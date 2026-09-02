@@ -1,0 +1,301 @@
+/* Official titles/notes from FRED series pages or Treasury Fiscal Data.
+   Justification is ours: why the cube keeps the column. */
+window.COLUMN_NOTES = {
+  FEDFUNDS: {
+    title: "Federal Funds Effective Rate",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, monthly average of business days, NSA",
+    url: "https://fred.stlouisfed.org/series/FEDFUNDS",
+    official:
+      "The federal funds rate is the interest rate at which depository institutions trade federal funds (balances held at Federal Reserve Banks) with each other overnight. Series is a monthly average of daily figures (H.15).",
+    why: "Policy rate in F1. Compared with the effective coupon on the debt stock: when funds has already met the book, a hike is the fiscal rate.",
+  },
+  TB3MS: {
+    title: "3-Month Treasury Bill Secondary Market Rate, Discount Basis",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, monthly average, discount basis, NSA",
+    url: "https://fred.stlouisfed.org/series/TB3MS",
+    official:
+      "Averages of business days, discount basis. H.15 Selected Interest Rates.",
+    why: "Short risk-free bill rate sitting next to funds. Sanity check that F1 is not an artifact of the effective-funds print alone.",
+  },
+  DGS10: {
+    title: "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily, NSA",
+    url: "https://fred.stlouisfed.org/series/DGS10",
+    official:
+      "Treasury constant-maturity 10-year yield from the H.15 / Treasury yield curve methodology.",
+    why: "Long rate context for term premium and r. Not a headline wire; kept so a reader can see the yield the ACM/Kim-Wright premium sits on.",
+  },
+  DGS2: {
+    title: "Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity, Quoted on an Investment Basis",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily, NSA",
+    url: "https://fred.stlouisfed.org/series/DGS2",
+    official:
+      "Treasury constant-maturity 2-year yield from the H.15 / Treasury yield curve methodology.",
+    why: "Front of the curve. Pair with DGS10 / T10Y2Y to see whether the term structure is already charging for duration.",
+  },
+  A091RC1Q027SBEA: {
+    title: "Federal government current expenditures: Interest payments",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/A091RC1Q027SBEA",
+    official:
+      "BEA NIPA account code A091RC. Federal current expenditures that are interest payments, seasonally adjusted annual rate.",
+    why: "Numerator for F2 (interest / receipts) and for the effective coupon in F1 and r−g (interest ÷ debt stock).",
+  },
+  FGRECPT: {
+    title: "Federal Government Current Receipts",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/FGRECPT",
+    official:
+      "NIPA federal current receipts, seasonally adjusted annual rate. The till: taxes plus other current receipts.",
+    why: "Denominator of F2. A 100bp coupon step is a program only relative to what actually comes in.",
+  },
+  W006RC1Q027SBEA: {
+    title: "Federal government current tax receipts",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/W006RC1Q027SBEA",
+    official:
+      "BEA NIPA federal current tax receipts only (excludes some non-tax current receipts in FGRECPT).",
+    why: "Narrower till. Side column so F2 is not an artifact of non-tax receipts.",
+  },
+  FGEXPND: {
+    title: "Federal Government Current Expenditures",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/FGEXPND",
+    official:
+      "NIPA federal current expenditures, seasonally adjusted annual rate.",
+    why: "Used with interest and receipts to form the primary deficit: (outlays − interest) − receipts.",
+  },
+  GFDEBTN: {
+    title: "Federal Debt: Total Public Debt",
+    source: "U.S. Department of the Treasury, Fiscal Service",
+    units: "Millions of dollars, quarterly",
+    url: "https://fred.stlouisfed.org/series/GFDEBTN",
+    official:
+      "Total public debt outstanding from the Treasury Bulletin / Fiscal Service, millions of dollars.",
+    why: "Lagged Bulletin stock. Fallback when debt-to-the-penny or MSPD has not printed yet. Converted to $bn for the coupon ratio.",
+  },
+  FYGFDPUN: {
+    title: "Federal Debt Held by the Public",
+    source: "U.S. Department of the Treasury, Fiscal Service",
+    units: "Millions of dollars",
+    url: "https://fred.stlouisfed.org/series/FYGFDPUN",
+    official:
+      "Debt held by the public (excludes intragovernmental holdings).",
+    why: "Public float, not the Social Security trust-fund circularity. Context for what the market has to roll.",
+  },
+  GFDEGDQ188S: {
+    title: "Federal Debt: Total Public Debt as Percent of Gross Domestic Product",
+    source: "U.S. Office of Management and Budget / BEA via FRED",
+    units: "Percent of GDP, quarterly",
+    url: "https://fred.stlouisfed.org/series/GFDEGDQ188S",
+    official:
+      "Total public debt divided by GDP, percent.",
+    why: "Scale check. Not a wire. Lets a reader see the stock ratio next to the flow wires.",
+  },
+  UNRATE: {
+    title: "Unemployment Rate",
+    source: "U.S. Bureau of Labor Statistics",
+    units: "Percent, monthly SA",
+    url: "https://fred.stlouisfed.org/series/UNRATE",
+    official:
+      "Civilian unemployment rate, U-3 definition.",
+    why: "Labor slack for the F3 story. Primary deficit is only “not in a hole” if the economy is not already in one. Paired with NROU.",
+  },
+  NROU: {
+    title: "Noncyclical Rate of Unemployment",
+    source: "U.S. Congressional Budget Office",
+    units: "Percent, quarterly NSA",
+    url: "https://fred.stlouisfed.org/series/NROU",
+    official:
+      "CBO renamed this from “Natural Rate of Unemployment (Long-Term)” in 2021. The unemployment rate arising from all sources except fluctuations in aggregate demand. Estimates of potential GDP use this long-term rate.",
+    why: "UNRATE − NROU is the unemployment gap stored with metric 3. F3’s “not in a hole” clause.",
+  },
+  GDP: {
+    title: "Gross Domestic Product",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/GDP",
+    official:
+      "Nominal GDP, seasonally adjusted annual rate.",
+    why: "Denominator of primary deficit / GDP (F3) and of nominal growth in r−g.",
+  },
+  GDPC1: {
+    title: "Real Gross Domestic Product",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of chained 2017 dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/GDPC1",
+    official:
+      "Real GDP, chained dollars, seasonally adjusted annual rate.",
+    why: "With GDPPOT, output gap stored on metric 3. Second reading of “is the economy in a hole.”",
+  },
+  GDPPOT: {
+    title: "Real Potential Gross Domestic Product",
+    source: "U.S. Congressional Budget Office",
+    units: "Billions of chained 2017 dollars, quarterly",
+    url: "https://fred.stlouisfed.org/series/GDPPOT",
+    official:
+      "CBO estimate of the trend level of real GDP consistent with stable inflation, given the noncyclical unemployment rate and capital stock.",
+    why: "Denominator of the output-gap companion on metric 3.",
+  },
+  THREEFYTP10: {
+    title: "Term Premium on a 10 Year Zero Coupon Bond",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/THREEFYTP10",
+    official:
+      "Kim and Wright (2005): three-factor arbitrage-free term structure fitted to Treasury yields since 1990, to recover long-term yields, distant-horizon forward rates, and term premiums. (Cube comments sometimes call this ACM; the FRED id we fetch is the Kim-Wright series.)",
+    why: "Amplifier 4. Duration is charging a fiscal premium when this is high. Does not define fail.",
+  },
+  T10Y2Y: {
+    title: "10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity",
+    source: "Federal Reserve Bank of St. Louis",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/T10Y2Y",
+    official:
+      "Spread constructed by FRED from DGS10 minus DGS2.",
+    why: "Curve shape next to the term-premium amplifier. Inversion vs a fat premium are different duration stories.",
+  },
+  T10Y3M: {
+    title: "10-Year Treasury Constant Maturity Minus 3-Month Treasury Constant Maturity",
+    source: "Federal Reserve Bank of St. Louis",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/T10Y3M",
+    official:
+      "Spread constructed by FRED from the 10-year constant maturity minus the 3-month constant maturity.",
+    why: "Policy-to-long spread. Companion to T10Y2Y on metric 4.",
+  },
+  NFCI: {
+    title: "Chicago Fed National Financial Conditions Index",
+    source: "Federal Reserve Bank of Chicago",
+    units: "Index, weekly ending Friday, NSA",
+    url: "https://fred.stlouisfed.org/series/NFCI",
+    official:
+      "Weekly update on U.S. financial conditions in money, debt, equity, and traditional and shadow banking. Positive values = tighter than average; negative = looser than average.",
+    why: "Amplifier 6 and its headline. Another official tightener on already-tight conditions is a second shock. Does not define fail.",
+  },
+  DRTSCILM: {
+    title: "Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, quarterly NSA",
+    url: "https://fred.stlouisfed.org/series/DRTSCILM",
+    official:
+      "SLOOS: net share of domestic banks tightening C&I standards for large and middle-market firms.",
+    why: "Bank-credit tightness next to NFCI. Conditions amplifier, not a fiscal wire.",
+  },
+  BAMLC0A0CM: {
+    title: "ICE BofA US Corporate Index Option-Adjusted Spread",
+    source: "Ice Data Indices, LLC",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/BAMLC0A0CM",
+    official:
+      "Option-adjusted spread of the ICE BofA US Corporate Index over a spot Treasury curve. Investment-grade credit premium.",
+    why: "IG OAS companion on metric 6. Private credit already charging more is an amplifier.",
+  },
+  BAMLH0A0HYM2: {
+    title: "ICE BofA US High Yield Index Option-Adjusted Spread",
+    source: "Ice Data Indices, LLC",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
+    official:
+      "Option-adjusted spread of the ICE BofA US High Yield Index over a spot Treasury curve.",
+    why: "HY OAS companion on metric 6. Same amplifier family as IG OAS and NFCI.",
+  },
+  PCEPILFE: {
+    title: "Personal Consumption Expenditures Excluding Food and Energy (Chain-Type Price Index)",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Index 2017=100, monthly SA",
+    url: "https://fred.stlouisfed.org/series/PCEPILFE",
+    official:
+      "BEA core PCE price index. Fed’s preferred underlying inflation gauge. Food and energy excluded.",
+    why: "Driver overlay (core PCE y/y), not a cube axis. Answers “if inflation printed hot tomorrow…”",
+  },
+  PCEPI: {
+    title: "Personal Consumption Expenditures: Chain-Type Price Index",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Index 2017=100, monthly SA",
+    url: "https://fred.stlouisfed.org/series/PCEPI",
+    official:
+      "Headline PCE price index, chained.",
+    why: "Headline next to core. Context only; the force map uses PCEPILFE.",
+  },
+  CPILFESL: {
+    title: "Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average",
+    source: "U.S. Bureau of Labor Statistics",
+    units: "Index 1982-84=100, monthly SA",
+    url: "https://fred.stlouisfed.org/series/CPILFESL",
+    official:
+      "CPI-U excluding food and energy, seasonally adjusted.",
+    why: "Second inflation print. Not in the two-force map; kept so core CPI and core PCE can be compared.",
+  },
+  MSPD_BILLS_PUBLIC_MN: {
+    title: "Marketable Treasury bills held by the public",
+    source: "U.S. Treasury Fiscal Data — Monthly Statement of the Public Debt, Table 1",
+    units: "Millions of dollars, monthly",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding",
+    official:
+      "MSPD Table 1, security class Bills, debt held by the public. Constructed in cube_data.fetch_mspd_composition.",
+    why: "Numerator of bills / marketable. A fat bill share means the coupon wall rolls fast when funds moves.",
+  },
+  MSPD_MARKETABLE_PUBLIC_MN: {
+    title: "Total marketable Treasury debt held by the public",
+    source: "U.S. Treasury Fiscal Data — Monthly Statement of the Public Debt, Table 1",
+    units: "Millions of dollars, monthly",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding",
+    official:
+      "MSPD Table 1, Total Marketable, debt held by the public.",
+    why: "Denominator of the bills share used on metric 1.",
+  },
+  MSPD_TOTAL_DEBT_MN: {
+    title: "Total public debt outstanding (MSPD)",
+    source: "U.S. Treasury Fiscal Data — Monthly Statement of the Public Debt, Table 1",
+    units: "Millions of dollars, monthly",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding",
+    official:
+      "MSPD Table 1 total public debt outstanding, millions of dollars.",
+    why: "Middle-priority debt stock for the effective coupon: penny first, then MSPD, then GFDEBTN.",
+  },
+  MSPD_BILLS_SHARE_MARKETABLE: {
+    title: "Bills as a share of marketable debt held by the public",
+    source: "Derived from MSPD Table 1",
+    units: "Ratio",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding",
+    official:
+      "MSPD_BILLS_PUBLIC_MN / MSPD_MARKETABLE_PUBLIC_MN. Not a FRED series.",
+    why: "How much of the book reprices when the funds rate moves. Input to the F1 story.",
+  },
+  DEBT_HELD_PUBLIC: {
+    title: "Debt Held by the Public",
+    source: "U.S. Treasury Fiscal Data — Debt to the Penny",
+    units: "U.S. dollars, daily",
+    url: "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny",
+    official:
+      "Daily debt held by the public from Debt to the Penny (debt_held_public_amt).",
+    why: "Public stock at daily frequency. Preferred over the Bulletin when it exists.",
+  },
+  DEBT_INTRAGOV: {
+    title: "Intragovernmental Holdings",
+    source: "U.S. Treasury Fiscal Data — Debt to the Penny",
+    units: "U.S. dollars, daily",
+    url: "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny",
+    official:
+      "Daily intragovernmental holdings (intragov_hold_amt).",
+    why: "The part of the total that is not the public float. Split out so DEBT_TOTAL is inspectable.",
+  },
+  DEBT_TOTAL: {
+    title: "Total Public Debt Outstanding",
+    source: "U.S. Treasury Fiscal Data — Debt to the Penny",
+    units: "U.S. dollars, daily",
+    url: "https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny",
+    official:
+      "Daily total public debt outstanding (tot_pub_debt_out_amt).",
+    why: "Preferred stock for interest / debt in F1 and r−g. Converted to $bn; latest official print wins the date.",
+  },
+};

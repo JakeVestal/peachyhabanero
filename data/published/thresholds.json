@@ -1,0 +1,56 @@
+[
+  {
+    "metric_id": 1,
+    "metric_key": "01_funds_equals_fiscal_rate",
+    "headline_column": "funds_minus_stock_coupon_pp",
+    "critical_value": 0.0,
+    "direction_unthinkable": "at_or_below",
+    "units": "percentage_points",
+    "rationale": "Policy rate and the coupon on the stock are the same object. Hiking is the fiscal rate."
+  },
+  {
+    "metric_id": 2,
+    "metric_key": "02_interest_share_of_receipts",
+    "headline_column": "interest_pct_of_current_receipts",
+    "critical_value": 20.0,
+    "direction_unthinkable": "at_or_above",
+    "units": "percent_of_receipts",
+    "rationale": "A fifth of the till. From here a 100bp path on the rolling wall is a named program not a rounding error."
+  },
+  {
+    "metric_id": 3,
+    "metric_key": "03_primary_deficit_not_in_hole",
+    "headline_column": "primary_deficit_pct_gdp",
+    "critical_value": 0.0,
+    "direction_unthinkable": "at_or_above",
+    "units": "percent_of_gdp",
+    "rationale": "Still borrowing for operations. Pair with unemployment_gap_pp <= 0 for the full condition."
+  },
+  {
+    "metric_id": 4,
+    "metric_key": "04_duration_demand_term_premium",
+    "headline_column": "acm_10y_term_premium_pp",
+    "critical_value": 1.0,
+    "direction_unthinkable": "at_or_above",
+    "units": "percentage_points",
+    "rationale": "Duration is charging a full point of fiscal premium. Private bid no longer absorbing issuance at a normal term premium."
+  },
+  {
+    "metric_id": 5,
+    "metric_key": "05_r_minus_g",
+    "headline_column": "r_minus_g_pp",
+    "critical_value": 0.0,
+    "direction_unthinkable": "at_or_above",
+    "units": "percentage_points",
+    "rationale": "Effective coupon >= nominal growth. Without a primary surplus the ratio only closes by inflating g or repressing r."
+  },
+  {
+    "metric_id": 6,
+    "metric_key": "06_financial_conditions",
+    "headline_column": "NFCI",
+    "critical_value": 0.0,
+    "direction_unthinkable": "at_or_above",
+    "units": "index",
+    "rationale": "Financial conditions already tighter than the 1973- historical average. Another official tightener is a second shock."
+  }
+]

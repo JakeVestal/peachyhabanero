@@ -1,0 +1,68 @@
+name: nightly-data
+
+on:
+  schedule:
+    - cron: "20 8 * * *"
+  workflow_dispatch:
+    inputs:
+      full_rebuild:
+        description: "Ignore cache and rebuild raw frames from 1970"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: install
+        run: pip install -r requirements.txt
+
+      - name: restore raw-frame cache
+        if: ${{ github.event.inputs.full_rebuild != 'true' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: cube-raw-${{ github.run_id }}
+          restore-keys: |
+            cube-raw-
+
+      - name: build published json
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          CUBE_CACHE: ${{ github.workspace }}/.cache
+          CUBE_DATA_DIR: ${{ github.workspace }}/data
+          CUBE_FULL_REBUILD: ${{ github.event.inputs.full_rebuild }}
+        run: python scripts/build_site_data.py
+
+      - name: save raw-frame cache
+        uses: actions/cache/save@v4
+        with:
+          path: .cache
+          key: cube-raw-${{ github.run_id }}
+
+      - name: commit published data if it moved
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/published
+          if git diff --cached --quiet; then
+            echo "no data change"
+          else
+            git commit -m "data: nightly refresh $(date -u +%F)"
+            git push
+          fi

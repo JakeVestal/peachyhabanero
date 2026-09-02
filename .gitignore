@@ -1,0 +1,19 @@
+# local python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# data cache — rebuild with --fetch
+.cache/
+*.pkl
+
+# ide
+.idea/
+*.iml
+.DS_Store
+
+# os / editor
+Thumbs.db
+*~
