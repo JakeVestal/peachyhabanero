@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T18:59:58Z",
+  "generated_at": "2026-09-02T20:34:39Z",
   "files": [
     "quarterly.json",
     "series.json",
@@ -7,6 +7,7 @@
     "raw_inputs.json",
     "rate_adjust.csv",
     "macro_drivers.csv",
-    "thresholds.json"
+    "thresholds.json",
+    "cubes.json"
   ]
 }

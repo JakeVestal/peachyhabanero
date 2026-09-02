@@ -34,9 +34,9 @@ function fmt(v, col) {
 function downloadCsv(id, filename) {
   const table = document.getElementById(id);
   const csv = [...table.querySelectorAll("tr")].map((row) =>
-      [...row.querySelectorAll("th,td")]
-          .map((td) => `"${td.innerText.replaceAll('"', '""')}"`)
-          .join(",")
+    [...row.querySelectorAll("th,td")]
+      .map((td) => `"${td.innerText.replaceAll('"', '""')}"`)
+      .join(",")
   );
   const blob = new Blob([csv.join("\n")], { type: "text/csv" });
   const a = document.createElement("a");
@@ -54,10 +54,10 @@ function renderTable(mount, table, tableId) {
   const cols = table.columns || Object.keys(table.rows[0]);
   const head = cols.map((c) => `<th>${c}</th>`).join("");
   const body = table.rows
-      .map((row) => `<tr>${cols.map((c) => `<td>${fmt(row[c], c)}</td>`).join("")}</tr>`)
-      .join("");
+    .map((row) => `<tr>${cols.map((c) => `<td>${fmt(row[c], c)}</td>`).join("")}</tr>`)
+    .join("");
   const meta = `${table.n_rows ?? table.rows.length} rows` +
-      (table.start ? ` · ${table.start} → ${table.end}` : "");
+    (table.start ? ` · ${table.start} → ${table.end}` : "");
   mount.innerHTML = `
     <div class="table-wrap">
       <div class="table-bar">
@@ -121,8 +121,8 @@ function asOf(table, date) {
   const cols = table.columns || (table.rows[0] ? Object.keys(table.rows[0]) : []);
   const key = cols.includes("quarter_end") ? "quarter_end" : "date";
   const hit = table.rows
-      .filter((r) => r[key] && r[key] <= date)
-      .sort((a, b) => (a[key] < b[key] ? 1 : -1));
+    .filter((r) => r[key] && r[key] <= date)
+    .sort((a, b) => (a[key] < b[key] ? 1 : -1));
   return hit[0] || null;
 }
 
@@ -197,9 +197,9 @@ function recipeX(id, date, metrics, raw, qrow) {
     const gdp = num(labor && labor.GDP);
     const primary = num(m3 && m3.primary_deficit_bn_saar);
     const rebuilt =
-        exp != null && interest != null && receipts != null && gdp
-            ? (100 * (exp - interest - receipts)) / gdp
-            : num(m3 && m3.primary_deficit_pct_gdp);
+      exp != null && interest != null && receipts != null && gdp
+        ? (100 * (exp - interest - receipts)) / gdp
+        : num(m3 && m3.primary_deficit_pct_gdp);
     return [
       `Outlays FGEXPND = ${fmtN(exp, 3)} $bn SAAR.`,
       `Interest A091RC1Q027SBEA = ${fmtN(interest, 3)} $bn SAAR.`,
@@ -232,12 +232,12 @@ function recipeX(id, date, metrics, raw, qrow) {
     ];
     if (gdpNow != null && gdpLag != null) {
       lines.push(
-          `Nominal GDP at ${date} = ${fmtN(gdpNow, 3)} $bn. GDP four quarters earlier (${laborYearAgo && laborYearAgo.date}) = ${fmtN(gdpLag, 3)} $bn.`
+        `Nominal GDP at ${date} = ${fmtN(gdpNow, 3)} $bn. GDP four quarters earlier (${laborYearAgo && laborYearAgo.date}) = ${fmtN(gdpLag, 3)} $bn.`
       );
       lines.push(`g = 100 × (GDP / GDP_lag − 1) = 100 × (${fmtN(gdpNow, 3)} / ${fmtN(gdpLag, 3)} − 1) = ${fmtN(g, 4)}.`);
     } else if (g != null && coupon != null && x5 != null && num(m5 && m5.nominal_gdp_yoy_pct) == null) {
       lines.push(
-          `Four-quarter GDP growth was not on the metric-5 row for this date. Backed out of the identity g = r − x5 = ${fmtN(coupon, 4)} − ${fmtN(x5, 4)} = ${fmtN(g, 4)}.`
+        `Four-quarter GDP growth was not on the metric-5 row for this date. Backed out of the identity g = r − x5 = ${fmtN(coupon, 4)} − ${fmtN(x5, 4)} = ${fmtN(g, 4)}.`
       );
     } else {
       lines.push(`g = 100 × four-quarter percent change in nominal GDP = ${fmtN(g, 4)}.`);
@@ -269,8 +269,8 @@ function recipeY(id, row, rows, thresholds) {
     `Threshold c = ${fmtN(c, 4)} (${dir}).`,
     `σ = sample standard deviation of quarterly ${xName} across the complete-case panel = ${fmtN(sigma, 4)}.`,
     dir === "at_or_below"
-        ? `y${id} = −(x − c) / σ = −(${fmtN(x, 4)} − ${fmtN(c, 4)}) / ${fmtN(sigma, 4)} = ${fmtN(y, 4)}.`
-        : `y${id} = (x − c) / σ = (${fmtN(x, 4)} − ${fmtN(c, 4)}) / ${fmtN(sigma, 4)} = ${fmtN(y, 4)}.`,
+      ? `y${id} = −(x − c) / σ = −(${fmtN(x, 4)} − ${fmtN(c, 4)}) / ${fmtN(sigma, 4)} = ${fmtN(y, 4)}.`
+      : `y${id} = (x − c) / σ = (${fmtN(x, 4)} − ${fmtN(c, 4)}) / ${fmtN(sigma, 4)} = ${fmtN(y, 4)}.`,
     `Table y${id} = ${fmtN(row["y" + id], 4)}.`,
   ];
 }
@@ -355,8 +355,8 @@ function explainQuarterlyCol(col, row, rows, thresholds, metrics, raw) {
 
 function picker(mount, names, onPick) {
   mount.innerHTML = names
-      .map((n, i) => `<button class="neon-btn${i === 0 ? " active" : ""}" data-name="${n}">${n}</button>`)
-      .join("");
+    .map((n, i) => `<button class="neon-btn${i === 0 ? " active" : ""}" data-name="${n}">${n}</button>`)
+    .join("");
   mount.querySelectorAll("button").forEach((btn) => {
     btn.onclick = () => {
       mount.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
@@ -381,24 +381,24 @@ async function load() {
     ]);
 
     stamp.textContent = `generated ${quarterly.generated_at || metrics.generated_at || "?"} · ${
-        quarterly.quarters?.length ?? 0
+      quarterly.quarters?.length ?? 0
     } quarters`;
 
     renderTable(
-        document.getElementById("tbl-thresholds"),
-        { columns: Object.keys(thresholds[0] || {}), rows: thresholds },
-        "thresholds"
+      document.getElementById("tbl-thresholds"),
+      { columns: Object.keys(thresholds[0] || {}), rows: thresholds },
+      "thresholds"
     );
 
     const qrows = (quarterly.quarters || []).slice().reverse();
     renderTable(
-        document.getElementById("tbl-quarterly"),
-        {
-          columns: qrows[0] ? Object.keys(qrows[0]) : [],
-          rows: qrows,
-          n_rows: qrows.length,
-        },
-        "quarterly"
+      document.getElementById("tbl-quarterly"),
+      {
+        columns: qrows[0] ? Object.keys(qrows[0]) : [],
+        rows: qrows,
+        n_rows: qrows.length,
+      },
+      "quarterly"
     );
     let examplesMount = document.getElementById("quarterly-examples");
     if (!examplesMount) {
@@ -412,9 +412,9 @@ async function load() {
         renderQuarterlyExamples(examplesMount, qrows, thresholds, metrics, raw);
         if (examplesMount && !examplesMount.innerHTML.trim()) {
           examplesMount.innerHTML =
-              `<article class="col-card"><p class="err">examples ran but produced no cards. first row keys: ${
-                  qrows[0] ? Object.keys(qrows[0]).join(", ") : "(no rows)"
-              }</p></article>`;
+            `<article class="col-card"><p class="err">examples ran but produced no cards. first row keys: ${
+              qrows[0] ? Object.keys(qrows[0]).join(", ") : "(no rows)"
+            }</p></article>`;
         }
       } catch (err) {
         if (examplesMount) {
@@ -447,15 +447,15 @@ async function load() {
     document.getElementById("raw-note").textContent = raw.note || "";
     const catRows = raw.catalog || [];
     renderTable(
-        document.getElementById("tbl-catalog"),
-        {
-          columns: catRows[0] ? Object.keys(catRows[0]) : [],
-          rows: catRows.map((r) => ({
-            ...r,
-            columns: Array.isArray(r.columns) ? r.columns.join(", ") : r.columns,
-          })),
-        },
-        "catalog"
+      document.getElementById("tbl-catalog"),
+      {
+        columns: catRows[0] ? Object.keys(catRows[0]) : [],
+        rows: catRows.map((r) => ({
+          ...r,
+          columns: Array.isArray(r.columns) ? r.columns.join(", ") : r.columns,
+        })),
+      },
+      "catalog"
     );
   } catch (err) {
     stamp.innerHTML = `<span class="err">${err.message}. Run the build script, then serve the repo root over http.</span>`;

@@ -18,6 +18,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,7 +66,7 @@ COLMAP = {
 RAW_KEEP = {
     "fred_policy_rates": ["FEDFUNDS", "TB3MS", "DGS10", "DGS2"],
     "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "FGEXPND"],
-    "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S"],
+    "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S", "FYGFGDQ188S"],
     "fred_labor_output": ["UNRATE", "NROU", "GDP", "GDPC1", "GDPPOT"],
     "fred_term_premium": ["THREEFYTP10", "T10Y2Y", "T10Y3M"],
     "fred_financial_conditions": ["NFCI", "DRTSCILM", "BAMLC0A0CM", "BAMLH0A0HYM2"],
@@ -114,6 +115,157 @@ def df_to_table(df: pd.DataFrame, date_key: str = "date") -> dict:
 def write_json(path: Path, payload) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"wrote {path}")
+
+
+ZONE = {
+    "debt_gdp_warn": 100.0,
+    "debt_gdp_death": 140.0,
+    "int_rec_warn": 20.0,
+    "int_rec_death": 30.0,
+    "int_tax_warn": 25.0,
+    "int_tax_death": 40.0,
+    "refi_gap_warn": 0.50,
+    "refi_gap_death": 1.50,
+}
+REFINANCE_WEIGHTS = {"tb3m": 0.25, "y2": 0.50, "y10": 0.25}
+
+
+def _qe(s: pd.Series) -> pd.Series:
+    s = pd.to_numeric(s, errors="coerce")
+    s.index = pd.to_datetime(s.index)
+    return s.sort_index().resample("QE").last()
+
+
+def _piecewise(v: pd.Series, warn: float, death: float) -> pd.Series:
+    v = v.astype(float)
+    out = pd.Series(np.nan, index=v.index)
+    below = v <= warn
+    mid = (v > warn) & (v <= death)
+    above = v > death
+    out.loc[below] = (v.loc[below] / warn).clip(lower=0)
+    span = max(death - warn, 1e-9)
+    out.loc[mid] = 1.0 + (v.loc[mid] - warn) / span
+    out.loc[above] = 2.0 + (v.loc[above] - death) / death
+    return out
+
+
+def _signed_dist(scores: np.ndarray, threshold: float) -> np.ndarray:
+    delta = scores - threshold
+    shortfall = np.clip(-delta, 0.0, None)
+    outside = shortfall.any(axis=1)
+    d_out = np.linalg.norm(shortfall, axis=1)
+    d_in = delta.min(axis=1)
+    return np.where(outside, d_out, -d_in)
+
+
+def _col_or(df: pd.DataFrame, *names) -> pd.Series:
+    for n in names:
+        if df is not None and n in df.columns:
+            return pd.to_numeric(df[n], errors="coerce")
+    return pd.Series(dtype="float64")
+
+
+def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: str) -> None:
+    by = {n: frames[i] for i, n in enumerate(FRAME_NAMES) if i < len(frames)}
+    m01 = metrics["01_funds_equals_fiscal_rate"]
+    m02 = metrics["02_interest_share_of_receipts"]
+    m03 = metrics["03_primary_deficit_not_in_hole"]
+    policy = by.get("fred_policy_rates", pd.DataFrame())
+    fiscal = by.get("fred_fiscal_nipa", pd.DataFrame())
+    debt = by.get("fred_debt_stocks", pd.DataFrame())
+    labor = by.get("fred_labor_output", pd.DataFrame())
+
+    stock = _qe(_col_or(m01, "treasury_avg_marketable_coupon_pct", "effective_avg_coupon_pct"))
+    funds = _qe(_col_or(m01, "FEDFUNDS"))
+    funds_minus = _qe(_col_or(m01, "funds_minus_stock_coupon_pp"))
+    int_rec = _qe(_col_or(m02, "interest_pct_of_current_receipts"))
+    int_tax = _qe(_col_or(m02, "interest_pct_of_tax_receipts"))
+    int_bn = _qe(_col_or(m02, "interest_bn_saar"))
+    rec_bn = _qe(_col_or(m02, "current_receipts_bn_saar"))
+    primary = _qe(_col_or(m03, "primary_deficit_pct_gdp"))
+    tb3 = _qe(_col_or(policy, "TB3MS"))
+    y2 = _qe(_col_or(policy, "DGS2"))
+    y10 = _qe(_col_or(policy, "DGS10"))
+    gdp = _qe(_col_or(labor, "GDP"))
+    debt_pub_gdp = _qe(_col_or(debt, "FYGFGDQ188S"))
+    tax_bn = _qe(_col_or(fiscal, "W006RC1Q027SBEA"))
+
+    w = REFINANCE_WEIGHTS
+    marginal = w["tb3m"] * tb3 + w["y2"] * y2 + w["y10"] * y10
+    refi_gap = marginal - stock
+
+    panel = pd.DataFrame({
+        "funds_minus_stock": funds_minus,
+        "FEDFUNDS": funds,
+        "stock_avg_coupon": stock,
+        "tb3m": tb3,
+        "y2": y2,
+        "y10": y10,
+        "marginal_rate": marginal,
+        "refi_gap": refi_gap,
+        "int_rec_pct": int_rec,
+        "int_tax_pct": int_tax,
+        "interest_bn": int_bn,
+        "receipts_bn": rec_bn,
+        "tax_bn": tax_bn,
+        "primary_deficit_pct_gdp": primary,
+        "debt_gdp_pct": debt_pub_gdp,
+        "gdp_bn": gdp,
+        "int_gdp_pct": (int_bn / gdp) * 100.0,
+    }).sort_index()
+    panel["F1"] = y["y1"].reindex(panel.index) if "y1" in y.columns else np.nan
+    panel["F3"] = y["y3"].reindex(panel.index) if "y3" in y.columns else np.nan
+
+    def f2_of(series, c):
+        s = series.dropna()
+        sig = float(s.std(ddof=1)) or 1.0
+        return (series - c) / sig
+
+    panel["F2_rec"] = f2_of(panel["int_rec_pct"], ZONE["int_rec_warn"])
+    panel["F2_tax"] = f2_of(panel["int_tax_pct"], ZONE["int_tax_warn"])
+
+    s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_death"])
+    s_gap = _piecewise(panel["refi_gap"], ZONE["refi_gap_warn"], ZONE["refi_gap_death"])
+    panel["s_debt"] = s_debt
+    panel["s_gap"] = s_gap
+    for burden, warn, death, col in (
+        ("rec", ZONE["int_rec_warn"], ZONE["int_rec_death"], "int_rec_pct"),
+        ("tax", ZONE["int_tax_warn"], ZONE["int_tax_death"], "int_tax_pct"),
+    ):
+        s_bur = _piecewise(panel[col], warn, death)
+        panel[f"s_{burden}"] = s_bur
+        cube = np.column_stack([s_debt.to_numpy(), s_bur.to_numpy(), s_gap.to_numpy()])
+        panel[f"dist_warn_{burden}"] = _signed_dist(cube, 1.0)
+        panel[f"dist_death_{burden}"] = _signed_dist(cube, 2.0)
+        panel[f"stress_{burden}"] = (
+            0.20 * s_debt + 0.35 * s_bur + 0.25 * s_gap
+            + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)
+        )
+
+    sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
+    sustain = sustain.loc[sustain.index >= "2000-01-01"]
+    fail = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
+
+    payload = {
+        "generated_at": generated_at,
+        "zone": ZONE,
+        "refinance_weights": REFINANCE_WEIGHTS,
+        "sustain": df_to_table(sustain)["rows"][::-1],
+        "fail": df_to_table(fail)["rows"][::-1],
+    }
+    write_json(PUB / "cubes.json", payload)
+    if len(sustain):
+        last = sustain.iloc[-1]
+        print(
+            f"cubes sustain {len(sustain)}  latest {sustain.index[-1].date()}  "
+            f"debt/gdp={last.debt_gdp_pct:.1f} refi={last.refi_gap:+.2f}"
+        )
+    if len(fail):
+        lastf = fail.iloc[-1]
+        print(
+            f"cubes fail {len(fail)}  latest {fail.index[-1].date()}  "
+            f"F1={lastf.F1:.2f} F2rec={lastf.F2_rec:.2f} F3={lastf.F3:.2f}"
+        )
 
 
 def fetch_raw() -> None:
@@ -201,6 +353,7 @@ def process_and_publish() -> None:
         "generated_at": generated_at,
         "tables": metric_tables,
     })
+    publish_cubes(metrics, y, frames=load_frames(RAW_JSON), generated_at=generated_at)
 
     frames = load_frames(RAW_JSON)
     raw_tables = {}
@@ -242,6 +395,7 @@ def process_and_publish() -> None:
             "rate_adjust.csv",
             "macro_drivers.csv",
             "thresholds.json",
+            "cubes.json",
         ],
     })
     write_json(PUB / "thresholds.json", thresh.to_dict(orient="records"))

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Failure mode — data</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header>
+    <p class="navline"><a href="index.html">cube</a> · data</p>
+    <h1>FAILURE MODE  /  DATA</h1>
+    <p class="sub">
+      Audit trail: thresholds, formula inputs, calculated metrics,
+      then the quarterly F / fail bits a human can recompute.
+    </p>
+    <p class="stat" id="stamp">loading published data…</p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="neon-btn active" data-tab="story">00 story</button>
+    <button class="neon-btn" data-tab="thresholds">01 thresholds</button>
+    <button class="neon-btn" data-tab="quarterly">02 quarterly F</button>
+    <button class="neon-btn" data-tab="metrics">03 calculated</button>
+    <button class="neon-btn" data-tab="raw">04 raw inputs</button>
+    <button class="neon-btn" data-tab="catalog">05 raw catalog</button>
+  </nav>
+
+  <section id="panel-story" class="panel">
+    <h2>What each number is</h2>
+    <ol class="story-list">
+      <li><b>F1 / funds − stock coupon</b> — effective funds minus NIPA interest ÷ debt stock. Unthinkable at or below 0: hiking <i>is</i> the fiscal rate.</li>
+      <li><b>F2 / interest ÷ receipts</b> — NIPA federal interest over current receipts. Unthinkable at or above 20%.</li>
+      <li><b>F3 / primary deficit ÷ GDP</b> — (outlays − interest − receipts) / GDP. Unthinkable at or above 0.</li>
+      <li><b>Amplifiers 4–6</b> — term premium, r − g, NFCI. Color only. They do not define fail.</li>
+      <li><b>fail</b> — AND of the three fiscal wires after standardizing through the threshold file.</li>
+    </ol>
+    <p class="sub">y = (x − c) / σ, flipped if direction is at_or_below. s = 1 when y &gt; 0.</p>
+  </section>
+
+  <section id="panel-thresholds" class="panel hidden">
+    <h2>01  /  adjustable defaults</h2>
+    <div id="tbl-thresholds"></div>
+  </section>
+
+  <section id="panel-quarterly" class="panel hidden">
+    <h2>02  /  quarterly complete cases</h2>
+    <div id="tbl-quarterly"></div>
+    <div class="toolbar" style="margin-top:14px">
+      <button class="neon-btn" type="button" id="btn-reshuffle">reshuffle example dates</button>
+    </div>
+    <div id="quarterly-examples"><p class="sub">loading worked examples…</p></div>
+  </section>
+
+  <section id="panel-metrics" class="panel hidden">
+    <h2>03  /  calculated metric frames</h2>
+    <div id="metric-picker" class="toolbar"></div>
+    <div id="tbl-metrics"></div>
+  </section>
+
+  <section id="panel-raw" class="panel hidden">
+    <h2>04  /  raw columns used in the formulas</h2>
+    <div id="raw-picker" class="toolbar"></div>
+    <div id="raw-col-notes"></div>
+    <div id="tbl-raw"></div>
+  </section>
+
+  <section id="panel-catalog" class="panel hidden">
+    <h2>05  /  what is in the cache</h2>
+    <p class="sub" id="raw-note"></p>
+    <div id="tbl-catalog"></div>
+  </section>
+
+  <footer>
+    peachyhabanero · <a href="index.html">back to cube</a>
+  </footer>
+  <script src="column_notes.js?v=4"></script>
+  <script src="app.js?v=4"></script>
+</body>
+</html>

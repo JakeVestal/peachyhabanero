@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-02T18:59:58Z",
+  "generated_at": "2026-09-02T20:34:39Z",
   "catalog": [
     {
       "frame": "fred_policy_rates",
-      "rows": 20699,
+      "rows": 20700,
       "cols": 9,
       "start": "1970-01-01",
-      "end": "2026-09-02",
+      "end": "2026-09-03",
       "columns": [
         "FEDFUNDS",
         "DFF",
@@ -158,7 +158,7 @@
     },
     {
       "frame": "fiscal_auctions",
-      "rows": 11100,
+      "rows": 6341,
       "cols": 14,
       "start": "1979-10-31",
       "end": "2026-09-03",
@@ -284,10 +284,10 @@
     },
     {
       "frame": "fiscal_debt_to_penny",
-      "rows": 8383,
+      "rows": 8384,
       "cols": 3,
       "start": "1993-04-01",
-      "end": "2026-08-31",
+      "end": "2026-09-01",
       "columns": [
         "DEBT_HELD_PUBLIC",
         "DEBT_INTRAGOV",
@@ -309,8 +309,8 @@
           "date": "2026-09-30",
           "FEDFUNDS": null,
           "TB3MS": null,
-          "DGS10": null,
-          "DGS2": null
+          "DGS10": 4.79,
+          "DGS2": 4.39
         },
         {
           "date": "2026-08-31",
@@ -9830,4050 +9830,4724 @@
         "date",
         "GFDEBTN",
         "FYGFDPUN",
-        "GFDEGDQ188S"
+        "GFDEGDQ188S",
+        "FYGFGDQ188S"
       ],
       "rows": [
         {
           "date": "2026-01-31",
           "GFDEBTN": 39065421.0,
           "FYGFDPUN": 31454810.95554976,
-          "GFDEGDQ188S": 122.59387
+          "GFDEGDQ188S": 122.59387,
+          "FYGFGDQ188S": 98.7105
         },
         {
           "date": "2025-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-10-31",
           "GFDEBTN": 38514009.0,
           "FYGFDPUN": 30870713.09449654,
-          "GFDEGDQ188S": 122.56815
+          "GFDEGDQ188S": 122.56815,
+          "FYGFGDQ188S": 98.24389
         },
         {
           "date": "2025-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-07-31",
           "GFDEBTN": 37637552.59555763,
           "FYGFDPUN": 30298281.338690888,
-          "GFDEGDQ188S": 121.02875
+          "GFDEGDQ188S": 121.02875,
+          "FYGFGDQ188S": 97.42831
         },
         {
           "date": "2025-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-04-30",
           "GFDEBTN": 36211469.0,
           "FYGFDPUN": 28976176.744858213,
-          "GFDEGDQ188S": 118.78171
+          "GFDEGDQ188S": 118.78171,
+          "FYGFGDQ188S": 95.04833
         },
         {
           "date": "2025-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2025-01-31",
           "GFDEBTN": 36214309.520796455,
           "FYGFDPUN": 28932973.238149263,
-          "GFDEGDQ188S": 120.54515
+          "GFDEGDQ188S": 120.54515,
+          "FYGFGDQ188S": 96.30805
         },
         {
           "date": "2024-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-10-31",
           "GFDEBTN": 36218605.0,
           "FYGFDPUN": 28859125.0,
-          "GFDEGDQ188S": 121.43633
+          "GFDEGDQ188S": 121.43633,
+          "FYGFGDQ188S": 96.76094
         },
         {
           "date": "2024-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-07-31",
           "GFDEBTN": 35464674.0,
           "FYGFDPUN": 28325715.0,
-          "GFDEGDQ188S": 120.17172
+          "GFDEGDQ188S": 120.17172,
+          "FYGFGDQ188S": 95.98142
         },
         {
           "date": "2024-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-04-30",
           "GFDEBTN": 34831634.0,
           "FYGFDPUN": 27634108.0,
-          "GFDEGDQ188S": 119.50314
+          "GFDEGDQ188S": 119.50314,
+          "FYGFGDQ188S": 94.8093
         },
         {
           "date": "2024-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2024-01-31",
           "GFDEBTN": 34586533.0,
           "FYGFDPUN": 27533422.0,
-          "GFDEGDQ188S": 120.47631
+          "GFDEGDQ188S": 120.47631,
+          "FYGFGDQ188S": 95.908
         },
         {
           "date": "2023-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-10-31",
           "GFDEBTN": 34001494.0,
           "FYGFDPUN": 26960227.0,
-          "GFDEGDQ188S": 119.61944
+          "GFDEGDQ188S": 119.61944,
+          "FYGFGDQ188S": 94.84781
         },
         {
           "date": "2023-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-07-31",
           "GFDEBTN": 33167334.0,
           "FYGFDPUN": 26349499.0,
-          "GFDEGDQ188S": 118.13897
+          "GFDEGDQ188S": 118.13897,
+          "FYGFGDQ188S": 93.85447
         },
         {
           "date": "2023-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-04-30",
           "GFDEBTN": 32332274.0,
           "FYGFDPUN": 25482075.0,
-          "GFDEGDQ188S": 117.44355
+          "GFDEGDQ188S": 117.44355,
+          "FYGFGDQ188S": 92.56093
         },
         {
           "date": "2023-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2023-01-31",
           "GFDEBTN": 31458438.0,
           "FYGFDPUN": 24714826.0,
-          "GFDEGDQ188S": 115.58614
+          "GFDEGDQ188S": 115.58614,
+          "FYGFGDQ188S": 90.80843
         },
         {
           "date": "2022-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-10-31",
           "GFDEBTN": 31419689.0,
           "FYGFDPUN": 24539241.0,
-          "GFDEGDQ188S": 117.36678
+          "GFDEGDQ188S": 117.36678,
+          "FYGFGDQ188S": 91.66518
         },
         {
           "date": "2022-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-07-31",
           "GFDEBTN": 30928912.0,
           "FYGFDPUN": 24320206.0,
-          "GFDEGDQ188S": 117.43832
+          "GFDEGDQ188S": 117.43832,
+          "FYGFGDQ188S": 92.3448
         },
         {
           "date": "2022-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-04-30",
           "GFDEBTN": 30568582.0,
           "FYGFDPUN": 23933481.0,
-          "GFDEGDQ188S": 118.20207
+          "GFDEGDQ188S": 118.20207,
+          "FYGFGDQ188S": 92.54557
         },
         {
           "date": "2022-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2022-01-31",
           "GFDEBTN": 30400960.0,
           "FYGFDPUN": 23903280.0,
-          "GFDEGDQ188S": 120.39819
+          "GFDEGDQ188S": 120.39819,
+          "FYGFGDQ188S": 94.66515
         },
         {
           "date": "2021-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-10-31",
           "GFDEBTN": 29617215.0,
           "FYGFDPUN": 23168329.0,
-          "GFDEGDQ188S": 119.3588
+          "GFDEGDQ188S": 119.3588,
+          "FYGFGDQ188S": 93.36948
         },
         {
           "date": "2021-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-07-31",
           "GFDEBTN": 28428919.0,
           "FYGFDPUN": 22305879.0,
-          "GFDEGDQ188S": 118.54086
+          "GFDEGDQ188S": 118.54086,
+          "FYGFGDQ188S": 93.00945
         },
         {
           "date": "2021-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-04-30",
           "GFDEBTN": 28529436.0,
           "FYGFDPUN": 22353532.0,
-          "GFDEGDQ188S": 121.78582
+          "GFDEGDQ188S": 121.78582,
+          "FYGFGDQ188S": 95.42226
         },
         {
           "date": "2021-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2021-01-31",
           "GFDEBTN": 28132570.0,
           "FYGFDPUN": 22006863.0,
-          "GFDEGDQ188S": 124.03752
+          "GFDEGDQ188S": 124.03752,
+          "FYGFGDQ188S": 97.02906
         },
         {
           "date": "2020-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-10-31",
           "GFDEBTN": 27747798.0,
           "FYGFDPUN": 21651416.0,
-          "GFDEGDQ188S": 125.62864
+          "GFDEGDQ188S": 125.62864,
+          "FYGFGDQ188S": 98.02716
         },
         {
           "date": "2020-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-07-31",
           "GFDEBTN": 26945391.0,
           "FYGFDPUN": 21037627.0,
-          "GFDEGDQ188S": 124.14692
+          "GFDEGDQ188S": 124.14692,
+          "FYGFGDQ188S": 96.92777
         },
         {
           "date": "2020-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-04-30",
           "GFDEBTN": 26477241.0,
           "FYGFDPUN": 20548375.0,
-          "GFDEGDQ188S": 132.66287
+          "GFDEGDQ188S": 132.66287,
+          "FYGFGDQ188S": 102.95659
         },
         {
           "date": "2020-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2020-01-31",
           "GFDEBTN": 23223813.0,
           "FYGFDPUN": 17228778.0,
-          "GFDEGDQ188S": 106.77007
+          "GFDEGDQ188S": 106.77007,
+          "FYGFGDQ188S": 79.20826
         },
         {
           "date": "2019-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-10-31",
           "GFDEBTN": 23201380.0,
           "FYGFDPUN": 17187392.0,
-          "GFDEGDQ188S": 105.78193
+          "GFDEGDQ188S": 105.78193,
+          "FYGFGDQ188S": 78.36239
         },
         {
           "date": "2019-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-07-31",
           "GFDEBTN": 22719402.0,
           "FYGFDPUN": 16825978.0,
-          "GFDEGDQ188S": 104.61492
+          "GFDEGDQ188S": 104.61492,
+          "FYGFGDQ188S": 77.47776
         },
         {
           "date": "2019-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-04-30",
           "GFDEBTN": 22023283.0,
           "FYGFDPUN": 16204719.0,
-          "GFDEGDQ188S": 102.92245
+          "GFDEGDQ188S": 102.92245,
+          "FYGFGDQ188S": 75.73028
         },
         {
           "date": "2019-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2019-01-31",
           "GFDEBTN": 22027880.0,
           "FYGFDPUN": 16223851.0,
-          "GFDEGDQ188S": 104.34017
+          "GFDEGDQ188S": 104.34017,
+          "FYGFGDQ188S": 76.84804
         },
         {
           "date": "2018-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-10-31",
           "GFDEBTN": 21974096.0,
           "FYGFDPUN": 16120742.0,
-          "GFDEGDQ188S": 105.04941
+          "GFDEGDQ188S": 105.04941,
+          "FYGFGDQ188S": 77.06685
         },
         {
           "date": "2018-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-07-31",
           "GFDEBTN": 21516058.0,
           "FYGFDPUN": 15778806.0,
-          "GFDEGDQ188S": 103.4489
+          "GFDEGDQ188S": 103.4489,
+          "FYGFGDQ188S": 75.86428
         },
         {
           "date": "2018-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-04-30",
           "GFDEBTN": 21195070.0,
           "FYGFDPUN": 15483548.0,
-          "GFDEGDQ188S": 102.98411
+          "GFDEGDQ188S": 102.98411,
+          "FYGFGDQ188S": 75.23257
         },
         {
           "date": "2018-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2018-01-31",
           "GFDEBTN": 21089643.0,
           "FYGFDPUN": 15436782.0,
-          "GFDEGDQ188S": 103.74395
+          "GFDEGDQ188S": 103.74395,
+          "FYGFGDQ188S": 75.93645
         },
         {
           "date": "2017-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-10-31",
           "GFDEBTN": 20492747.0,
           "FYGFDPUN": 14823106.0,
-          "GFDEGDQ188S": 102.27408
+          "GFDEGDQ188S": 102.27408,
+          "FYGFGDQ188S": 73.97834
         },
         {
           "date": "2017-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-07-31",
           "GFDEBTN": 20244900.0,
           "FYGFDPUN": 14681827.0,
-          "GFDEGDQ188S": 102.80463
+          "GFDEGDQ188S": 102.80463,
+          "FYGFGDQ188S": 74.55506
         },
         {
           "date": "2017-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-04-30",
           "GFDEBTN": 19844554.0,
           "FYGFDPUN": 14370898.0,
-          "GFDEGDQ188S": 102.08817
+          "GFDEGDQ188S": 102.08817,
+          "FYGFGDQ188S": 73.92953
         },
         {
           "date": "2017-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2017-01-31",
           "GFDEBTN": 19846420.0,
           "FYGFDPUN": 14374457.0,
-          "GFDEGDQ188S": 102.93741
+          "GFDEGDQ188S": 102.93741,
+          "FYGFGDQ188S": 74.55599
         },
         {
           "date": "2016-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-10-31",
           "GFDEBTN": 19976827.0,
           "FYGFDPUN": 14439326.0,
-          "GFDEGDQ188S": 104.64891
+          "GFDEGDQ188S": 104.64891,
+          "FYGFGDQ188S": 75.64063
         },
         {
           "date": "2016-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-07-31",
           "GFDEBTN": 19573445.0,
           "FYGFDPUN": 14177750.0,
-          "GFDEGDQ188S": 103.60355
+          "GFDEGDQ188S": 103.60355,
+          "FYGFGDQ188S": 75.04378
         },
         {
           "date": "2016-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-04-30",
           "GFDEBTN": 19381591.0,
           "FYGFDPUN": 13937309.0,
-          "GFDEGDQ188S": 103.58005
+          "GFDEGDQ188S": 103.58005,
+          "FYGFGDQ188S": 74.48445
         },
         {
           "date": "2016-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2016-01-31",
           "GFDEBTN": 19264939.0,
           "FYGFDPUN": 13929762.0,
-          "GFDEGDQ188S": 103.98904
+          "GFDEGDQ188S": 103.98904,
+          "FYGFGDQ188S": 75.19061
         },
         {
           "date": "2015-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-10-31",
           "GFDEBTN": 18922179.0,
           "FYGFDPUN": 13699868.0,
-          "GFDEGDQ188S": 102.64192
+          "GFDEGDQ188S": 102.64192,
+          "FYGFGDQ188S": 74.31389
         },
         {
           "date": "2015-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-07-31",
           "GFDEBTN": 18150618.0,
           "FYGFDPUN": 13123756.0,
-          "GFDEGDQ188S": 98.63595
+          "GFDEGDQ188S": 98.63595,
+          "FYGFGDQ188S": 71.31846
         },
         {
           "date": "2015-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-04-30",
           "GFDEBTN": 18151998.0,
           "FYGFDPUN": 13075036.0,
-          "GFDEGDQ188S": 99.30094
+          "GFDEGDQ188S": 99.30094,
+          "FYGFGDQ188S": 71.5273
         },
         {
           "date": "2015-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2015-01-31",
           "GFDEBTN": 18152056.0,
           "FYGFDPUN": 13090183.0,
-          "GFDEGDQ188S": 100.49009
+          "GFDEGDQ188S": 100.49009,
+          "FYGFGDQ188S": 72.46747
         },
         {
           "date": "2014-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-10-31",
           "GFDEBTN": 18141444.0,
           "FYGFDPUN": 13023818.0,
-          "GFDEGDQ188S": 101.2805
+          "GFDEGDQ188S": 101.2805,
+          "FYGFGDQ188S": 72.70969
         },
         {
           "date": "2014-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-07-31",
           "GFDEBTN": 17824071.0,
           "FYGFDPUN": 12784809.0,
-          "GFDEGDQ188S": 100.11145
+          "GFDEGDQ188S": 100.11145,
+          "FYGFGDQ188S": 71.80771
         },
         {
           "date": "2014-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-04-30",
           "GFDEBTN": 17632606.0,
           "FYGFDPUN": 12572021.0,
-          "GFDEGDQ188S": 100.6513
+          "GFDEGDQ188S": 100.6513,
+          "FYGFGDQ188S": 71.76422
         },
         {
           "date": "2014-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2014-01-31",
           "GFDEBTN": 17601227.0,
           "FYGFDPUN": 12643201.0,
-          "GFDEGDQ188S": 102.34617
+          "GFDEGDQ188S": 102.34617,
+          "FYGFGDQ188S": 73.51665
         },
         {
           "date": "2013-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-10-31",
           "GFDEBTN": 17156119.0,
           "FYGFDPUN": 12355194.0,
-          "GFDEGDQ188S": 99.79118
+          "GFDEGDQ188S": 99.79118,
+          "FYGFGDQ188S": 71.86587
         },
         {
           "date": "2013-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-07-31",
           "GFDEBTN": 16738180.0,
           "FYGFDPUN": 11980978.0,
-          "GFDEGDQ188S": 98.72797
+          "GFDEGDQ188S": 98.72797,
+          "FYGFGDQ188S": 70.66823
         },
         {
           "date": "2013-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-04-30",
           "GFDEBTN": 16738320.0,
           "FYGFDPUN": 11906573.0,
-          "GFDEGDQ188S": 100.05758
+          "GFDEGDQ188S": 100.05758,
+          "FYGFGDQ188S": 71.17458
         },
         {
           "date": "2013-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2013-01-31",
           "GFDEBTN": 16771381.0,
           "FYGFDPUN": 11922454.0,
-          "GFDEGDQ188S": 100.73997
+          "GFDEGDQ188S": 100.73997,
+          "FYGFGDQ188S": 71.61412
         },
         {
           "date": "2012-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-10-31",
           "GFDEBTN": 16432730.0,
           "FYGFDPUN": 11586560.0,
-          "GFDEGDQ188S": 100.07497
+          "GFDEGDQ188S": 100.07497,
+          "FYGFGDQ188S": 70.5619
         },
         {
           "date": "2012-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-07-31",
           "GFDEBTN": 16066240.0,
           "FYGFDPUN": 11274396.0,
-          "GFDEGDQ188S": 98.44787
+          "GFDEGDQ188S": 98.44787,
+          "FYGFGDQ188S": 69.08525
         },
         {
           "date": "2012-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-04-30",
           "GFDEBTN": 15855037.0,
           "FYGFDPUN": 11048217.0,
-          "GFDEGDQ188S": 97.82763
+          "GFDEGDQ188S": 97.82763,
+          "FYGFGDQ188S": 68.16893
         },
         {
           "date": "2012-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2012-01-31",
           "GFDEBTN": 15606518.0,
           "FYGFDPUN": 10876394.0,
-          "GFDEGDQ188S": 97.12308
+          "GFDEGDQ188S": 97.12308,
+          "FYGFGDQ188S": 67.68639
         },
         {
           "date": "2011-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-10-31",
           "GFDEBTN": 15222940.0,
           "FYGFDPUN": 10452503.0,
-          "GFDEGDQ188S": 96.09072
+          "GFDEGDQ188S": 96.09072,
+          "FYGFGDQ188S": 65.97861
         },
         {
           "date": "2011-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-07-31",
           "GFDEBTN": 14790340.0,
           "FYGFDPUN": 10132039.0,
-          "GFDEGDQ188S": 94.52098
+          "GFDEGDQ188S": 94.52098,
+          "FYGFGDQ188S": 64.75106
         },
         {
           "date": "2011-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-04-30",
           "GFDEBTN": 14343087.0,
           "FYGFDPUN": 9746879.0,
-          "GFDEGDQ188S": 92.1938
+          "GFDEGDQ188S": 92.1938,
+          "FYGFGDQ188S": 62.65052
         },
         {
           "date": "2011-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2011-01-31",
           "GFDEBTN": 14270114.0,
           "FYGFDPUN": 9656573.0,
-          "GFDEGDQ188S": 92.95614
+          "GFDEGDQ188S": 92.95614,
+          "FYGFGDQ188S": 62.90334
         },
         {
           "date": "2010-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-10-31",
           "GFDEBTN": 14025215.0,
           "FYGFDPUN": 9395411.0,
-          "GFDEGDQ188S": 91.61134
+          "GFDEGDQ188S": 91.61134,
+          "FYGFGDQ188S": 61.36991
         },
         {
           "date": "2010-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-07-31",
           "GFDEBTN": 13561622.0,
           "FYGFDPUN": 9027611.0,
-          "GFDEGDQ188S": 89.56528
+          "GFDEGDQ188S": 89.56528,
+          "FYGFGDQ188S": 59.62122
         },
         {
           "date": "2010-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-04-30",
           "GFDEBTN": 13201792.0,
           "FYGFDPUN": 8639220.0,
-          "GFDEGDQ188S": 88.12832
+          "GFDEGDQ188S": 88.12832,
+          "FYGFGDQ188S": 57.67095
         },
         {
           "date": "2010-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2010-01-31",
           "GFDEBTN": 12773123.0,
           "FYGFDPUN": 8294251.0,
-          "GFDEGDQ188S": 86.51175
+          "GFDEGDQ188S": 86.51175,
+          "FYGFGDQ188S": 56.17657
         },
         {
           "date": "2009-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-10-31",
           "GFDEBTN": 12311349.0,
           "FYGFDPUN": 7814359.0,
-          "GFDEGDQ188S": 84.02935
+          "GFDEGDQ188S": 84.02935,
+          "FYGFGDQ188S": 53.33579
         },
         {
           "date": "2009-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-07-31",
           "GFDEBTN": 11909828.0,
           "FYGFDPUN": 7554537.0,
-          "GFDEGDQ188S": 82.42733
+          "GFDEGDQ188S": 82.42733,
+          "FYGFGDQ188S": 52.28458
         },
         {
           "date": "2009-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-04-30",
           "GFDEBTN": 11545275.0,
           "FYGFDPUN": 7176464.0,
-          "GFDEGDQ188S": 80.28013
+          "GFDEGDQ188S": 80.28013,
+          "FYGFGDQ188S": 49.90158
         },
         {
           "date": "2009-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2009-01-31",
           "GFDEBTN": 11126941.0,
           "FYGFDPUN": 6836338.0,
-          "GFDEGDQ188S": 77.10496
+          "GFDEGDQ188S": 77.10496,
+          "FYGFGDQ188S": 47.37291
         },
         {
           "date": "2008-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-10-31",
           "GFDEBTN": 10699805.0,
           "FYGFDPUN": 6372651.0,
-          "GFDEGDQ188S": 73.24515
+          "GFDEGDQ188S": 73.24515,
+          "FYGFGDQ188S": 43.62377
         },
         {
           "date": "2008-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-07-31",
           "GFDEBTN": 10024725.0,
           "FYGFDPUN": 5814240.0,
-          "GFDEGDQ188S": 67.28455
+          "GFDEGDQ188S": 67.28455,
+          "FYGFGDQ188S": 39.02437
         },
         {
           "date": "2008-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-04-30",
           "GFDEBTN": 9492006.0,
           "FYGFDPUN": 5285025.0,
-          "GFDEGDQ188S": 63.85172
+          "GFDEGDQ188S": 63.85172,
+          "FYGFGDQ188S": 35.5518
         },
         {
           "date": "2008-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2008-01-31",
           "GFDEBTN": 9437594.0,
           "FYGFDPUN": 5334048.0,
-          "GFDEGDQ188S": 64.17278
+          "GFDEGDQ188S": 64.17278,
+          "FYGFGDQ188S": 36.26991
         },
         {
           "date": "2007-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-10-31",
           "GFDEBTN": 9229172.0,
           "FYGFDPUN": 5136288.0,
-          "GFDEGDQ188S": 62.71924
+          "GFDEGDQ188S": 62.71924,
+          "FYGFGDQ188S": 34.90498
         },
         {
           "date": "2007-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-07-31",
           "GFDEBTN": 9007653.0,
           "FYGFDPUN": 5049242.0,
-          "GFDEGDQ188S": 61.84826
+          "GFDEGDQ188S": 61.84826,
+          "FYGFGDQ188S": 34.66906
         },
         {
           "date": "2007-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-04-30",
           "GFDEBTN": 8867677.0,
           "FYGFDPUN": 4943033.0,
-          "GFDEGDQ188S": 61.57219
+          "GFDEGDQ188S": 61.57219,
+          "FYGFGDQ188S": 34.32166
         },
         {
           "date": "2007-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2007-01-31",
           "GFDEBTN": 8849665.0,
           "FYGFDPUN": 5054278.0,
-          "GFDEGDQ188S": 62.25297
+          "GFDEGDQ188S": 62.25297,
+          "FYGFGDQ188S": 35.55432
         },
         {
           "date": "2006-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-10-31",
           "GFDEBTN": 8680224.0,
           "FYGFDPUN": 4901208.0,
-          "GFDEGDQ188S": 61.82689
+          "GFDEGDQ188S": 61.82689,
+          "FYGFGDQ188S": 34.90998
         },
         {
           "date": "2006-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-07-31",
           "GFDEBTN": 8506974.0,
           "FYGFDPUN": 4843208.0,
-          "GFDEGDQ188S": 61.3328
+          "GFDEGDQ188S": 61.3328,
+          "FYGFGDQ188S": 34.91811
         },
         {
           "date": "2006-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-04-30",
           "GFDEBTN": 8420042.0,
           "FYGFDPUN": 4797450.0,
-          "GFDEGDQ188S": 61.22142
+          "GFDEGDQ188S": 61.22142,
+          "FYGFGDQ188S": 34.88186
         },
         {
           "date": "2006-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2006-01-31",
           "GFDEBTN": 8371156.0,
           "FYGFDPUN": 4872804.0,
-          "GFDEGDQ188S": 61.55642
+          "GFDEGDQ188S": 61.55642,
+          "FYGFGDQ188S": 35.83165
         },
         {
           "date": "2005-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-10-31",
           "GFDEBTN": 8170413.0,
           "FYGFDPUN": 4714607.0,
-          "GFDEGDQ188S": 61.32008
+          "GFDEGDQ188S": 61.32008,
+          "FYGFGDQ188S": 35.38378
         },
         {
           "date": "2005-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-07-31",
           "GFDEBTN": 7932710.0,
           "FYGFDPUN": 4601378.0,
-          "GFDEGDQ188S": 60.35856
+          "GFDEGDQ188S": 60.35856,
+          "FYGFGDQ188S": 35.01106
         },
         {
           "date": "2005-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-04-30",
           "GFDEBTN": 7836496.0,
           "FYGFDPUN": 4527630.0,
-          "GFDEGDQ188S": 60.64153
+          "GFDEGDQ188S": 60.64153,
+          "FYGFGDQ188S": 35.03637
         },
         {
           "date": "2005-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2005-01-31",
           "GFDEBTN": 7776939.0,
           "FYGFDPUN": 4572397.0,
-          "GFDEGDQ188S": 60.91302
+          "GFDEGDQ188S": 60.91302,
+          "FYGFGDQ188S": 35.81338
         },
         {
           "date": "2004-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-10-31",
           "GFDEBTN": 7596143.0,
           "FYGFDPUN": 4406352.0,
-          "GFDEGDQ188S": 60.63713
+          "GFDEGDQ188S": 60.63713,
+          "FYGFGDQ188S": 35.17424
         },
         {
           "date": "2004-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-07-31",
           "GFDEBTN": 7379053.0,
           "FYGFDPUN": 4303366.0,
-          "GFDEGDQ188S": 59.96643
+          "GFDEGDQ188S": 59.96643,
+          "FYGFGDQ188S": 34.97163
         },
         {
           "date": "2004-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-04-30",
           "GFDEBTN": 7274335.0,
           "FYGFDPUN": 4218734.0,
-          "GFDEGDQ188S": 60.05487
+          "GFDEGDQ188S": 60.05487,
+          "FYGFGDQ188S": 34.82868
         },
         {
           "date": "2004-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2004-01-31",
           "GFDEBTN": 7131068.0,
           "FYGFDPUN": 4176667.0,
-          "GFDEGDQ188S": 59.8071
+          "GFDEGDQ188S": 59.8071,
+          "FYGFGDQ188S": 35.02902
         },
         {
           "date": "2003-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-10-31",
           "GFDEBTN": 6997964.0,
           "FYGFDPUN": 4044054.0,
-          "GFDEGDQ188S": 59.44466
+          "GFDEGDQ188S": 59.44466,
+          "FYGFGDQ188S": 34.35248
         },
         {
           "date": "2003-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-07-31",
           "GFDEBTN": 6783320.0,
           "FYGFDPUN": 3924045.0,
-          "GFDEGDQ188S": 58.64541
+          "GFDEGDQ188S": 58.64541,
+          "FYGFGDQ188S": 33.92545
         },
         {
           "date": "2003-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-04-30",
           "GFDEBTN": 6670121.0,
           "FYGFDPUN": 3816279.0,
-          "GFDEGDQ188S": 58.96101
+          "GFDEGDQ188S": 58.96101,
+          "FYGFGDQ188S": 33.73427
         },
         {
           "date": "2003-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2003-01-31",
           "GFDEBTN": 6460776.0,
           "FYGFDPUN": 3710779.0,
-          "GFDEGDQ188S": 57.81906
+          "GFDEGDQ188S": 57.81906,
+          "FYGFGDQ188S": 33.20866
         },
         {
           "date": "2002-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-10-31",
           "GFDEBTN": 6405707.0,
           "FYGFDPUN": 3647385.0,
-          "GFDEGDQ188S": 57.91028
+          "GFDEGDQ188S": 57.91028,
+          "FYGFGDQ188S": 32.97389
         },
         {
           "date": "2002-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-07-31",
           "GFDEBTN": 6228236.0,
           "FYGFDPUN": 3552588.0,
-          "GFDEGDQ188S": 56.7026
+          "GFDEGDQ188S": 56.7026,
+          "FYGFGDQ188S": 32.34318
         },
         {
           "date": "2002-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-04-30",
           "GFDEBTN": 6126469.0,
           "FYGFDPUN": 3463544.0,
-          "GFDEGDQ188S": 56.27087
+          "GFDEGDQ188S": 56.27087,
+          "FYGFGDQ188S": 31.81223
         },
         {
           "date": "2002-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2002-01-31",
           "GFDEBTN": 6006032.0,
           "FYGFDPUN": 3443674.0,
-          "GFDEGDQ188S": 55.6965
+          "GFDEGDQ188S": 55.6965,
+          "FYGFGDQ188S": 31.93466
         },
         {
           "date": "2001-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-10-31",
           "GFDEBTN": 5943439.0,
           "FYGFDPUN": 3393758.0,
-          "GFDEGDQ188S": 55.75216
+          "GFDEGDQ188S": 55.75216,
+          "FYGFGDQ188S": 31.83499
         },
         {
           "date": "2001-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-07-31",
           "GFDEBTN": 5807464.0,
           "FYGFDPUN": 3338707.0,
-          "GFDEGDQ188S": 54.79763
+          "GFDEGDQ188S": 54.79763,
+          "FYGFGDQ188S": 31.50312
         },
         {
           "date": "2001-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-04-30",
           "GFDEBTN": 5726815.0,
           "FYGFDPUN": 3274176.0,
-          "GFDEGDQ188S": 54.03165
+          "GFDEGDQ188S": 54.03165,
+          "FYGFGDQ188S": 30.89137
         },
         {
           "date": "2001-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2001-01-31",
           "GFDEBTN": 5773740.0,
           "FYGFDPUN": 3434386.0,
-          "GFDEGDQ188S": 55.14434
+          "GFDEGDQ188S": 55.14434,
+          "FYGFGDQ188S": 32.80143
         },
         {
           "date": "2000-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-10-31",
           "GFDEBTN": 5662216.0,
           "FYGFDPUN": 3413541.0,
-          "GFDEGDQ188S": 54.2579
+          "GFDEGDQ188S": 54.2579,
+          "FYGFGDQ188S": 32.71009
         },
         {
           "date": "2000-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-07-31",
           "GFDEBTN": 5674179.0,
           "FYGFDPUN": 3438416.0,
-          "GFDEGDQ188S": 54.99213
+          "GFDEGDQ188S": 54.99213,
+          "FYGFGDQ188S": 33.32391
         },
         {
           "date": "2000-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-04-30",
           "GFDEBTN": 5685938.0,
           "FYGFDPUN": 3495713.0,
-          "GFDEGDQ188S": 55.48491
+          "GFDEGDQ188S": 55.48491,
+          "FYGFGDQ188S": 34.1121
         },
         {
           "date": "2000-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "2000-01-31",
           "GFDEBTN": 5773392.0,
           "FYGFDPUN": 3687974.0,
-          "GFDEGDQ188S": 57.72134
+          "GFDEGDQ188S": 57.72134,
+          "FYGFGDQ188S": 36.87171
         },
         {
           "date": "1999-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-10-31",
           "GFDEBTN": 5776091.0,
           "FYGFDPUN": 3715531.0,
-          "GFDEGDQ188S": 58.34336
+          "GFDEGDQ188S": 58.34336,
+          "FYGFGDQ188S": 37.52998
         },
         {
           "date": "1999-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-07-31",
           "GFDEBTN": 5656271.0,
           "FYGFDPUN": 3667597.0,
-          "GFDEGDQ188S": 58.39258
+          "GFDEGDQ188S": 58.39258,
+          "FYGFGDQ188S": 37.86248
         },
         {
           "date": "1999-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-04-30",
           "GFDEBTN": 5638780.0,
           "FYGFDPUN": 3685167.0,
-          "GFDEGDQ188S": 59.19227
+          "GFDEGDQ188S": 59.19227,
+          "FYGFGDQ188S": 38.6845
         },
         {
           "date": "1999-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1999-01-31",
           "GFDEBTN": 5651615.0,
           "FYGFDPUN": 3794549.0,
-          "GFDEGDQ188S": 60.04894
+          "GFDEGDQ188S": 60.04894,
+          "FYGFGDQ188S": 40.31744
         },
         {
           "date": "1998-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-10-31",
           "GFDEBTN": 5614217.0,
           "FYGFDPUN": 3787391.0,
-          "GFDEGDQ188S": 60.40696
+          "GFDEGDQ188S": 60.40696,
+          "FYGFGDQ188S": 40.75096
         },
         {
           "date": "1998-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-07-31",
           "GFDEBTN": 5526193.0,
           "FYGFDPUN": 3762333.0,
-          "GFDEGDQ188S": 60.58693
+          "GFDEGDQ188S": 60.58693,
+          "FYGFGDQ188S": 41.24869
         },
         {
           "date": "1998-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-04-30",
           "GFDEBTN": 5547935.0,
           "FYGFDPUN": 3790379.0,
-          "GFDEGDQ188S": 61.85196
+          "GFDEGDQ188S": 61.85196,
+          "FYGFGDQ188S": 42.25759
         },
         {
           "date": "1998-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1998-01-31",
           "GFDEBTN": 5542426.0,
           "FYGFDPUN": 3872048.0,
-          "GFDEGDQ188S": 62.50988
+          "GFDEGDQ188S": 62.50988,
+          "FYGFGDQ188S": 43.67063
         },
         {
           "date": "1997-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-10-31",
           "GFDEBTN": 5502388.0,
           "FYGFDPUN": 3846706.0,
-          "GFDEGDQ188S": 62.77032
+          "GFDEGDQ188S": 62.77032,
+          "FYGFGDQ188S": 43.88258
         },
         {
           "date": "1997-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-07-31",
           "GFDEBTN": 5413146.0,
           "FYGFDPUN": 3816381.0,
-          "GFDEGDQ188S": 62.48709
+          "GFDEGDQ188S": 62.48709,
+          "FYGFGDQ188S": 44.0547
         },
         {
           "date": "1997-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-04-30",
           "GFDEBTN": 5376151.0,
           "FYGFDPUN": 3804568.0,
-          "GFDEGDQ188S": 63.10907
+          "GFDEGDQ188S": 63.10907,
+          "FYGFGDQ188S": 44.66071
         },
         {
           "date": "1997-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1997-01-31",
           "GFDEBTN": 5380890.0,
           "FYGFDPUN": 3874106.0,
-          "GFDEGDQ188S": 64.34428
+          "GFDEGDQ188S": 64.34428,
+          "FYGFGDQ188S": 46.32627
         },
         {
           "date": "1996-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-10-31",
           "GFDEBTN": 5323172.0,
           "FYGFDPUN": 3825994.0,
-          "GFDEGDQ188S": 64.44697
+          "GFDEGDQ188S": 64.44697,
+          "FYGFGDQ188S": 46.32082
         },
         {
           "date": "1996-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-07-31",
           "GFDEBTN": 5224811.0,
           "FYGFDPUN": 3777808.0,
-          "GFDEGDQ188S": 64.25469
+          "GFDEGDQ188S": 64.25469,
+          "FYGFGDQ188S": 46.45946
         },
         {
           "date": "1996-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-04-30",
           "GFDEBTN": 5161076.0,
           "FYGFDPUN": 3738633.0,
-          "GFDEGDQ188S": 64.2497
+          "GFDEGDQ188S": 64.2497,
+          "FYGFGDQ188S": 46.54186
         },
         {
           "date": "1996-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1996-01-31",
           "GFDEBTN": 5117786.0,
           "FYGFDPUN": 3764019.0,
-          "GFDEGDQ188S": 65.04171
+          "GFDEGDQ188S": 65.04171,
+          "FYGFGDQ188S": 47.83675
         },
         {
           "date": "1995-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-10-31",
           "GFDEBTN": 4988665.0,
           "FYGFDPUN": 3684209.0,
-          "GFDEGDQ188S": 64.18282
+          "GFDEGDQ188S": 64.18282,
+          "FYGFGDQ188S": 47.40004
         },
         {
           "date": "1995-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-07-31",
           "GFDEBTN": 4973983.0,
           "FYGFDPUN": 3653199.0,
-          "GFDEGDQ188S": 64.73906
+          "GFDEGDQ188S": 64.73906,
+          "FYGFGDQ188S": 47.54835
         },
         {
           "date": "1995-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-04-30",
           "GFDEBTN": 4951372.0,
           "FYGFDPUN": 3634808.0,
-          "GFDEGDQ188S": 65.31294
+          "GFDEGDQ188S": 65.31294,
+          "FYGFGDQ188S": 47.94631
         },
         {
           "date": "1995-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1995-01-31",
           "GFDEBTN": 4864116.0,
           "FYGFDPUN": 3609459.0,
-          "GFDEGDQ188S": 64.66271
+          "GFDEGDQ188S": 64.66271,
+          "FYGFGDQ188S": 47.98352
         },
         {
           "date": "1994-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-10-31",
           "GFDEBTN": 4800150.0,
           "FYGFDPUN": 3543118.0,
-          "GFDEGDQ188S": 64.38584
+          "GFDEGDQ188S": 64.38584,
+          "FYGFGDQ188S": 47.5249
         },
         {
           "date": "1994-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-07-31",
           "GFDEBTN": 4692750.0,
           "FYGFDPUN": 3479652.0,
-          "GFDEGDQ188S": 64.01176
+          "GFDEGDQ188S": 64.01176,
+          "FYGFGDQ188S": 47.46442
         },
         {
           "date": "1994-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-04-30",
           "GFDEBTN": 4645802.0,
           "FYGFDPUN": 3442868.0,
-          "GFDEGDQ188S": 64.10716
+          "GFDEGDQ188S": 64.10716,
+          "FYGFGDQ188S": 47.50795
         },
         {
           "date": "1994-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1994-01-31",
           "GFDEBTN": 4575869.0,
           "FYGFDPUN": 3434208.0,
-          "GFDEGDQ188S": 64.30709
+          "GFDEGDQ188S": 64.30709,
+          "FYGFGDQ188S": 48.26273
         },
         {
           "date": "1993-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-10-31",
           "GFDEBTN": 4535687.0,
           "FYGFDPUN": 3382197.0,
-          "GFDEGDQ188S": 64.66861
+          "GFDEGDQ188S": 64.66861,
+          "FYGFGDQ188S": 48.22246
         },
         {
           "date": "1993-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-07-31",
           "GFDEBTN": 4411489.0,
           "FYGFDPUN": 3294796.0,
-          "GFDEGDQ188S": 64.10093
+          "GFDEGDQ188S": 64.10093,
+          "FYGFGDQ188S": 47.87488
         },
         {
           "date": "1993-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-04-30",
           "GFDEBTN": 4351950.0,
           "FYGFDPUN": 3252285.0,
-          "GFDEGDQ188S": 63.91524
+          "GFDEGDQ188S": 63.91524,
+          "FYGFGDQ188S": 47.76493
         },
         {
           "date": "1993-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1993-01-31",
           "GFDEBTN": 4230580.0,
           "FYGFDPUN": 3187556.0,
-          "GFDEGDQ188S": 62.86657
+          "GFDEGDQ188S": 62.86657,
+          "FYGFGDQ188S": 47.3672
         },
         {
           "date": "1992-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-10-31",
           "GFDEBTN": 4177009.0,
           "FYGFDPUN": 3129308.0,
-          "GFDEGDQ188S": 62.52256
+          "GFDEGDQ188S": 62.52256,
+          "FYGFGDQ188S": 46.8403
         },
         {
           "date": "1992-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-07-31",
           "GFDEBTN": 4064621.0,
           "FYGFDPUN": 3048291.0,
-          "GFDEGDQ188S": 61.89802
+          "GFDEGDQ188S": 61.89802,
+          "FYGFGDQ188S": 46.42086
         },
         {
           "date": "1992-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-04-30",
           "GFDEBTN": 3984656.0,
           "FYGFDPUN": 2976774.0,
-          "GFDEGDQ188S": 61.57938
+          "GFDEGDQ188S": 61.57938,
+          "FYGFGDQ188S": 46.00345
         },
         {
           "date": "1992-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1992-01-31",
           "GFDEBTN": 3881288.0,
           "FYGFDPUN": 2917630.0,
-          "GFDEGDQ188S": 60.99679
+          "GFDEGDQ188S": 60.99679,
+          "FYGFGDQ188S": 45.85232
         },
         {
           "date": "1991-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-10-31",
           "GFDEBTN": 3801698.0,
           "FYGFDPUN": 2833034.0,
-          "GFDEGDQ188S": 60.68599
+          "GFDEGDQ188S": 60.68599,
+          "FYGFGDQ188S": 45.22334
         },
         {
           "date": "1991-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-07-31",
           "GFDEBTN": 3665303.0,
           "FYGFDPUN": 2745729.0,
-          "GFDEGDQ188S": 59.06123
+          "GFDEGDQ188S": 59.06123,
+          "FYGFGDQ188S": 44.24358
         },
         {
           "date": "1991-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-04-30",
           "GFDEBTN": 3537988.0,
           "FYGFDPUN": 2642863.0,
-          "GFDEGDQ188S": 57.74551
+          "GFDEGDQ188S": 57.74551,
+          "FYGFGDQ188S": 43.13567
         },
         {
           "date": "1991-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1991-01-31",
           "GFDEBTN": 3465189.0,
           "FYGFDPUN": 2598351.0,
-          "GFDEGDQ188S": 57.41652
+          "GFDEGDQ188S": 57.41652,
+          "FYGFGDQ188S": 43.05343
         },
         {
           "date": "1990-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-10-31",
           "GFDEBTN": 3364820.0,
           "FYGFDPUN": 2536545.0,
-          "GFDEGDQ188S": 56.03613
+          "GFDEGDQ188S": 56.03613,
+          "FYGFGDQ188S": 42.24243
         },
         {
           "date": "1990-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-07-31",
           "GFDEBTN": 3233313.0,
           "FYGFDPUN": 2437551.0,
-          "GFDEGDQ188S": 53.75313
+          "GFDEGDQ188S": 53.75313,
+          "FYGFGDQ188S": 40.52376
         },
         {
           "date": "1990-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-04-30",
           "GFDEBTN": 3143754.0,
           "FYGFDPUN": 2368772.0,
-          "GFDEGDQ188S": 52.7473
+          "GFDEGDQ188S": 52.7473,
+          "FYGFGDQ188S": 39.74431
         },
         {
           "date": "1990-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1990-01-31",
           "GFDEBTN": 3051958.0,
           "FYGFDPUN": 2329264.0,
-          "GFDEGDQ188S": 51.96856
+          "GFDEGDQ188S": 51.96856,
+          "FYGFGDQ188S": 39.66257
         },
         {
           "date": "1989-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-10-31",
           "GFDEBTN": 2952994.0,
           "FYGFDPUN": 2245171.0,
-          "GFDEGDQ188S": 51.38111
+          "GFDEGDQ188S": 51.38111,
+          "FYGFGDQ188S": 39.06522
         },
         {
           "date": "1989-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-07-31",
           "GFDEBTN": 2857431.0,
           "FYGFDPUN": 2180726.0,
-          "GFDEGDQ188S": 50.17117
+          "GFDEGDQ188S": 50.17117,
+          "FYGFGDQ188S": 38.28949
         },
         {
           "date": "1989-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-04-30",
           "GFDEBTN": 2799923.0,
           "FYGFDPUN": 2142122.0,
-          "GFDEGDQ188S": 49.8876
+          "GFDEGDQ188S": 49.8876,
+          "FYGFGDQ188S": 38.16724
         },
         {
           "date": "1989-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1989-01-31",
           "GFDEBTN": 2740898.0,
           "FYGFDPUN": 2133419.0,
-          "GFDEGDQ188S": 49.73276
+          "GFDEGDQ188S": 49.73276,
+          "FYGFGDQ188S": 38.71024
         },
         {
           "date": "1988-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-10-31",
           "GFDEBTN": 2684392.0,
           "FYGFDPUN": 2095179.0,
-          "GFDEGDQ188S": 49.71548
+          "GFDEGDQ188S": 49.71548,
+          "FYGFGDQ188S": 38.80314
         },
         {
           "date": "1988-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-07-31",
           "GFDEBTN": 2602183.0,
           "FYGFDPUN": 2051735.0,
-          "GFDEGDQ188S": 49.25732
+          "GFDEGDQ188S": 49.25732,
+          "FYGFGDQ188S": 38.83776
         },
         {
           "date": "1988-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-04-30",
           "GFDEBTN": 2547656.0,
           "FYGFDPUN": 2013414.0,
-          "GFDEGDQ188S": 49.08744
+          "GFDEGDQ188S": 49.08744,
+          "FYGFGDQ188S": 38.79383
         },
         {
           "date": "1988-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1988-01-31",
           "GFDEBTN": 2487551.0,
           "FYGFDPUN": 1996711.0,
-          "GFDEGDQ188S": 49.03151
+          "GFDEGDQ188S": 49.03151,
+          "FYGFGDQ188S": 39.35668
         },
         {
           "date": "1987-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-10-31",
           "GFDEBTN": 2431715.0,
           "FYGFDPUN": 1954065.0,
-          "GFDEGDQ188S": 48.55667
+          "GFDEGDQ188S": 48.55667,
+          "FYGFGDQ188S": 39.01892
         },
         {
           "date": "1987-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-07-31",
           "GFDEBTN": 2350277.0,
           "FYGFDPUN": 1893110.0,
-          "GFDEGDQ188S": 48.1165
+          "GFDEGDQ188S": 48.1165,
+          "FYGFGDQ188S": 38.75706
         },
         {
           "date": "1987-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-04-30",
           "GFDEBTN": 2309296.0,
           "FYGFDPUN": 1871150.0,
-          "GFDEGDQ188S": 48.04867
+          "GFDEGDQ188S": 48.04867,
+          "FYGFGDQ188S": 38.93233
         },
         {
           "date": "1987-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1987-01-31",
           "GFDEBTN": 2246724.0,
           "FYGFDPUN": 1839271.0,
-          "GFDEGDQ188S": 47.57835
+          "GFDEGDQ188S": 47.57835,
+          "FYGFGDQ188S": 38.94981
         },
         {
           "date": "1986-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-10-31",
           "GFDEBTN": 2214835.0,
           "FYGFDPUN": 1811744.0,
-          "GFDEGDQ188S": 47.55286
+          "GFDEGDQ188S": 47.55286,
+          "FYGFGDQ188S": 38.89843
         },
         {
           "date": "1986-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-07-31",
           "GFDEBTN": 2125304.0,
           "FYGFDPUN": 1742445.0,
-          "GFDEGDQ188S": 46.12536
+          "GFDEGDQ188S": 46.12536,
+          "FYGFGDQ188S": 37.81619
         },
         {
           "date": "1986-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-04-30",
           "GFDEBTN": 2059349.0,
           "FYGFDPUN": 1684939.0,
-          "GFDEGDQ188S": 45.30682
+          "GFDEGDQ188S": 45.30682,
+          "FYGFGDQ188S": 37.06959
         },
         {
           "date": "1986-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1986-01-31",
           "GFDEBTN": 1986816.0,
           "FYGFDPUN": 1634259.0,
-          "GFDEGDQ188S": 44.07415
+          "GFDEGDQ188S": 44.07415,
+          "FYGFGDQ188S": 36.25327
         },
         {
           "date": "1985-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-10-31",
           "GFDEBTN": 1945942.0,
           "FYGFDPUN": 1597083.0,
-          "GFDEGDQ188S": 43.78715
+          "GFDEGDQ188S": 43.78715,
+          "FYGFGDQ188S": 35.9372
         },
         {
           "date": "1985-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-07-31",
           "GFDEBTN": 1823103.0,
           "FYGFDPUN": 1506558.0,
-          "GFDEGDQ188S": 41.55909
+          "GFDEGDQ188S": 41.55909,
+          "FYGFGDQ188S": 34.34319
         },
         {
           "date": "1985-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-04-30",
           "GFDEBTN": 1774640.0,
           "FYGFDPUN": 1460484.0,
-          "GFDEGDQ188S": 41.31983
+          "GFDEGDQ188S": 41.31983,
+          "FYGFGDQ188S": 34.00518
         },
         {
           "date": "1985-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1985-01-31",
           "GFDEBTN": 1710731.0,
           "FYGFDPUN": 1415232.0,
-          "GFDEGDQ188S": 40.44121
+          "GFDEGDQ188S": 40.44121,
+          "FYGFGDQ188S": 33.45569
         },
         {
           "date": "1984-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-10-31",
           "GFDEBTN": 1662966.0,
           "FYGFDPUN": 1373366.0,
-          "GFDEGDQ188S": 40.08547
+          "GFDEGDQ188S": 40.08547,
+          "FYGFGDQ188S": 33.10472
         },
         {
           "date": "1984-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-07-31",
           "GFDEBTN": 1572267.0,
           "FYGFDPUN": 1309183.0,
-          "GFDEGDQ188S": 38.49586
+          "GFDEGDQ188S": 38.49586,
+          "FYGFGDQ188S": 32.05443
         },
         {
           "date": "1984-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-04-30",
           "GFDEBTN": 1512697.0,
           "FYGFDPUN": 1255100.0,
-          "GFDEGDQ188S": 37.72687
+          "GFDEGDQ188S": 37.72687,
+          "FYGFGDQ188S": 31.30237
         },
         {
           "date": "1984-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1984-01-31",
           "GFDEBTN": 1463741.0,
           "FYGFDPUN": 1223898.0,
-          "GFDEGDQ188S": 37.45447
+          "GFDEGDQ188S": 37.45447,
+          "FYGFGDQ188S": 31.31733
         },
         {
           "date": "1983-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-10-31",
           "GFDEBTN": 1410702.0,
           "FYGFDPUN": 1174425.0,
-          "GFDEGDQ188S": 37.17553
+          "GFDEGDQ188S": 37.17553,
+          "FYGFGDQ188S": 30.94904
         },
         {
           "date": "1983-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-07-31",
           "GFDEBTN": 1377211.0,
           "FYGFDPUN": 1138188.0,
-          "GFDEGDQ188S": 37.3311
+          "GFDEGDQ188S": 37.3311,
+          "FYGFGDQ188S": 30.85207
         },
         {
           "date": "1983-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-04-30",
           "GFDEBTN": 1319581.0,
           "FYGFDPUN": 1090291.0,
-          "GFDEGDQ188S": 36.87167
+          "GFDEGDQ188S": 36.87167,
+          "FYGFGDQ188S": 30.46486
         },
         {
           "date": "1983-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1983-01-31",
           "GFDEBTN": 1244493.0,
           "FYGFDPUN": 1043339.0,
-          "GFDEGDQ188S": 35.82911
+          "GFDEGDQ188S": 35.82911,
+          "FYGFGDQ188S": 30.03786
         },
         {
           "date": "1982-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-10-31",
           "GFDEBTN": 1197074.0,
           "FYGFDPUN": 987719.0,
-          "GFDEGDQ188S": 35.18156
+          "GFDEGDQ188S": 35.18156,
+          "FYGFGDQ188S": 29.02869
         },
         {
           "date": "1982-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-07-31",
           "GFDEBTN": 1142035.0,
           "FYGFDPUN": 925631.0,
-          "GFDEGDQ188S": 33.9253
+          "GFDEGDQ188S": 33.9253,
+          "FYGFGDQ188S": 27.49681
         },
         {
           "date": "1982-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-04-30",
           "GFDEBTN": 1079630.0,
           "FYGFDPUN": 867916.0,
-          "GFDEGDQ188S": 32.40213
+          "GFDEGDQ188S": 32.40213,
+          "FYGFGDQ188S": 26.04812
         },
         {
           "date": "1982-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1982-01-31",
           "GFDEBTN": 1061299.0,
           "FYGFDPUN": 858888.0,
-          "GFDEGDQ188S": 32.41298
+          "GFDEGDQ188S": 32.41298,
+          "FYGFGDQ188S": 26.23118
         },
         {
           "date": "1981-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-10-31",
           "GFDEBTN": 1028729.0,
           "FYGFDPUN": 825509.0,
-          "GFDEGDQ188S": 31.35587
+          "GFDEGDQ188S": 31.35587,
+          "FYGFGDQ188S": 25.16168
         },
         {
           "date": "1981-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-07-31",
           "GFDEBTN": 997855.0,
           "FYGFDPUN": 789799.0,
-          "GFDEGDQ188S": 30.60333
+          "GFDEGDQ188S": 30.60333,
+          "FYGFGDQ188S": 24.22244
         },
         {
           "date": "1981-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-04-30",
           "GFDEBTN": 971174.0,
           "FYGFDPUN": 771255.0,
-          "GFDEGDQ188S": 30.70875
+          "GFDEGDQ188S": 30.70875,
+          "FYGFGDQ188S": 24.38726
         },
         {
           "date": "1981-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1981-01-31",
           "GFDEBTN": 964531.0,
           "FYGFDPUN": 773676.0,
-          "GFDEGDQ188S": 30.87284
+          "GFDEGDQ188S": 30.87284,
+          "FYGFGDQ188S": 24.76392
         },
         {
           "date": "1980-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-10-31",
           "GFDEBTN": 930210.0,
           "FYGFDPUN": 737746.0,
-          "GFDEGDQ188S": 31.157
+          "GFDEGDQ188S": 31.157,
+          "FYGFGDQ188S": 24.7105
         },
         {
           "date": "1980-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-07-31",
           "GFDEBTN": 907701.0,
           "FYGFDPUN": 709958.0,
-          "GFDEGDQ188S": 31.77687
+          "GFDEGDQ188S": 31.77687,
+          "FYGFGDQ188S": 24.85427
         },
         {
           "date": "1980-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-04-30",
           "GFDEBTN": 877614.0,
           "FYGFDPUN": 682710.0,
-          "GFDEGDQ188S": 31.37303
+          "GFDEGDQ188S": 31.37303,
+          "FYGFGDQ188S": 24.40558
         },
         {
           "date": "1980-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1980-01-31",
           "GFDEBTN": 863451.0,
           "FYGFDPUN": 667123.0,
-          "GFDEGDQ188S": 30.94982
+          "GFDEGDQ188S": 30.94982,
+          "FYGFGDQ188S": 23.91257
         },
         {
           "date": "1979-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-10-31",
           "GFDEBTN": 845116.0,
           "FYGFDPUN": 657968.0,
-          "GFDEGDQ188S": 31.02615
+          "GFDEGDQ188S": 31.02615,
+          "FYGFGDQ188S": 24.15552
         },
         {
           "date": "1979-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-07-31",
           "GFDEBTN": 826519.0,
           "FYGFDPUN": 638836.0,
-          "GFDEGDQ188S": 30.98402
+          "GFDEGDQ188S": 30.98402,
+          "FYGFGDQ188S": 23.94828
         },
         {
           "date": "1979-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-04-30",
           "GFDEBTN": 804913.0,
           "FYGFDPUN": 626388.0,
-          "GFDEGDQ188S": 31.06277
+          "GFDEGDQ188S": 31.06277,
+          "FYGFGDQ188S": 24.17323
         },
         {
           "date": "1979-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1979-01-31",
           "GFDEBTN": 796792.0,
           "FYGFDPUN": 630518.0,
-          "GFDEGDQ188S": 31.53601
+          "GFDEGDQ188S": 31.53601,
+          "FYGFGDQ188S": 24.9551
         },
         {
           "date": "1978-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-10-31",
           "GFDEBTN": 789207.0,
           "FYGFDPUN": 619207.0,
-          "GFDEGDQ188S": 31.86206
+          "GFDEGDQ188S": 31.86206,
+          "FYGFGDQ188S": 24.99878
         },
         {
           "date": "1978-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-07-31",
           "GFDEBTN": 771544.0,
           "FYGFDPUN": 603571.0,
-          "GFDEGDQ188S": 32.21407
+          "GFDEGDQ188S": 32.21407,
+          "FYGFGDQ188S": 25.20074
         },
         {
           "date": "1978-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-04-30",
           "GFDEBTN": 749024.0,
           "FYGFDPUN": 587939.0,
-          "GFDEGDQ188S": 32.12444
+          "GFDEGDQ188S": 32.12444,
+          "FYGFGDQ188S": 25.21576
         },
         {
           "date": "1978-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1978-01-31",
           "GFDEBTN": 737951.0,
           "FYGFDPUN": 585233.0,
-          "GFDEGDQ188S": 33.5012
+          "GFDEGDQ188S": 33.5012,
+          "FYGFGDQ188S": 26.56817
         },
         {
           "date": "1977-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-10-31",
           "GFDEBTN": 718943.0,
           "FYGFDPUN": 564094.0,
-          "GFDEGDQ188S": 33.21873
+          "GFDEGDQ188S": 33.21873,
+          "FYGFGDQ188S": 26.06394
         },
         {
           "date": "1977-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-07-31",
           "GFDEBTN": 698840.0,
           "FYGFDPUN": 543350.0,
-          "GFDEGDQ188S": 32.98791
+          "GFDEGDQ188S": 32.98791,
+          "FYGFGDQ188S": 25.64819
         },
         {
           "date": "1977-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-04-30",
           "GFDEBTN": 674425.0,
           "FYGFDPUN": 523221.0,
-          "GFDEGDQ188S": 32.80422
+          "GFDEGDQ188S": 32.80422,
+          "FYGFGDQ188S": 25.44962
         },
         {
           "date": "1977-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1977-01-31",
           "GFDEBTN": 669207.0,
           "FYGFDPUN": 524258.0,
-          "GFDEGDQ188S": 33.65136
+          "GFDEGDQ188S": 33.65136,
+          "FYGFGDQ188S": 26.36253
         },
         {
           "date": "1976-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-10-31",
           "GFDEBTN": 653543.0,
           "FYGFDPUN": 506445.0,
-          "GFDEGDQ188S": 33.78753
+          "GFDEGDQ188S": 33.78753,
+          "FYGFGDQ188S": 26.18271
         },
         {
           "date": "1976-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-07-31",
           "GFDEBTN": 634701.0,
           "FYGFDPUN": 488327.0,
-          "GFDEGDQ188S": 33.64333
+          "GFDEGDQ188S": 33.64333,
+          "FYGFGDQ188S": 25.88455
         },
         {
           "date": "1976-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-04-30",
           "GFDEBTN": 620432.0,
           "FYGFDPUN": 470821.0,
-          "GFDEGDQ188S": 33.49464
+          "GFDEGDQ188S": 33.49464,
+          "FYGFGDQ188S": 25.41774
         },
         {
           "date": "1976-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1976-01-31",
           "GFDEBTN": 600490.0,
           "FYGFDPUN": 461423.0,
-          "GFDEGDQ188S": 32.98513
+          "GFDEGDQ188S": 32.98513,
+          "FYGFGDQ188S": 25.34613
         },
         {
           "date": "1975-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-10-31",
           "GFDEBTN": 576649.0,
           "FYGFDPUN": 437305.0,
-          "GFDEGDQ188S": 32.7301
+          "GFDEGDQ188S": 32.7301,
+          "FYGFGDQ188S": 24.82105
         },
         {
           "date": "1975-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-07-31",
           "GFDEBTN": 553647.0,
           "FYGFDPUN": 411381.0,
-          "GFDEGDQ188S": 32.38043
+          "GFDEGDQ188S": 32.38043,
+          "FYGFGDQ188S": 24.0599
         },
         {
           "date": "1975-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-04-30",
           "GFDEBTN": 533188.0,
           "FYGFDPUN": 387905.0,
-          "GFDEGDQ188S": 32.27817
+          "GFDEGDQ188S": 32.27817,
+          "FYGFGDQ188S": 23.48302
         },
         {
           "date": "1975-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1975-01-31",
           "GFDEBTN": 509659.0,
           "FYGFDPUN": 371201.0,
-          "GFDEGDQ188S": 31.53604
+          "GFDEGDQ188S": 31.53604,
+          "FYGFGDQ188S": 22.96871
         },
         {
           "date": "1974-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-10-31",
           "GFDEBTN": 492664.0,
           "FYGFDPUN": 351457.0,
-          "GFDEGDQ188S": 30.79768
+          "GFDEGDQ188S": 30.79768,
+          "FYGFGDQ188S": 21.97047
         },
         {
           "date": "1974-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-07-31",
           "GFDEBTN": 481466.0,
           "FYGFDPUN": 340881.0,
-          "GFDEGDQ188S": 30.86269
+          "GFDEGDQ188S": 30.86269,
+          "FYGFGDQ188S": 21.85098
         },
         {
           "date": "1974-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-04-30",
           "GFDEBTN": 474235.0,
           "FYGFDPUN": 336029.0,
-          "GFDEGDQ188S": 30.99462
+          "GFDEGDQ188S": 30.99462,
+          "FYGFGDQ188S": 21.96188
         },
         {
           "date": "1974-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1974-01-31",
           "GFDEBTN": 473675.0,
           "FYGFDPUN": 342459.0,
-          "GFDEGDQ188S": 31.76449
+          "GFDEGDQ188S": 31.76449,
+          "FYGFGDQ188S": 22.96519
         },
         {
           "date": "1973-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-10-31",
           "GFDEBTN": 469073.0,
           "FYGFDPUN": 339432.0,
-          "GFDEGDQ188S": 31.77379
+          "GFDEGDQ188S": 31.77379,
+          "FYGFGDQ188S": 22.99225
         },
         {
           "date": "1973-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-07-31",
           "GFDEBTN": 460614.0,
           "FYGFDPUN": 332838.0,
-          "GFDEGDQ188S": 32.12455
+          "GFDEGDQ188S": 32.12455,
+          "FYGFGDQ188S": 23.21308
         },
         {
           "date": "1973-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-04-30",
           "GFDEBTN": 457317.0,
           "FYGFDPUN": 333932.0,
-          "GFDEGDQ188S": 32.34466
+          "GFDEGDQ188S": 32.34466,
+          "FYGFGDQ188S": 23.61801
         },
         {
           "date": "1973-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1973-01-31",
           "GFDEBTN": 458606.0,
           "FYGFDPUN": 339859.0,
-          "GFDEGDQ188S": 33.29287
+          "GFDEGDQ188S": 33.29287,
+          "FYGFGDQ188S": 24.67234
         },
         {
           "date": "1972-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-10-31",
           "GFDEBTN": 448473.0,
           "FYGFDPUN": 331576.0,
-          "GFDEGDQ188S": 33.74758
+          "GFDEGDQ188S": 33.74758,
+          "FYGFGDQ188S": 24.95109
         },
         {
           "date": "1972-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-07-31",
           "GFDEBTN": 433946.0,
           "FYGFDPUN": 319574.0,
-          "GFDEGDQ188S": 33.62447
+          "GFDEGDQ188S": 33.62447,
+          "FYGFGDQ188S": 24.76231
         },
         {
           "date": "1972-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-04-30",
           "GFDEBTN": 426435.0,
           "FYGFDPUN": 314976.0,
-          "GFDEGDQ188S": 33.67383
+          "GFDEGDQ188S": 33.67383,
+          "FYGFGDQ188S": 24.87237
         },
         {
           "date": "1972-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-02-29",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1972-01-31",
           "GFDEBTN": 427344.0,
           "FYGFDPUN": 320987.0,
-          "GFDEGDQ188S": 34.72622
+          "GFDEGDQ188S": 34.72622,
+          "FYGFGDQ188S": 26.08359
         },
         {
           "date": "1971-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-10-31",
           "GFDEBTN": 424131.0,
           "FYGFDPUN": 317118.0,
-          "GFDEGDQ188S": 35.63237
+          "GFDEGDQ188S": 35.63237,
+          "FYGFGDQ188S": 26.64192
         },
         {
           "date": "1971-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-07-31",
           "GFDEBTN": 412268.0,
           "FYGFDPUN": 304952.0,
-          "GFDEGDQ188S": 35.00694
+          "GFDEGDQ188S": 35.00694,
+          "FYGFGDQ188S": 25.89441
         },
         {
           "date": "1971-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-04-30",
           "GFDEBTN": 397305.0,
           "FYGFDPUN": 294417.0,
-          "GFDEGDQ188S": 34.36089
+          "GFDEGDQ188S": 34.36089,
+          "FYGFGDQ188S": 25.46263
         },
         {
           "date": "1971-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1971-01-31",
           "GFDEBTN": 391668.0,
           "FYGFDPUN": 292043.0,
-          "GFDEGDQ188S": 34.50345
+          "GFDEGDQ188S": 34.50345,
+          "FYGFGDQ188S": 25.72712
         },
         {
           "date": "1970-12-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-11-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-10-31",
           "GFDEBTN": 389158.0,
           "FYGFDPUN": 291242.0,
-          "GFDEGDQ188S": 35.74822
+          "GFDEGDQ188S": 35.74822,
+          "FYGFGDQ188S": 26.75362
         },
         {
           "date": "1970-09-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-08-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-07-31",
           "GFDEBTN": 378678.0,
           "FYGFDPUN": 282367.0,
-          "GFDEGDQ188S": 34.86717
+          "GFDEGDQ188S": 34.86717,
+          "FYGFGDQ188S": 25.99923
         },
         {
           "date": "1970-06-30",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-05-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-04-30",
           "GFDEBTN": 370094.0,
           "FYGFDPUN": 274924.0,
-          "GFDEGDQ188S": 34.67329
+          "GFDEGDQ188S": 34.67329,
+          "FYGFGDQ188S": 25.75702
         },
         {
           "date": "1970-03-31",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-02-28",
           "GFDEBTN": null,
           "FYGFDPUN": null,
-          "GFDEGDQ188S": null
+          "GFDEGDQ188S": null,
+          "FYGFGDQ188S": null
         },
         {
           "date": "1970-01-31",
           "GFDEBTN": 372007.0,
           "FYGFDPUN": 280814.0,
-          "GFDEGDQ188S": 35.38879
+          "GFDEGDQ188S": 35.38879,
+          "FYGFGDQ188S": 26.71366
         }
       ],
       "n_rows": 673,
-      "n_cols": 3,
+      "n_cols": 4,
       "start": "1970-01-31",
       "end": "2026-01-31"
     },
@@ -34906,6 +35580,12 @@
       ],
       "rows": [
         {
+          "date": "2026-09-30",
+          "DEBT_HELD_PUBLIC": 32420529452197.11,
+          "DEBT_INTRAGOV": 7691935141009.19,
+          "DEBT_TOTAL": 40112464593206.3
+        },
+        {
           "date": "2026-08-31",
           "DEBT_HELD_PUBLIC": 32414988847175.22,
           "DEBT_INTRAGOV": 7760652224458.92,
@@ -37312,10 +37992,10 @@
           "DEBT_TOTAL": 4254084170636.01
         }
       ],
-      "n_rows": 401,
+      "n_rows": 402,
       "n_cols": 3,
       "start": "1993-04-30",
-      "end": "2026-08-31"
+      "end": "2026-09-30"
     }
   },
   "note": "Auction / coupon / holdings frames stay in .cache; only formula inputs are published."

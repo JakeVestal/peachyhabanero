@@ -141,3 +141,16 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
 .col-card a { color: #00f0ff; }
 .col-card .why { color: var(--muted); }
 .col-card .why b { color: #ff2bd6; }
+.navline { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+.navline a { color: #00f0ff; }
+#cube { width: 100%; min-height: 820px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+#cube-sustain, #cube-fail, #dist-plot {
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  min-height: 320px;
+}
+#cube-sustain, #cube-fail { min-height: 720px; }
+.toolbar span { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted); }
