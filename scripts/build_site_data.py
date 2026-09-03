@@ -7,7 +7,7 @@ Steps you can run separately:
     python scripts/build_site_data.py          # both
 
 Raw frames stay in CUBE_CACHE (not git).
-Derived tables land in data/published/ for the static page.
+Derived tables land in site/data/published/
 """
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ from failure_cube import embed, load_or_update_rate_adjust  # noqa: E402
 from macro_drivers import load_or_update_drivers  # noqa: E402
 
 CACHE = Path(os.environ.get("CUBE_CACHE", ROOT / ".cache"))
-DATA = Path(os.environ.get("CUBE_DATA_DIR", ROOT / "data"))
+DATA = Path(os.environ.get("CUBE_DATA_DIR", ROOT / "site" / "data"))
 PUB = DATA / "published"
 THRESH = DATA / "cube_critical_values.csv"
 RAW_JSON = CACHE / "cube_raw_frames.json"

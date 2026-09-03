@@ -1,4 +1,4 @@
-const DATA = "../data/published";
+const DATA = "./data/published";
 
 const TABS = ["story", "thresholds", "quarterly", "metrics", "raw", "catalog"];
 

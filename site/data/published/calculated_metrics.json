@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T20:34:39Z",
+  "generated_at": "2026-09-03T14:55:26Z",
   "tables": {
     "01_funds_equals_fiscal_rate": {
       "columns": [
@@ -13778,6 +13778,13 @@
         "auction_btc_10y"
       ],
       "rows": [
+        {
+          "date": "2026-09-02",
+          "acm_10y_term_premium_pp": null,
+          "T10Y2Y_pp": 0.4,
+          "T10Y3M_pp": 0.87,
+          "auction_btc_10y": null
+        },
         {
           "date": "2026-09-01",
           "acm_10y_term_premium_pp": null,
@@ -101699,10 +101706,10 @@
           "auction_btc_10y": null
         }
       ],
-      "n_rows": 12560,
+      "n_rows": 12561,
       "n_cols": 4,
       "start": "1976-06-01",
-      "end": "2026-09-01"
+      "end": "2026-09-02"
     },
     "05_r_minus_g": {
       "columns": [
@@ -104643,6 +104650,13 @@
         "hy_oas_pp"
       ],
       "rows": [
+        {
+          "date": "2026-09-02",
+          "NFCI": null,
+          "sloos_ci_tightening_pct": null,
+          "ig_oas_pp": 0.81,
+          "hy_oas_pp": 2.66
+        },
         {
           "date": "2026-09-01",
           "NFCI": null,
@@ -130222,10 +130236,10 @@
           "hy_oas_pp": null
         }
       ],
-      "n_rows": 3654,
+      "n_rows": 3655,
       "n_cols": 4,
       "start": "1971-01-08",
-      "end": "2026-09-01"
+      "end": "2026-09-02"
     }
   }
 }
