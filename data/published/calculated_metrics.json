@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T20:34:39Z",
+  "generated_at": "2026-09-03T14:19:18Z",
   "tables": {
     "01_funds_equals_fiscal_rate": {
       "columns": [
@@ -12375,7 +12375,7 @@
           "primary_deficit_pct_gdp": 2.2397852832673264,
           "primary_deficit_bn_saar": 486.41799999999967,
           "unemployment_gap_pp": -0.7747059457000001,
-          "output_gap_pct": 1.0944348520091518
+          "output_gap_pct": 1.0944348520096403
         },
         {
           "date": "2019-04-01",
@@ -12438,7 +12438,7 @@
           "primary_deficit_pct_gdp": 1.3199789717831654,
           "primary_deficit_bn_saar": 256.58600000000024,
           "unemployment_gap_pp": -0.17415498379999939,
-          "output_gap_pct": -0.9088951444899074
+          "output_gap_pct": -0.9088951444893967
         },
         {
           "date": "2017-01-01",
@@ -13779,6 +13779,13 @@
       ],
       "rows": [
         {
+          "date": "2026-09-02",
+          "acm_10y_term_premium_pp": null,
+          "T10Y2Y_pp": 0.4,
+          "T10Y3M_pp": 0.87,
+          "auction_btc_10y": null
+        },
+        {
           "date": "2026-09-01",
           "acm_10y_term_premium_pp": null,
           "T10Y2Y_pp": 0.4,
@@ -13881,7 +13888,7 @@
           "acm_10y_term_premium_pp": 0.8438,
           "T10Y2Y_pp": 0.48,
           "T10Y3M_pp": 0.81,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.53
         },
         {
           "date": "2026-08-11",
@@ -13979,7 +13986,7 @@
           "acm_10y_term_premium_pp": 0.8488,
           "T10Y2Y_pp": 0.34,
           "T10Y3M_pp": 0.76,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.3
         },
         {
           "date": "2026-07-22",
@@ -14322,7 +14329,7 @@
           "acm_10y_term_premium_pp": 0.7439,
           "T10Y2Y_pp": 0.46,
           "T10Y3M_pp": 0.76,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.4
         },
         {
           "date": "2026-05-11",
@@ -14861,7 +14868,7 @@
           "acm_10y_term_premium_pp": 0.6276,
           "T10Y2Y_pp": 0.65,
           "T10Y3M_pp": 0.55,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.38
         },
         {
           "date": "2026-01-21",
@@ -16100,7 +16107,7 @@
           "acm_10y_term_premium_pp": 0.5164,
           "T10Y2Y_pp": 0.52,
           "T10Y3M_pp": -0.03,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.6
         },
         {
           "date": "2025-05-05",
@@ -16597,7 +16604,7 @@
           "acm_10y_term_premium_pp": 0.7212,
           "T10Y2Y_pp": 0.36,
           "T10Y3M_pp": 0.29,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.48
         },
         {
           "date": "2025-01-22",
@@ -16961,7 +16968,7 @@
           "acm_10y_term_premium_pp": 0.5071,
           "T10Y2Y_pp": 0.07,
           "T10Y3M_pp": -0.38,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.58
         },
         {
           "date": "2024-11-04",
@@ -17395,7 +17402,7 @@
           "acm_10y_term_premium_pp": 0.1439,
           "T10Y2Y_pp": -0.04,
           "T10Y3M_pp": -1.38,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.32
         },
         {
           "date": "2024-08-06",
@@ -17829,7 +17836,7 @@
           "acm_10y_term_premium_pp": 0.4154,
           "T10Y2Y_pp": -0.36,
           "T10Y3M_pp": -0.97,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.49
         },
         {
           "date": "2024-05-07",
@@ -18270,7 +18277,7 @@
           "acm_10y_term_premium_pp": 0.219,
           "T10Y2Y_pp": -0.32,
           "T10Y3M_pp": -1.34,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.56
         },
         {
           "date": "2024-02-06",
@@ -19138,7 +19145,7 @@
           "acm_10y_term_premium_pp": 0.1469,
           "T10Y2Y_pp": -0.79,
           "T10Y3M_pp": -1.55,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.56
         },
         {
           "date": "2023-08-08",
@@ -20020,7 +20027,7 @@
           "acm_10y_term_premium_pp": 0.0919,
           "T10Y2Y_pp": -0.82,
           "T10Y3M_pp": -1.09,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.66
         },
         {
           "date": "2023-02-07",
@@ -20118,7 +20125,7 @@
           "acm_10y_term_premium_pp": -0.0412,
           "T10Y2Y_pp": -0.7,
           "T10Y3M_pp": -1.32,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.79
         },
         {
           "date": "2023-01-18",
@@ -21315,7 +21322,7 @@
           "acm_10y_term_premium_pp": 0.5519,
           "T10Y2Y_pp": 0.25,
           "T10Y3M_pp": 2.0,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.49
         },
         {
           "date": "2022-05-10",
@@ -21854,7 +21861,7 @@
           "acm_10y_term_premium_pp": 0.1035,
           "T10Y2Y_pp": 0.75,
           "T10Y3M_pp": 1.66,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.3
         },
         {
           "date": "2022-01-19",
@@ -22722,7 +22729,7 @@
           "acm_10y_term_premium_pp": -0.2597,
           "T10Y2Y_pp": 1.07,
           "T10Y3M_pp": 1.22,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.5
         },
         {
           "date": "2021-07-21",
@@ -24374,7 +24381,7 @@
           "acm_10y_term_premium_pp": -0.5991,
           "T10Y2Y_pp": 0.53,
           "T10Y3M_pp": 0.58,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.41
         },
         {
           "date": "2020-08-11",
@@ -24822,7 +24829,7 @@
           "acm_10y_term_premium_pp": -0.5674,
           "T10Y2Y_pp": 0.52,
           "T10Y3M_pp": 0.56,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.69
         },
         {
           "date": "2020-05-11",
@@ -25354,7 +25361,7 @@
           "acm_10y_term_premium_pp": -0.2737,
           "T10Y2Y_pp": 0.23,
           "T10Y3M_pp": 0.19,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.33
         },
         {
           "date": "2020-01-22",
@@ -26250,7 +26257,7 @@
           "acm_10y_term_premium_pp": -0.2418,
           "T10Y2Y_pp": 0.27,
           "T10Y3M_pp": -0.01,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.28
         },
         {
           "date": "2019-07-17",
@@ -27034,7 +27041,7 @@
           "acm_10y_term_premium_pp": 0.0496,
           "T10Y2Y_pp": 0.18,
           "T10Y3M_pp": 0.28,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.35
         },
         {
           "date": "2019-02-05",
@@ -27125,7 +27132,7 @@
           "acm_10y_term_premium_pp": 0.0738,
           "T10Y2Y_pp": 0.19,
           "T10Y3M_pp": 0.33,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.42
         },
         {
           "date": "2019-01-16",
@@ -27454,7 +27461,7 @@
           "acm_10y_term_premium_pp": 0.3517,
           "T10Y2Y_pp": 0.29,
           "T10Y3M_pp": 0.87,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.54
         },
         {
           "date": "2018-11-05",
@@ -34440,7 +34447,7 @@
           "acm_10y_term_premium_pp": 0.358,
           "T10Y2Y_pp": 1.82,
           "T10Y3M_pp": 2.35,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.52
         },
         {
           "date": "2014-11-10",
@@ -36183,7 +36190,7 @@
           "acm_10y_term_premium_pp": 0.4269,
           "T10Y2Y_pp": 2.43,
           "T10Y3M_pp": 2.67,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.7
         },
         {
           "date": "2013-11-12",
@@ -37954,7 +37961,7 @@
           "acm_10y_term_premium_pp": -0.1554,
           "T10Y2Y_pp": 1.41,
           "T10Y3M_pp": 1.58,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.59
         },
         {
           "date": "2012-11-06",
@@ -41454,7 +41461,7 @@
           "acm_10y_term_premium_pp": 0.3301,
           "T10Y2Y_pp": 2.26,
           "T10Y3M_pp": 2.59,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.8
         },
         {
           "date": "2010-11-08",
@@ -41888,7 +41895,7 @@
           "acm_10y_term_premium_pp": 0.4344,
           "T10Y2Y_pp": 2.18,
           "T10Y3M_pp": 2.57,
-          "auction_btc_10y": null
+          "auction_btc_10y": 3.04
         },
         {
           "date": "2010-08-10",
@@ -42329,7 +42336,7 @@
           "acm_10y_term_premium_pp": 0.9365,
           "T10Y2Y_pp": 2.67,
           "T10Y3M_pp": 3.4,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.96
         },
         {
           "date": "2010-05-11",
@@ -42924,7 +42931,7 @@
           "acm_10y_term_premium_pp": 1.1267,
           "T10Y2Y_pp": 2.9,
           "T10Y3M_pp": 3.81,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.65
         },
         {
           "date": "2010-01-08",
@@ -43827,7 +43834,7 @@
           "acm_10y_term_premium_pp": 1.0003,
           "T10Y2Y_pp": 2.56,
           "T10Y3M_pp": 3.33,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.51
         },
         {
           "date": "2009-07-02",
@@ -44947,7 +44954,7 @@
           "acm_10y_term_premium_pp": 1.0951,
           "T10Y2Y_pp": 2.56,
           "T10Y3M_pp": 3.57,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.2
         },
         {
           "date": "2008-11-10",
@@ -47607,7 +47614,7 @@
           "acm_10y_term_premium_pp": 0.5832,
           "T10Y2Y_pp": -0.05,
           "T10Y3M_pp": -0.27,
-          "auction_btc_10y": null
+          "auction_btc_10y": 2.3
         },
         {
           "date": "2007-05-07",
@@ -101699,10 +101706,10 @@
           "auction_btc_10y": null
         }
       ],
-      "n_rows": 12560,
+      "n_rows": 12561,
       "n_cols": 4,
       "start": "1976-06-01",
-      "end": "2026-09-01"
+      "end": "2026-09-02"
     },
     "05_r_minus_g": {
       "columns": [
@@ -104643,6 +104650,13 @@
         "hy_oas_pp"
       ],
       "rows": [
+        {
+          "date": "2026-09-02",
+          "NFCI": null,
+          "sloos_ci_tightening_pct": null,
+          "ig_oas_pp": 0.81,
+          "hy_oas_pp": 2.66
+        },
         {
           "date": "2026-09-01",
           "NFCI": null,
@@ -130222,10 +130236,10 @@
           "hy_oas_pp": null
         }
       ],
-      "n_rows": 3654,
+      "n_rows": 3655,
       "n_cols": 4,
       "start": "1971-01-08",
-      "end": "2026-09-01"
+      "end": "2026-09-02"
     }
   }
 }

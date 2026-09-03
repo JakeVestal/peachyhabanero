@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T20:34:39Z",
+  "generated_at": "2026-09-03T14:19:18Z",
   "catalog": [
     {
       "frame": "fred_policy_rates",
@@ -61,10 +61,10 @@
     },
     {
       "frame": "fred_term_premium",
-      "rows": 13111,
+      "rows": 13112,
       "cols": 3,
       "start": "1976-06-01",
-      "end": "2026-09-01",
+      "end": "2026-09-02",
       "columns": [
         "THREEFYTP10",
         "T10Y2Y",
@@ -84,10 +84,10 @@
     },
     {
       "frame": "fred_financial_conditions",
-      "rows": 3657,
+      "rows": 3658,
       "cols": 4,
       "start": "1971-01-08",
-      "end": "2026-09-01",
+      "end": "2026-09-02",
       "columns": [
         "NFCI",
         "DRTSCILM",
@@ -158,7 +158,7 @@
     },
     {
       "frame": "fiscal_auctions",
-      "rows": 6341,
+      "rows": 11100,
       "cols": 14,
       "start": "1979-10-31",
       "end": "2026-09-03",
@@ -9879,7 +9879,7 @@
         {
           "date": "2025-07-31",
           "GFDEBTN": 37637552.59555763,
-          "FYGFDPUN": 30298281.338690888,
+          "FYGFDPUN": 30298281.33869089,
           "GFDEGDQ188S": 121.02875,
           "FYGFGDQ188S": 97.42831
         },
@@ -16223,7 +16223,7 @@
           "NROU": 4.4747059457,
           "GDP": 21717.171,
           "GDPC1": 20843.322,
-          "GDPPOT": 20617.674979352
+          "GDPPOT": 20617.6749793519
         },
         {
           "date": "2019-06-30",
@@ -16439,7 +16439,7 @@
           "NROU": 4.5741549838,
           "GDP": 19438.643,
           "GDPC1": 19506.949,
-          "GDPPOT": 19685.8729433324
+          "GDPPOT": 19685.8729433323
         },
         {
           "date": "2017-03-31",
@@ -24635,7 +24635,7 @@
           "NFCI": null,
           "DRTSCILM": null,
           "BAMLC0A0CM": 0.81,
-          "BAMLH0A0HYM2": 2.65
+          "BAMLH0A0HYM2": 2.66
         },
         {
           "date": "2026-08-31",
