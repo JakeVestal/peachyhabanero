@@ -32,13 +32,12 @@ function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
 function axis3d(title) {
   return {
     title,
-    backgroundcolor: "#0b0f16",
-    showbackground: true,
+    backgroundcolor: "rgba(0,0,0,0)",
+    showbackground: false,
     showgrid: false,
     showline: true,
     linecolor: "rgba(196,163,90,0.45)",
-    zeroline: true,
-    zerolinecolor: "rgba(255,43,214,0.35)",
+    zeroline: false,
     ticks: "outside",
     color: "#c8d6e5",
   };
@@ -51,7 +50,13 @@ function layout3d(title, xt, yt, zt, ranges) {
     zaxis: Object.assign(axis3d(zt), ranges ? { range: ranges.z } : {}),
     aspectmode: "cube",
     bgcolor: "#07080c",
+    // --- ADD CAMERA CENTER SHIFT BELOW ---
+    camera: {
+      center: { x: 0, y: 0, z: -0.18 }, // Shifts the cube position upward in the frame
+      eye: { x: 1.25, y: 1.25, z: 1.25 }  // Preserves default zoom/perspective angle
+    }
   };
+
   return {
     title: { text: title, font: { color: "#00f0ff", size: 14 } },
     paper_bgcolor: "#07080c",
