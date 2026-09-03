@@ -1,4 +1,4 @@
-const DATA = "../data/published/cubes.json";
+const DATA = "data/published/cubes.json";
 
 function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
   const edges = [
@@ -58,7 +58,15 @@ function layout3d(title, xt, yt, zt, ranges) {
     plot_bgcolor: "#07080c",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace" },
     scene,
-    legend: { font: { size: 10, color: "#9fb3c8" }, bgcolor: "rgba(7,8,12,0.55)" },
+    legend: {
+      font: { size: 10, color: "#9fb3c8" },
+      bgcolor: "rgba(7,8,12,0.55)",
+      orientation: 'h',
+      x: 0.5,
+      xanchor: 'center',
+      y: 1.12,
+      yanchor: 'bottom'
+    },
     margin: { l: 0, r: 0, t: 48, b: 72 },
     height: 720,
   };
