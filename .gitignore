@@ -17,3 +17,4 @@ __pycache__/
 # os / editor
 Thumbs.db
 *~
+/site/data/
