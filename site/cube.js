@@ -103,8 +103,8 @@ function sustainTraces(rows, zone, burden) {
   const zmax = Math.max(5, ...rows.map((r) => r.refi_gap), 0) + 0.3;
   const zmin = Math.min(-1, ...rows.map((r) => r.refi_gap), 0) - 0.2;
   return [
-    wire(zone.debt_gdp_warn, xmax, ywarn, ymax, zone.refi_gap_warn, zmax, "#ffbf00", "warn box", 3),
-    wire(zone.debt_gdp_death, xmax, ydeath, ymax, zone.refi_gap_death, zmax, "#ff2bd6", "death box", 4),
+    wire(zone.debt_gdp_warn, xmax, ywarn, ymax, zone.refi_gap_warn, zmax, "#ffbf00", "Danger Zone", 3),
+    wire(zone.debt_gdp_death, xmax, ydeath, ymax, zone.refi_gap_death, zmax, "#ff2bd6", "Death Zone", 4),
     {
       type: "scatter3d",
       x: rows.map((r) => r.debt_gdp_pct),
@@ -156,7 +156,7 @@ function failTraces(rows) {
   const hi = Math.max(w1[1], w2[1], w3[1]);
   const inside = rows.filter((r) => r.F1 > 0 && r.F2_rec > 0 && r.F3 > 0);
   const traces = [
-    wire(0, hi, 0, hi, 0, hi, "#ff2bd6", "failure octant", 4),
+    wire(0, hi, 0, hi, 0, hi, "#ff2bd6", "Fiscal Dominance Zone", 4),
     {
       type: "scatter3d",
       x: rows.map((r) => r.F1), y: f2, z: rows.map((r) => r.F3),
@@ -205,7 +205,15 @@ function drawDist(el, rows, tax) {
     xaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     yaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } }],
-    legend: { font: { size: 10, color: "#9fb3c8" }, bgcolor: "rgba(7,8,12,0.55)" },
+    legend: {
+      font: { size: 10, color: "#9fb3c8" },
+      bgcolor: "rgba(7,8,12,0.55)",
+      orientation: 'h',
+      x: 0.5,
+      xanchor: 'center',
+      y: 0.95,
+      yanchor: 'bottom'
+    },
   }, { responsive: true, displaylogo: false });
 }
 
@@ -226,19 +234,19 @@ async function main() {
   }
   const ls = sus[sus.length - 1];
   const lf = fail[fail.length - 1];
-  stamp.textContent =
-    `sustain ${ls.date}  debt/GDP ${Number(ls.debt_gdp_pct).toFixed(1)}%  ` +
-    `int/rec ${Number(ls.int_rec_pct).toFixed(1)}%  int/tax ${Number(ls.int_tax_pct).toFixed(1)}%  ` +
-    `refi ${Number(ls.refi_gap) >= 0 ? "+" : ""}${Number(ls.refi_gap).toFixed(2)}  ` +
-    `dist_warn(tax) ${Number(ls.dist_warn_tax) >= 0 ? "+" : ""}${Number(ls.dist_warn_tax).toFixed(2)}   ·   ` +
-    `fail ${lf.date}  F1 ${Number(lf.F1).toFixed(2)}  F2rec ${Number(lf.F2_rec).toFixed(2)}  F3 ${Number(lf.F3).toFixed(2)}`;
+  stamp.innerHTML =
+      `<b>Latest data point: ${ls.date}</b><br>` +
+      `<p style="font-size: 0.85em;text-indent: 40px;">` +
+      `New points are added quarterly when the US Bureau of Economic ` +
+      `Analysis prints GDP numbers` +
+      `</p>`;
 
   const opts = { responsive: true, displaylogo: false };
   let tax = true;
 
   function sustainLayout(burden) {
     return layout3d(
-      `Sustainability — burden = ${burden === "tax" ? "tax" : "receipts"}`,
+      `Sustainability Cube`,
       "Debt held by public / GDP (%)",
       burden === "tax" ? "Interest / tax (%)" : "Interest / receipts (%)",
       "Refi gap  (marginal − stock, pp)"
@@ -252,7 +260,7 @@ async function main() {
   const ft = failTraces(fail);
   await Plotly.newPlot("cube-fail", ft.traces, Object.assign(
     layout3d(
-      "Failure cube — F2 uses receipts",
+      "Fiscal Dominance Cube",
       "F1  y(funds − stock)",
       "F2  y(interest / receipts − 20%)",
       "F3  y(primary / GDP)",

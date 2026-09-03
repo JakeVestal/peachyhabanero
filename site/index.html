@@ -11,38 +11,44 @@
   <header>
     <p class="navline">cubes · <a href="data.html">data</a></p>
     <h1>FED CUBES</h1>
-    <p class="sub">
-      The Sustainibility Cube (left) tracks whether the current <b>US
-      debt stock</b> is already in the Danger Zone of fiscal dominance in which
-      national debt, annual defecits, and the cost to roll over the national
-      debt grow large enough to constrain the Fed's freedom of action to set
-      monetary policy in its pursuit to fulfill its mandates.
+    <p>
+      The Sustainibility Cube (left) defines a <b>Danger Zone</b> within
+      which the US debt stock is at high risk of entering a self-reinforcing
+      feedback loop of runaway debt and interest, as well as a <b>Death
+      Zone</b> in which such a feedback loop is all but certain.</p>
 
-      The Failure Cube (right) plots the answer to a similar question: if
-      inflation printed hot, and the Fed would like to raise rates, would
-      they even be able to? Or would a hike be unthinkable because the cost
-      to pay out higher rates would be too great?
+    <p>
+      The Fiscal Dominance Cube (right) plots the answer to a similar
+      question by defining a region within which the Fed must abandon its
+      inflation-fighting mandate in order to service existing debt. Within
+      the cube, a rate hike would be unthinkable even if inflation printed
+      hot and the Fed would otherwise like to raise rates.
     </p>
     <p class="stat" id="stamp">loading cubes.json…</p>
   </header>
-  <div class="toolbar">
-    <span>burden</span>
-    <button class="neon-btn" type="button" id="btn-rec">receipts</button>
-    <button class="neon-btn active" type="button" id="btn-tax">tax</button>
-    <span>Left cube and distance plot. Right-cube F2 stays interest / receipts.</span>
+  <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
+    <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
+      <button class="neon-btn" type="button" id="btn-rec">receipts</button>
+      <button class="neon-btn active" type="button" id="btn-tax">tax</button>
+    </div>
+    <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
+    Use these buttons to toggle between displaying "Interest/Tax" and "Interest/Receipts" on the Sustainability Cube and the 1-D distance plot below. "Tax" means total collected tax revenue (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a> in the FRED database). "Receipts" means total govenmental reciepts (<a href="https://fred.stlouisfed.org/series/FGRECPT" style="color: #00f0ff; text-decoration: none;">FGRECPT</a>), which includes taxes plus Social Security and Medicare payroll taxes, fines, income on assets, and all other sources of government income.
+  </span>
   </div>
   <section>
-    <h2>01  /  the two cubes</h2>
     <div class="grid-2">
       <div id="cube-sustain"></div>
       <div id="cube-fail"></div>
     </div>
   </section>
   <section>
-    <h2>02  /  distance to the left-hand cube</h2>
+    <h2>Distance to the Danger Zone / Death Zone over time </h2>
     <p class="sub">
-      Score-space distance to the nearest point on the warn (s≥1) or death (s≥2) octant.
-      + outside · 0 on a face · − inside. Not raw percent or basis points.
+      Tracks score-space distance to the nearest point on the Danger (s≥1) or
+      Death Zone (s≥2) octant. This distance is positive if a set of
+      quarterly prints falls outside or on a face, and negative if inside.
+      Note that this metric is a calculated distance across all three
+      score-space dimensions, and is not a raw percent or basis point measure.
     </p>
     <div id="dist-plot"></div>
   </section>
