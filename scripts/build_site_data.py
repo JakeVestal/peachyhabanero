@@ -21,10 +21,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+# Helper for real-time progress logging in CI/CD runners
+def log_step(msg: str) -> None:
+    print(f"==> [{datetime.now(timezone.utc).strftime('%H:%M:%S UTC')}] {msg}")
+    sys.stdout.flush()
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
 
+log_step("Importing local modules from src...")
 from cube_data import (  # noqa: E402
     FRAME_NAMES,
     build_all,
@@ -113,8 +119,8 @@ def df_to_table(df: pd.DataFrame, date_key: str = "date") -> dict:
 
 
 def write_json(path: Path, payload) -> None:
+    log_step(f"Writing output file: {path}")
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"wrote {path}")
 
 
 ZONE = {
@@ -166,6 +172,7 @@ def _col_or(df: pd.DataFrame, *names) -> pd.Series:
 
 
 def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: str) -> None:
+    log_step("Publishing cubes data...")
     by = {n: frames[i] for i, n in enumerate(FRAME_NAMES) if i < len(frames)}
     m01 = metrics["01_funds_equals_fiscal_rate"]
     m02 = metrics["02_interest_share_of_receipts"]
@@ -229,8 +236,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     panel["s_debt"] = s_debt
     panel["s_gap"] = s_gap
     for burden, warn, death, col in (
-        ("rec", ZONE["int_rec_warn"], ZONE["int_rec_death"], "int_rec_pct"),
-        ("tax", ZONE["int_tax_warn"], ZONE["int_tax_death"], "int_tax_pct"),
+            ("rec", ZONE["int_rec_warn"], ZONE["int_rec_death"], "int_rec_pct"),
+            ("tax", ZONE["int_tax_warn"], ZONE["int_tax_death"], "int_tax_pct"),
     ):
         s_bur = _piecewise(panel[col], warn, death)
         panel[f"s_{burden}"] = s_bur
@@ -238,8 +245,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         panel[f"dist_warn_{burden}"] = _signed_dist(cube, 1.0)
         panel[f"dist_death_{burden}"] = _signed_dist(cube, 2.0)
         panel[f"stress_{burden}"] = (
-            0.20 * s_debt + 0.35 * s_bur + 0.25 * s_gap
-            + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)
+                0.20 * s_debt + 0.35 * s_bur + 0.25 * s_gap
+                + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)
         )
 
     sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
@@ -256,41 +263,47 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     write_json(PUB / "cubes.json", payload)
     if len(sustain):
         last = sustain.iloc[-1]
-        print(
+        log_step(
             f"cubes sustain {len(sustain)}  latest {sustain.index[-1].date()}  "
             f"debt/gdp={last.debt_gdp_pct:.1f} refi={last.refi_gap:+.2f}"
         )
     if len(fail):
         lastf = fail.iloc[-1]
-        print(
+        log_step(
             f"cubes fail {len(fail)}  latest {fail.index[-1].date()}  "
             f"F1={lastf.F1:.2f} F2rec={lastf.F2_rec:.2f} F3={lastf.F3:.2f}"
         )
 
 
 def fetch_raw() -> None:
+    log_step("Starting raw data fetch/update step...")
     CACHE.mkdir(parents=True, exist_ok=True)
     if FULL or not RAW_JSON.exists():
-        print("full raw build")
+        log_step("Running full raw build (CUBE_FULL_REBUILD or missing cache)...")
         frames = build_all()
+        log_step("Saving raw frames to cache...")
         save_frames(frames, RAW_JSON)
     else:
-        print("incremental raw update")
+        log_step(f"Running incremental raw update using existing cache: {RAW_JSON}")
         frames = update_raw(RAW_JSON)
+
     print(summarize(frames).to_string(index=False))
-    print(f"cached {RAW_JSON}")
+    log_step(f"Cached raw frames successfully to {RAW_JSON}")
 
 
 def process_and_publish() -> None:
+    log_step("Starting data processing and publication step...")
     if not RAW_JSON.exists():
         raise SystemExit(f"missing {RAW_JSON} — run with --fetch first")
 
     CACHE.mkdir(parents=True, exist_ok=True)
     PUB.mkdir(parents=True, exist_ok=True)
 
+    log_step("Calculating metrics...")
     metrics = calculate_metrics(raw_path=RAW_JSON, metrics_path=METRICS_JSON, save=True)
     print(summarize_metrics(metrics).to_string(index=False))
 
+    log_step("Loading critical threshold values and standardizing data...")
     thresh = load_thresholds(THRESH)
     aligned = quarterly_complete(metrics, thresh).sort_index()
     y, s_bits = standardize(aligned, thresh)
@@ -298,6 +311,7 @@ def process_and_publish() -> None:
     for c in aligned.columns:
         state[c] = aligned[c]
 
+    log_step("Updating rate adjustments and macro drivers...")
     rates = load_or_update_rate_adjust(RATE_CSV)
     state = state.join(rates[["rate_adjust"]], how="left")
     state["rate_adjust"] = state["rate_adjust"].fillna(0.0)
@@ -323,6 +337,7 @@ def process_and_publish() -> None:
         published["latest"] = published["quarters"][-1]
     write_json(PUB / "quarterly.json", published)
 
+    log_step("Building metric series JSON payloads...")
     series = {}
     for _, row in thresh.iterrows():
         mid = int(row["metric_id"])
@@ -346,6 +361,7 @@ def process_and_publish() -> None:
         }
     write_json(PUB / "series.json", series)
 
+    log_step("Building metric tables...")
     metric_tables = {}
     for name, df in metrics.items():
         metric_tables[name] = df_to_table(df)
@@ -353,8 +369,10 @@ def process_and_publish() -> None:
         "generated_at": generated_at,
         "tables": metric_tables,
     })
+
     publish_cubes(metrics, y, frames=load_frames(RAW_JSON), generated_at=generated_at)
 
+    log_step("Generating catalog and raw input published tables...")
     frames = load_frames(RAW_JSON)
     raw_tables = {}
     catalog = []
@@ -399,14 +417,16 @@ def process_and_publish() -> None:
         ],
     })
     write_json(PUB / "thresholds.json", thresh.to_dict(orient="records"))
+
+    log_step("Writing final CSV outputs...")
     drivers.to_csv(PUB / "macro_drivers.csv")
     rates.to_csv(PUB / "rate_adjust.csv")
-    print(f"wrote {PUB / 'macro_drivers.csv'}")
-    print(f"wrote {PUB / 'rate_adjust.csv'}")
+    log_step(f"wrote {PUB / 'macro_drivers.csv'}")
+    log_step(f"wrote {PUB / 'rate_adjust.csv'}")
 
     last = state.iloc[-1]
-    print(f"quarters {len(state)}  {state.index.min().date()} -> {state.index.max().date()}")
-    print(
+    log_step(f"quarters {len(state)}  {state.index.min().date()} -> {state.index.max().date()}")
+    log_step(
         f"latest {state.index[-1].date()}  "
         f"F=({last.F1:.2f},{last.F2:.2f},{last.F3:.2f})  "
         f"fiscal={int(last.n_fiscal)}/3 amp={int(last.n_amp)}/3 fail={int(last.fail)}"
@@ -414,6 +434,7 @@ def process_and_publish() -> None:
 
 
 def main() -> None:
+    log_step("Data build script initialized.")
     p = argparse.ArgumentParser()
     p.add_argument("--fetch", action="store_true", help="pull / update raw frames into .cache")
     p.add_argument("--process", action="store_true", help="compute metrics and write data/published")
@@ -424,10 +445,12 @@ def main() -> None:
         do_process = False
     if args.process and not args.fetch:
         do_fetch = False
+
     if do_fetch:
         fetch_raw()
     if do_process:
         process_and_publish()
+    log_step("Build script completed successfully.")
 
 
 if __name__ == "__main__":
