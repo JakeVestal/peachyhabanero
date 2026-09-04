@@ -17,4 +17,5 @@ __pycache__/
 # os / editor
 Thumbs.db
 *~
-/site/data/
+# generated nightly — rebuilt by scripts/build_site_data.py
+/site/data/published/

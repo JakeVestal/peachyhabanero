@@ -3,6 +3,10 @@ name: pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
   workflow_dispatch:
 
 permissions:
@@ -17,14 +21,41 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: install
+        run: pip install -r requirements.txt
+
+      - name: restore raw-frame cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: cube-raw-${{ github.run_id }}
+          restore-keys: |
+            cube-raw-
+
+      - name: rebuild published json
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          CUBE_CACHE: ${{ github.workspace }}/.cache
+          CUBE_DATA_DIR: ${{ github.workspace }}/site/data
+        run: python scripts/build_site_data.py
+
       - uses: actions/configure-pages@v5
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
       - id: deploy
         uses: actions/deploy-pages@v4
