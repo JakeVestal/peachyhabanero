@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Fed cubes — methodology</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header>
+    <p class="navline"><a href="index.html">cubes</a> · <a href="data.html">data</a> · methodology</p>
+    <h1>METHODOLOGY</h1>
+    <p class="sub">
+      Two cubes, two sentences, six axes. The left cube asks whether the
+      <b>stock</b> is already in a self-reinforcing region. The right cube
+      asks whether a <b>hike</b> would be unthinkable on fiscal arithmetic
+      even if inflation printed hot. Axes 1 and 4 are the same series in
+      two embeddings. Axes 2 and 5 share a book coupon and then use
+      different rates. Axes 3 and 6 are a stock and a flow linked by an
+      identity, not two spellings of one number.
+    </p>
+  </header>
+
+  <section>
+    <h2>00  /  what this is not</h2>
+    <p class="sub">
+      The wires are conventions, not estimated thresholds. They are not
+      Reinhart–Rogoff 90, not a Blanchard r−g test, and not a CBO
+      long-run projection. A quarter inside a box is “these three
+      doors are on,” not “default next Tuesday.” Falsify an axis by
+      showing the named series does not measure the sentence on that
+      axis. Do not falsify it by preferring a different sentence.
+    </p>
+  </section>
+
+  <section>
+    <h2>01  /  vintage rules that apply to every axis</h2>
+    <p class="sub">
+      Quarterly last observation in the quarter. NIPA interest, receipts,
+      outlays, and GDP stay in NIPA. Market rates stay FRED constant-maturity
+      / funds. The book coupon stays Treasury Fiscal Data. We do not mix a
+      unified-budget FY print with a NIPA SAAR denominator on the same axis.
+      Debt held by the public, never gross debt. The identity that links
+      the stock cube to the hole is
+    </p>
+    <p class="stat" style="margin: 8px 0 12px;">
+      Δ(debt/GDP) ≈ (r − g) × stock + primary
+    </p>
+    <p class="sub">
+      r here is the effective coupon on the book, g is nominal GDP growth.
+      That identity is why axes 3 and 6 are both on the site and why they
+      are not substitutes. Metric 05 on the data page reports r−g. It is
+      not a cube axis.
+    </p>
+  </section>
+
+  <section>
+    <h2>02  /  the book coupon (shared by axes 2 and 5)</h2>
+    <p class="sub">
+      One number is “the stock.” Both roll axes subtract it.
+    </p>
+    <div class="col-card">
+      <h3>stock coupon  ·  Treasury average interest rate, total marketable</h3>
+      <p>
+        Source:
+        <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">
+          Treasury Fiscal Data, Average Interest Rates on U.S. Treasury Securities
+        </a>
+        — security class <span class="col-id">Total Marketable</span>.
+      </p>
+      <p class="why">
+        <b>Why this and not NIPA interest / debt.</b>
+        Fiscal Data’s published average rate is the coupon the marketable
+        book actually carries. NIPA <span class="col-id">A091RC1Q027SBEA</span>
+        over debt held by the public is an effective rate: it folds in
+        premiums and discounts, nonmarketable issues, and intra-governmental
+        accounts. Fine as a robustness line on the data page. Wrong as the
+        book that new issuance is compared to.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>03  /  axis 1 — interest share of the till (sustainability Y)</h2>
+    <p class="sub">
+      Sentence: how much of this quarter’s incoming cash is already spoken
+      for by interest. Level, not a z-score. Default denominator is current
+      receipts. The tax toggle is a tighter till, not a different theory.
+    </p>
+    <div class="col-card">
+      <h3>interest  ·  A091RC1Q027SBEA</h3>
+      <p>
+        Federal government interest payments, NIPA, SAAR $bn.
+        <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">FRED A091RC1Q027SBEA</a>.
+      </p>
+    </div>
+    <div class="col-card">
+      <h3>receipts  ·  FGRECPT</h3>
+      <p>
+        Federal government current receipts, NIPA, SAAR $bn.
+        Taxes plus contributions for social insurance, income on assets,
+        and the rest of the current-receipts envelope.
+        <a href="https://fred.stlouisfed.org/series/FGRECPT">FRED FGRECPT</a>.
+      </p>
+    </div>
+    <div class="col-card">
+      <h3>tax receipts  ·  W006RC1Q027SBEA</h3>
+      <p>
+        Federal government current tax receipts, NIPA, SAAR $bn.
+        <a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">FRED W006RC1Q027SBEA</a>.
+      </p>
+    </div>
+    <p class="stat">
+      int/rec = 100 × A091RC1Q027SBEA / FGRECPT<br/>
+      int/tax = 100 × A091RC1Q027SBEA / W006RC1Q027SBEA
+    </p>
+    <p class="sub">
+      Warn / death on this axis are 20 / 30 percent of receipts, or 25 / 40
+      percent of tax. Those are labeled conventions. Unified-budget
+      outlays/receipts are fiscal-year and are not used here: they would
+      break the quarterly path and the GDP vintage on the other two left-hand
+      axes.
+    </p>
+  </section>
+
+  <section>
+    <h2>04  /  axis 4 — F2, same share past the wire</h2>
+    <p class="sub">
+      Same raw series as axis 1. The right cube does not invent a second
+      interest-burden concept. It embeds the level in the units of the
+      failure octant: y &gt; 0 means that door is on.
+    </p>
+    <p class="stat">
+      F2_rec = (int/rec − 20) / σ(int/rec)<br/>
+      F2_tax = (int/tax − 25) / σ(int/tax)
+    </p>
+    <p class="sub">
+      σ is the sample standard deviation of the quarterly complete-case
+      series. The receipts / tax toggle moves axis 1 and F2 together.
+      Rejected: putting ACM term premium or NFCI on this axis. Those are
+      amplifiers on the data page. They do not define the till.
+    </p>
+  </section>
+
+  <section>
+    <h2>05  /  axis 2 — refi gap (sustainability Z)</h2>
+    <p class="sub">
+      Sentence: is the market already refinancing the book above the coupon
+      the book carries. This is the strip the chair does not have to touch.
+      The marginal rate is the issuance mix that quarter, not a fixed
+      25/50/25 prior.
+    </p>
+    <div class="col-card">
+      <h3>front  ·  TB3MS</h3>
+      <p>
+        3-month Treasury bill, secondary market, monthly average, percent.
+        <a href="https://fred.stlouisfed.org/series/TB3MS">FRED TB3MS</a>.
+        Stands in for bills.
+      </p>
+    </div>
+    <div class="col-card">
+      <h3>belly  ·  DGS2</h3>
+      <p>
+        2-year Treasury constant maturity, percent.
+        <a href="https://fred.stlouisfed.org/series/DGS2">FRED DGS2</a>.
+      </p>
+    </div>
+    <div class="col-card">
+      <h3>back  ·  DGS10</h3>
+      <p>
+        10-year Treasury constant maturity, percent.
+        <a href="https://fred.stlouisfed.org/series/DGS10">FRED DGS10</a>.
+      </p>
+    </div>
+    <div class="col-card">
+      <h3>mix  ·  MSPD bills share of marketable, else auction volumes</h3>
+      <p>
+        Preferred weight on the front is
+        <span class="col-id">MSPD_BILLS_SHARE_MARKETABLE</span>
+        from the Monthly Statement of the Public Debt
+        (bills outstanding held by the public / marketable held by the public).
+        <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding">Treasury Fiscal Data, MSPD</a>.
+        When auction detail is complete for the quarter, issuance dollars
+        replace the stock share: bills issued × TB3MS, notes issued in the
+        2-year neighborhood × DGS2, longer coupons × DGS10, weights sum to 1.
+      </p>
+      <p class="why">
+        <b>Why not 0.25 / 0.50 / 0.25.</b>
+        That blend is a prior. The book’s actual front-end share is observed.
+        A bills-heavy quarter should move the marginal rate with TB3MS, not
+        with the 10-year.
+      </p>
+    </div>
+    <p class="stat">
+      marginal = w_bills × TB3MS + w_2y × DGS2 + w_10y × DGS10<br/>
+      refi gap = marginal − stock coupon
+    </p>
+    <p class="sub">
+      Warn / death on this axis are +0.50 / +1.50 percentage points. Positive
+      means new issuance already costs more than the book. Rejected as the
+      axis: ACM 10-year term premium
+      (<a href="https://fred.stlouisfed.org/series/THREEFYTP10">THREEFYTP10</a>).
+      That is “duration is charging rent,” metric 04 on the data page, a
+      different sentence.
+    </p>
+  </section>
+
+  <section>
+    <h2>06  /  axis 5 — F1, funds minus the same book</h2>
+    <p class="sub">
+      Sentence: if the chair hiked, would the policy rate itself be the
+      fiscal rate on the book. Same stock coupon as axis 2. Different
+      comparison rate. Sargent–Wallace / fiscal theory is about the policy
+      instrument, not the 2s10s curve.
+    </p>
+    <div class="col-card">
+      <h3>policy  ·  FEDFUNDS</h3>
+      <p>
+        Effective federal funds rate, percent.
+        <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FRED FEDFUNDS</a>.
+      </p>
+    </div>
+    <p class="stat">
+      funds − stock = FEDFUNDS − stock coupon<br/>
+      F1 = (funds − stock − 0) / σ(funds − stock)
+    </p>
+    <p class="sub">
+      Direction on the wire is at-or-below zero after the usual sign flip
+      in standardization: F1 &gt; 0 means funds are already at or under the
+      book coupon, so a hike is a fiscal tightening of the stock. Do not
+      replace F1 with the refi gap. The market can lift the book while
+      the chair sits; that is why axis 2 exists.
+    </p>
+  </section>
+
+  <section>
+    <h2>07  /  axis 3 — debt held by the public / GDP (sustainability X)</h2>
+    <p class="sub">
+      Sentence: how large is the stock that interest and refinancing act on.
+      This is the standard sustainability stock, not gross debt.
+    </p>
+    <div class="col-card">
+      <h3>stock ratio  ·  FYGFGDQ188S</h3>
+      <p>
+        Federal debt held by the public as a percent of GDP, quarterly.
+        <a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FRED FYGFGDQ188S</a>.
+      </p>
+      <p class="why">
+        <b>Why not GFDEBTN / GDP.</b>
+        Gross debt includes intra-governmental holdings. Those are not the
+        stock the market refinances and not the stock whose interest hits
+        the till. Debt held by the public
+        (<a href="https://fred.stlouisfed.org/series/FYGFDPUN">FYGFDPUN</a>)
+        over GDP is the object in Blanchard, in CBO long-run, and in the
+        Fiscal Service table the series is built from.
+      </p>
+    </div>
+    <p class="sub">
+      Warn / death on this axis are 100 / 140 percent of GDP. Labeled
+      stress bands, not an estimated threshold and not Reinhart 90.
+      A robustness print of the ratio from
+      <span class="col-id">FYGFDPUN / GDP</span> in $bn belongs on the
+      data page; the cube uses the published FRED ratio so the vintage
+      matches everyone else’s chart.
+    </p>
+  </section>
+
+  <section>
+    <h2>08  /  axis 6 — F3, primary deficit / GDP</h2>
+    <p class="sub">
+      Sentence: are operations still financed with new borrowing. A flow.
+      High debt/GDP with a primary surplus is a different country from
+      a wide hole under a smaller stock. F3 is not a z-score of axis 3.
+    </p>
+    <div class="col-card">
+      <h3>outlays  ·  FGEXPND</h3>
+      <p>
+        Federal government current expenditures, NIPA, SAAR $bn.
+        <a href="https://fred.stlouisfed.org/series/FGEXPND">FRED FGEXPND</a>.
+      </p>
+    </div>
+    <div class="col-card">
+      <h3>GDP  ·  GDP</h3>
+      <p>
+        Gross domestic product, NIPA, SAAR $bn.
+        <a href="https://fred.stlouisfed.org/series/GDP">FRED GDP</a>.
+      </p>
+    </div>
+    <p class="stat">
+      primary $bn = (FGEXPND − A091RC1Q027SBEA) − FGRECPT<br/>
+      primary % GDP = 100 × primary $bn / GDP<br/>
+      F3 = (primary % GDP − 0) / σ(primary % GDP)
+    </p>
+    <p class="sub">
+      Positive primary is a deficit. The wire is zero: still borrowing
+      for operations. NIPA, not the unified budget, so the flow shares a
+      vintage with FGRECPT, A091RC1Q027SBEA, and GDP. Rejected as the
+      cube axis: cyclically adjusted primary balance. <span class="col-id">GDPPOT</span>
+      and the unemployment gap
+      (<span class="col-id">UNRATE</span> − <span class="col-id">NROU</span>)
+      stay on the data page as “is this a cycle” checks. Putting a filter
+      on the cube would make the fight about the filter.
+    </p>
+  </section>
+
+  <section>
+    <h2>09  /  map</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>axis</th>
+              <th>cube</th>
+              <th>sentence</th>
+              <th>raw</th>
+              <th>embedding</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 interest / till</td>
+              <td>sustain Y</td>
+              <td>share of incoming cash already interest</td>
+              <td>A091 / FGRECPT or W006</td>
+              <td>percent</td>
+            </tr>
+            <tr>
+              <td>4 F2</td>
+              <td>dominance Y</td>
+              <td>that share past the 20% / 25% wire</td>
+              <td>same</td>
+              <td>y = (x − c) / σ</td>
+            </tr>
+            <tr>
+              <td>2 refi gap</td>
+              <td>sustain Z</td>
+              <td>market already lifting the book</td>
+              <td>issuance-weighted TB3MS, DGS2, DGS10 − Fiscal Data coupon</td>
+              <td>percentage points</td>
+            </tr>
+            <tr>
+              <td>5 F1</td>
+              <td>dominance X</td>
+              <td>chair’s rate already the fiscal rate</td>
+              <td>FEDFUNDS − same coupon</td>
+              <td>y = (x − 0) / σ</td>
+            </tr>
+            <tr>
+              <td>3 debt / GDP</td>
+              <td>sustain X</td>
+              <td>size of the stock</td>
+              <td>FYGFGDQ188S</td>
+              <td>percent of GDP</td>
+            </tr>
+            <tr>
+              <td>6 F3</td>
+              <td>dominance Z</td>
+              <td>operations still open</td>
+              <td>(FGEXPND − A091 − FGRECPT) / GDP</td>
+              <td>y = (x − 0) / σ</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>10  /  what would change an axis</h2>
+    <ol class="story-list">
+      <li>A documented Fiscal Data break in the Total Marketable average rate — then the NIPA effective coupon becomes the book, on both roll axes at once.</li>
+      <li>A quarter where auction volumes exist and contradict MSPD bills share by enough to move the warn face — then auctions take priority, which is already the rule.</li>
+      <li>A NIPA vs unified-budget reconciliation that made FGRECPT the wrong till for interest — then we would owe a second burden series, not a silent swap.</li>
+      <li>An estimated, out-of-sample threshold for debt/GDP or the interest share that beat the labeled bands on a pre-registered rule — then the band changes. Until then the band stays a label.</li>
+    </ol>
+  </section>
+
+  <footer>
+    peachyhabanero ·
+    <a href="index.html">cubes</a> ·
+    <a href="data.html">data</a>
+  </footer>
+</body>
+</html>
