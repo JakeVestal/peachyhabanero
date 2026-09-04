@@ -50,11 +50,11 @@ function layout3d(title, xt, yt, zt, ranges) {
     zaxis: Object.assign(axis3d(zt), ranges ? { range: ranges.z } : {}),
     aspectmode: "cube",
     bgcolor: "#07080c",
-    // --- ADD CAMERA CENTER SHIFT BELOW ---
     camera: {
-      center: { x: 0, y: 0, z: -0.18 }, // Shifts the cube position upward in the frame
-      eye: { x: 1.25, y: 1.25, z: 1.25 }  // Preserves default zoom/perspective angle
-    }
+      up: { x: 0, y: 0, z: 1 },
+      center: { x: 0, y: 0, z: -0.12 },
+      eye: { x: 1.55, y: 1.55, z: 0.95 },
+    },
   };
 
   return {
@@ -74,7 +74,15 @@ function layout3d(title, xt, yt, zt, ranges) {
     },
     margin: { l: 0, r: 0, t: 48, b: 72 },
     height: 720,
+    uirevision: "keep-camera",
   };
+}
+
+function keepCamera(id, layout) {
+  const gd = document.getElementById(id);
+  const cam = gd && gd.layout && gd.layout.scene && gd.layout.scene.camera;
+  if (cam) layout.scene.camera = cam;
+  return layout;
 }
 
 function win(vals) {
@@ -259,7 +267,8 @@ async function main() {
   }
 
   async function drawSustain() {
-    await Plotly.react("cube-sustain", sustainTraces(sus, zone, tax ? "tax" : "rec"), sustainLayout(tax ? "tax" : "rec"), opts);
+    const layout = keepCamera("cube-sustain", sustainLayout(tax ? "tax" : "rec"));
+    await Plotly.react("cube-sustain", sustainTraces(sus, zone, tax ? "tax" : "rec"), layout, opts);
   }
 
   const ft = failTraces(fail);
