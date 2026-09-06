@@ -326,13 +326,7 @@ async function main() {
   const mix = pack.refinance_rule || "w_bills = MSPD bills share; remainder 2:1 DGS2:DGS10";
   stamp.innerHTML =
       `<b>Latest data point: ${ls.date}</b>` +
-      ` · refi death ${Number(death).toFixed(2)} pp` +
-      ` · coupon: ${couponSrc}` +
-      ` · σ window ${win.start || "?"} → ${win.end || ls.date} (n=${win.n || sus.length})<br>` +
-      `<p style="font-size: 0.85em;">` +
-      `New points when BEA prints quarterly GDP. Book coupon: Treasury Fiscal Data, total marketable. ` +
-      `Issuance mix: ${mix}. The 2:1 on notes vs longer coupons is a labeled prior on the non-bill residual, not an MSPD observation.` +
-      `</p>`;
+      `New points become available when BEA prints quarterly GDP.</p>`;
 
   const opts = { responsive: true, displaylogo: false };
   let tax = false;
