@@ -127,15 +127,28 @@
       <div class="axis-plot" id="ax-2"></div>
       <div class="axis-copy">
         <p>
-          Is the market already refinancing the book above the coupon the
-          book carries. Positive: new issue costs more than the stock.
-          Wires at +0.50 / +1.00 pp.
+          The <b>Refi Gap</b> is defined as the difference between the
+          <b>marginal</b> rate that must be paid on new debt sold to the
+          market and the <b>Fiscal Data Total Marketable coupon</b>, which is
+          the overall effective rate that the Treasury is paying on its
+          existing debt stock.
         </p>
         <p class="stat">marginal − Fiscal Data Total Marketable coupon</p>
+        <p>
+          The Treasury issues new debt to pay back loans it already has. The
+          <b>Refi Gap</b> is a measure of how much that affects the total
+          interest rates. If the <b>Refi Gap</b> is positive, then the total
+          rate that the Treasury pays on its stock of debt must go up when it
+          refinances; i.e., new issue costs more than the stock. Otherwise if
+          the gap is negative.
+        </p>
+        <p>The marginal rate is calculated as:</p>
         <p>
           marginal = w_bills × <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>
           + w_2y × <a href="https://fred.stlouisfed.org/series/DGS2">DGS2</a>
           + w_10y × <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>.
+
+
           w_bills is MSPD bills / marketable held by the public. The rest
           of the book is split 2:1 onto DGS2 and DGS10 — a labeled split
           on the non-bill residual, not a second MSPD print. The coupon

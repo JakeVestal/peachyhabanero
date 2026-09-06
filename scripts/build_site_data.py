@@ -84,9 +84,17 @@ RAW_KEEP = {
     ],
     "fiscal_mspd_composition": [
         "MSPD_BILLS_PUBLIC_MN",
+        "MSPD_NOTES_PUBLIC_MN",
+        "MSPD_BONDS_PUBLIC_MN",
+        "MSPD_TIPS_PUBLIC_MN",
+        "MSPD_FRN_PUBLIC_MN",
         "MSPD_MARKETABLE_PUBLIC_MN",
         "MSPD_TOTAL_DEBT_MN",
         "MSPD_BILLS_SHARE_MARKETABLE",
+        "MSPD_NOTES_SHARE_MARKETABLE",
+        "MSPD_BONDS_SHARE_MARKETABLE",
+        "MSPD_TIPS_SHARE_MARKETABLE",
+        "MSPD_FRN_SHARE_MARKETABLE",
     ],
     "fiscal_debt_to_penny": ["DEBT_HELD_PUBLIC", "DEBT_INTRAGOV", "DEBT_TOTAL"],
 }
@@ -422,6 +430,22 @@ def process_and_publish() -> None:
 
     log_step("Generating catalog and raw input published tables...")
     frames = load_frames(RAW_JSON)
+    i = FRAME_NAMES.index("fiscal_mspd_composition")
+    if i < len(frames) and frames[i] is not None and not frames[i].empty:
+        m = frames[i].copy()
+        mkt = pd.to_numeric(m.get("MSPD_MARKETABLE_PUBLIC_MN"), errors="coerce")
+        for src, share in (
+            ("MSPD_BILLS_PUBLIC_MN", "MSPD_BILLS_SHARE_MARKETABLE"),
+            ("MSPD_NOTES_PUBLIC_MN", "MSPD_NOTES_SHARE_MARKETABLE"),
+            ("MSPD_BONDS_PUBLIC_MN", "MSPD_BONDS_SHARE_MARKETABLE"),
+            ("MSPD_TIPS_PUBLIC_MN", "MSPD_TIPS_SHARE_MARKETABLE"),
+            ("MSPD_FRN_PUBLIC_MN", "MSPD_FRN_SHARE_MARKETABLE"),
+        ):
+            if src in m.columns:
+                m[share] = pd.to_numeric(m[src], errors="coerce") / mkt
+        frames[i] = m
+        save_frames(frames, RAW_JSON)
+        log_step("Rewrote MSPD class shares from dollar columns")
     raw_tables = {}
     catalog = []
     for name, df in zip(FRAME_NAMES, frames):

@@ -341,14 +341,20 @@ def fetch_mspd_composition(sess: requests.Session, start: str) -> pd.DataFrame:
     for dt, g in raw.groupby("record_date"):
         rec = {"date": dt}
         mapping = {
-            "MSPD_BILLS_PUBLIC_MN": ("Marketable", "Bills"),
-            "MSPD_NOTES_PUBLIC_MN": ("Marketable", "Notes"),
-            "MSPD_BONDS_PUBLIC_MN": ("Marketable", "Bonds"),
-            "MSPD_TIPS_PUBLIC_MN": ("Marketable", "Treasury Inflation-Protected Securities"),
-            "MSPD_FRN_PUBLIC_MN": ("Marketable", "Floating Rate Notes"),
+            "MSPD_BILLS_PUBLIC_MN": [("Marketable", "Bills")],
+            "MSPD_NOTES_PUBLIC_MN": [("Marketable", "Notes")],
+            "MSPD_BONDS_PUBLIC_MN": [("Marketable", "Bonds")],
+            "MSPD_TIPS_PUBLIC_MN": [
+                ("Marketable", "Treasury Inflation-Protected Securities"),
+                ("Marketable", "Inflation-Indexed Notes"),
+                ("Marketable", "Inflation-Indexed Bonds"),
+            ],
+            "MSPD_FRN_PUBLIC_MN": [("Marketable", "Floating Rate Notes")],
         }
-        for col, (td, cd) in mapping.items():
-            hit = g[_class_mask(g, td, cd)]
+        for col, pairs in mapping.items():
+            hit = g.iloc[0:0]
+            for td, cd in pairs:
+                hit = pd.concat([hit, g[_class_mask(g, td, cd)]])
             rec[col] = hit["debt_held_public_mil_amt"].sum() if len(hit) else pd.NA
         tot_mkt = g[_class_mask(g, "Total Marketable")]
         rec["MSPD_MARKETABLE_PUBLIC_MN"] = (
@@ -363,9 +369,15 @@ def fetch_mspd_composition(sess: requests.Session, start: str) -> pd.DataFrame:
         )
         rows.append(rec)
     out = pd.DataFrame(rows).set_index("date").sort_index()
-    bills = pd.to_numeric(out["MSPD_BILLS_PUBLIC_MN"], errors="coerce")
     mkt = pd.to_numeric(out["MSPD_MARKETABLE_PUBLIC_MN"], errors="coerce")
-    out["MSPD_BILLS_SHARE_MARKETABLE"] = bills / mkt
+    for src, share in (
+        ("MSPD_BILLS_PUBLIC_MN", "MSPD_BILLS_SHARE_MARKETABLE"),
+        ("MSPD_NOTES_PUBLIC_MN", "MSPD_NOTES_SHARE_MARKETABLE"),
+        ("MSPD_BONDS_PUBLIC_MN", "MSPD_BONDS_SHARE_MARKETABLE"),
+        ("MSPD_TIPS_PUBLIC_MN", "MSPD_TIPS_SHARE_MARKETABLE"),
+        ("MSPD_FRN_PUBLIC_MN", "MSPD_FRN_SHARE_MARKETABLE"),
+    ):
+        out[share] = pd.to_numeric(out[src], errors="coerce") / mkt
     return out
 
 
@@ -621,7 +633,17 @@ def update_raw(
     updated = []
     for i, name in enumerate(FRAME_NAMES):
         old = frames[i] if i < len(frames) else pd.DataFrame()
-        if old is not None and len(old):
+        force_full = False
+        if name == "fiscal_mspd_composition" and old is not None and len(old):
+            notes = pd.to_numeric(old.get("MSPD_NOTES_PUBLIC_MN"), errors="coerce") if "MSPD_NOTES_PUBLIC_MN" in old.columns else pd.Series(dtype=float)
+            if notes.empty or notes.notna().mean() < 0.8:
+                force_full = True
+        if force_full:
+            start = DEFAULT_START
+            old = pd.DataFrame()
+            if verbose:
+                print(f"  MSPD class dollars sparse — full Table 1 rebuild from {start}")
+        elif old is not None and len(old):
             last = pd.to_datetime(old.index.max())
             start = (last - timedelta(days=lookback_days)).date().isoformat()
         else:
