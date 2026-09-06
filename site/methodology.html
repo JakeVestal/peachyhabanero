@@ -187,9 +187,8 @@
         from the Monthly Statement of the Public Debt
         (bills outstanding held by the public / marketable held by the public).
         <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding">Treasury Fiscal Data, MSPD</a>.
-        When auction detail is complete for the quarter, issuance dollars
-        replace the stock share: bills issued × TB3MS, notes issued in the
-        2-year neighborhood × DGS2, longer coupons × DGS10, weights sum to 1.
+        Published weights use the MSPD stock share, not auction dollars.
+        Auction-dollar bills share is a scratch robustness plot only.
       </p>
       <p class="why">
         <b>Why not 0.25 / 0.50 / 0.25.</b>
@@ -384,7 +383,7 @@
     <h2>10  /  what would change an axis</h2>
     <ol class="story-list">
       <li>A documented Fiscal Data break in the Total Marketable average rate — then the NIPA effective coupon becomes the book, on both roll axes at once.</li>
-      <li>A quarter where auction volumes exist and contradict MSPD bills share by enough to move the warn face — then auctions take priority, which is already the rule.</li>
+      <li>A documented, complete auction-dollar mapping that moves the refi warn face versus MSPD bills share — then consider promoting flow weights. That check lives on scratch; it is not the published rule.</li>
       <li>A NIPA vs unified-budget reconciliation that made FGRECPT the wrong till for interest — then we would owe a second burden series, not a silent swap.</li>
       <li>An estimated, out-of-sample threshold for debt/GDP or the interest share that beat the labeled bands on a pre-registered rule — then the band changes. Until then the band stays a label.</li>
     </ol>

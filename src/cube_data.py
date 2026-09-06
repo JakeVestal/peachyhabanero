@@ -793,6 +793,30 @@ def calculate_metrics(
     ).rename("marginal_rate")
     refi_gap = (marginal - coupon_m).rename("refi_gap")
 
+    # Scratch robustness only — not a cube axis. Auction $ bills share vs MSPD stock share.
+    extra = []
+    if auctions is not None and not auctions.empty and "total_accepted" in auctions.columns:
+        a = auctions.copy()
+        a.index = pd.to_datetime(a.index)
+        typ = a["security_type"].astype(str).str.lower() if "security_type" in a.columns else ""
+        acc = pd.to_numeric(a["total_accepted"], errors="coerce")
+        is_bill = typ.str.contains("bill|cmb", regex=True) if len(typ) else False
+        bills_acc = acc.where(is_bill, 0.0)
+        q_bills = bills_acc.resample("QE").sum()
+        q_all = acc.resample("QE").sum()
+        w_auc = (q_bills / q_all).replace([float("inf"), float("-inf")], pd.NA).clip(0, 1)
+        w_auc = w_auc.rename("auction_bills_share")
+        rest_a = (1.0 - w_auc).clip(lower=0.0)
+        w2a = (rest_a * (2.0 / 3.0)).rename("auction_w_2y")
+        w10a = (rest_a * (1.0 / 3.0)).rename("auction_w_10y")
+        tb3_q = tb3.resample("QE").last()
+        d2_q = dgs2.resample("QE").last()
+        d10_q = dgs10.resample("QE").last()
+        coup_q = coupon_m.resample("QE").last()
+        marg_a = (w_auc * tb3_q + w2a * d2_q + w10a * d10_q).rename("auction_marginal_rate")
+        refi_a = (marg_a - coup_q).rename("refi_gap_auction")
+        extra = [w_auc, w2a, w10a, marg_a, refi_a]
+
     metric_1 = _frame(
         bills_share,
         w_bills,
@@ -807,6 +831,7 @@ def calculate_metrics(
         funds_minus_stock,
         marginal,
         refi_gap,
+        *extra,
     )
 
     interest_over_receipts = (100.0 * interest / receipts).rename(

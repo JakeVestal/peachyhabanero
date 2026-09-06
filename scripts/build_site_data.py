@@ -237,6 +237,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "w_10y": w_10y,
         "marginal_rate": marginal,
         "refi_gap": refi_gap,
+        "auction_bills_share": _qe(_col_or(m01, "auction_bills_share")),
+        "refi_gap_auction": _qe(_col_or(m01, "refi_gap_auction")),
         "int_rec_pct": int_rec,
         "int_tax_pct": int_tax,
         "interest_bn": int_bn,
@@ -248,6 +250,11 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "int_gdp_pct": (int_bn / gdp) * 100.0,
     }).sort_index()
     panel = panel.loc[panel.index >= SIGMA_WINDOW_START]
+    need = [
+        "debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap",
+        "funds_minus_stock", "primary_deficit_pct_gdp",
+    ]
+    panel = panel.dropna(subset=need)
 
     def _sigma(series, name):
         s = pd.to_numeric(series, errors="coerce").dropna()
@@ -284,8 +291,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
                 + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)
         )
 
-    sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
-    fail = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
+    sustain = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
+    fail = sustain
 
     payload = {
         "generated_at": generated_at,
@@ -293,7 +300,12 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "coupon_source": coupon_source,
         "refinance_rule": "w_bills = MSPD bills share of marketable; remainder 2:1 DGS2:DGS10",
         "nonbill_split": NONBILL_SPLIT,
-        "sigma_window": {"start": SIGMA_WINDOW_START},
+        "sigma_window": {
+            "requested_start": SIGMA_WINDOW_START,
+            "start": str(panel.index.min().date()) if len(panel) else SIGMA_WINDOW_START,
+            "end": str(panel.index.max().date()) if len(panel) else None,
+            "n": int(len(panel)),
+        },
         "sigma": {"int_rec": sig_rec, "int_tax": sig_tax},
         "sustain": df_to_table(sustain)["rows"][::-1],
         "fail": df_to_table(fail)["rows"][::-1],

@@ -9,6 +9,7 @@ on:
         description: "Ignore cache and rebuild raw frames from 1970"
         type: boolean
         default: false
+  # A push that touches the pipeline retriggers this job (not HTML-only pushes).
   push:
     branches: [main]
     paths:

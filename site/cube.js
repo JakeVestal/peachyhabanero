@@ -108,7 +108,7 @@ function sustainTraces(rows, zone, burden) {
     `refi gap ${Number(r.refi_gap) >= 0 ? "+" : ""}${Number(r.refi_gap).toFixed(2)} pp<br>` +
     `dist_warn ${Number(r[distW]) >= 0 ? "+" : ""}${Number(r[distW]).toFixed(2)}  ` +
     `dist_death ${Number(r[distD]) >= 0 ? "+" : ""}${Number(r[distD]).toFixed(2)}<br>` +
-    `stress ${Number(r[stressCol]).toFixed(2)}`
+    `stress ${Number(r[stressCol]).toFixed(2)} (color only; int/GDP sleeve is not an axis)`
   );
   const last = rows[rows.length - 1];
   const xmax = Math.max(200, ...rows.map((r) => r.debt_gdp_pct), 0) + 5;
@@ -273,6 +273,7 @@ function drawRawAxis(el, rows, col, title, color, wires) {
 }
 
 function drawSixAxes(sus, fail, zone, tax) {
+  fail = sus;
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
   const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
@@ -316,12 +317,16 @@ async function main() {
     stamp.innerHTML = `<span class="err">cubes.json missing coupon_source or zone.refi_gap_death — rerun --process</span>`;
     return;
   }
+  const win = pack.sigma_window || {};
+  const mix = pack.refinance_rule || "w_bills = MSPD bills share; remainder 2:1 DGS2:DGS10";
   stamp.innerHTML =
       `<b>Latest data point: ${ls.date}</b>` +
       ` · refi death ${Number(death).toFixed(2)} pp` +
-      ` · coupon: ${couponSrc}<br>` +
+      ` · coupon: ${couponSrc}` +
+      ` · σ window ${win.start || "?"} → ${win.end || ls.date} (n=${win.n || sus.length})<br>` +
       `<p style="font-size: 0.85em;">` +
-      `New points when BEA prints quarterly GDP. Book coupon: Treasury Fiscal Data, total marketable.` +
+      `New points when BEA prints quarterly GDP. Book coupon: Treasury Fiscal Data, total marketable. ` +
+      `Issuance mix: ${mix}. The 2:1 on notes vs longer coupons is a labeled prior on the non-bill residual, not an MSPD observation.` +
       `</p>`;
 
   const opts = { responsive: true, displaylogo: false };
