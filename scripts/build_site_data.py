@@ -145,7 +145,8 @@ def load_zone(path: Path) -> dict:
 
 
 ZONE = load_zone(DATA / "zone.csv")
-REFINANCE_WEIGHTS = {"tb3m": 0.25, "y2": 0.50, "y10": 0.25}
+SIGMA_WINDOW_START = "2000-01-01"  # plotted path and σ share this window
+NONBILL_SPLIT = {"y2": 2.0 / 3.0, "y10": 1.0 / 3.0}  # applied to (1 - w_bills) only
 
 
 def _qe(s: pd.Series) -> pd.Series:
@@ -195,13 +196,12 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     labor = by.get("fred_labor_output", pd.DataFrame())
 
     stock_fd = _qe(_col_or(m01, "treasury_avg_marketable_coupon_pct"))
-    stock_nipa = _qe(_col_or(m01, "effective_avg_coupon_pct"))
-    if int(stock_fd.dropna().shape[0]) >= 8:
-        stock = stock_fd
-        coupon_source = "fiscal_data_marketable"
-    else:
-        stock = stock_nipa
-        coupon_source = "nipa_effective"
+    if int(stock_fd.dropna().shape[0]) < 8:
+        raise SystemExit(
+            "missing treasury_avg_marketable_coupon_pct — Fiscal Data Total Marketable required; no NIPA fallback"
+        )
+    stock = stock_fd
+    coupon_source = "fiscal_data_marketable"
     log_step(f"book coupon source: {coupon_source}")
     funds = _qe(_col_or(m01, "FEDFUNDS"))
     funds_minus = (funds - stock).rename("funds_minus_stock")
@@ -217,9 +217,13 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     debt_pub_gdp = _qe(_col_or(debt, "FYGFGDQ188S"))
     tax_bn = _qe(_col_or(fiscal, "W006RC1Q027SBEA"))
 
-    w = REFINANCE_WEIGHTS
-    marginal = w["tb3m"] * tb3 + w["y2"] * y2 + w["y10"] * y10
-    refi_gap = marginal - stock
+    w_bills = _qe(_col_or(m01, "w_bills"))
+    w_2y = _qe(_col_or(m01, "w_2y"))
+    w_10y = _qe(_col_or(m01, "w_10y"))
+    marginal = _qe(_col_or(m01, "marginal_rate"))
+    refi_gap = _qe(_col_or(m01, "refi_gap"))
+    if min(int(s.dropna().shape[0]) for s in (w_bills, w_2y, w_10y, marginal, refi_gap)) < 8:
+        raise SystemExit("metric 01 missing issuance weights / refi_gap — rerun calculate_metrics")
 
     panel = pd.DataFrame({
         "funds_minus_stock": funds_minus,
@@ -228,6 +232,9 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "tb3m": tb3,
         "y2": y2,
         "y10": y10,
+        "w_bills": w_bills,
+        "w_2y": w_2y,
+        "w_10y": w_10y,
         "marginal_rate": marginal,
         "refi_gap": refi_gap,
         "int_rec_pct": int_rec,
@@ -240,16 +247,24 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "gdp_bn": gdp,
         "int_gdp_pct": (int_bn / gdp) * 100.0,
     }).sort_index()
+    panel = panel.loc[panel.index >= SIGMA_WINDOW_START]
+
+    def _sigma(series, name):
+        s = pd.to_numeric(series, errors="coerce").dropna()
+        if len(s) < 8:
+            raise SystemExit(f"sigma window too short for {name}")
+        sig = float(s.std(ddof=1))
+        if not np.isfinite(sig) or sig == 0:
+            raise SystemExit(f"sigma undefined for {name}")
+        return sig
+
+    sig_rec = _sigma(panel["int_rec_pct"], "int_rec")
+    sig_tax = _sigma(panel["int_tax_pct"], "int_tax")
+    panel["F2_rec"] = y["y2"].reindex(panel.index) if "y2" in y.columns else (panel["int_rec_pct"] - ZONE["int_rec_warn"]) / sig_rec
+    panel["F2_tax"] = (panel["int_tax_pct"] - ZONE["int_tax_warn"]) / sig_tax
     panel["F1"] = y["y1"].reindex(panel.index) if "y1" in y.columns else np.nan
     panel["F3"] = y["y3"].reindex(panel.index) if "y3" in y.columns else np.nan
-
-    def f2_of(series, c):
-        s = series.dropna()
-        sig = float(s.std(ddof=1)) or 1.0
-        return (series - c) / sig
-
-    panel["F2_rec"] = f2_of(panel["int_rec_pct"], ZONE["int_rec_warn"])
-    panel["F2_tax"] = f2_of(panel["int_tax_pct"], ZONE["int_tax_warn"])
+    log_step(f"sigma int/rec={sig_rec:.4f}  int/tax={sig_tax:.4f}")
 
     s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_death"])
     s_gap = _piecewise(panel["refi_gap"], ZONE["refi_gap_warn"], ZONE["refi_gap_death"])
@@ -270,14 +285,16 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         )
 
     sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
-    sustain = sustain.loc[sustain.index >= "2000-01-01"]
     fail = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
 
     payload = {
         "generated_at": generated_at,
         "zone": ZONE,
         "coupon_source": coupon_source,
-        "refinance_weights": REFINANCE_WEIGHTS,
+        "refinance_rule": "w_bills = MSPD bills share of marketable; remainder 2:1 DGS2:DGS10",
+        "nonbill_split": NONBILL_SPLIT,
+        "sigma_window": {"start": SIGMA_WINDOW_START},
+        "sigma": {"int_rec": sig_rec, "int_tax": sig_tax},
         "sustain": df_to_table(sustain)["rows"][::-1],
         "fail": df_to_table(fail)["rows"][::-1],
     }
@@ -327,6 +344,10 @@ def process_and_publish() -> None:
     log_step("Loading critical threshold values and standardizing data...")
     thresh = load_thresholds(THRESH)
     aligned = quarterly_complete(metrics, thresh).sort_index()
+    aligned = aligned.loc[aligned.index >= SIGMA_WINDOW_START]
+    if aligned.empty:
+        raise SystemExit(f"no complete quarters on or after {SIGMA_WINDOW_START}")
+    log_step(f"sigma window {aligned.index.min().date()} → {aligned.index.max().date()}  n={len(aligned)}")
     y, s_bits = standardize(aligned, thresh)
     state = embed(y, s_bits, (1, 2, 3), ()).sort_index()
     for c in aligned.columns:

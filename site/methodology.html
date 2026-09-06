@@ -40,7 +40,11 @@
       outlays, and GDP stay in NIPA. Market rates stay FRED constant-maturity
       / funds. The book coupon stays Treasury Fiscal Data. We do not mix a
       unified-budget FY print with a NIPA SAAR denominator on the same axis.
-      Debt held by the public, never gross debt. The identity that links
+      Debt held by the public, never gross debt.
+      σ and both cube paths use the same window: complete quarters from
+      2000-Q1 through the last quarter with BEA GDP. A quarter that is
+      out of the picture is out of σ.
+ The identity that links
       the stock cube to the hole is
     </p>
     <p class="stat" style="margin: 8px 0 12px;">
@@ -49,8 +53,8 @@
     <p class="sub">
       r here is the effective coupon on the book, g is nominal GDP growth.
       That identity is why axes 3 and 6 are both on the site and why they
-      are not substitutes. Metric 05 on the data page reports r−g. It is
-      not a cube axis.
+      are not substitutes. The six raw (pre-σ) series are the 1-d plots
+      under the cubes — not a separate r−g axis.
     </p>
   </section>
 
@@ -136,9 +140,9 @@
     </p>
     <p class="sub">
       σ is the sample standard deviation of the quarterly complete-case
-      series. The receipts / tax toggle moves axis 1 and F2 together.
-      Rejected: putting ACM term premium or NFCI on this axis. Those are
-      amplifiers on the data page. They do not define the till.
+      series on the 2000-Q1 window. The receipts / tax toggle moves axis 1
+      and F2 together. ACM term premium and NFCI stay in the raw pull; they
+      are not cube axes.
     </p>
   </section>
 
@@ -197,11 +201,8 @@
     </p>
     <p class="sub">
       Warn / death on this axis are +0.50 / +1.00 percentage points. Positive
-      means new issuance already costs more than the book. Rejected as the
-      axis: ACM 10-year term premium
-      (<a href="https://fred.stlouisfed.org/series/THREEFYTP10">THREEFYTP10</a>).
-      That is “duration is charging rent,” metric 04 on the data page, a
-      different sentence.
+      means new issuance already costs more than the book. THREEFYTP10 stays
+      in the raw pull as a rates diagnostic. It is not this axis.
     </p>
   </section>
 
@@ -341,10 +342,10 @@
             </tr>
             <tr>
               <td>5 F1</td>
-              <td>dominance X</td>
+              <td>dominance plotted Z</td>
               <td>chair’s rate already the fiscal rate</td>
               <td>FEDFUNDS − same coupon</td>
-              <td>y = (x − 0) / σ</td>
+              <td>y = −(x − 0) / σ  (sign flip)</td>
             </tr>
             <tr>
               <td>3 debt / GDP</td>
@@ -355,7 +356,7 @@
             </tr>
             <tr>
               <td>6 F3</td>
-              <td>dominance Z</td>
+              <td>dominance plotted X</td>
               <td>operations still open</td>
               <td>(FGEXPND − A091 − FGRECPT) / GDP</td>
               <td>y = (x − 0) / σ</td>
@@ -364,6 +365,16 @@
         </table>
       </div>
     </div>
+    <p class="sub">
+      Path color on the sustainability cube is a 0–1 blend: 20% debt/GDP
+      score, 35% interest share, 25% refi gap, plus a 20% sleeve for
+      interest / GDP (A091 / GDP) through 3.0% / 4.5%. That sleeve is not
+      a cube axis and is not in σ. It is only color.
+    </p>
+    <p class="sub">
+      On the fiscal-dominance cube the reader sees X = F3, Y = F2, Z = F1.
+      Names F1/F2/F3 still follow the wires (funds−stock, till, primary).
+    </p>
   </section>
 
   <section>

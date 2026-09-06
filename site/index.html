@@ -35,8 +35,8 @@
   </header>
   <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
     <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
-      <button class="neon-btn" type="button" id="btn-rec">receipts</button>
-      <button class="neon-btn active" type="button" id="btn-tax">tax</button>
+      <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
+      <button class="neon-btn" type="button" id="btn-tax">tax</button>
     </div>
     <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
     Toggle interest / tax vs interest / receipts on both cubes and the
@@ -74,9 +74,28 @@
       look the same as one that is already a program.
     </p>
   </section>
+
+  <section>
+    <h2>Six axes, raw</h2>
+    <p class="sub">
+      Untransformed quarterly prints — the numbers that go into σ, not the
+      z-scores. Dotted gold is the warn wire; dotted magenta is the death
+      wire (or the single FD wire at 0 / 20% / 0). Axes 1 and 4 are the same
+      till share; the receipts / tax toggle moves both. Full walk-through
+      is on the <a href="methodology.html">methodology</a> page.
+    </p>
+    <div class="grid-3">
+      <div id="ax-1"></div>
+      <div id="ax-2"></div>
+      <div id="ax-3"></div>
+      <div id="ax-4"></div>
+      <div id="ax-5"></div>
+      <div id="ax-6"></div>
+    </div>
+  </section>
   <footer>
     peachyhabanero · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
   </footer>
-  <script src="cube.js?v=7"></script>
+  <script src="cube.js?v=13"></script>
 </body>
 </html>

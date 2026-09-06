@@ -55,16 +55,12 @@ jobs:
             cube-published-v2-
             cube-published-
 
-      - name: fill published json from live site if cache cold
+      - name: require published json from cache
         run: |
-          mkdir -p site/data/published
-          if [ ! -s site/data/published/cubes.json ]; then
-            echo "cache miss — pulling last live published json"
-            for f in cubes.json quarterly.json raw_inputs.json calculated_metrics.json series.json thresholds.json manifest.json; do
-              curl -fsSL "https://peachyhabanero.com/data/published/$f" -o "site/data/published/$f" || true
-            done
-          fi
-          test -s site/data/published/cubes.json
+          test -s site/data/published/cubes.json || {
+            echo "missing site/data/published/cubes.json — run nightly-data first"
+            exit 1
+          }
 
       - uses: actions/configure-pages@v5
 

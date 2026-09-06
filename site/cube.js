@@ -53,7 +53,7 @@ function layout3d(title, xt, yt, zt, ranges) {
     camera: {
       up: { x: 0, y: 0, z: 1 },
       center: { x: 0, y: 0, z: -0.12 },
-      eye: { x: 1.55, y: 1.55, z: 0.95 },
+      eye: { x: -1.55, y: -1.55, z: 0.95 },
     },
   };
 
@@ -158,7 +158,7 @@ function failTraces(rows, tax) {
     return (
       `${inside ? "<b>INSIDE</b> " : ""}${r.date}<br>` +
       `F1=${Number(r.F1).toFixed(2)}  F2=${f2v.toFixed(2)}  F3=${Number(r.F3).toFixed(2)}<br>` +
-      `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp<br>` +
+      `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp  (F1&gt;0 ⇒ funds ≤ book)<br>` +
       `int/rec ${Number(r.int_rec_pct).toFixed(2)}%  int/tax ${Number(r.int_tax_pct).toFixed(2)}%<br>` +
       `primary/GDP ${Number(r.primary_deficit_pct_gdp).toFixed(2)}%`
     );
@@ -232,6 +232,67 @@ function drawDist(el, rows, tax) {
   }, { responsive: true, displaylogo: false });
 }
 
+
+function hline(y, color) {
+  return {
+    type: "line", xref: "paper", x0: 0, x1: 1, y0: y, y1: y,
+    line: { color, width: 1.5, dash: "dot" },
+  };
+}
+
+function drawRawAxis(el, rows, col, title, color, wires) {
+  const xs = [], ys = [];
+  rows.forEach((r) => {
+    const v = Number(r[col]);
+    if (!Number.isFinite(v)) return;
+    xs.push(r.date);
+    ys.push(v);
+  });
+  const node = document.getElementById(el);
+  if (!node) return;
+  if (!xs.length) {
+    node.innerHTML = `<p class="err">no ${col}</p>`;
+    return;
+  }
+  return Plotly.newPlot(el, [{
+    type: "scatter", mode: "lines",
+    x: xs, y: ys, name: col,
+    line: { color, width: 2 },
+  }], {
+    title: { text: title, font: { color: "#00f0ff", size: 12 } },
+    paper_bgcolor: "#07080c",
+    plot_bgcolor: "#0b0f16",
+    font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 10 },
+    margin: { l: 48, r: 12, t: 40, b: 32 },
+    height: 280,
+    showlegend: false,
+    xaxis: { gridcolor: "rgba(196,163,90,0.12)", zeroline: false },
+    yaxis: { gridcolor: "rgba(196,163,90,0.12)", zeroline: false },
+    shapes: wires || [],
+  }, { responsive: true, displaylogo: false });
+}
+
+function drawSixAxes(sus, fail, zone, tax) {
+  const gold = "#c4a35a";
+  const mag = "#ff2bd6";
+  const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
+  const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
+  const tillDeath = tax ? zone.int_tax_death : zone.int_rec_death;
+  const tillName = tax ? "int / tax (%)" : "int / receipts (%)";
+  drawRawAxis("ax-1", sus, tillCol, `1  sustain Y · ${tillName}`, "#00f0ff",
+    [hline(tillWarn, gold), hline(tillDeath, mag)]);
+  drawRawAxis("ax-2", sus, "refi_gap", "2  sustain Z · refi gap (pp)", "#ffbf00",
+    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_death, mag)]);
+  drawRawAxis("ax-3", sus, "debt_gdp_pct", "3  sustain X · debt public / GDP (%)", "#7aa2ff",
+    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_death, mag)]);
+  drawRawAxis("ax-4", sus, tillCol, `4  FD Y raw · ${tillName}`, "#00f0ff",
+    [hline(tillWarn, mag)]);
+  drawRawAxis("ax-5", fail, "funds_minus_stock", "5  F1 raw · plotted Z · funds − book coupon (pp)", "#39ff14",
+    [hline(0, mag)]);
+  drawRawAxis("ax-6", fail, "primary_deficit_pct_gdp", "6  F3 raw · plotted X · primary / GDP (%)", "#ff6b4a",
+    [hline(0, mag)]);
+}
+
 async function main() {
   const stamp = document.getElementById("stamp");
   const res = await fetch(DATA);
@@ -249,20 +310,22 @@ async function main() {
   }
   const ls = sus[sus.length - 1];
   const lf = fail[fail.length - 1];
-  const couponSrc = pack.coupon_source || ls.coupon_source || "unknown";
-  const couponNote = couponSrc === "nipa_effective"
-      ? "Book coupon fallback: NIPA interest / debt (Fiscal Data marketable missing)."
-      : "Book coupon: Treasury Fiscal Data, total marketable.";
+  const couponSrc = pack.coupon_source;
+  const death = zone && zone.refi_gap_death;
+  if (couponSrc !== "fiscal_data_marketable" || !Number.isFinite(Number(death))) {
+    stamp.innerHTML = `<span class="err">cubes.json missing coupon_source or zone.refi_gap_death — rerun --process</span>`;
+    return;
+  }
   stamp.innerHTML =
       `<b>Latest data point: ${ls.date}</b>` +
-      ` · refi death ${Number((zone || {}).refi_gap_death).toFixed(2)} pp` +
+      ` · refi death ${Number(death).toFixed(2)} pp` +
       ` · coupon: ${couponSrc}<br>` +
       `<p style="font-size: 0.85em;">` +
-      `New points when BEA prints quarterly GDP. ${couponNote}` +
+      `New points when BEA prints quarterly GDP. Book coupon: Treasury Fiscal Data, total marketable.` +
       `</p>`;
 
   const opts = { responsive: true, displaylogo: false };
-  let tax = true;
+  let tax = false;
 
   function sustainLayout(burden) {
     return layout3d(
@@ -296,6 +359,7 @@ async function main() {
   await drawFail();
   await drawSustain();
   await drawDist("dist-plot", sus, tax);
+  drawSixAxes(sus, fail, zone, tax);
 
   function setBurden(next) {
     tax = next;
@@ -303,6 +367,7 @@ async function main() {
     document.getElementById("btn-rec").classList.toggle("active", !tax);
     drawSustain();
     drawFail();
+    drawSixAxes(sus, fail, zone, tax);
     Plotly.restyle("dist-plot", { visible: tax ? [true, true, false, false] : [false, false, true, true] });
   }
   document.getElementById("btn-tax").onclick = () => setBurden(true);

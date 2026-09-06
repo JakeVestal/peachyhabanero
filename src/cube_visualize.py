@@ -2,8 +2,7 @@
 """Failure-mode fiscal cube -> 3D Plotly dashboard.
 
 Cube axes are wires 1–3 (funds−stock, interest/receipts, primary deficit).
-Magenta = all three on. Amplifiers 4–6 color and size the markers.
-PCA / L2 remain the six-vector diagnostic.
+Magenta = all three on. Axes are the three fiscal wires only.
 """
 from __future__ import annotations
 import argparse
@@ -70,6 +69,8 @@ def standardize(aligned, thresh):
         sigma = float(x.std(ddof=1))
         if not np.isfinite(sigma) or sigma == 0:
             sigma = 1.0
+        # One sign convention for the whole site. at_or_below (F1 only):
+        # flip so y>0 means the unthinkable side (funds at or under the book).
         raw = (x - c) / sigma
         if str(row["direction_unthinkable"]).lower() == "at_or_below":
             raw = -raw
@@ -243,7 +244,7 @@ def build_figure(state, y):
     fig = go.Figure(data=traces)
     fig.update_layout(
         title=dict(
-            text="Failure mode = funds≈stock ∧ interest/receipts ∧ primary deficit. Color/size = amplifiers (4–6).",
+            text="Failure mode = funds≈stock ∧ interest/receipts ∧ primary deficit. Three fiscal wires.",
             font=dict(color="#00f0ff", size=15),
         ),
         paper_bgcolor="#07080c", plot_bgcolor="#07080c",

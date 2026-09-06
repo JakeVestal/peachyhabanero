@@ -1,12 +1,5 @@
 const DATA = "data/published/cubes.json";
 
-const FALLBACK_ZONE = {
-  debt_gdp_warn: 100, debt_gdp_death: 140,
-  int_rec_warn: 20, int_rec_death: 30,
-  int_tax_warn: 25, int_tax_death: 40,
-  refi_gap_warn: 0.5, refi_gap_death: 1.0,
-};
-
 function layout(title) {
   return {
     title: { text: title, font: { color: "#00f0ff", size: 13 } },
@@ -61,7 +54,11 @@ async function main() {
     return;
   }
   const pack = await res.json();
-  const zone = Object.assign({}, FALLBACK_ZONE, pack.zone || {});
+  const zone = pack.zone;
+  if (!zone || !Number.isFinite(Number(zone.refi_gap_death))) {
+    stamp.innerHTML = `<span class="err">cubes.json missing zone — rerun --process</span>`;
+    return;
+  }
   const sus = (pack.sustain || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   const fail = (pack.fail || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   stamp.textContent = `zone refi death = ${zone.refi_gap_death} · ${pack.generated_at || ""}`;
@@ -69,27 +66,41 @@ async function main() {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
   const cyan = "#00f0ff";
+  let tax = false;
 
-  await draw("b-debt", sus, "debt_gdp_pct",
-    "Debt held by public / GDP (%)", gold,
-    [hline(zone.debt_gdp_warn, "#ffbf00"), hline(zone.debt_gdp_death, mag)]);
-  await draw("b-int", sus, "int_rec_pct",
-    "Interest / receipts (%)", cyan,
-    [hline(zone.int_rec_warn, "#ffbf00"), hline(zone.int_rec_death, mag)]);
-  await draw("b-refi", sus, "refi_gap",
-    "Refi gap  (marginal − stock, pp)", gold,
-    [hline(zone.refi_gap_warn, "#ffbf00"), hline(zone.refi_gap_death, mag)]);
+  async function paint() {
+    const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
+    const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
+    const tillDeath = tax ? zone.int_tax_death : zone.int_rec_death;
+    const tillName = tax ? "tax" : "receipts";
+    const f2key = tax ? "F2_tax" : "F2_rec";
+    await draw("b-debt", sus, "debt_gdp_pct",
+      "Debt held by public / GDP (%)", gold,
+      [hline(zone.debt_gdp_warn, "#ffbf00"), hline(zone.debt_gdp_death, mag)]);
+    await draw("b-int", sus, tillCol,
+      `Interest / ${tillName} (%)`, cyan,
+      [hline(tillWarn, "#ffbf00"), hline(tillDeath, mag)]);
+    await draw("b-refi", sus, "refi_gap",
+      "Refi gap  (marginal − stock, pp)", gold,
+      [hline(zone.refi_gap_warn, "#ffbf00"), hline(zone.refi_gap_death, mag)]);
+    await draw("b-f1x", fail, "funds_minus_stock",
+      "F1 raw  funds − stock coupon (pp)  ·  plotted Z", cyan, [hline(0, mag)]);
+    await draw("b-f2x", fail, tillCol,
+      `F2 raw  interest / ${tillName} (%)`, gold, [hline(tillWarn, mag)]);
+    await draw("b-f3x", fail, "primary_deficit_pct_gdp",
+      "F3 raw  primary / GDP (%)  ·  plotted X", cyan, [hline(0, mag)]);
+    await draw("b-f1y", fail, "F1", "F1  y(funds − stock)  ·  plotted Z", cyan, [hline(0, mag)]);
+    await draw("b-f2y", fail, f2key, tax ? "F2  y(int/tax − 25%)" : "F2  y(int/rec − 20%)", gold, [hline(0, mag)]);
+    await draw("b-f3y", fail, "F3", "F3  y(primary / GDP)  ·  plotted X", cyan, [hline(0, mag)]);
+  }
 
-  await draw("b-f1x", fail, "funds_minus_stock",
-    "F1 raw  funds − stock coupon (pp)", cyan, [hline(0, mag)]);
-  await draw("b-f2x", fail, "int_rec_pct",
-    "F2 raw  interest / receipts (%)", gold, [hline(zone.int_rec_warn, mag)]);
-  await draw("b-f3x", fail, "primary_deficit_pct_gdp",
-    "F3 raw  primary / GDP (%)", cyan, [hline(0, mag)]);
-
-  await draw("b-f1y", fail, "F1", "F1  y(funds − stock)", cyan, [hline(0, mag)]);
-  await draw("b-f2y", fail, "F2_rec", "F2  y(int/rec − 20%)", gold, [hline(0, mag)]);
-  await draw("b-f3y", fail, "F3", "F3  y(primary / GDP)", cyan, [hline(0, mag)]);
+  await paint();
+  const rec = document.getElementById("btn-rec");
+  const taxBtn = document.getElementById("btn-tax");
+  if (rec && taxBtn) {
+    rec.onclick = () => { tax = false; rec.classList.add("active"); taxBtn.classList.remove("active"); paint(); };
+    taxBtn.onclick = () => { tax = true; taxBtn.classList.add("active"); rec.classList.remove("active"); paint(); };
+  }
 }
 
 main().catch((err) => {

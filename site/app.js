@@ -164,27 +164,33 @@ function recipeX(id, date, metrics, raw, qrow) {
 
   if (id === 1) {
     const funds = num(policy && policy.FEDFUNDS) ?? num(m1 && m1.FEDFUNDS);
-    const coupon = num(m1 && m1.effective_avg_coupon_pct);
-    const interest = num(nipa && nipa.A091RC1Q027SBEA) ?? num(m2 && m2.interest_bn_saar);
-    const debt = num(penny && penny.DEBT_TOTAL);
-    const debtBn = debt != null ? debt / 1e9 : null;
+    const coupon = num(m1 && m1.treasury_avg_marketable_coupon_pct);
+    const nipaCoupon = num(m1 && m1.effective_avg_coupon_pct);
     const rebuilt = funds != null && coupon != null ? funds - coupon : null;
-    return [
+    if (coupon == null) {
+      return [`error: treasury_avg_marketable_coupon_pct missing on metric 1 for ${date} — rerun --process.`];
+    }
+    const lines = [
       `Last policy print on or before ${date}: FEDFUNDS = ${fmtN(funds, 4)}.`,
-      `Effective coupon on the stock = 100 × NIPA interest (A091RC1Q027SBEA = ${fmtN(interest, 3)} $bn SAAR) ÷ debt stock.`,
-      `Debt-to-the-penny DEBT_TOTAL = ${debt != null ? fmtPenny(debt) : "—"} → ${fmtN(debtBn, 3)} $bn.`,
-      `Coupon stored on metric 1: effective_avg_coupon_pct = ${fmtN(coupon, 4)}.`,
-      `x1 = FEDFUNDS − coupon = ${fmtN(funds, 4)} − ${fmtN(coupon, 4)} = ${fmtN(rebuilt, 4)} (table: funds_minus_stock).`,
+      `Book coupon = Treasury Fiscal Data average rate, Total Marketable = ${fmtN(coupon, 4)}.`,
+      `x1 = FEDFUNDS − book coupon = ${fmtN(funds, 4)} − ${fmtN(coupon, 4)} = ${fmtN(rebuilt, 4)} (table: funds_minus_stock).`,
     ];
+    if (nipaCoupon != null) {
+      lines.push(`Robustness only (not on the cube): NIPA interest / debt stock = ${fmtN(nipaCoupon, 4)}.`);
+    }
+    return lines;
   }
   if (id === 2) {
     const interest = num(nipa && nipa.A091RC1Q027SBEA) ?? num(m2 && m2.interest_bn_saar);
     const receipts = num(nipa && nipa.FGRECPT) ?? num(m2 && m2.current_receipts_bn_saar);
+    const taxr = num(nipa && nipa.W006RC1Q027SBEA);
     const rebuilt = interest != null && receipts ? (100 * interest) / receipts : null;
+    const rebuiltTax = interest != null && taxr ? (100 * interest) / taxr : null;
     return [
       `NIPA interest A091RC1Q027SBEA = ${fmtN(interest, 3)} $bn SAAR.`,
       `NIPA current receipts FGRECPT = ${fmtN(receipts, 3)} $bn SAAR.`,
-      `x2 = 100 × interest / receipts = 100 × ${fmtN(interest, 3)} / ${fmtN(receipts, 3)} = ${fmtN(rebuilt, 4)}.`,
+      `x2 = 100 × A091 / FGRECPT = ${fmtN(rebuilt, 4)}.`,
+      `Tax till (toggle, not the default x2): 100 × A091 / W006RC1Q027SBEA = ${fmtN(rebuiltTax, 4)}.`,
     ];
   }
   if (id === 3) {
@@ -226,6 +232,9 @@ function recipeY(id, row, rows, thresholds) {
       ? `y${id} = −(x − c) / σ = −(${fmtN(x, 4)} − ${fmtN(c, 4)}) / ${fmtN(sigma, 4)} = ${fmtN(y, 4)}.`
       : `y${id} = (x − c) / σ = (${fmtN(x, 4)} − ${fmtN(c, 4)}) / ${fmtN(sigma, 4)} = ${fmtN(y, 4)}.`,
     `Table y${id} = ${fmtN(row["y" + id], 4)}.`,
+    ...(id === 1 ? [
+      "F1 = y1. The minus is the only sign flip on the site. F1 > 0 means FEDFUNDS is at or under the Fiscal Data book coupon: a hike tightens the fiscal rate on the stock."
+    ] : []),
   ];
 }
 
@@ -298,6 +307,30 @@ function explainQuarterlyCol(col, row, rows, thresholds, metrics, raw) {
   }
   const xid = Object.entries(X_COLS).find(([, name]) => name === col);
   if (xid) return recipeX(Number(xid[0]), date, metrics, raw, row);
+  if (col === "funds_minus_stock") return recipeX(1, date, metrics, raw, row);
+  if (col === "interest_pct_receipts") return recipeX(2, date, metrics, raw, row);
+  if (col === "primary_deficit_pct_gdp") return recipeX(3, date, metrics, raw, row);
+  const m1 = asOf(metrics["01_funds_equals_fiscal_rate"], date);
+  if (col === "refi_gap" || col === "marginal_rate" || col === "w_bills") {
+    const tb3 = num(m1 && m1.TB3MS);
+    const d2 = num(m1 && m1.DGS2);
+    const d10 = num(m1 && m1.DGS10);
+    const wb = num(m1 && m1.w_bills);
+    const w2 = num(m1 && m1.w_2y);
+    const w10 = num(m1 && m1.w_10y);
+    const coupon = num(m1 && m1.treasury_avg_marketable_coupon_pct);
+    const marg = (wb != null && w2 != null && w10 != null && tb3 != null && d2 != null && d10 != null)
+      ? wb * tb3 + w2 * d2 + w10 * d10 : num(m1 && m1.marginal_rate);
+    const gap = marg != null && coupon != null ? marg - coupon : num(m1 && m1.refi_gap);
+    return [
+      `w_bills = MSPD bills / marketable = ${fmtN(wb, 4)}.`,
+      `w_2y = (1 − w_bills) × 2/3 = ${fmtN(w2, 4)}; w_10y = (1 − w_bills) × 1/3 = ${fmtN(w10, 4)}.`,
+      `TB3MS = ${fmtN(tb3, 4)}, DGS2 = ${fmtN(d2, 4)}, DGS10 = ${fmtN(d10, 4)}.`,
+      `marginal = w_bills·TB3MS + w_2y·DGS2 + w_10y·DGS10 = ${fmtN(marg, 4)}.`,
+      `Book coupon = Fiscal Data Total Marketable = ${fmtN(coupon, 4)}.`,
+      `refi gap = marginal − coupon = ${fmtN(gap, 4)}.`,
+    ];
+  }
   return [`Value copied from the quarterly embed. No further raw recipe on file.`];
 }
 

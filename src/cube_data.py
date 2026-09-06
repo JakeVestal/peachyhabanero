@@ -749,31 +749,64 @@ def calculate_metrics(
     r_stock = (100.0 * interest_m / debt_bn_m).rename("effective_avg_coupon_pct")
     r_stock = r_stock.replace([float("inf"), float("-inf")], pd.NA).dropna()
 
-    funds_m = funds.resample("ME").last()
-    funds_minus_stock = (funds_m - r_stock).rename("funds_minus_stock_coupon_pp")
-
     bills_share = _col(mspd, "MSPD_BILLS_SHARE_MARKETABLE").rename(
         "bills_share_of_marketable"
     )
-    # Treasury published average coupon on total marketable, if present
     mkt_coupon_cols = [
         c
         for c in (coupon.columns if not coupon.empty else [])
         if "Total_Marketable" in c or c.endswith("Total_Marketable")
     ]
-    avg_mkt_coupon = None
-    if mkt_coupon_cols:
-        avg_mkt_coupon = pd.to_numeric(
-            coupon[mkt_coupon_cols[0]], errors="coerce"
-        ).rename("treasury_avg_marketable_coupon_pct")
+    if not mkt_coupon_cols:
+        raise RuntimeError(
+            "fiscal_avg_coupon has no Total_Marketable column — cannot build funds−stock or refi"
+        )
+    avg_mkt_coupon = pd.to_numeric(
+        coupon[mkt_coupon_cols[0]], errors="coerce"
+    ).rename("treasury_avg_marketable_coupon_pct")
+    if int(avg_mkt_coupon.dropna().shape[0]) < 8:
+        raise RuntimeError(
+            "treasury_avg_marketable_coupon_pct too short — Fiscal Data Total Marketable required"
+        )
+
+    coupon_m = avg_mkt_coupon.resample("ME").last()
+    funds_m = funds.resample("ME").last()
+    # Book coupon for cubes and x1 is Fiscal Data only. NIPA/debt stays as robustness.
+    funds_minus_stock = (funds_m - coupon_m).rename("funds_minus_stock_coupon_pp")
+
+    dgs2 = _col(policy, "DGS2")
+    dgs10 = _col(policy, "DGS10")
+    w_bills = bills_share.clip(lower=0.0, upper=1.0).rename("w_bills")
+    rest = (1.0 - w_bills).clip(lower=0.0)
+    # Remainder of the book that is not bills: 2:1 notes vs longer coupons
+    # (same relative split the retired 0.25/0.50/0.25 prior used among non-bills).
+    w_2y = (rest * (2.0 / 3.0)).rename("w_2y")
+    w_10y = (rest * (1.0 / 3.0)).rename("w_10y")
+    tb3_m = tb3.resample("ME").last()
+    dgs2_m = dgs2.resample("ME").last()
+    dgs10_m = dgs10.resample("ME").last()
+    w_bills_m = w_bills.resample("ME").last()
+    w_2y_m = w_2y.resample("ME").last()
+    w_10y_m = w_10y.resample("ME").last()
+    marginal = (
+        w_bills_m * tb3_m + w_2y_m * dgs2_m + w_10y_m * dgs10_m
+    ).rename("marginal_rate")
+    refi_gap = (marginal - coupon_m).rename("refi_gap")
 
     metric_1 = _frame(
         bills_share,
+        w_bills,
+        w_2y,
+        w_10y,
         r_stock,
+        avg_mkt_coupon,
         funds.rename("FEDFUNDS"),
         tb3.rename("TB3MS"),
+        dgs2.rename("DGS2"),
+        dgs10.rename("DGS10"),
         funds_minus_stock,
-        *([avg_mkt_coupon] if avg_mkt_coupon is not None else []),
+        marginal,
+        refi_gap,
     )
 
     interest_over_receipts = (100.0 * interest / receipts).rename(
