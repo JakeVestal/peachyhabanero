@@ -325,7 +325,7 @@ async function main() {
   const win = pack.sigma_window || {};
   const mix = pack.refinance_rule || "w_bills = MSPD bills share; remainder 2:1 DGS2:DGS10";
   stamp.innerHTML =
-      `<b>Latest data point: ${ls.date}</b>` +
+      `<b>Latest data point: ${ls.date}</b><br>` +
       `New points become available when BEA prints quarterly GDP.</p>`;
 
   const opts = { responsive: true, displaylogo: false };
