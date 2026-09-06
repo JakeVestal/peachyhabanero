@@ -19,3 +19,8 @@ Thumbs.db
 *~
 # generated nightly — rebuilt by scripts/build_site_data.py
 /site/data/published/
+
+# local experiment page — never ship
+/site/scratch.html
+/site/scratch.js
+

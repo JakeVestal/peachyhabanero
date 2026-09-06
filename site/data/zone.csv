@@ -1,0 +1,13 @@
+key,value
+debt_gdp_warn,100
+debt_gdp_death,140
+int_rec_warn,20
+int_rec_death,30
+int_tax_warn,25
+int_tax_death,40
+refi_gap_warn,0.50
+refi_gap_death,1.00
+f1_raw,0
+f2_raw,20
+f3_raw,0
+f_transformed,0

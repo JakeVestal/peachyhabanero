@@ -152,7 +152,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/THREEFYTP10",
     official:
       "Kim and Wright (2005): three-factor arbitrage-free term structure fitted to Treasury yields since 1990, to recover long-term yields, distant-horizon forward rates, and term premiums. (Cube comments sometimes call this ACM; the FRED id we fetch is the Kim-Wright series.)",
-    why: "Amplifier 4. Duration is charging a fiscal premium when this is high. Does not define fail.",
+    why: "Characteristic long-rate series for a later Fed plot (term premium). Not a Treasury-cube axis.",
   },
   T10Y2Y: {
     title: "10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity",
@@ -161,7 +161,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/T10Y2Y",
     official:
       "Spread constructed by FRED from DGS10 minus DGS2.",
-    why: "Curve shape next to the term-premium amplifier. Inversion vs a fat premium are different duration stories.",
+    why: "Curve shape next to the term premium. Inversion vs a fat premium are different duration stories. Raw only.",
   },
   T10Y3M: {
     title: "10-Year Treasury Constant Maturity Minus 3-Month Treasury Constant Maturity",
@@ -170,7 +170,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/T10Y3M",
     official:
       "Spread constructed by FRED from the 10-year constant maturity minus the 3-month constant maturity.",
-    why: "Policy-to-long spread. Companion to T10Y2Y on metric 4.",
+    why: "Policy-to-long spread. Companion to T10Y2Y. Raw only.",
   },
   NFCI: {
     title: "Chicago Fed National Financial Conditions Index",
@@ -179,7 +179,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/NFCI",
     official:
       "Weekly update on U.S. financial conditions in money, debt, equity, and traditional and shadow banking. Positive values = tighter than average; negative = looser than average.",
-    why: "Amplifier 6 and its headline. Another official tightener on already-tight conditions is a second shock. Does not define fail.",
+    why: "Financial conditions level. Raw series for later work. Not a Treasury-cube axis.",
   },
   DRTSCILM: {
     title: "Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms",
@@ -188,7 +188,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/DRTSCILM",
     official:
       "SLOOS: net share of domestic banks tightening C&I standards for large and middle-market firms.",
-    why: "Bank-credit tightness next to NFCI. Conditions amplifier, not a fiscal wire.",
+    why: "Bank-credit tightness next to NFCI. Raw only. Not a fiscal wire.",
   },
   BAMLC0A0CM: {
     title: "ICE BofA US Corporate Index Option-Adjusted Spread",
@@ -197,7 +197,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/BAMLC0A0CM",
     official:
       "Option-adjusted spread of the ICE BofA US Corporate Index over a spot Treasury curve. Investment-grade credit premium.",
-    why: "IG OAS companion on metric 6. Private credit already charging more is an amplifier.",
+    why: "IG OAS companion to NFCI. Raw only.",
   },
   BAMLH0A0HYM2: {
     title: "ICE BofA US High Yield Index Option-Adjusted Spread",
@@ -206,7 +206,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
     official:
       "Option-adjusted spread of the ICE BofA US High Yield Index over a spot Treasury curve.",
-    why: "HY OAS companion on metric 6. Same amplifier family as IG OAS and NFCI.",
+    why: "HY OAS companion to NFCI. Raw only.",
   },
   PCEPILFE: {
     title: "Personal Consumption Expenditures Excluding Food and Energy (Chain-Type Price Index)",
@@ -215,7 +215,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/PCEPILFE",
     official:
       "BEA core PCE price index. Fed’s preferred underlying inflation gauge. Food and energy excluded.",
-    why: "Driver overlay (core PCE y/y), not a cube axis. Answers “if inflation printed hot tomorrow…”",
+    why: "Fed’s preferred inflation gauge. Stored as a level; the mandate plot will use 12-month % vs 2%. Not a Treasury-cube axis.",
   },
   PCEPI: {
     title: "Personal Consumption Expenditures: Chain-Type Price Index",
@@ -224,7 +224,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/PCEPI",
     official:
       "Headline PCE price index, chained.",
-    why: "Headline next to core. Context only; the force map uses PCEPILFE.",
+    why: "Headline PCE. Stored for the Fed-mandate plot (12-month % minus the 2% goal). Not a Treasury-cube axis.",
   },
   CPILFESL: {
     title: "Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average",
@@ -297,5 +297,113 @@ window.COLUMN_NOTES = {
     official:
       "Daily total public debt outstanding (tot_pub_debt_out_amt).",
     why: "Preferred stock for interest / debt in F1 and r−g. Converted to $bn; latest official print wins the date.",
+  },
+  DFII10: {
+    title: "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/DFII10",
+    official:
+      "10-year TIPS real yield from the Treasury H.15 constant-maturity curve.",
+    why: "Real long rate the FOMC means when it talks about moderate long-term rates. Stored raw for the Fed plot. Not a Treasury-cube axis.",
+  },
+  DGS30: {
+    title: "Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/DGS30",
+    official:
+      "Treasury constant-maturity 30-year yield from the H.15 / Treasury yield curve methodology.",
+    why: "Back of the curve next to DGS10. Context for duration and the long-rate mandate, not a cube wire.",
+  },
+  DFEDTARU: {
+    title: "Federal Funds Target Range — Upper Limit",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/DFEDTARU",
+    official:
+      "Upper limit of the FOMC federal funds target range. Series begins December 2008 when the Committee switched to a range.",
+    why: "What the Committee set, not a mandate gap. Overlay for a later “what they did” plot. Not used in the Treasury cubes.",
+  },
+  DFEDTARL: {
+    title: "Federal Funds Target Range — Lower Limit",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/DFEDTARL",
+    official:
+      "Lower limit of the FOMC federal funds target range. Series begins December 2008.",
+    why: "Companion to DFEDTARU. Instrument path, not a goal. Stored raw only.",
+  },
+  PAYEMS: {
+    title: "All Employees, Total Nonfarm",
+    source: "U.S. Bureau of Labor Statistics",
+    units: "Thousands of persons, monthly SA",
+    url: "https://fred.stlouisfed.org/series/PAYEMS",
+    official:
+      "Total nonfarm payroll employment from the Current Employment Statistics survey, seasonally adjusted.",
+    why: "The jobs print the public hears. Check series for the Fed plot, not the employment axis — that axis will be UNRATE vs NROU so one print cannot move the cube.",
+  },
+  JTSJOL: {
+    title: "Job Openings: Total Nonfarm",
+    source: "U.S. Bureau of Labor Statistics",
+    units: "Level in thousands, monthly SA",
+    url: "https://fred.stlouisfed.org/series/JTSJOL",
+    official:
+      "JOLTS total nonfarm job openings, seasonally adjusted. Starts December 2000.",
+    why: "Labor-market tightness beyond the unemployment gap. Stored for the Fed plot. Post-2000 only.",
+  },
+  T5YIE: {
+    title: "5-Year Breakeven Inflation Rate",
+    source: "Federal Reserve Bank of St. Louis",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/T5YIE",
+    official:
+      "Difference between 5-year Treasury and 5-year TIPS yields. Market-implied average inflation over five years.",
+    why: "Near-term inflation expectation the Board cites. Stored raw for the Fed plot. Not a Treasury-cube axis.",
+  },
+  T10YIE: {
+    title: "10-Year Breakeven Inflation Rate",
+    source: "Federal Reserve Bank of St. Louis",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/T10YIE",
+    official:
+      "Difference between 10-year Treasury and 10-year TIPS yields. Market-implied average inflation over ten years.",
+    why: "Longer breakeven next to T5YIE. Stored raw for the Fed plot.",
+  },
+  T5YIFR: {
+    title: "5-Year, 5-Year Forward Inflation Expectation Rate",
+    source: "Federal Reserve Bank of St. Louis",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/T5YIFR",
+    official:
+      "Market-implied inflation five years forward for five years. Closest market stand-in for whether 2% is anchored.",
+    why: "Anchoring check for the inflation mandate. Stored raw. Not a cube wire.",
+  },
+  CPIAUCSL: {
+    title: "Consumer Price Index for All Urban Consumers: All Items in U.S. City Average",
+    source: "U.S. Bureau of Labor Statistics",
+    units: "Index 1982-84=100, monthly SA",
+    url: "https://fred.stlouisfed.org/series/CPIAUCSL",
+    official:
+      "Headline CPI-U, seasonally adjusted.",
+    why: "Public inflation print. Robustness next to PCE. The Fed plot’s inflation axis will be PCE, not CPI.",
+  },
+  MICH: {
+    title: "University of Michigan: Inflation Expectation",
+    source: "University of Michigan, Survey of Consumers",
+    units: "Percent, monthly NSA",
+    url: "https://fred.stlouisfed.org/series/MICH",
+    official:
+      "Median expected price change over the next 12 months from the University of Michigan Survey of Consumers.",
+    why: "Household inflation expectation the FOMC still mentions. Soft series. Stored raw for the Fed plot.",
+  },
+  PCETRIM12M159SFRBDAL: {
+    title: "Trimmed Mean PCE Inflation Rate",
+    source: "Federal Reserve Bank of Dallas",
+    units: "Percent change from year ago, monthly SA",
+    url: "https://fred.stlouisfed.org/series/PCETRIM12M159SFRBDAL",
+    official:
+      "Dallas Fed 12-month trimmed-mean PCE inflation. Already a rate, not an index.",
+    why: "Underlying PCE the briefings use when headline and core disagree. Stored raw. Not a Treasury-cube axis.",
   },
 };

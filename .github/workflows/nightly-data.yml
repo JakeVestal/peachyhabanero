@@ -9,6 +9,18 @@ on:
         description: "Ignore cache and rebuild raw frames from 1970"
         type: boolean
         default: false
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_site_data.py"
+      - ".github/workflows/nightly-data.yml"
+      - "src/cube_data.py"
+      - "src/cube_visualize.py"
+      - "src/failure_cube.py"
+      - "src/cube_critical_values.csv"
+      - "site/data/cube_critical_values.csv"
+      - "site/data/zone.csv"
+      - "requirements.txt"
 
 permissions:
   contents: read
@@ -37,13 +49,19 @@ jobs:
       - name: install
         run: pip install -r requirements.txt
 
+      - name: iso week
+        id: week
+        run: echo "iso=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+
       - name: restore raw-frame cache
         if: ${{ github.event.inputs.full_rebuild != 'true' }}
         uses: actions/cache/restore@v4
         with:
           path: .cache
-          key: cube-raw-${{ github.run_id }}
+          key: cube-raw-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
           restore-keys: |
+            cube-raw-v2-${{ github.ref_name }}-
+            cube-raw-v2-
             cube-raw-
 
       - name: build published json
@@ -55,10 +73,31 @@ jobs:
         run: python scripts/build_site_data.py
 
       - name: save raw-frame cache
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: .cache
-          key: cube-raw-${{ github.run_id }}
+          key: cube-raw-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
+
+      - name: require published json
+        run: |
+          test -s site/data/published/cubes.json
+          test -s site/data/published/quarterly.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("site/data/published/cubes.json")
+          pack = json.loads(p.read_text())
+          assert pack.get("sustain") and pack.get("fail"), "empty cubes"
+          print("ok", pack.get("coupon_source"), "sustain", len(pack["sustain"]))
+          PY
+
+      - name: save published json cache
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: site/data/published
+          key: cube-published-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
 
       - uses: actions/configure-pages@v5
 

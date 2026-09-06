@@ -1,7 +1,4 @@
 metric_id,metric_key,headline_column,critical_value,direction_unthinkable,units,rationale
 1,01_funds_equals_fiscal_rate,funds_minus_stock_coupon_pp,0,at_or_below,percentage_points,Policy rate and the coupon on the stock are the same object. Hiking is the fiscal rate.
 2,02_interest_share_of_receipts,interest_pct_of_current_receipts,20,at_or_above,percent_of_receipts,A fifth of the till. From here a 100bp path on the rolling wall is a named program not a rounding error.
-3,03_primary_deficit_not_in_hole,primary_deficit_pct_gdp,0,at_or_above,percent_of_gdp,Still borrowing for operations. Pair with unemployment_gap_pp <= 0 for the full condition.
-4,04_duration_demand_term_premium,acm_10y_term_premium_pp,1.0,at_or_above,percentage_points,Duration is charging a full point of fiscal premium. Private bid no longer absorbing issuance at a normal term premium.
-5,05_r_minus_g,r_minus_g_pp,0,at_or_above,percentage_points,Effective coupon >= nominal growth. Without a primary surplus the ratio only closes by inflating g or repressing r.
-6,06_financial_conditions,NFCI,0,at_or_above,index,Financial conditions already tighter than the 1973- historical average. Another official tightener is a second shock.
+3,03_primary_deficit_not_in_hole,primary_deficit_pct_gdp,0,at_or_above,percent_of_gdp,Still borrowing for operations.

@@ -46,8 +46,7 @@ from cube_visualize import (  # noqa: E402
     quarterly_complete,
     standardize,
 )
-from failure_cube import embed, load_or_update_rate_adjust  # noqa: E402
-from macro_drivers import load_or_update_drivers  # noqa: E402
+from failure_cube import embed  # noqa: E402
 
 CACHE = Path(os.environ.get("CUBE_CACHE", ROOT / ".cache"))
 DATA = Path(os.environ.get("CUBE_DATA_DIR", ROOT / "site" / "data"))
@@ -63,20 +62,26 @@ COLMAP = {
     "x1": "funds_minus_stock",
     "x2": "interest_pct_receipts",
     "x3": "primary_deficit_pct_gdp",
-    "x4": "acm_10y_term_premium",
-    "x5": "r_minus_g",
-    "x6": "NFCI",
 }
 
 # Columns a human needs to replay the six formulas. Full auction tables stay in cache.
 RAW_KEEP = {
-    "fred_policy_rates": ["FEDFUNDS", "TB3MS", "DGS10", "DGS2"],
+    "fred_policy_rates": [
+        "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS30", "DFII10",
+        "DFEDTARU", "DFEDTARL",
+    ],
     "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "FGEXPND"],
     "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S", "FYGFGDQ188S"],
-    "fred_labor_output": ["UNRATE", "NROU", "GDP", "GDPC1", "GDPPOT"],
-    "fred_term_premium": ["THREEFYTP10", "T10Y2Y", "T10Y3M"],
+    "fred_labor_output": [
+        "UNRATE", "NROU", "GDP", "GDPC1", "GDPPOT", "PAYEMS", "JTSJOL",
+    ],
+    "fred_term_premium": [
+        "THREEFYTP10", "T10Y2Y", "T10Y3M", "T5YIE", "T10YIE", "T5YIFR",
+    ],
     "fred_financial_conditions": ["NFCI", "DRTSCILM", "BAMLC0A0CM", "BAMLH0A0HYM2"],
-    "fred_inflation": ["PCEPILFE", "PCEPI", "CPILFESL"],
+    "fred_inflation": [
+        "PCEPILFE", "PCEPI", "CPILFESL", "CPIAUCSL", "MICH", "PCETRIM12M159SFRBDAL",
+    ],
     "fiscal_mspd_composition": [
         "MSPD_BILLS_PUBLIC_MN",
         "MSPD_MARKETABLE_PUBLIC_MN",
@@ -123,16 +128,23 @@ def write_json(path: Path, payload) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-ZONE = {
-    "debt_gdp_warn": 100.0,
-    "debt_gdp_death": 140.0,
-    "int_rec_warn": 20.0,
-    "int_rec_death": 30.0,
-    "int_tax_warn": 25.0,
-    "int_tax_death": 40.0,
-    "refi_gap_warn": 0.50,
-    "refi_gap_death": 1.50,
-}
+def load_zone(path: Path) -> dict:
+    if path.exists():
+        z = pd.read_csv(path)
+        return {str(r["key"]): float(r["value"]) for _, r in z.iterrows()}
+    return {
+        "debt_gdp_warn": 100.0,
+        "debt_gdp_death": 140.0,
+        "int_rec_warn": 20.0,
+        "int_rec_death": 30.0,
+        "int_tax_warn": 25.0,
+        "int_tax_death": 40.0,
+        "refi_gap_warn": 0.50,
+        "refi_gap_death": 1.00,
+    }
+
+
+ZONE = load_zone(DATA / "zone.csv")
 REFINANCE_WEIGHTS = {"tb3m": 0.25, "y2": 0.50, "y10": 0.25}
 
 
@@ -182,9 +194,17 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     debt = by.get("fred_debt_stocks", pd.DataFrame())
     labor = by.get("fred_labor_output", pd.DataFrame())
 
-    stock = _qe(_col_or(m01, "treasury_avg_marketable_coupon_pct", "effective_avg_coupon_pct"))
+    stock_fd = _qe(_col_or(m01, "treasury_avg_marketable_coupon_pct"))
+    stock_nipa = _qe(_col_or(m01, "effective_avg_coupon_pct"))
+    if int(stock_fd.dropna().shape[0]) >= 8:
+        stock = stock_fd
+        coupon_source = "fiscal_data_marketable"
+    else:
+        stock = stock_nipa
+        coupon_source = "nipa_effective"
+    log_step(f"book coupon source: {coupon_source}")
     funds = _qe(_col_or(m01, "FEDFUNDS"))
-    funds_minus = _qe(_col_or(m01, "funds_minus_stock_coupon_pp"))
+    funds_minus = (funds - stock).rename("funds_minus_stock")
     int_rec = _qe(_col_or(m02, "interest_pct_of_current_receipts"))
     int_tax = _qe(_col_or(m02, "interest_pct_of_tax_receipts"))
     int_bn = _qe(_col_or(m02, "interest_bn_saar"))
@@ -256,6 +276,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     payload = {
         "generated_at": generated_at,
         "zone": ZONE,
+        "coupon_source": coupon_source,
         "refinance_weights": REFINANCE_WEIGHTS,
         "sustain": df_to_table(sustain)["rows"][::-1],
         "fail": df_to_table(fail)["rows"][::-1],
@@ -307,23 +328,17 @@ def process_and_publish() -> None:
     thresh = load_thresholds(THRESH)
     aligned = quarterly_complete(metrics, thresh).sort_index()
     y, s_bits = standardize(aligned, thresh)
-    state = embed(y, s_bits, (1, 2, 3), (4, 5, 6)).sort_index()
+    state = embed(y, s_bits, (1, 2, 3), ()).sort_index()
     for c in aligned.columns:
         state[c] = aligned[c]
-
-    log_step("Updating rate adjustments and macro drivers...")
-    rates = load_or_update_rate_adjust(RATE_CSV)
-    state = state.join(rates[["rate_adjust"]], how="left")
-    state["rate_adjust"] = state["rate_adjust"].fillna(0.0)
-    drivers = load_or_update_drivers(DRIVERS_CSV)
 
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     quarterly_cols = [
-        "F1", "F2", "F3", "n_fiscal", "n_amp", "fail", "rate_adjust",
-        "y1", "y2", "y3", "y4", "y5", "y6",
-        "s1", "s2", "s3", "s4", "s5", "s6",
-        "x1", "x2", "x3", "x4", "x5", "x6",
+        "F1", "F2", "F3", "n_fiscal", "fail",
+        "y1", "y2", "y3",
+        "s1", "s2", "s3",
+        "x1", "x2", "x3",
     ]
     qdf = state[quarterly_cols].rename(columns=COLMAP)
 
@@ -410,26 +425,18 @@ def process_and_publish() -> None:
             "series.json",
             "calculated_metrics.json",
             "raw_inputs.json",
-            "rate_adjust.csv",
-            "macro_drivers.csv",
             "thresholds.json",
             "cubes.json",
         ],
     })
     write_json(PUB / "thresholds.json", thresh.to_dict(orient="records"))
 
-    log_step("Writing final CSV outputs...")
-    drivers.to_csv(PUB / "macro_drivers.csv")
-    rates.to_csv(PUB / "rate_adjust.csv")
-    log_step(f"wrote {PUB / 'macro_drivers.csv'}")
-    log_step(f"wrote {PUB / 'rate_adjust.csv'}")
-
     last = state.iloc[-1]
     log_step(f"quarters {len(state)}  {state.index.min().date()} -> {state.index.max().date()}")
     log_step(
         f"latest {state.index[-1].date()}  "
         f"F=({last.F1:.2f},{last.F2:.2f},{last.F3:.2f})  "
-        f"fiscal={int(last.n_fiscal)}/3 amp={int(last.n_amp)}/3 fail={int(last.fail)}"
+        f"fiscal={int(last.n_fiscal)}/3 fail={int(last.fail)}"
     )
 
 

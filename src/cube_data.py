@@ -72,6 +72,8 @@ FRED_GROUPS = {
         "DGS10",
         "DGS30",
         "DFII10",    # 10y TIPS real yield
+        "DFEDTARU",  # FOMC target range, upper
+        "DFEDTARL",  # FOMC target range, lower
     ],
     "fred_fiscal_nipa": [
         "A091RC1Q027SBEA",  # federal interest payments, SAAR $bn
@@ -91,11 +93,16 @@ FRED_GROUPS = {
         "GDP",              # nominal GDP SAAR $bn
         "GDPC1",            # real GDP
         "GDPPOT",           # potential GDP
+        "PAYEMS",           # nonfarm payrolls, thousands
+        "JTSJOL",           # JOLTS job openings, thousands
     ],
     "fred_term_premium": [
         "THREEFYTP10",      # NY Fed ACM 10y term premium (FRED)
         "T10Y2Y",
         "T10Y3M",
+        "T5YIE",            # 5y inflation breakeven
+        "T10YIE",           # 10y inflation breakeven
+        "T5YIFR",           # 5y5y forward inflation expectation
     ],
     "fred_official_holdings": [
         "WSHOTSL",          # Fed SOMA Treasuries, $mn, Wednesday
@@ -111,11 +118,18 @@ FRED_GROUPS = {
         "PCEPI",
         "PCEPILFE",
         "CPILFESL",
+        "CPIAUCSL",                 # headline CPI-U
+        "MICH",                     # Michigan 1y inflation expectations
+        "PCETRIM12M159SFRBDAL",     # Dallas Fed 12m trimmed-mean PCE
     ],
 }
 
 # IORB / RRP series may 404 on older csv combiners; fetch individually.
-OPTIONAL_FRED = {"IORB", "RRPONTSYD", "DFF", "ACMTP10"}
+OPTIONAL_FRED = {
+    "IORB", "RRPONTSYD", "DFF", "ACMTP10",
+    "JTSJOL", "DFEDTARU", "DFEDTARL", "T5YIE", "T10YIE", "T5YIFR",
+    "PCETRIM12M159SFRBDAL",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -634,9 +648,6 @@ METRIC_NAMES = [
     "01_funds_equals_fiscal_rate",
     "02_interest_share_of_receipts",
     "03_primary_deficit_not_in_hole",
-    "04_duration_demand_term_premium",
-    "05_r_minus_g",
-    "06_financial_conditions",
 ]
 
 
@@ -780,34 +791,6 @@ def calculate_metrics(
     output_gap = (100.0 * (gdpc1 / gdppot - 1.0)).rename("output_gap_pct")
     metric_3 = _frame(primary_gdp, primary_bn, slack_u, output_gap)
 
-    tp = _col(term, "THREEFYTP10").rename("acm_10y_term_premium_pp")
-    t10y2y = _col(term, "T10Y2Y").rename("T10Y2Y_pp")
-    t10y3m = _col(term, "T10Y3M").rename("T10Y3M_pp")
-    # 10y auction bid-to-cover, native auction dates only
-    btc_10y = pd.Series(dtype="float64", name="auction_btc_10y")
-    if auctions is not None and not auctions.empty and "bid_to_cover_ratio" in auctions.columns:
-        a = auctions.copy()
-        a.index = pd.to_datetime(a.index)
-        term_col = a["security_term"].astype(str) if "security_term" in a.columns else None
-        if term_col is not None:
-            mask = term_col.str.contains(r"10[-\s]?Year", case=False, na=False)
-            btc_10y = pd.to_numeric(a.loc[mask, "bid_to_cover_ratio"], errors="coerce")
-            btc_10y = btc_10y[~btc_10y.index.duplicated(keep="last")].sort_index()
-            btc_10y.name = "auction_btc_10y"
-    metric_4 = _frame(tp, t10y2y, t10y3m, btc_10y)
-
-    g_nom = (100.0 * gdp.pct_change(4)).rename("nominal_gdp_yoy_pct")
-    g_nom_m = g_nom.resample("ME").last()
-    g_nom_m = g_nom_m.reindex(r_stock.index).ffill()
-    r_minus_g = (r_stock - g_nom_m).rename("r_minus_g_pp")
-    metric_5 = _frame(r_minus_g, r_stock, g_nom)
-
-    nfci = _col(fci, "NFCI").rename("NFCI")
-    sloos = _col(fci, "DRTSCILM").rename("sloos_ci_tightening_pct")
-    ig = _col(fci, "BAMLC0A0CM").rename("ig_oas_pp")
-    hy = _col(fci, "BAMLH0A0HYM2").rename("hy_oas_pp")
-    metric_6 = _frame(nfci, sloos, ig, hy)
-
     def _keep_where(df: pd.DataFrame, headline: str) -> pd.DataFrame:
         if df.empty or headline not in df.columns:
             return df.dropna(how="all")
@@ -821,9 +804,6 @@ def calculate_metrics(
         "03_primary_deficit_not_in_hole": _keep_where(
             metric_3, "primary_deficit_pct_gdp"
         ),
-        "04_duration_demand_term_premium": metric_4.dropna(how="all"),
-        "05_r_minus_g": _keep_where(metric_5, "r_minus_g_pp"),
-        "06_financial_conditions": metric_6.dropna(how="all"),
     }
 
     if save:

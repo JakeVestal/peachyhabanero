@@ -3,26 +3,33 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Fed cubes</title>
+  <title>Treasury cubes</title>
   <link rel="stylesheet" href="style.css"/>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
   <header>
-    <p class="navline">cubes · <a href="data.html">data</a> · <a href="methodology.html">methodology</a></p>
-    <h1>FED CUBES</h1>
+    <p class="navline">cubes · <a href="data.html">data</a> · <a href="methodology.html">methodology</a> · <a href="boundaries.html">boundaries</a></p>
+    <h1>TREASURY CUBES</h1>
     <p>
-      The Sustainibility Cube (left) defines a <b>Danger Zone</b> within
+      These two cubes are the Treasury’s problem, not the Fed’s. The stock,
+      the till, the book coupon, and whether a hike is fiscally unthinkable
+      are fiscal objects. The Fed’s mandate is prices, employment, and
+      moderate long-term rates — not the best financing position of the
+      United States.
+    </p>
+    <p>
+      The Sustainability Cube (left) defines a <b>Danger Zone</b> within
       which the US debt stock is at high risk of entering a self-reinforcing
       feedback loop of runaway debt and interest, as well as a <b>Death
       Zone</b> in which such a feedback loop is all but certain.</p>
 
     <p>
-      The Fiscal Dominance Cube (right) plots the answer to a similar
-      question by defining a region within which the Fed must abandon its
-      inflation-fighting mandate in order to service existing debt. Within
-      the cube, a rate hike would be unthinkable even if inflation printed
-      hot and the Fed would otherwise like to raise rates.
+      The Fiscal Dominance Cube (right) is still a Treasury question: the
+      region in which a rate hike would be unthinkable on fiscal arithmetic
+      even if inflation printed hot and the Fed’s inflation mandate would
+      otherwise demand one. That is the contest — Treasury cannot support
+      the hike; the mandate may still require it.
     </p>
     <p class="stat" id="stamp">loading cubes.json…</p>
   </header>
@@ -32,7 +39,13 @@
       <button class="neon-btn active" type="button" id="btn-tax">tax</button>
     </div>
     <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
-    Use these buttons to toggle between displaying "Interest/Tax" and "Interest/Receipts" on the Sustainability Cube and the 1-D distance plot below. "Tax" means total collected tax revenue (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a> in the FRED database). "Receipts" means total govenmental reciepts (<a href="https://fred.stlouisfed.org/series/FGRECPT" style="color: #00f0ff; text-decoration: none;">FGRECPT</a>), which includes taxes plus Social Security and Medicare payroll taxes, fines, income on assets, and all other sources of government income.
+    Toggle interest / tax vs interest / receipts on both cubes and the
+    distance plot. Tax is NIPA current tax receipts
+    (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a>).
+    Receipts is NIPA current receipts
+    (<a href="https://fred.stlouisfed.org/series/FGRECPT" style="color: #00f0ff; text-decoration: none;">FGRECPT</a>)
+    — taxes plus contributions for social insurance, income on assets, and
+    the rest of the current-receipts envelope.
   </span>
   </div>
   <section>
@@ -51,10 +64,19 @@
       score-space dimensions, and is not a raw percent or basis point measure.
     </p>
     <div id="dist-plot"></div>
+    <p class="sub">
+      Point color on the sustainability path is <b>interest-burden stress</b>:
+      a 0–1 blend of the three score-space coordinates
+      (20% debt/GDP, 35% interest share, 25% refi gap) plus a 20% sleeve for
+      <b>interest / GDP</b> (`A091 / GDP`), piecewise through 3.0% (warn) and
+      4.5% (death). That sleeve is not a cube axis. It is only the color so a
+      high till-share quarter that is still a small slice of GDP does not
+      look the same as one that is already a program.
+    </p>
   </section>
   <footer>
     peachyhabanero · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
   </footer>
-  <script src="cube.js?v=5"></script>
+  <script src="cube.js?v=7"></script>
 </body>
 </html>

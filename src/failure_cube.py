@@ -168,14 +168,17 @@ def embed(y: pd.DataFrame, s_bits: pd.DataFrame, fiscal_ids, amp_ids) -> pd.Data
     out["F2"] = y[f"y{fids[1]}"]
     out["F3"] = y[f"y{fids[2]}"]
     out["n_fiscal"] = sum(s_bits[f"s{i}"] for i in fids).astype(int)
-    out["n_amp"] = sum(s_bits[f"s{i}"] for i in amp_ids).astype(int)
+    if amp_ids:
+        out["n_amp"] = sum(s_bits[f"s{i}"] for i in amp_ids).astype(int)
     fail = s_bits[f"s{fids[0]}"] == 1
     for i in fids[1:]:
         fail = fail & (s_bits[f"s{i}"] == 1)
     out["fail"] = fail.astype(int)
-    for i in range(1, 7):
-        out[f"y{i}"] = y[f"y{i}"]
-        out[f"s{i}"] = s_bits[f"s{i}"]
+    for col in list(y.columns) + list(s_bits.columns):
+        if col.startswith("y") or col.startswith("s"):
+            src = y if col.startswith("y") else s_bits
+            if col in src.columns:
+                out[col] = src[col]
     return out
 
 

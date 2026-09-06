@@ -1,5 +1,9 @@
 name: pages
 
+# HTML/JS/CSS only. No FRED. Last published JSON comes from the
+# cube-published cache (written only after a green nightly) or, if
+# that cache is cold, from the live site. A failed nightly never
+# reaches deploy-pages, so GitHub keeps the previous Pages build.
 on:
   push:
     branches: [main]
@@ -7,6 +11,15 @@ on:
       - "README.md"
       - "LICENSE"
       - ".gitignore"
+      - "scripts/build_site_data.py"
+      - ".github/workflows/nightly-data.yml"
+      - "src/cube_data.py"
+      - "src/cube_visualize.py"
+      - "src/failure_cube.py"
+      - "src/cube_critical_values.csv"
+      - "site/data/cube_critical_values.csv"
+      - "site/data/zone.csv"
+      - "requirements.txt"
   workflow_dispatch:
 
 permissions:
@@ -21,35 +34,37 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
+      - name: iso week
+        id: week
+        run: echo "iso=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
 
-      - name: install
-        run: pip install -r requirements.txt
-
-      - name: restore raw-frame cache
+      - name: restore published json
         uses: actions/cache/restore@v4
         with:
-          path: .cache
-          key: cube-raw-${{ github.run_id }}
+          path: site/data/published
+          key: cube-published-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
           restore-keys: |
-            cube-raw-
+            cube-published-v2-${{ github.ref_name }}-
+            cube-published-v2-
+            cube-published-
 
-      - name: rebuild published json
-        env:
-          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-          CUBE_CACHE: ${{ github.workspace }}/.cache
-          CUBE_DATA_DIR: ${{ github.workspace }}/site/data
-        run: python scripts/build_site_data.py
+      - name: fill published json from live site if cache cold
+        run: |
+          mkdir -p site/data/published
+          if [ ! -s site/data/published/cubes.json ]; then
+            echo "cache miss — pulling last live published json"
+            for f in cubes.json quarterly.json raw_inputs.json calculated_metrics.json series.json thresholds.json manifest.json; do
+              curl -fsSL "https://peachyhabanero.com/data/published/$f" -o "site/data/published/$f" || true
+            done
+          fi
+          test -s site/data/published/cubes.json
 
       - uses: actions/configure-pages@v5
 

@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Failure mode — data</title>
+  <title>Treasury cubes — data</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <header>
-    <p class="navline"><a href="index.html">cubes</a> · data · <a href="methodology.html">methodology</a></p>
-    <h1>FAILURE MODE  /  DATA</h1>
+    <p class="navline"><a href="index.html">cubes</a> · data · <a href="methodology.html">methodology</a> · <a href="boundaries.html">boundaries</a></p>
+    <h1>TREASURY CUBES  /  DATA</h1>
     <p class="sub">
-      Audit trail: thresholds, formula inputs, calculated metrics,
-      then the quarterly F / fail bits a human can recompute.
+      Audit trail: three fiscal wires only. Thresholds, formula inputs,
+      calculated metrics 01–03, then the quarterly F / fail bits.
     </p>
     <p class="stat" id="stamp">loading published data…</p>
   </header>
@@ -32,8 +32,7 @@
       <li><b>F1 / funds − stock coupon</b> — effective funds minus NIPA interest ÷ debt stock. Unthinkable at or below 0: hiking <i>is</i> the fiscal rate.</li>
       <li><b>F2 / interest ÷ receipts</b> — NIPA federal interest over current receipts. Unthinkable at or above 20%.</li>
       <li><b>F3 / primary deficit ÷ GDP</b> — (outlays − interest − receipts) / GDP. Unthinkable at or above 0.</li>
-      <li><b>Amplifiers 4–6</b> — term premium, r − g, NFCI. Color only. They do not define fail.</li>
-      <li><b>fail</b> — AND of the three fiscal wires after standardizing through the threshold file.</li>
+      <li><b>fail</b> — AND of those three wires after standardizing through the threshold file.</li>
     </ol>
     <p class="sub">y = (x − c) / σ, flipped if direction is at_or_below. s = 1 when y &gt; 0.</p>
   </section>
@@ -59,7 +58,12 @@
   </section>
 
   <section id="panel-raw" class="panel hidden">
-    <h2>04  /  raw columns used in the formulas</h2>
+    <h2>04  /  raw columns (Treasury formulas + Fed-mandate store)</h2>
+    <p class="sub">
+      Same frames as the nightly cache. New mandate series (PCE/CPI, payrolls,
+      JOLTS, breakevens, target range) are stored here as raw levels. No gaps
+      or Fed plot yet — that comes after the cache has a full history.
+    </p>
     <div id="raw-picker" class="toolbar"></div>
     <div id="raw-col-notes"></div>
     <div id="tbl-raw"></div>
@@ -74,7 +78,7 @@
   <footer>
     peachyhabanero · <a href="index.html">cubes</a> · <a href="methodology.html">methodology</a>
   </footer>
-  <script src="column_notes.js?v=4"></script>
+  <script src="column_notes.js?v=5"></script>
   <script src="app.js?v=4"></script>
 </body>
 </html>

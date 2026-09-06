@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Treasury cubes — boundaries</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header>
+    <p class="navline"><a href="index.html">cubes</a> · <a href="data.html">data</a> · <a href="methodology.html">methodology</a> · boundaries</p>
+    <h1>TREASURY CUBES  /  BOUNDARIES</h1>
+    <p class="sub">
+      One-dimensional histories of the six axes, with the wires drawn.
+      Orange = sustainability warn (danger). Magenta = death / unthinkable.
+      Fiscal-dominance y-space has a single magenta face at 0 by construction.
+    </p>
+    <p class="sub" id="stamp">loading cubes.json…</p>
+  </header>
+
+  <section>
+    <h2>Sustainability — why these faces</h2>
+    <p class="sub">
+      These are <b>conventions with a mechanism</b>, not estimated discontinuities.
+      Reinhart and Rogoff’s 90% public-debt cliff
+      (<i>Growth in a Time of Debt</i>, 2010) is the citation a reviewer will
+      throw. Herndon, Ash and Pollin (2013) killed the cliff, not the idea that
+      a high public-held stock is a different regime. We use <b>debt held by
+      the public / GDP</b> (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>),
+      not total debt, and we put the warn face at <b>100%</b> — the round
+      figure CBO and the IMF Fiscal Monitor talk in — and the death face at
+      <b>140%</b>, Italy/Greece-crisis stock without Japan’s captive domestic bid.
+      140 is a labeled convention. It is not in Reinhart.
+    </p>
+    <p class="sub">
+      Interest / receipts <b>20 / 30</b> (tax till <b>25 / 40</b>) is “a fifth
+      of the till.” US federal interest over current receipts last peaked in
+      the mid-teens in the early 1990s. At 20%, a 100 bp coupon step on the
+      rolling wall is a budget line, not rounding. Dalio’s
+      <i>Principles for Navigating Big Debt Crises</i> (2018) is the
+      <b>loop</b> — service crowds the budget, the deficit feeds the stock,
+      the stock feeds service — not a Dalio constant of 20. We cite the
+      mechanism. We do not invent a Dalio number.
+    </p>
+    <p class="sub">
+      Refi gap <b>+0.50 / +1.00 pp</b> is our construction: issuance-weighted
+      marginal (¼ TB3MS + ½ DGS2 + ¼ DGS10) minus the book coupon. Warn:
+      new issue already costs half a point more than the stock. Death: a
+      full extra point on every rolled dollar — the same “named program”
+      sentence as the 20% till wire. There is no paper for 0.50 or 1.00.
+      Zero on this axis would mean the marginal rate has met the book
+      (cousin of F1). We do not pretend otherwise.
+    </p>
+    <div class="grid-2">
+      <div><div id="b-debt"></div></div>
+      <div><div id="b-int"></div></div>
+    </div>
+    <div id="b-refi"></div>
+  </section>
+
+  <section>
+    <h2>Fiscal dominance — raw</h2>
+    <p class="sub">
+      Three identities, one magenta face each. <b>F1 raw:</b> effective funds
+      minus the same book coupon. Face at <b>0</b>: hiking <i>is</i> the fiscal
+      rate. Not a citation. <b>F2 raw:</b> interest / receipts, face at
+      <b>20</b> — the same till wire as sustainability warn. We do not run a
+      second interest-share number. <b>F3 raw:</b> NIPA primary deficit / GDP,
+      face at <b>0</b>. Domar (1944) and Blanchard (AEA presidential address,
+      2019): if \(r \ge g\), a primary deficit cannot stabilize the ratio
+      without inflation or repression. Reviewer objection — the US runs
+      primary deficits in expansions — is answered by the sentence of this
+      cube: this face is <i>can you hike</i>, not “deficits are always a crisis.”
+    </p>
+    <div class="grid-2">
+      <div><div id="b-f1x"></div></div>
+      <div><div id="b-f2x"></div></div>
+    </div>
+    <div id="b-f3x"></div>
+  </section>
+
+  <section>
+    <h2>Fiscal dominance — y-space</h2>
+    <p class="sub">
+      \(y = (x - c) / \sigma\), flipped when the unthinkable direction is
+      at-or-below. Magenta at <b>y = 0</b> is the raw face after that map.
+      Plotting it is so a reader sees the scale, not new information.
+      Inside the octant is \(y_1 &gt; 0 \wedge y_2 &gt; 0 \wedge y_3 &gt; 0\).
+    </p>
+    <div class="grid-2">
+      <div><div id="b-f1y"></div></div>
+      <div><div id="b-f2y"></div></div>
+    </div>
+    <div id="b-f3y"></div>
+  </section>
+
+  <footer>peachyhabanero · wires are conventions with a mechanism</footer>
+  <script src="boundaries.js"></script>
+</body>
+</html>

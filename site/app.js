@@ -103,9 +103,6 @@ const X_COLS = {
   1: "funds_minus_stock",
   2: "interest_pct_receipts",
   3: "primary_deficit_pct_gdp",
-  4: "acm_10y_term_premium",
-  5: "r_minus_g",
-  6: "NFCI",
 };
 
 function sampleStd(values) {
@@ -209,49 +206,6 @@ function recipeX(id, date, metrics, raw, qrow) {
       `x3 = 100 × primary / GDP = ${fmtN(rebuilt, 4)}.`,
     ];
   }
-  if (id === 4) {
-    const tp = num(term && term.THREEFYTP10) ?? num(m4 && m4.acm_10y_term_premium_pp);
-    return [
-      `Raw FRED THREEFYTP10 (Kim–Wright 10y zero term premium) last print ≤ ${date}: ${fmtN(tp, 4)}.`,
-      `x4 is that print. No transformation other than last-in-quarter.`,
-    ];
-  }
-  if (id === 5) {
-    const x5 = num(qrow && qrow.r_minus_g) ?? num(m5 && m5.r_minus_g_pp);
-    let coupon = num(m1 && m1.effective_avg_coupon_pct) ?? num(m5 && m5.effective_avg_coupon_pct);
-    let g = num(m5 && m5.nominal_gdp_yoy_pct);
-    const gdpNow = num(labor && labor.GDP);
-    const laborYearAgo = asOf(R.fred_labor_output, shiftIso(date, -1));
-    const gdpLag = num(laborYearAgo && laborYearAgo.GDP);
-    if (g == null && gdpNow && gdpLag) g = 100 * (gdpNow / gdpLag - 1);
-    if (g == null && coupon != null && x5 != null) g = coupon - x5;
-    if (coupon == null && g != null && x5 != null) coupon = x5 + g;
-    const rebuilt = coupon != null && g != null ? coupon - g : x5;
-    const lines = [
-      `r = effective coupon on the stock = 100 × NIPA interest ÷ debt stock = ${fmtN(coupon, 4)}.`,
-    ];
-    if (gdpNow != null && gdpLag != null) {
-      lines.push(
-        `Nominal GDP at ${date} = ${fmtN(gdpNow, 3)} $bn. GDP four quarters earlier (${laborYearAgo && laborYearAgo.date}) = ${fmtN(gdpLag, 3)} $bn.`
-      );
-      lines.push(`g = 100 × (GDP / GDP_lag − 1) = 100 × (${fmtN(gdpNow, 3)} / ${fmtN(gdpLag, 3)} − 1) = ${fmtN(g, 4)}.`);
-    } else if (g != null && coupon != null && x5 != null && num(m5 && m5.nominal_gdp_yoy_pct) == null) {
-      lines.push(
-        `Four-quarter GDP growth was not on the metric-5 row for this date. Backed out of the identity g = r − x5 = ${fmtN(coupon, 4)} − ${fmtN(x5, 4)} = ${fmtN(g, 4)}.`
-      );
-    } else {
-      lines.push(`g = 100 × four-quarter percent change in nominal GDP = ${fmtN(g, 4)}.`);
-    }
-    lines.push(`x5 = r − g = ${fmtN(coupon, 4)} − ${fmtN(g, 4)} = ${fmtN(rebuilt, 4)}. Table r_minus_g = ${fmtN(x5, 4)}.`);
-    return lines;
-  }
-  if (id === 6) {
-    const nfci = num(fci && fci.NFCI) ?? num(m6 && m6.NFCI);
-    return [
-      `Raw Chicago Fed NFCI last print ≤ ${date}: ${fmtN(nfci, 4)}.`,
-      `x6 is that print. No transformation other than last-in-quarter.`,
-    ];
-  }
   return [];
 }
 
@@ -326,12 +280,6 @@ function explainQuarterlyCol(col, row, rows, thresholds, metrics, raw) {
     return [
       `n_fiscal = s1 + s2 + s3 = ${row.s1} + ${row.s2} + ${row.s3} = ${row.n_fiscal}.`,
       `Each s is 1 when that fiscal wire’s y is positive (see y/s cards).`,
-    ];
-  }
-  if (col === "n_amp") {
-    return [
-      `n_amp = s4 + s5 + s6 = ${row.s4} + ${row.s5} + ${row.s6} = ${row.n_amp}.`,
-      `Amplifiers only. They color the cube; they do not define fail.`,
     ];
   }
   if (col === "fail") {
