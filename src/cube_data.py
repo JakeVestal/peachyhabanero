@@ -56,6 +56,7 @@ FRAME_NAMES = [
     "fred_inflation",
     "fiscal_avg_coupon",
     "fiscal_mspd_composition",
+    "fiscal_mspd_residual",
     "fiscal_auctions",
     "fiscal_interest_expense",
     "fiscal_debt_to_penny",
@@ -69,6 +70,7 @@ FRED_GROUPS = {
         "RRPONTSYD",  # ON RRP uptake, $bn (optional; skip if missing)
         "TB3MS",     # 3-month T-bill
         "DGS2",
+        "DGS5",
         "DGS10",
         "DGS30",
         "DFII10",    # 10y TIPS real yield
@@ -381,6 +383,91 @@ def fetch_mspd_composition(sess: requests.Session, start: str) -> pd.DataFrame:
     return out
 
 
+RESID_BUCKETS = (
+    "0_1Y",
+    "1_3Y",
+    "3_7Y",
+    "7_10Y",
+    "10YPLUS",
+    "TIPS",
+    "FRN",
+)
+
+
+def _resid_bucket(class1: str, years: float) -> str | None:
+    c = (class1 or "").lower()
+    if "total" in c or "financing bank" in c:
+        return None
+    if "floating" in c:
+        return "FRN"
+    if "inflation" in c or "tips" in c:
+        return "TIPS"
+    if years < 0:
+        return None
+    if years < 1:
+        return "0_1Y"
+    if years < 3:
+        return "1_3Y"
+    if years < 7:
+        return "3_7Y"
+    if years < 10:
+        return "7_10Y"
+    return "10YPLUS"
+
+
+def fetch_mspd_residual(sess: requests.Session, start: str) -> pd.DataFrame:
+    """MSPD Table 3 market collapsed to remaining-maturity bucket weights.
+
+    Stores monthly shares and dollar amounts only — not CUSIPs.
+    """
+    raw = fiscal_paginate(
+        sess,
+        "v1/debt/mspd/mspd_table_3_market",
+        fields=(
+            "record_date,security_class1_desc,maturity_date,"
+            "outstanding_amt,issued_amt,inflation_adj_amt"
+        ),
+        start=max(start, "2001-01-01"),
+        sort="record_date",
+        page_size=10000,
+    )
+    if raw.empty:
+        return raw
+    raw["record_date"] = pd.to_datetime(raw["record_date"], errors="coerce")
+    raw["maturity_date"] = pd.to_datetime(raw["maturity_date"], errors="coerce")
+    out_amt = pd.to_numeric(raw["outstanding_amt"], errors="coerce")
+    iss_amt = pd.to_numeric(raw["issued_amt"], errors="coerce")
+    inf_amt = pd.to_numeric(raw.get("inflation_adj_amt"), errors="coerce")
+    amt = out_amt.copy()
+    miss = amt.isna()
+    amt = amt.where(~miss, iss_amt)
+    tips = raw["security_class1_desc"].astype(str).str.lower().str.contains("inflation|tips")
+    amt = amt.where(~(miss & tips), iss_amt.fillna(0) + inf_amt.fillna(0))
+    raw["amt"] = amt
+    years = (raw["maturity_date"] - raw["record_date"]).dt.days / 365.25
+    raw["bucket"] = [
+        _resid_bucket(c, y) if pd.notna(y) else None
+        for c, y in zip(raw["security_class1_desc"].astype(str), years)
+    ]
+    raw = raw.dropna(subset=["record_date", "bucket", "amt"])
+    raw = raw[raw["amt"] > 0]
+    if raw.empty:
+        return pd.DataFrame()
+    g = raw.groupby(["record_date", "bucket"], as_index=False)["amt"].sum()
+    wide_amt = g.pivot(index="record_date", columns="bucket", values="amt").sort_index()
+    for b in RESID_BUCKETS:
+        if b not in wide_amt.columns:
+            wide_amt[b] = pd.NA
+    wide_amt = wide_amt[list(RESID_BUCKETS)]
+    tot = wide_amt.sum(axis=1)
+    out = pd.DataFrame(index=wide_amt.index)
+    for b in RESID_BUCKETS:
+        out[f"RESID_AMT_{b}"] = wide_amt[b]
+        out[f"RESID_W_{b}"] = wide_amt[b] / tot
+    out.index.name = "date"
+    return out
+
+
 def fetch_auctions(sess: requests.Session, start: str) -> pd.DataFrame:
     """Auction results indexed by auction_date. One row per CUSIP/auction."""
     raw = fiscal_paginate(
@@ -500,6 +587,7 @@ FETCHERS = {
     "fred_inflation": lambda s, start: fetch_fred_group(s, FRED_GROUPS["fred_inflation"], start),
     "fiscal_avg_coupon": fetch_avg_coupon,
     "fiscal_mspd_composition": fetch_mspd_composition,
+    "fiscal_mspd_residual": fetch_mspd_residual,
     "fiscal_auctions": fetch_auctions,
     "fiscal_interest_expense": fetch_interest_expense,
     "fiscal_debt_to_penny": fetch_debt_to_penny,
@@ -638,6 +726,8 @@ def update_raw(
             notes = pd.to_numeric(old.get("MSPD_NOTES_PUBLIC_MN"), errors="coerce") if "MSPD_NOTES_PUBLIC_MN" in old.columns else pd.Series(dtype=float)
             if notes.empty or notes.notna().mean() < 0.8:
                 force_full = True
+        if name == "fiscal_mspd_residual" and (old is None or old.empty or "RESID_W_0_1Y" not in getattr(old, "columns", [])):
+            force_full = True
         if force_full:
             start = DEFAULT_START
             old = pd.DataFrame()
@@ -730,6 +820,7 @@ def calculate_metrics(
     holdings = src.get("fred_official_holdings", pd.DataFrame())
     fci = src.get("fred_financial_conditions", pd.DataFrame())
     mspd = src.get("fiscal_mspd_composition", pd.DataFrame())
+    resid = src.get("fiscal_mspd_residual", pd.DataFrame())
     coupon = src.get("fiscal_avg_coupon", pd.DataFrame())
     auctions = src.get("fiscal_auctions", pd.DataFrame())
     penny = src.get("fiscal_debt_to_penny", pd.DataFrame())
@@ -815,6 +906,40 @@ def calculate_metrics(
     ).rename("marginal_rate")
     refi_gap = (marginal - coupon_m).rename("refi_gap")
 
+    resid_extra = []
+    if resid is not None and not resid.empty and "RESID_W_0_1Y" in resid.columns:
+        dgs5 = _col(policy, "DGS5")
+        dgs30 = _col(policy, "DGS30")
+        dfii = _col(policy, "DFII10")
+        ymap = {
+            "0_1Y": tb3.resample("ME").last(),
+            "1_3Y": dgs2.resample("ME").last(),
+            "3_7Y": dgs5.resample("ME").last() if len(dgs5) else dgs2.resample("ME").last(),
+            "7_10Y": dgs10.resample("ME").last(),
+            "10YPLUS": dgs30.resample("ME").last() if len(dgs30) else dgs10.resample("ME").last(),
+            "TIPS": dfii.resample("ME").last() if len(dfii) else pd.Series(dtype="float64"),
+            "FRN": funds.resample("ME").last(),
+        }
+        parts = []
+        wsum = None
+        for b, yld in ymap.items():
+            w = _col(resid, f"RESID_W_{b}").resample("ME").last()
+            if wsum is None:
+                wsum = w.fillna(0.0)
+            else:
+                wsum = wsum.add(w.fillna(0.0), fill_value=0.0)
+            parts.append((w, yld))
+            resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
+        # Renormalize known buckets; month is NA if a positive-weight bucket lacks a yield.
+        marg_r = None
+        for w, yld in parts:
+            wn = w / wsum.replace(0, pd.NA)
+            term = wn * yld
+            marg_r = term if marg_r is None else marg_r.add(term, fill_value=0.0)
+        marg_r = marg_r.rename("marginal_residual")
+        refi_r = (marg_r - coupon_m).rename("refi_gap_residual")
+        resid_extra.extend([marg_r, refi_r])
+
     # Scratch robustness only — not a cube axis. Auction $ bills share vs MSPD stock share.
     extra = []
     if auctions is not None and not auctions.empty and "total_accepted" in auctions.columns:
@@ -853,6 +978,7 @@ def calculate_metrics(
         funds_minus_stock,
         marginal,
         refi_gap,
+        *resid_extra,
         *extra,
     )
 

@@ -67,7 +67,7 @@ COLMAP = {
 # Columns a human needs to replay the six formulas. Full auction tables stay in cache.
 RAW_KEEP = {
     "fred_policy_rates": [
-        "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS30", "DFII10",
+        "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS5", "DGS30", "DFII10",
         "DFEDTARU", "DFEDTARL",
     ],
     "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "FGEXPND"],
@@ -95,6 +95,12 @@ RAW_KEEP = {
         "MSPD_BONDS_SHARE_MARKETABLE",
         "MSPD_TIPS_SHARE_MARKETABLE",
         "MSPD_FRN_SHARE_MARKETABLE",
+    ],
+    "fiscal_mspd_residual": [
+        "RESID_W_0_1Y", "RESID_W_1_3Y", "RESID_W_3_7Y",
+        "RESID_W_7_10Y", "RESID_W_10YPLUS", "RESID_W_TIPS", "RESID_W_FRN",
+        "RESID_AMT_0_1Y", "RESID_AMT_1_3Y", "RESID_AMT_3_7Y",
+        "RESID_AMT_7_10Y", "RESID_AMT_10YPLUS", "RESID_AMT_TIPS", "RESID_AMT_FRN",
     ],
     "fiscal_debt_to_penny": ["DEBT_HELD_PUBLIC", "DEBT_INTRAGOV", "DEBT_TOTAL"],
 }
@@ -247,6 +253,15 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "refi_gap": refi_gap,
         "auction_bills_share": _qe(_col_or(m01, "auction_bills_share")),
         "refi_gap_auction": _qe(_col_or(m01, "refi_gap_auction")),
+        "marginal_residual": _qe(_col_or(m01, "marginal_residual")),
+        "refi_gap_residual": _qe(_col_or(m01, "refi_gap_residual")),
+        "resid_w_0_1y": _qe(_col_or(m01, "resid_w_0_1y")),
+        "resid_w_1_3y": _qe(_col_or(m01, "resid_w_1_3y")),
+        "resid_w_3_7y": _qe(_col_or(m01, "resid_w_3_7y")),
+        "resid_w_7_10y": _qe(_col_or(m01, "resid_w_7_10y")),
+        "resid_w_10yplus": _qe(_col_or(m01, "resid_w_10yplus")),
+        "resid_w_tips": _qe(_col_or(m01, "resid_w_tips")),
+        "resid_w_frn": _qe(_col_or(m01, "resid_w_frn")),
         "int_rec_pct": int_rec,
         "int_tax_pct": int_tax,
         "interest_bn": int_bn,

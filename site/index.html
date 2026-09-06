@@ -127,33 +127,51 @@
       <div class="axis-plot" id="ax-2"></div>
       <div class="axis-copy">
         <p>
-          The <b>Refi Gap</b> is defined as the difference between the
-          <b>marginal</b> rate that must be paid on new debt sold to the
-          market and the <b>Fiscal Data Total Marketable coupon</b>, which is
-          the overall effective rate that the Treasury is paying on its
-          existing debt stock.
+          The <b>Refi Gap</b> is the difference between the
+          <b>marginal</b> rate the book would clear at if it were marked
+          to the current Treasury curve by remaining maturity, and the
+          <b>coupon that the marketable stock already carries</b>.
         </p>
         <p class="stat">marginal − Fiscal Data Total Marketable coupon</p>
         <p>
-          The Treasury issues new debt to pay back loans it already has. The
-          <b>Refi Gap</b> is a measure of how much that affects the total
-          interest rates. If the <b>Refi Gap</b> is positive, then the total
-          rate that the Treasury pays on its stock of debt must go up when it
-          refinances; i.e., new issue costs more than the stock. Otherwise if
-          the gap is negative.
+          The Treasury issues new debt to pay what is already out. If the
+          gap is positive, new issue costs more than the stock and the
+          book’s carrying rate has to rise as it rolls. If the gap is
+          negative, rolls cheapen the book.
         </p>
-        <p>The marginal rate is calculated as:</p>
         <p>
-          marginal = w_bills × <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>
-          + w_2y × <a href="https://fred.stlouisfed.org/series/DGS2">DGS2</a>
-          + w_10y × <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>.
-
-
-          w_bills is MSPD bills / marketable held by the public. The rest
-          of the book is split 2:1 onto DGS2 and DGS10 — a labeled split
-          on the non-bill residual, not a second MSPD print. The coupon
-          subtracted is Treasury Fiscal Data, Total Marketable, not NIPA
-          interest / debt (that folds in nonmarketable and intra-gov).
+          <b>Stock coupon</b> is not constructed. It is the Treasury
+          Fiscal Data print
+          <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Average Interest Rates on U.S. Treasury Securities</a>,
+          row <b>Total Marketable</b>
+          (<a href="https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates">v2/accounting/od/avg_interest_rates</a>).
+          That is the carrying rate on marketable debt only.
+        </p>
+        <p>
+          <b>Marginal</b> is constructed. Each month we take every
+          marketable CUSIP on MSPD
+          <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>,
+          remaining life = maturity − record date, and collapse principal
+          into buckets. Those weights times the CMT stand-in for that
+          bucket:
+        </p>
+        <p class="stat">
+          0–1y × <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>
+          + 1–3y × <a href="https://fred.stlouisfed.org/series/DGS2">DGS2</a>
+          + 3–7y × <a href="https://fred.stlouisfed.org/series/DGS5">DGS5</a>
+          + 7–10y × <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>
+          + 10y+ × <a href="https://fred.stlouisfed.org/series/DGS30">DGS30</a>
+          + TIPS × <a href="https://fred.stlouisfed.org/series/DFII10">DFII10</a>
+          + FRN × <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
+        </p>
+        <p>
+          TIPS and FRNs stay in their own buckets — a TIPS is not a
+          nominal 10-year, and an FRN resets off the bill, not its final
+          maturity. Table 3 is total marketable outstanding, not
+          held-by-the-public. A month is left blank if a bucket with
+          weight has no CMT (TIPS before DFII10). This is still a CMT
+          estimate, not each CUSIP’s mid. Original-class Table 1 mix
+          stays on scratch as the issuance picture.
         </p>
       </div>
     </div>
