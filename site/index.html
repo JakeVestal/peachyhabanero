@@ -8,40 +8,40 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
-  <header>
-    <div class="header-top">
+<header>
+  <div class="header-top">
     <p class="navline">cubes · <a href="data.html">data</a> · <a href="methodology.html">methodology</a> · <a href="boundaries.html">boundaries</a></p>
     <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
-    </div>
-    <h1>TREASURY CUBES</h1>
-    <p>
-      These two cubes are the Treasury’s problem, not the Fed’s. The stock,
-      the till, the book coupon, and whether a hike is fiscally unthinkable
-      are fiscal objects. The Fed’s mandate is prices, employment, and
-      moderate long-term rates — not the best financing position of the
-      United States.
-    </p>
-    <p>
-      The Sustainability Cube (left) defines a <b>Danger Zone</b> within
-      which the US debt stock is at high risk of entering a self-reinforcing
-      feedback loop of runaway debt and interest, as well as a <b>Death
-      Zone</b> in which such a feedback loop is all but certain.</p>
+  </div>
+  <h1>TREASURY CUBES</h1>
+  <p>
+    These two cubes are the Treasury’s problem, not the Fed’s. The stock,
+    the till, the book coupon, and whether a hike is fiscally unthinkable
+    are fiscal objects. The Fed’s mandate is prices, employment, and
+    moderate long-term rates — not the best financing position of the
+    United States.
+  </p>
+  <p>
+    The Sustainability Cube (left) defines a <b>Danger Zone</b> within
+    which the US debt stock is at high risk of entering a self-reinforcing
+    feedback loop of runaway debt and interest, as well as a <b>Death
+    Zone</b> in which such a feedback loop is all but certain.</p>
 
-    <p>
-      The Fiscal Dominance Cube (right) is still a Treasury question: the
-      region in which a rate hike would be unthinkable on fiscal arithmetic
-      even if inflation printed hot and the Fed’s inflation mandate would
-      otherwise demand one. That is the contest — Treasury cannot support
-      the hike; the mandate may still require it.
-    </p>
-    <p class="stat" id="stamp">loading cubes.json…</p>
-  </header>
-  <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
-    <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
-      <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
-      <button class="neon-btn" type="button" id="btn-tax">tax</button>
-    </div>
-    <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
+  <p>
+    The Fiscal Dominance Cube (right) is still a Treasury question: the
+    region in which a rate hike would be unthinkable on fiscal arithmetic
+    even if inflation printed hot and the Fed’s inflation mandate would
+    otherwise demand one. That is the contest — Treasury cannot support
+    the hike; the mandate may still require it.
+  </p>
+  <p class="stat" id="stamp">loading cubes.json…</p>
+</header>
+<div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
+  <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
+    <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
+    <button class="neon-btn" type="button" id="btn-tax">tax</button>
+  </div>
+  <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
     Toggle interest / tax vs interest / receipts on both cubes and the
     distance plot. Tax is NIPA current tax receipts
     (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a>).
@@ -50,73 +50,80 @@
     — taxes plus contributions for social insurance, income on assets, and
     the rest of the current-receipts envelope.
   </span>
+</div>
+<section>
+  <div class="grid-2">
+    <div id="cube-sustain"></div>
+    <div id="cube-fail"></div>
   </div>
-  <section>
-    <div class="grid-2">
-      <div id="cube-sustain"></div>
-      <div id="cube-fail"></div>
-    </div>
-  </section>
-  <section>
-    <h2>Distance to the Danger Zone / Death Zone over time </h2>
-    <p class="sub">
-      Tracks score-space distance to the nearest point on the Danger (s≥1) or
-      Death Zone (s≥2) octant. This distance is positive if a set of
-      quarterly prints falls outside or on a face, and negative if inside.
-      Note that this metric is a calculated distance across all three
-      score-space dimensions, and is not a raw percent or basis point measure.
-    </p>
-    <div id="dist-plot"></div>
-    <p class="sub">
-      Point color on the sustainability path is <b>interest-burden stress</b>:
-      a 0–1 blend of the three score-space coordinates
-      (20% debt/GDP, 35% interest share, 25% refi gap) plus a 20% sleeve for
-      <b>interest / GDP</b> (`A091 / GDP`), piecewise through 3.0% (warn) and
-      4.5% (death). That sleeve is not a cube axis. It is only the color so a
-      high till-share quarter that is still a small slice of GDP does not
-      look the same as one that is already a program.
-    </p>
-  </section>
+</section>
+<section>
+  <h2>Distance to the Danger Zone / Death Zone over time </h2>
+  <p class="sub">
+    Tracks score-space distance to the nearest point on the Danger (s≥1) or
+    Death Zone (s≥2) octant. This distance is positive if a set of
+    quarterly prints falls outside or on a face, and negative if inside.
+    Note that this metric is a calculated distance across all three
+    score-space dimensions, and is not a raw percent or basis point measure.
+  </p>
+  <div id="dist-plot"></div>
+  <p class="sub">
+    Point color on the sustainability path is <b>interest-burden stress</b>:
+    a 0–1 blend of the three score-space coordinates
+    (20% debt/GDP, 35% interest share, 25% refi gap) plus a 20% sleeve for
+    <b>interest / GDP</b> (`A091 / GDP`), piecewise through 3.0% (warn) and
+    4.5% (death). That sleeve is not a cube axis. It is only the color so a
+    high till-share quarter that is still a small slice of GDP does not
+    look the same as one that is already a program.
+  </p>
+</section>
 
-  <section>
-    <h2>Six axes, raw</h2>
-    <p class="sub">
-      Untransformed quarterly prints — the numbers that go into σ, not the
-      z-scores. Dotted gold is the warn wire; dotted magenta is the death
-      wire (or the single FD wire at 0 / 20% / 0). Axes 1 and 4 are the same
-      till share; the receipts / tax toggle moves both. Full walk-through
-      is on the <a href="methodology.html">methodology</a> page.
-    </p>
-    <article class="axis-block">
-      <h3 class="axis-head">1  ·  sustainability Y  ·  interest / till</h3>
-      <div class="axis-row">
+<section>
+  <h2>Description of Each Axis and its Tripwire Levels</h2>
+  <article class="axis-block">
+    <h3 class="axis-head">1  · Interest / Till</h3>
+    <div class="axis-row">
       <div class="axis-plot" id="ax-1"></div>
       <div class="axis-copy">
         <p>
-          Share of this quarter’s incoming cash already spoken for by interest.
-          Level, not a z-score. Gold dotted = warn, magenta = death.
+          Share of this quarter’s incoming cash (the “till”) already spoken
+          for by interest on the existing book, and not available to fund
+          the government's operations.
         </p>
         <p class="stat">100 × A091RC1Q027SBEA / FGRECPT &nbsp; (tax toggle: / W006RC1Q027SBEA)</p>
         <p>
           Interest and the till are both NIPA SAAR so the ratio stays inside
-          one vintage. Default denominator is <b>current receipts</b>
-          (<a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>) —
-          taxes plus social-insurance contributions, income on assets, and
-          the rest of the current-receipts envelope. That is the cash that
-          can actually service the book. Tax receipts
-          (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">W006RC1Q027SBEA</a>)
-          are a tighter till: same theory, smaller denominator, wires at
-          25 / 40 instead of 20 / 30. Unified-budget FY totals are not used;
-          they would break the quarterly path and the GDP vintage on the
-          other two left-hand axes.
+          one vintage. Intrest is fetched from FRED item <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">A091RC1Q027SBEA</a>
+          By default, the till is set to <b>current receipts</b>
+          (<a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>):
+          taxes, social-insurance contributions, income on assets, and the
+          rest of the current-receipts envelope. That is the cash that can
+          service the book. The buttons above the cubes switch the
+          denominator to tax receipts only
+          (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">W006RC1Q027SBEA</a>):
+          same theory, smaller till.
+        </p>
+        <p>
+          The <b style="color:#c4a35a">Danger Zone</b> is
+          <b style="color:#c4a35a">20%</b> of receipts. Federal receipts run
+          near 17% of GDP; 20% × 0.17 ≈ 3.4% of GDP of interest — the same
+          order as OMB function 050 (national defense). 0.03 / 0.17 ≈ 18,
+          rounded to 20.
+        </p>
+        <p>
+          The <b style="color:#ff2bd6">Death Zone</b> is
+          <b style="color:#ff2bd6">30%</b>. Same map: 30% × 0.17 ≈ 5% of GDP
+          of interest. That is past the postwar US sample and well past “the
+          same size as defense.” It is a labeled step on that identity, not a
+          fitted cliff.
         </p>
       </div>
-      </div>
-    </article>
+    </div>
+  </article>
 
-    <article class="axis-block">
-      <h3 class="axis-head">2  ·  sustainability Z  ·  refi gap</h3>
-      <div class="axis-row">
+  <article class="axis-block">
+    <h3 class="axis-head">2  ·  Refi Gap</h3>
+    <div class="axis-row">
       <div class="axis-plot" id="ax-2"></div>
       <div class="axis-copy">
         <p>
@@ -136,13 +143,12 @@
           interest / debt (that folds in nonmarketable and intra-gov).
         </p>
       </div>
-      </div>
-    </article>
+    </div>
+  </article>
 
-    <article class="axis-block">
-      <h3 class="axis-head">3  ·  Debt held by the public / GDP</h3>
-      <h4>Updated Quarterly</h4>
-      <div class="axis-row">
+  <article class="axis-block">
+    <h3 class="axis-head">3  ·  Debt held by the public / GDP</h3>
+    <div class="axis-row">
       <div class="axis-plot" id="ax-3"></div>
       <div class="axis-copy">
         <p>
@@ -168,12 +174,12 @@
           without the advantage of Japan’s captive domestic bid for refinancing.
         </p>
       </div>
-      </div>
-    </article>
+    </div>
+  </article>
 
-    <article class="axis-block">
-      <h3 class="axis-head">4  ·  FD Y raw  ·  same till share</h3>
-      <div class="axis-row">
+  <article class="axis-block">
+    <h3 class="axis-head">4  ·  FD Y raw  ·  same till share</h3>
+    <div class="axis-row">
       <div class="axis-plot" id="ax-4"></div>
       <div class="axis-copy">
         <p>
@@ -189,12 +195,12 @@
           (or 25%) line in the units the BEA actually prints.
         </p>
       </div>
-      </div>
-    </article>
+    </div>
+  </article>
 
-    <article class="axis-block">
-      <h3 class="axis-head">5  ·  F1 raw  ·  plotted Z  ·  funds − book coupon</h3>
-      <div class="axis-row">
+  <article class="axis-block">
+    <h3 class="axis-head">5  ·  F1 raw  ·  plotted Z  ·  funds − book coupon</h3>
+    <div class="axis-row">
       <div class="axis-plot" id="ax-5"></div>
       <div class="axis-copy">
         <p>
@@ -210,12 +216,12 @@
           cube; the name F1 still means this wire.
         </p>
       </div>
-      </div>
-    </article>
+    </div>
+  </article>
 
-    <article class="axis-block">
-      <h3 class="axis-head">6  ·  F3 raw  ·  plotted X  ·  primary / GDP</h3>
-      <div class="axis-row">
+  <article class="axis-block">
+    <h3 class="axis-head">6  ·  F3 raw  ·  plotted X  ·  primary / GDP</h3>
+    <div class="axis-row">
       <div class="axis-plot" id="ax-6"></div>
       <div class="axis-copy">
         <p>
@@ -233,12 +239,12 @@
           two different objects, both on the site.
         </p>
       </div>
-      </div>
-    </article>
-  </section>
-  <footer>
-    peachyhabanero · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
-  </footer>
-  <script src="cube.js?v=17"></script>
+    </div>
+  </article>
+</section>
+<footer>
+  peachyhabanero · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
+</footer>
+<script src="cube.js?v=17"></script>
 </body>
 </html>
