@@ -213,13 +213,14 @@
       <div class="axis-plot" id="ax-5"></div>
       <div class="axis-copy">
         <p>
-          Same metric as <b>2: Refi gap</b> except <b>4</b> uses the <a
-                href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
-          rate instead of the marginal rate, and is sigma-scaled into a Z
-          using the standard deviation of the entire sample. This plot
-          is the raw difference so a positive print here means the funds rate is
-          above the book; therefore a rate hike by the Fed would tighten the
-          fiscal rate.
+          Same metric as <b>2 · Refi gap</b> except the left-hand rate is
+          <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
+          instead of m: funds − Fiscal Data Total Marketable coupon.
+          This plot is the cube coordinate, not the raw gap:
+        <p class="stat">F1 = −(x₁ − 0) / σ</p>
+        <p>, σ from 2000-01-01.
+          Sign is flipped so F1 &gt; 0 means funds are already at or
+          under the book — a hike is then a fiscal tightening of the stock.
         </p>
       </div>
     </div>
@@ -234,7 +235,7 @@
           Same series as axis 1 with till=receipts, except transformed as a
           sigma-scaled distance from the threshold. 20% is subtracted from each
           measurement of Interest/Revenue and divided by the standard
-          deviation of the entire sample.
+          deviation from 2000-01-01.
         </p>
       </div>
     </div>
@@ -257,7 +258,7 @@
           axis 1. Uses primary deficit, not the headline unified deficit:
           interest is stripped so this axis asks “are we borrowing for
           operations,” not “is the till already paying the coupon” (that is
-          axes 1 and 4). If positive, we're borrowing for operations;
+          axes 1 and 5). If positive, we're borrowing for operations;
           otherwise if negative. Together with axis 3 completes the stock
           identity Δ(debt/GDP) ≈ (r − g)×stock + primary.
         </p>
@@ -268,6 +269,6 @@
 <footer>
   peachyhabanero · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
 </footer>
-<script src="cube.js?v=17"></script>
+<script src="cube.js?v=19"></script>
 </body>
 </html>

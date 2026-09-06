@@ -94,6 +94,15 @@ function win(vals) {
   return [lo - 0.15 * room, hi + 0.15 * room];
 }
 
+function winAll(vals) {
+  const s = vals.filter((v) => Number.isFinite(v));
+  if (!s.length) return [-0.2, 1];
+  const lo = Math.min(...s, 0);
+  const hi = Math.max(...s, 0.6);
+  const room = hi > lo ? hi - lo : 1;
+  return [lo - 0.08 * room, hi + 0.08 * room];
+}
+
 function sustainTraces(rows, zone, burden) {
   const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
   const ywarn = burden === "tax" ? zone.int_tax_warn : zone.int_rec_warn;
@@ -164,9 +173,9 @@ function failTraces(rows, tax) {
     );
   });
   const last = rows[rows.length - 1];
-  const w1 = win(rows.map((r) => r.F1));
-  const w2 = win(f2);
-  const w3 = win(rows.map((r) => r.F3));
+  const w1 = winAll(rows.map((r) => r.F1));
+  const w2 = winAll(f2);
+  const w3 = winAll(rows.map((r) => r.F3));
   const lo = Math.min(w1[0], w2[0], w3[0]);
   const hi = Math.max(w1[1], w2[1], w3[1]);
   const inside = rows.filter((r) => r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0);
@@ -291,11 +300,13 @@ function drawSixAxes(sus, fail, zone, tax) {
     [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_death, mag)]);
   drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
     [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_death, mag)]);
-  drawRawAxis("ax-4", sus, tillCol, `· ${tillName}`, "#00f0ff",
-    [hline(tillWarn, mag)]);
-  drawRawAxis("ax-5", fail, "funds_minus_stock", "funds − book coupon (pp)", "#39ff14",
+  const f2col = tax ? "F2_tax" : "F2_rec";
+  const f2name = tax ? "F2  y(int/tax − 25%)" : "F2  y(int/receipts − 20%)";
+  drawRawAxis("ax-4", sus, f2col, f2name, "#00f0ff",
     [hline(0, mag)]);
-  drawRawAxis("ax-6", fail, "primary_deficit_pct_gdp", "plotted X · primary / GDP (%)", "#ff6b4a",
+  drawRawAxis("ax-5", sus, "F1", "F1  y(funds − book)  flipped", "#39ff14",
+    [hline(0, mag)]);
+  drawRawAxis("ax-6", sus, "F3", "F3  y(primary / GDP)", "#ff6b4a",
     [hline(0, mag)]);
 }
 
