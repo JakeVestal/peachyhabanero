@@ -155,3 +155,27 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
 }
 #cube-sustain, #cube-fail { min-height: 720px; }
 .toolbar span { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted); }
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.header-top .navline { margin: 0; }
+.gh-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--gold);
+  color: #c8d6e5;
+  text-decoration: none;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.gh-badge:hover { color: #00f0ff; border-color: #00f0ff; }
