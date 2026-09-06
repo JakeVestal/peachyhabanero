@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Fed View</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline"><a href="index.html">cubes</a> · <a href="fed.html">fed view</a> · <a href="data.html">data</a> · <a href="methodology.html">methodology</a> · <a href="boundaries.html">boundaries</a></p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>FED VIEW</h1>
+  <p>
+    The Fed’s mandate is stable prices, maximum employment, and moderate
+    long-term rates. This page is that object — not the Treasury cubes.
+    Three characteristic gaps, plus what the FOMC actually did to the
+    funds target.
+  </p>
+  <p>
+    Markers are month-end changes in the upper target
+    (<a href="https://fred.stlouisfed.org/series/DFEDTARU">DFEDTARU</a>):
+    magenta triangle up = hike, lime triangle down = cut. A hold is the
+    default: no marker. Pre-range years use
+    <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
+    only when DFEDTARU is missing. Holds are the path, not extra markers.
+  </p>
+  <p class="stat" id="stamp">loading raw_inputs.json…</p>
+</header>
+
+<section>
+  <h2>Mandate space</h2>
+  <p class="sub">
+    Each month is a point: inflation gap (X), employment gap (Y), ACM 10y
+    term premium (Z). Cyan path is the hold default. Magenta = hike,
+    lime = cut.
+  </p>
+  <div class="toolbar" style="max-width:920px;align-items:center;gap:12px;margin-bottom:8px">
+    <label class="sub" style="margin:0">from
+      <input id="fed-from" type="month" value="2000-01"/>
+    </label>
+    <label class="sub" style="margin:0">to
+      <input id="fed-to" type="month"/>
+    </label>
+    <span class="stat" id="fed-range-label"></span>
+  </div>
+  <div id="fed-cube" style="width:100%;max-width:920px;height:560px"></div>
+</section>
+
+<section>
+  <h2>What they did — funds and the target</h2>
+  <div id="fed-fomc" style="width:100%;max-width:1100px;height:360px"></div>
+  <p class="sub">
+    Effective funds and the published target range. Supporting plot, not
+    the mandate object.
+  </p>
+</section>
+
+<section>
+  <article class="axis-block">
+    <h3 class="axis-head">1  ·  Inflation gap  ·  PCE yoy − 2%</h3>
+    <div class="axis-row">
+      <div class="axis-plot" id="fed-pi"></div>
+      <div class="axis-copy">
+        <p>
+          Headline personal consumption expenditures price index, twelve-month
+          percent change, minus the FOMC’s 2% longer-run goal.
+        </p>
+        <p class="stat">100 × (PCEPI<sub>t</sub> / PCEPI<sub>t−12</sub> − 1) − 2</p>
+        <p>
+          Level is
+          <a href="https://fred.stlouisfed.org/series/PCEPI">FRED PCEPI</a>,
+          monthly. The 2% target is applied to the whole sample, including
+          pre-2012, with that vintage labeled — the FOMC did not adopt an
+          explicit 2% goal until January 2012. Positive = inflation above
+          target (mandate pressure to hike). Core PCE
+          (<a href="https://fred.stlouisfed.org/series/PCEPILFE">PCEPILFE</a>)
+          stays in the raw pull; it is not this axis.
+        </p>
+      </div>
+    </div>
+  </article>
+
+  <article class="axis-block">
+    <h3 class="axis-head">2  ·  Employment gap  ·  NROU − UNRATE</h3>
+    <div class="axis-row">
+      <div class="axis-plot" id="fed-u"></div>
+      <div class="axis-copy">
+        <p>
+          Slack versus the FOMC’s published natural rate. Positive = unemployment
+          below NROU (mandate looking met on jobs). Negative = slack.
+        </p>
+        <p class="stat">NROU − UNRATE</p>
+        <p>
+          <a href="https://fred.stlouisfed.org/series/UNRATE">UNRATE</a>
+          is monthly civilian unemployment. 
+          <a href="https://fred.stlouisfed.org/series/NROU">NROU</a>
+          is CBO’s natural rate, quarterly; we hold the last quarterly
+          print across months in that quarter. This is the Board’s own
+          longer-run unemployment concept, not a u* we estimated.
+        </p>
+      </div>
+    </div>
+  </article>
+
+  <article class="axis-block">
+    <h3 class="axis-head">3  ·  Long rates  ·  ACM 10y term premium</h3>
+    <div class="axis-row">
+      <div class="axis-plot" id="fed-tp"></div>
+      <div class="axis-copy">
+        <p>
+          What duration charges beyond the expected path of short rates
+          and inflation. The long-rate mandate is “moderate,” not a 2%
+          target; this series is the residual the Board actually debates.
+        </p>
+        <p class="stat">THREEFYTP10</p>
+        <p>
+          NY Fed ACM three-factor 10-year term premium,
+          <a href="https://fred.stlouisfed.org/series/THREEFYTP10">FRED THREEFYTP10</a>.
+          Starts 1990. Not DGS10 (path + inflation + premium) and not
+          DFII10 (real yield). Those stay on scratch.
+        </p>
+      </div>
+    </div>
+  </article>
+</section>
+
+<footer>
+  peachyhabanero · <a href="index.html">cubes</a> · fed view · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
+</footer>
+<script src="fed.js?v=3"></script>
+</body>
+</html>
