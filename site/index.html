@@ -87,18 +87,158 @@
       till share; the receipts / tax toggle moves both. Full walk-through
       is on the <a href="methodology.html">methodology</a> page.
     </p>
-    <div class="grid-3">
-      <div id="ax-1"></div>
-      <div id="ax-2"></div>
-      <div id="ax-3"></div>
-      <div id="ax-4"></div>
-      <div id="ax-5"></div>
-      <div id="ax-6"></div>
-    </div>
+    <article class="axis-block">
+      <h3 class="axis-head">1  ·  sustainability Y  ·  interest / till</h3>
+      <div class="axis-row">
+      <div class="axis-plot" id="ax-1"></div>
+      <div class="axis-copy">
+        <p>
+          Share of this quarter’s incoming cash already spoken for by interest.
+          Level, not a z-score. Gold dotted = warn, magenta = death.
+        </p>
+        <p class="stat">100 × A091RC1Q027SBEA / FGRECPT &nbsp; (tax toggle: / W006RC1Q027SBEA)</p>
+        <p>
+          Interest and the till are both NIPA SAAR so the ratio stays inside
+          one vintage. Default denominator is <b>current receipts</b>
+          (<a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>) —
+          taxes plus social-insurance contributions, income on assets, and
+          the rest of the current-receipts envelope. That is the cash that
+          can actually service the book. Tax receipts
+          (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">W006RC1Q027SBEA</a>)
+          are a tighter till: same theory, smaller denominator, wires at
+          25 / 40 instead of 20 / 30. Unified-budget FY totals are not used;
+          they would break the quarterly path and the GDP vintage on the
+          other two left-hand axes.
+        </p>
+      </div>
+      </div>
+    </article>
+
+    <article class="axis-block">
+      <h3 class="axis-head">2  ·  sustainability Z  ·  refi gap</h3>
+      <div class="axis-row">
+      <div class="axis-plot" id="ax-2"></div>
+      <div class="axis-copy">
+        <p>
+          Is the market already refinancing the book above the coupon the
+          book carries. Positive: new issue costs more than the stock.
+          Wires at +0.50 / +1.00 pp.
+        </p>
+        <p class="stat">marginal − Fiscal Data Total Marketable coupon</p>
+        <p>
+          marginal = w_bills × <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>
+          + w_2y × <a href="https://fred.stlouisfed.org/series/DGS2">DGS2</a>
+          + w_10y × <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>.
+          w_bills is MSPD bills / marketable held by the public. The rest
+          of the book is split 2:1 onto DGS2 and DGS10 — a labeled split
+          on the non-bill residual, not a second MSPD print. The coupon
+          subtracted is Treasury Fiscal Data, Total Marketable, not NIPA
+          interest / debt (that folds in nonmarketable and intra-gov).
+        </p>
+      </div>
+      </div>
+    </article>
+
+    <article class="axis-block">
+      <h3 class="axis-head">3  ·  Debt held by the public / GDP</h3>
+      <h4>Updated Quarterly</h4>
+      <div class="axis-row">
+      <div class="axis-plot" id="ax-3"></div>
+      <div class="axis-copy">
+        <p>
+          Reported directly by FRED, Debt Held by the Public as a percentage
+          of GDP (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">
+          FYGFGDQ188S</a>) provides the of existing debt stock the that the
+          till and the coupon have to carry; in other words, it reflects the
+          overall debt burden that taxpayers and the government must manage
+          and pay interest on. This is distinct from gross federal debt
+          (<a href="https://fred.stlouisfed.org/series/GFDEGDQ188S">
+          GFDEGDQ188S</a>), which includes intra-governmental IOUs that the
+          government writes to itself and do not roll into the market.
+        </p>
+        <p>
+          The <b style="color:#c4a35a">Danger Zone</b> for <b>Debt held by the
+          public/GDP</b> is set to<b style="color:#c4a35a">100%</b> following the
+          round figure that the <a
+                href="https://www.cbo.gov/publication/61332">Congressional Budget Office (CBO)</a> and the <a
+                href="https://www.imf.org/-/media/files/publications/fiscal-monitor/2025/october/english/foreword.pdf">IMF Fiscal Monitor</a>
+          have identified as a warning level for fiscal risk. The
+          <b style="color:#ff2bd6">Death Zone</b> was set to <b>140%</b>,
+          because at that point the US would reach Italy/Greece-crisis levels, but
+          without the advantage of Japan’s captive domestic bid for refinancing.
+        </p>
+      </div>
+      </div>
+    </article>
+
+    <article class="axis-block">
+      <h3 class="axis-head">4  ·  FD Y raw  ·  same till share</h3>
+      <div class="axis-row">
+      <div class="axis-plot" id="ax-4"></div>
+      <div class="axis-copy">
+        <p>
+          Same series as axis 1. The right cube does not invent a second
+          interest-burden concept. One magenta wire at 20% of receipts
+          (25% of tax) — the unthinkable face, not a second death band.
+        </p>
+        <p class="stat">same 100 × A091 / FGRECPT (or W006 on the tax toggle)</p>
+        <p>
+          On the cube this level is then standardized:
+          F2 = (int/till − wire) / σ, σ from the 2001-Q1–last complete GDP
+          window. This plot is the pre-σ number so you can see the 20%
+          (or 25%) line in the units the BEA actually prints.
+        </p>
+      </div>
+      </div>
+    </article>
+
+    <article class="axis-block">
+      <h3 class="axis-head">5  ·  F1 raw  ·  plotted Z  ·  funds − book coupon</h3>
+      <div class="axis-row">
+      <div class="axis-plot" id="ax-5"></div>
+      <div class="axis-copy">
+        <p>
+          Is the chair’s rate already the fiscal rate on the stock.
+          Magenta wire at 0: funds at or under the book coupon.
+        </p>
+        <p class="stat"><a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a> − Fiscal Data Total Marketable coupon</p>
+        <p>
+          Same coupon as axis 2. On the cube, F1 flips the sign so F1 &gt; 0
+          means funds ≤ coupon (a hike tightens the fiscal rate). This plot
+          is the raw difference, unflipped, so a positive print here is
+          funds still above the book. Plotted as Z on the fiscal-dominance
+          cube; the name F1 still means this wire.
+        </p>
+      </div>
+      </div>
+    </article>
+
+    <article class="axis-block">
+      <h3 class="axis-head">6  ·  F3 raw  ·  plotted X  ·  primary / GDP</h3>
+      <div class="axis-row">
+      <div class="axis-plot" id="ax-6"></div>
+      <div class="axis-copy">
+        <p>
+          Are operations still open. Magenta wire at 0: still borrowing
+          after interest.
+        </p>
+        <p class="stat">100 × (FGEXPND − A091RC1Q027SBEA − FGRECPT) / GDP</p>
+        <p>
+          All four series NIPA / BEA SAAR, same vintage as axis 1.
+          Primary deficit, not the headline unified deficit: interest is
+          stripped so this axis is “are we borrowing for operations,”
+          not “is the till already paying the coupon” (that is axes 1 and 4).
+          Plotted as X on the fiscal-dominance cube. Together with axis 3
+          it is the stock identity Δ(debt/GDP) ≈ (r − g)×stock + primary —
+          two different objects, both on the site.
+        </p>
+      </div>
+      </div>
+    </article>
   </section>
   <footer>
     peachyhabanero · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
   </footer>
-  <script src="cube.js?v=14"></script>
+  <script src="cube.js?v=17"></script>
 </body>
 </html>

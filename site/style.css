@@ -9,6 +9,8 @@
   --gold: #c4a35a;
   --gold-dim: rgba(196, 163, 90, 0.4);
   --gold-faint: rgba(196, 163, 90, 0.16);
+  --axis-plot-w: 680px;
+  --axis-plot-h: 340px;
 }
 
 * { box-sizing: border-box; }
@@ -147,6 +149,57 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 @media (max-width: 1100px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.axis-block {
+  margin: 8px 0 28px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gold-faint);
+}
+.axis-head {
+  margin: 0 0 12px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+  color: #ff2bd6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.axis-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 20px;
+}
+.axis-plot {
+  flex: 0 0 var(--axis-plot-w);
+  width: var(--axis-plot-w);
+  min-width: var(--axis-plot-w);
+  height: var(--axis-plot-h);
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.axis-plot .js-plotly-plot,
+.axis-plot .plot-container {
+  width: var(--axis-plot-w) !important;
+  height: var(--axis-plot-h) !important;
+}
+.axis-copy {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.axis-copy p { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.55; max-width: none; }
+.axis-copy .stat { font-size: 13px; margin: 0 0 12px; }
+@media (max-width: 720px) {
+  .axis-row { flex-wrap: wrap; }
+  .axis-plot { flex-basis: var(--axis-plot-w); }
+}
 #cube-sustain, #cube-fail, #dist-plot {
   background: var(--panel);
   border: 1px solid var(--gold-dim);

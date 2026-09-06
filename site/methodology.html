@@ -154,8 +154,8 @@
     <p class="sub">
       Sentence: is the market already refinancing the book above the coupon
       the book carries. This is the strip the chair does not have to touch.
-      The marginal rate is the issuance mix that quarter, not a fixed
-      25/50/25 prior.
+      The marginal rate is the MSPD bills share of marketable that quarter,
+      with the non-bill residual split 2:1 onto DGS2 and DGS10.
     </p>
     <div class="col-card">
       <h3>front  ·  TB3MS</h3>
@@ -180,21 +180,17 @@
       </p>
     </div>
     <div class="col-card">
-      <h3>mix  ·  MSPD bills share of marketable, else auction volumes</h3>
+      <h3>mix  ·  MSPD bills share of marketable</h3>
       <p>
-        Preferred weight on the front is
+        Weight on the front is
         <span class="col-id">MSPD_BILLS_SHARE_MARKETABLE</span>
         from the Monthly Statement of the Public Debt
         (bills outstanding held by the public / marketable held by the public).
         <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding">Treasury Fiscal Data, MSPD</a>.
-        Published weights use the MSPD stock share, not auction dollars.
-        Auction-dollar bills share is a scratch robustness plot only.
-      </p>
-      <p class="why">
-        <b>Why not 0.25 / 0.50 / 0.25.</b>
-        That blend is a prior. The book’s actual front-end share is observed.
-        A bills-heavy quarter should move the marginal rate with TB3MS, not
-        with the 10-year.
+        The rest of the book is split 2:1 onto DGS2 and DGS10
+        (w_2y = (1 − w_bills) × 2/3, w_10y = (1 − w_bills) × 1/3).
+        That 2:1 is a labeled split on the non-bill residual, not a second
+        MSPD observation. Auction-dollar bills share is a scratch plot only.
       </p>
     </div>
     <p class="stat">

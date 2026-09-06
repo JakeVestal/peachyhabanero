@@ -229,7 +229,7 @@ function drawDist(el, rows, tax) {
       y: 0.95,
       yanchor: 'bottom'
     },
-  }, { responsive: true, displaylogo: false });
+  }, { responsive: false, displaylogo: false });
 }
 
 
@@ -254,6 +254,10 @@ function drawRawAxis(el, rows, col, title, color, wires) {
     node.innerHTML = `<p class="err">no ${col}</p>`;
     return;
   }
+  const box = node;
+  const cs = window.getComputedStyle(box);
+  const w = Math.round(parseFloat(cs.width)) || 680;
+  const h = Math.round(parseFloat(cs.height)) || 340;
   return Plotly.newPlot(el, [{
     type: "scatter", mode: "lines",
     x: xs, y: ys, name: col,
@@ -263,13 +267,14 @@ function drawRawAxis(el, rows, col, title, color, wires) {
     paper_bgcolor: "#07080c",
     plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 10 },
-    margin: { l: 48, r: 12, t: 40, b: 32 },
-    height: 280,
+    margin: { l: 44, r: 8, t: 36, b: 28 },
+    height: h,
+    width: w,
     showlegend: false,
     xaxis: { gridcolor: "rgba(196,163,90,0.12)", zeroline: false },
     yaxis: { gridcolor: "rgba(196,163,90,0.12)", zeroline: false },
     shapes: wires || [],
-  }, { responsive: true, displaylogo: false });
+  }, { responsive: false, displaylogo: false, staticPlot: false });
 }
 
 function drawSixAxes(sus, fail, zone, tax) {
