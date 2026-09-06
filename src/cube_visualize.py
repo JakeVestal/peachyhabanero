@@ -59,14 +59,15 @@ def quarterly_complete(metrics, thresh):
     return pd.concat(cols, axis=1).sort_index().dropna(how="any")
 
 
-def standardize(aligned, thresh):
+def standardize(aligned, thresh, sigma_from=None):
     y = pd.DataFrame(index=aligned.index)
     s_bits = pd.DataFrame(index=aligned.index)
+    ref = sigma_from if sigma_from is not None else aligned
     for _, row in thresh.iterrows():
         mid = int(row["metric_id"])
         x = aligned[f"x{mid}"]
         c = float(row["critical_value"])
-        sigma = float(x.std(ddof=1))
+        sigma = float(pd.to_numeric(ref[f"x{mid}"], errors="coerce").std(ddof=1))
         if not np.isfinite(sigma) or sigma == 0:
             sigma = 1.0
         # One sign convention for the whole site. at_or_below (F1 only):

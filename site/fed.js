@@ -273,6 +273,15 @@ async function main() {
         text: ct, hoverinfo: "text",
         marker: { size: 6, color: "#39ff14", symbol: "diamond" },
       },
+      {
+        type: "scatter3d", mode: "markers",
+        x: [X[X.length - 1]], y: [Y[Y.length - 1]], z: [Z[Z.length - 1]],
+        name: "latest " + months[months.length - 1],
+        text: ["latest " + hover[hover.length - 1]],
+        hoverinfo: "text",
+        marker: { size: 11, color: "#ff8a00", symbol: "circle",
+          line: { color: "#fff3d6", width: 2 } },
+      },
     ], layout, { responsive: true, displaylogo: false });
   }
 
