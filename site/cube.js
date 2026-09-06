@@ -356,23 +356,8 @@ async function main() {
     await Plotly.react("cube-sustain", sustainTraces(sus, zone, tax ? "tax" : "rec"), layout, opts);
   }
 
-  function failWindow() {
-    const fromEl = document.getElementById("fd-from");
-    const toEl = document.getElementById("fd-to");
-    if (toEl && !toEl.value && fail.length) {
-      toEl.value = String(fail[fail.length - 1].date).slice(0, 7);
-    }
-    const a = fromEl && fromEl.value ? fromEl.value : "1990-01";
-    const b = toEl && toEl.value ? toEl.value : "9999-12";
-    return fail.filter((r) => {
-      const m = String(r.date).slice(0, 7);
-      return m >= a && m <= b;
-    });
-  }
-
   async function drawFail() {
-    const rows = failWindow();
-    const ft = failTraces(rows.length ? rows : fail, tax);
+    const ft = failTraces(fail, tax);
     const f2title = tax
         ? "F2  y(interest / tax − 25%)"
         : "F2  y(interest / receipts − 20%)";
@@ -390,10 +375,6 @@ async function main() {
   await drawSustain();
   await drawDist("dist-plot", sus, tax);
   drawSixAxes(sus, fail, zone, tax);
-  const fdFrom = document.getElementById("fd-from");
-  const fdTo = document.getElementById("fd-to");
-  if (fdFrom) fdFrom.addEventListener("change", () => drawFail());
-  if (fdTo) fdTo.addEventListener("change", () => drawFail());
 
   function setBurden(next) {
     tax = next;

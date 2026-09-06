@@ -43,22 +43,36 @@ function actionsFrom(map) {
   return { hike, cut, amt };
 }
 
-function markersOn(series, months, color, symbol, name) {
+function fmtMove(d) {
+  if (!Number.isFinite(d)) return "n/a";
+  return (d > 0 ? "+" : "") + d.toFixed(2) + " pp";
+}
+
+function markersOn(series, months, color, symbol, name, spec) {
   const yAt = new Map();
   series.xs.forEach((d, i) => yAt.set(d.slice(0, 7), series.ys[i]));
   const xs = [];
   const ys = [];
+  const text = [];
   months.forEach((k) => {
     const y = yAt.get(k);
     if (!Number.isFinite(y)) return;
     xs.push(k + "-01");
     ys.push(y);
+    const move = spec.amt && spec.amt.get(k);
+    const funds = spec.funds && spec.funds.get(k);
+    const tgt = spec.target && spec.target.get(k);
+    let tip = `<b>${name}</b> ${k}<br>move ${fmtMove(move)}`;
+    if (Number.isFinite(tgt)) tip += `<br>DFEDTARU ${tgt.toFixed(2)}%`;
+    if (Number.isFinite(funds)) tip += `<br>FEDFUNDS ${funds.toFixed(2)}%`;
+    tip += `<br>${spec.label}  ${y.toFixed(2)}`;
+    text.push(tip);
   });
   return {
     type: "scatter", mode: "markers",
-    x: xs, y: ys, name,
+    x: xs, y: ys, name, text,
+    hoverinfo: "text",
     marker: { color, size: 8, symbol },
-    hoverinfo: "skip",
   };
 }
 
@@ -78,7 +92,7 @@ function axisLayout() {
   };
 }
 
-function plotGap(el, series, color, hike, cut) {
+function plotGap(el, series, color, hike, cut, spec) {
   const node = document.getElementById(el);
   if (!node) return;
   if (!series.xs.length) {
@@ -88,11 +102,16 @@ function plotGap(el, series, color, hike, cut) {
   const box = window.getComputedStyle(node);
   const w = Math.round(parseFloat(box.width)) || 680;
   const h = Math.round(parseFloat(box.height)) || 340;
+  const holdText = series.xs.map((d, i) => {
+    const k = d.slice(0, 7);
+    return `${k}<br>${spec.label}  ${series.ys[i].toFixed(2)}`;
+  });
   return Plotly.newPlot(el, [
     { type: "scatter", mode: "lines", x: series.xs, y: series.ys,
+      text: holdText, hoverinfo: "text",
       line: { color, width: 2 } },
-    markersOn(series, hike, "#ff2bd6", "triangle-up", "hike"),
-    markersOn(series, cut, "#39ff14", "triangle-down", "cut"),
+    markersOn(series, hike, "#ff2bd6", "triangle-up", "hike", spec),
+    markersOn(series, cut, "#39ff14", "triangle-down", "cut", spec),
   ], Object.assign(axisLayout(), { width: w, height: h }),
   { responsive: false, displaylogo: false });
 }
@@ -350,9 +369,17 @@ async function main() {
     }, { responsive: true, displaylogo: false });
   }
 
-  await plotGap("fed-pi", pi, "#ff2bd6", hike, cut);
-  await plotGap("fed-u", emp, "#00f0ff", hike, cut);
-  await plotGap("fed-tp", tp, "#c4a35a", hike, cut);
+  const hoverSpec = {
+    amt,
+    funds: fundsMap,
+    target: hiMap,
+  };
+  await plotGap("fed-pi", pi, "#ff2bd6", hike, cut,
+    Object.assign({ label: "PCE yoy − 2%" }, hoverSpec));
+  await plotGap("fed-u", emp, "#00f0ff", hike, cut,
+    Object.assign({ label: "NROU − UNRATE" }, hoverSpec));
+  await plotGap("fed-tp", tp, "#c4a35a", hike, cut,
+    Object.assign({ label: "ACM 10y TP" }, hoverSpec));
 }
 
 main().catch((e) => {
