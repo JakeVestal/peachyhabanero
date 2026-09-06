@@ -285,17 +285,17 @@ function drawSixAxes(sus, fail, zone, tax) {
   const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
   const tillDeath = tax ? zone.int_tax_death : zone.int_rec_death;
   const tillName = tax ? "int / tax (%)" : "int / receipts (%)";
-  drawRawAxis("ax-1", sus, tillCol, `1  sustain Y · ${tillName}`, "#00f0ff",
+  drawRawAxis("ax-1", sus, tillCol, `${tillName}`, "#00f0ff",
     [hline(tillWarn, gold), hline(tillDeath, mag)]);
-  drawRawAxis("ax-2", sus, "refi_gap", "2  sustain Z · refi gap (pp)", "#ffbf00",
+  drawRawAxis("ax-2", sus, "refi_gap", "refi gap (pp)", "#ffbf00",
     [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_death, mag)]);
-  drawRawAxis("ax-3", sus, "debt_gdp_pct", "3  sustain X · debt public / GDP (%)", "#7aa2ff",
+  drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
     [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_death, mag)]);
-  drawRawAxis("ax-4", sus, tillCol, `4  FD Y raw · ${tillName}`, "#00f0ff",
+  drawRawAxis("ax-4", sus, tillCol, `· ${tillName}`, "#00f0ff",
     [hline(tillWarn, mag)]);
-  drawRawAxis("ax-5", fail, "funds_minus_stock", "5  F1 raw · plotted Z · funds − book coupon (pp)", "#39ff14",
+  drawRawAxis("ax-5", fail, "funds_minus_stock", "funds − book coupon (pp)", "#39ff14",
     [hline(0, mag)]);
-  drawRawAxis("ax-6", fail, "primary_deficit_pct_gdp", "6  F3 raw · plotted X · primary / GDP (%)", "#ff6b4a",
+  drawRawAxis("ax-6", fail, "primary_deficit_pct_gdp", "plotted X · primary / GDP (%)", "#ff6b4a",
     [hline(0, mag)]);
 }
 

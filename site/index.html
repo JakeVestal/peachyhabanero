@@ -132,7 +132,7 @@
           to the current Treasury curve by remaining maturity, and the
           <b>coupon that the marketable stock already carries</b>.
         </p>
-        <p class="stat">marginal − Fiscal Data Total Marketable coupon</p>
+        <p class="stat">marginal − stock coupon</p>
         <p>
           The Treasury issues new debt to pay what is already out. If the
           gap is positive, new issue costs more than the stock and the
@@ -208,49 +208,42 @@
   </article>
 
   <article class="axis-block">
-    <h3 class="axis-head">4  ·  FD Y raw  ·  same till share</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-4"></div>
-      <div class="axis-copy">
-        <p>
-          Same series as axis 1. The right cube does not invent a second
-          interest-burden concept. One magenta wire at 20% of receipts
-          (25% of tax) — the unthinkable face, not a second death band.
-        </p>
-        <p class="stat">same 100 × A091 / FGRECPT (or W006 on the tax toggle)</p>
-        <p>
-          On the cube this level is then standardized:
-          F2 = (int/till − wire) / σ, σ from the 2001-Q1–last complete GDP
-          window. This plot is the pre-σ number so you can see the 20%
-          (or 25%) line in the units the BEA actually prints.
-        </p>
-      </div>
-    </div>
-  </article>
-
-  <article class="axis-block">
-    <h3 class="axis-head">5  ·  F1 raw  ·  plotted Z  ·  funds − book coupon</h3>
+    <h3 class="axis-head">4  ·  y(funds − book coupon)</h3>
     <div class="axis-row">
       <div class="axis-plot" id="ax-5"></div>
       <div class="axis-copy">
         <p>
-          Is the chair’s rate already the fiscal rate on the stock.
-          Magenta wire at 0: funds at or under the book coupon.
-        </p>
-        <p class="stat"><a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a> − Fiscal Data Total Marketable coupon</p>
-        <p>
-          Same coupon as axis 2. On the cube, F1 flips the sign so F1 &gt; 0
-          means funds ≤ coupon (a hike tightens the fiscal rate). This plot
-          is the raw difference, unflipped, so a positive print here is
-          funds still above the book. Plotted as Z on the fiscal-dominance
-          cube; the name F1 still means this wire.
+          Same metric as <b>2: Refi gap</b> except <b>4</b> uses the <a
+                href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
+          rate instead of the marginal rate, and is sigma-scaled into a Z
+          using the standard deviation of the entire sample. This plot
+          is the raw difference so a positive print here means the funds rate is
+          above the book; therefore a rate hike by the Fed would tighten the
+          fiscal rate.
         </p>
       </div>
     </div>
   </article>
 
   <article class="axis-block">
-    <h3 class="axis-head">6  ·  F3 raw  ·  plotted X  ·  primary / GDP</h3>
+    <h3 class="axis-head">5  ·  y(Interest / Receipts)</h3>
+    <div class="axis-row">
+      <div class="axis-plot" id="ax-4"></div>
+      <div class="axis-copy">
+        <p>
+          Same series as axis 1 with till=receipts, except transformed as a
+          sigma-scaled distance from the threshold. 20% is subtracted from each
+          measurement of Interest/Revenue and divided by the standard
+          deviation of the entire sample.
+        </p>
+      </div>
+    </div>
+  </article>
+
+
+
+  <article class="axis-block">
+    <h3 class="axis-head">6  primary / GDP</h3>
     <div class="axis-row">
       <div class="axis-plot" id="ax-6"></div>
       <div class="axis-copy">
@@ -260,13 +253,13 @@
         </p>
         <p class="stat">100 × (FGEXPND − A091RC1Q027SBEA − FGRECPT) / GDP</p>
         <p>
-          All four series NIPA / BEA SAAR, same vintage as axis 1.
-          Primary deficit, not the headline unified deficit: interest is
-          stripped so this axis is “are we borrowing for operations,”
-          not “is the till already paying the coupon” (that is axes 1 and 4).
-          Plotted as X on the fiscal-dominance cube. Together with axis 3
-          it is the stock identity Δ(debt/GDP) ≈ (r − g)×stock + primary —
-          two different objects, both on the site.
+          All four of the named series are NIPA / BEA SAAR, same vintage as
+          axis 1. Uses primary deficit, not the headline unified deficit:
+          interest is stripped so this axis asks “are we borrowing for
+          operations,” not “is the till already paying the coupon” (that is
+          axes 1 and 4). If positive, we're borrowing for operations;
+          otherwise if negative. Together with axis 3 completes the stock
+          identity Δ(debt/GDP) ≈ (r − g)×stock + primary.
         </p>
       </div>
     </div>
