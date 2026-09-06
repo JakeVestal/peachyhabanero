@@ -110,8 +110,8 @@ function plotGap(el, series, color, hike, cut, spec) {
     { type: "scatter", mode: "lines", x: series.xs, y: series.ys,
       text: holdText, hoverinfo: "text",
       line: { color, width: 2 } },
-    markersOn(series, hike, "#ff2bd6", "triangle-up", "hike", spec),
-    markersOn(series, cut, "#39ff14", "triangle-down", "cut", spec),
+    markersOn(series, hike, "#39ff14", "triangle-up", "hike", spec),
+    markersOn(series, cut, "#ff2bd6", "triangle-down", "cut", spec),
   ], Object.assign(axisLayout(), { width: w, height: h }),
   { responsive: false, displaylogo: false });
 }
@@ -284,13 +284,13 @@ async function main() {
         type: "scatter3d", mode: "markers",
         x: hx, y: hy, z: hz, name: "hike",
         text: ht, hoverinfo: "text",
-        marker: { size: 6, color: "#ff2bd6", symbol: "diamond" },
+        marker: { size: 6, color: "#39ff14", symbol: "diamond" },
       },
       {
         type: "scatter3d", mode: "markers",
         x: cx, y: cy, z: cz, name: "cut",
         text: ct, hoverinfo: "text",
-        marker: { size: 6, color: "#39ff14", symbol: "diamond" },
+        marker: { size: 6, color: "#ff2bd6", symbol: "diamond" },
       },
       {
         type: "scatter3d", mode: "markers",
@@ -340,19 +340,33 @@ async function main() {
     hi.xs.forEach((d, i) => yAtHi.set(d.slice(0, 7), hi.ys[i]));
     const yAtF = new Map();
     funds.xs.forEach((d, i) => yAtF.set(d.slice(0, 7), funds.ys[i]));
+    function actionTips(kind, months) {
+      return months.map((k) => {
+        const tgt = yAtHi.get(k);
+        const ff = yAtF.get(k);
+        let tip = `<b>${kind}</b> ${k}<br>move ${fmtMove(amt.get(k))}`;
+        if (Number.isFinite(tgt)) tip += `<br>DFEDTARU ${tgt.toFixed(2)}%`;
+        if (Number.isFinite(ff)) tip += `<br>FEDFUNDS ${ff.toFixed(2)}%`;
+        return tip;
+      });
+    }
     traces.push({
       type: "scatter", mode: "markers",
       x: hike.map((k) => k + "-01"),
       y: hike.map((k) => yAtHi.get(k) ?? yAtF.get(k)),
       name: "hike",
-      marker: { color: "#ff2bd6", size: 8, symbol: "triangle-up" },
+      text: actionTips("hike", hike),
+      hoverinfo: "text",
+      marker: { color: "#39ff14", size: 8, symbol: "triangle-up" },
     });
     traces.push({
       type: "scatter", mode: "markers",
       x: cut.map((k) => k + "-01"),
       y: cut.map((k) => yAtHi.get(k) ?? yAtF.get(k)),
       name: "cut",
-      marker: { color: "#39ff14", size: 8, symbol: "triangle-down" },
+      text: actionTips("cut", cut),
+      hoverinfo: "text",
+      marker: { color: "#ff2bd6", size: 8, symbol: "triangle-down" },
     });
     await Plotly.newPlot("fed-fomc", traces, {
       paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
