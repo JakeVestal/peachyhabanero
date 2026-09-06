@@ -901,44 +901,78 @@ def calculate_metrics(
     w_bills_m = w_bills.resample("ME").last()
     w_2y_m = w_2y.resample("ME").last()
     w_10y_m = w_10y.resample("ME").last()
-    marginal = (
+    marginal_bills21 = (
         w_bills_m * tb3_m + w_2y_m * dgs2_m + w_10y_m * dgs10_m
-    ).rename("marginal_rate")
-    refi_gap = (marginal - coupon_m).rename("refi_gap")
+    ).rename("marginal_bills21")
+    refi_bills21 = (marginal_bills21 - coupon_m).rename("refi_gap_bills21")
 
+    if resid is None or resid.empty or "RESID_W_0_1Y" not in resid.columns:
+        raise RuntimeError(
+            "fiscal_mspd_residual missing — fetch MSPD Table 3 before publishing refi"
+        )
+    dgs5 = _col(policy, "DGS5")
+    dgs30 = _col(policy, "DGS30")
+    dfii = _col(policy, "DFII10")
+    need = {"DGS5": dgs5, "DGS30": dgs30, "DFII10": dfii, "DGS2": dgs2, "DGS10": dgs10, "TB3MS": tb3, "FEDFUNDS": funds}
+    missing = [k for k, s in need.items() if int(s.dropna().shape[0]) < 8]
+    if missing:
+        raise RuntimeError(
+            "FRED stand-ins missing from cache: " + ", ".join(missing) + " — run --fetch"
+        )
+    def _month(s: pd.Series) -> pd.Series:
+        if s is None or s.empty:
+            return pd.Series(dtype="float64", name=getattr(s, "name", None))
+        out = pd.to_numeric(s, errors="coerce").dropna()
+        out.index = pd.to_datetime(out.index).tz_localize(None)
+        out = out.groupby(out.index.to_period("M")).last()
+        out.index = out.index.to_timestamp(how="end").normalize()
+        return out
+
+    ymap = {
+        "0_1Y": _month(tb3),
+        "1_3Y": _month(dgs2),
+        "3_7Y": _month(dgs5),
+        "7_10Y": _month(dgs10),
+        "10YPLUS": _month(dgs30),
+        "TIPS": _month(dfii),
+        "FRN": _month(funds),
+    }
+    coupon_m = _month(avg_mkt_coupon)
     resid_extra = []
-    if resid is not None and not resid.empty and "RESID_W_0_1Y" in resid.columns:
-        dgs5 = _col(policy, "DGS5")
-        dgs30 = _col(policy, "DGS30")
-        dfii = _col(policy, "DFII10")
-        ymap = {
-            "0_1Y": tb3.resample("ME").last(),
-            "1_3Y": dgs2.resample("ME").last(),
-            "3_7Y": dgs5.resample("ME").last() if len(dgs5) else dgs2.resample("ME").last(),
-            "7_10Y": dgs10.resample("ME").last(),
-            "10YPLUS": dgs30.resample("ME").last() if len(dgs30) else dgs10.resample("ME").last(),
-            "TIPS": dfii.resample("ME").last() if len(dfii) else pd.Series(dtype="float64"),
-            "FRN": funds.resample("ME").last(),
-        }
-        parts = []
-        wsum = None
-        for b, yld in ymap.items():
-            w = _col(resid, f"RESID_W_{b}").resample("ME").last()
-            if wsum is None:
-                wsum = w.fillna(0.0)
-            else:
-                wsum = wsum.add(w.fillna(0.0), fill_value=0.0)
-            parts.append((w, yld))
-            resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
-        # Renormalize known buckets; month is NA if a positive-weight bucket lacks a yield.
-        marg_r = None
-        for w, yld in parts:
-            wn = w / wsum.replace(0, pd.NA)
-            term = wn * yld
-            marg_r = term if marg_r is None else marg_r.add(term, fill_value=0.0)
-        marg_r = marg_r.rename("marginal_residual")
-        refi_r = (marg_r - coupon_m).rename("refi_gap_residual")
-        resid_extra.extend([marg_r, refi_r])
+    parts = []
+    wsum = None
+    for b, yld in ymap.items():
+        w = _month(_col(resid, f"RESID_W_{b}"))
+        if wsum is None:
+            wsum = w.fillna(0.0)
+        else:
+            wsum = wsum.add(w.fillna(0.0), fill_value=0.0)
+        parts.append((b, w, yld))
+        resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
+    killed = []
+    marg_r = None
+    for b, w, yld in parts:
+        w0 = w.fillna(0.0)
+        y = yld.reindex(w0.index)
+        term = (w0 / wsum.replace(0, pd.NA)) * y
+        term = term.where(w0 > 1e-12, 0.0)
+        miss = (w0 > 1e-12) & y.isna()
+        if int(miss.sum()) > 0:
+            killed.append(f"{b}:{int(miss.sum())}mo")
+        marg_r = term if marg_r is None else marg_r.add(term)
+    if marg_r is None or int(marg_r.dropna().shape[0]) < 8:
+        raise RuntimeError(
+            "residual marginal_rate too short — Table 3 × CMT failed"
+            + (f" ({', '.join(killed)})" if killed else "")
+        )
+    marginal = marg_r.rename("marginal_rate")
+    refi_gap = (marginal - coupon_m).rename("refi_gap")
+    resid_extra.extend([
+        marginal,
+        refi_gap,
+        marginal.rename("marginal_residual"),
+        refi_gap.rename("refi_gap_residual"),
+    ])
 
     # Scratch robustness only — not a cube axis. Auction $ bills share vs MSPD stock share.
     extra = []
@@ -976,8 +1010,8 @@ def calculate_metrics(
         dgs2.rename("DGS2"),
         dgs10.rename("DGS10"),
         funds_minus_stock,
-        marginal,
-        refi_gap,
+        marginal_bills21,
+        refi_bills21,
         *resid_extra,
         *extra,
     )

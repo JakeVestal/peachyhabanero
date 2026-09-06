@@ -154,48 +154,51 @@
     <p class="sub">
       Sentence: is the market already refinancing the book above the coupon
       the book carries. This is the strip the chair does not have to touch.
-      The marginal rate is the MSPD bills share of marketable that quarter,
-      with the non-bill residual split 2:1 onto DGS2 and DGS10.
+      The marginal rate is MSPD Table 3 remaining-maturity weights times
+      CMT stand-ins, minus Fiscal Data Total Marketable coupon.
     </p>
     <div class="col-card">
-      <h3>front  ·  TB3MS</h3>
+      <h3>weights  ·  MSPD Table 3 remaining life</h3>
       <p>
-        3-month Treasury bill, secondary market, monthly average, percent.
-        <a href="https://fred.stlouisfed.org/series/TB3MS">FRED TB3MS</a>.
-        Stands in for bills.
+        Every marketable CUSIP on
+        <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">MSPD Table 3 market</a>.
+        Remaining life = maturity date − record date. Principal collapsed
+        to 0–1y, 1–3y, 3–7y, 7–10y, 10y+, TIPS, FRN. TIPS and FRNs are
+        not dumped into a nominal tenor. Table 3 is total marketable
+        outstanding, not held-by-the-public.
       </p>
     </div>
     <div class="col-card">
-      <h3>belly  ·  DGS2</h3>
+      <h3>yields  ·  CMT stand-ins</h3>
       <p>
-        2-year Treasury constant maturity, percent.
-        <a href="https://fred.stlouisfed.org/series/DGS2">FRED DGS2</a>.
+        0–1y
+        <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>,
+        1–3y
+        <a href="https://fred.stlouisfed.org/series/DGS2">DGS2</a>,
+        3–7y
+        <a href="https://fred.stlouisfed.org/series/DGS5">DGS5</a>,
+        7–10y
+        <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>,
+        10y+
+        <a href="https://fred.stlouisfed.org/series/DGS30">DGS30</a>,
+        TIPS
+        <a href="https://fred.stlouisfed.org/series/DFII10">DFII10</a>,
+        FRN
+        <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>.
+        A month with weight in a bucket and no yield is blank.
       </p>
     </div>
     <div class="col-card">
-      <h3>back  ·  DGS10</h3>
+      <h3>stock coupon  ·  Fiscal Data Total Marketable</h3>
       <p>
-        10-year Treasury constant maturity, percent.
-        <a href="https://fred.stlouisfed.org/series/DGS10">FRED DGS10</a>.
-      </p>
-    </div>
-    <div class="col-card">
-      <h3>mix  ·  MSPD bills share of marketable</h3>
-      <p>
-        Weight on the front is
-        <span class="col-id">MSPD_BILLS_SHARE_MARKETABLE</span>
-        from the Monthly Statement of the Public Debt
-        (bills outstanding held by the public / marketable held by the public).
-        <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/summary-of-treasury-securities-outstanding">Treasury Fiscal Data, MSPD</a>.
-        The rest of the book is split 2:1 onto DGS2 and DGS10
-        (w_2y = (1 − w_bills) × 2/3, w_10y = (1 − w_bills) × 1/3).
-        That 2:1 is a labeled split on the non-bill residual, not a second
-        MSPD observation. Auction-dollar bills share is a scratch plot only.
+        Not constructed.
+        <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Average Interest Rates on U.S. Treasury Securities</a>,
+        Total Marketable row. Not NIPA interest / debt.
       </p>
     </div>
     <p class="stat">
-      marginal = w_bills × TB3MS + w_2y × DGS2 + w_10y × DGS10<br/>
-      refi gap = marginal − stock coupon
+      marginal = Σ w_bucket × CMT_bucket<br/>
+      refi gap = marginal − Fiscal Data Total Marketable coupon
     </p>
     <p class="sub">
       Warn / death on this axis are +0.50 / +1.00 percentage points. Positive
@@ -335,7 +338,7 @@
               <td>2 refi gap</td>
               <td>sustain Z</td>
               <td>market already lifting the book</td>
-              <td>issuance-weighted TB3MS, DGS2, DGS10 − Fiscal Data coupon</td>
+              <td>Table 3 remaining-maturity × CMT − Fiscal Data Total Marketable coupon</td>
               <td>percentage points</td>
             </tr>
             <tr>

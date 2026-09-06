@@ -255,6 +255,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "refi_gap_auction": _qe(_col_or(m01, "refi_gap_auction")),
         "marginal_residual": _qe(_col_or(m01, "marginal_residual")),
         "refi_gap_residual": _qe(_col_or(m01, "refi_gap_residual")),
+        "marginal_bills21": _qe(_col_or(m01, "marginal_bills21")),
+        "refi_gap_bills21": _qe(_col_or(m01, "refi_gap_bills21")),
         "resid_w_0_1y": _qe(_col_or(m01, "resid_w_0_1y")),
         "resid_w_1_3y": _qe(_col_or(m01, "resid_w_1_3y")),
         "resid_w_3_7y": _qe(_col_or(m01, "resid_w_3_7y")),
@@ -321,7 +323,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "generated_at": generated_at,
         "zone": ZONE,
         "coupon_source": coupon_source,
-        "refinance_rule": "w_bills = MSPD bills share of marketable; remainder 2:1 DGS2:DGS10",
+        "refinance_rule": "MSPD Table 3 remaining-maturity weights x TB3MS/DGS2/DGS5/DGS10/DGS30/DFII10/FEDFUNDS minus Fiscal Data Total Marketable coupon",
         "nonbill_split": NONBILL_SPLIT,
         "sigma_window": {
             "requested_start": SIGMA_WINDOW_START,
