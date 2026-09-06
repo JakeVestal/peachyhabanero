@@ -29,7 +29,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: nightly-data
   cancel-in-progress: false
 
 jobs:
