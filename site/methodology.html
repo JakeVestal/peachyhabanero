@@ -163,9 +163,10 @@
         Every marketable CUSIP on
         <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">MSPD Table 3 market</a>.
         Remaining life = maturity date − record date. Principal collapsed
-        to 0–1y, 1–3y, 3–7y, 7–10y, 10y+, TIPS, FRN. TIPS and FRNs are
-        not dumped into a nominal tenor. Table 3 is total marketable
-        outstanding, not held-by-the-public.
+        to 0–1y, 1–3y, 3–7y, 7–10y, 10y+, TIPS, FRN. Published \(m_t\)
+        drops TIPS and renormalizes the other buckets so the gap stays
+        in nominal units. FRNs stay in, priced off FEDFUNDS. Table 3 is
+        total marketable outstanding, not held-by-the-public.
       </p>
     </div>
     <div class="col-card">
@@ -181,11 +182,11 @@
         <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>,
         10y+
         <a href="https://fred.stlouisfed.org/series/DGS30">DGS30</a>,
-        TIPS
-        <a href="https://fred.stlouisfed.org/series/DFII10">DFII10</a>,
         FRN
         <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>.
-        A month with weight in a bucket and no yield is blank.
+        TIPS weights are stored; they are not in published \(m_t\).
+        DFII10 stays a raw/scratch series. A month with weight in a
+        published bucket and no yield is blank.
       </p>
     </div>
     <div class="col-card">
@@ -197,7 +198,7 @@
       </p>
     </div>
     <p class="stat">
-      marginal = Σ w_bucket × CMT_bucket<br/>
+      marginal = Σ_{b ≠ TIPS} (w_b / Σ_{j ≠ TIPS} w_j) × CMT_b<br/>
       refi gap = marginal − Fiscal Data Total Marketable coupon
     </p>
     <p class="sub">

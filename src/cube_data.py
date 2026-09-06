@@ -924,7 +924,7 @@ def calculate_metrics(
     dgs5 = _fred_or_fetch("DGS5", _col(policy, "DGS5"))
     dgs30 = _fred_or_fetch("DGS30", _col(policy, "DGS30"))
     dfii = _fred_or_fetch("DFII10", _col(policy, "DFII10"))
-    need = {"DGS5": dgs5, "DGS30": dgs30, "DFII10": dfii, "DGS2": dgs2, "DGS10": dgs10, "TB3MS": tb3, "FEDFUNDS": funds}
+    need = {"DGS5": dgs5, "DGS30": dgs30, "DGS2": dgs2, "DGS10": dgs10, "TB3MS": tb3, "FEDFUNDS": funds}
     missing = [k for k, s in need.items() if int(s.dropna().shape[0]) < 8]
     if missing:
         raise RuntimeError(
@@ -952,14 +952,17 @@ def calculate_metrics(
     resid_extra = []
     parts = []
     wsum = None
+    PUBLISH_BUCKETS = ("0_1Y", "1_3Y", "3_7Y", "7_10Y", "10YPLUS", "FRN")
     for b, yld in ymap.items():
         w = _month(_col(resid, f"RESID_W_{b}"))
+        resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
+        if b not in PUBLISH_BUCKETS:
+            continue
         if wsum is None:
             wsum = w.fillna(0.0)
         else:
             wsum = wsum.add(w.fillna(0.0), fill_value=0.0)
         parts.append((b, w, yld))
-        resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
     killed = []
     marg_r = None
     for b, w, yld in parts:

@@ -161,17 +161,16 @@
           + 3–7y × <a href="https://fred.stlouisfed.org/series/DGS5">DGS5</a>
           + 7–10y × <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>
           + 10y+ × <a href="https://fred.stlouisfed.org/series/DGS30">DGS30</a>
-          + TIPS × <a href="https://fred.stlouisfed.org/series/DFII10">DFII10</a>
           + FRN × <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
         </p>
         <p>
-          TIPS and FRNs stay in their own buckets — a TIPS is not a
-          nominal 10-year, and an FRN resets off the bill, not its final
-          maturity. Table 3 is total marketable outstanding, not
-          held-by-the-public. A month is left blank if a bucket with
-          weight has no CMT (TIPS before DFII10). This is still a CMT
-          estimate, not each CUSIP’s mid. Original-class Table 1 mix
-          stays on scratch as the issuance picture.
+          TIPS are not in that sum. The TIPS yield we would use
+          (<a href="https://fred.stlouisfed.org/series/DFII10">DFII10</a>)
+          is real; the coupon we subtract is nominal. Mixing them would
+          move the gap for a unit reason. TIPS stay in the <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>
+          weights so the share is visible; the other buckets are
+          renormalized. FRNs stay in the sum (FEDFUNDS is already
+          nominal).
         </p>
       </div>
     </div>

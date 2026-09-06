@@ -323,7 +323,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "generated_at": generated_at,
         "zone": ZONE,
         "coupon_source": coupon_source,
-        "refinance_rule": "MSPD Table 3 remaining-maturity weights x TB3MS/DGS2/DGS5/DGS10/DGS30/DFII10/FEDFUNDS minus Fiscal Data Total Marketable coupon",
+        "refinance_rule": "MSPD Table 3 remaining-maturity weights on nominal paper + FRN (TIPS dropped, rest renormalized) x TB3MS/DGS2/DGS5/DGS10/DGS30/FEDFUNDS minus Fiscal Data Total Marketable coupon",
         "nonbill_split": NONBILL_SPLIT,
         "sigma_window": {
             "requested_start": SIGMA_WINDOW_START,
