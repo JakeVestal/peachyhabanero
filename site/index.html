@@ -34,6 +34,28 @@
     otherwise demand one. That is the contest — Treasury cannot support
     the hike; the mandate may still require it.
   </p>
+  <p>
+    The Sustainability Cube wires are labeled marks, not estimated
+    thresholds, with the following values: Interest at 20% of receipts is a
+    fifth of the till — about the size of the defense budget in a ~17%-of-GDP
+    receipts economy — so a 100 bp coupon step is a budget function, not
+    rounding. 30% is the death face: interest near 5% of GDP, past every
+    postwar US year. Public debt at 100% of GDP is the published fiscal-risk
+    mark (CBO / IMF-style stock warning). 140% is Italy/Greece crisis stock
+    without Japan’s captive domestic bid. The refi wires at +0.50 / +1.00 pp
+    are the same idea in rate space: half a point is a line item on a book
+    this size.
+  </p>
+  <p>
+    The boundaries on the Fiscal Dominance Cube were chosen based on the
+    assumption that the following statement is true: if the funds rate is at
+    or under the Treasury's book rate, and interest payments make up over one
+    fifth of Treasury revenue, and the primary deficit / GDP is positive,
+    <em>all at the same time</em>, then the Fed might begin, either through
+    voluntary cooperation or Congressional action, to relax its independence
+    as a money supply manager only and consider Treasury budgetary needs in
+    its policy decisions.
+  </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
 <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
@@ -218,9 +240,10 @@
           instead of m: funds − Fiscal Data Total Marketable coupon.
           This plot is the cube coordinate, not the raw gap:
         <p class="stat">F1 = −(x₁ − 0) / σ</p>
-        <p>, σ from 2000-01-01.
-          Sign is flipped so F1 &gt; 0 means funds are already at or
-          under the book — a hike is then a fiscal tightening of the stock.
+        <p>
+          with σ from 2000-01-01. Sign is flipped so F1 &gt; 0 means funds
+          are already at or under the book — a hike is then a fiscal
+          tightening of the stock.
         </p>
       </div>
     </div>
@@ -248,14 +271,9 @@
     <div class="axis-row">
       <div class="axis-plot" id="ax-6"></div>
       <div class="axis-copy">
-        <p>
-          Are operations still open. Magenta wire at 0: still borrowing
-          after interest.
-        </p>
         <p class="stat">100 × (FGEXPND − A091RC1Q027SBEA − FGRECPT) / GDP</p>
         <p>
-          All four of the named series are NIPA / BEA SAAR, same vintage as
-          axis 1. Uses primary deficit, not the headline unified deficit:
+          Uses primary deficit, not the headline unified deficit:
           interest is stripped so this axis asks “are we borrowing for
           operations,” not “is the till already paying the coupon” (that is
           axes 1 and 5). If positive, we're borrowing for operations;
