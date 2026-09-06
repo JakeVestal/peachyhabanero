@@ -728,6 +728,10 @@ def update_raw(
                 force_full = True
         if name == "fiscal_mspd_residual" and (old is None or old.empty or "RESID_W_0_1Y" not in getattr(old, "columns", [])):
             force_full = True
+        if name == "fred_policy_rates" and old is not None and len(old):
+            d5 = pd.to_numeric(old.get("DGS5"), errors="coerce") if "DGS5" in old.columns else pd.Series(dtype=float)
+            if d5.empty or d5.notna().mean() < 0.8:
+                force_full = True
         if force_full:
             start = DEFAULT_START
             old = pd.DataFrame()
@@ -910,9 +914,16 @@ def calculate_metrics(
         raise RuntimeError(
             "fiscal_mspd_residual missing — fetch MSPD Table 3 before publishing refi"
         )
-    dgs5 = _col(policy, "DGS5")
-    dgs30 = _col(policy, "DGS30")
-    dfii = _col(policy, "DFII10")
+    def _fred_or_fetch(sid: str, have: pd.Series) -> pd.Series:
+        monthly = have.dropna().index.to_period("M").nunique() if len(have) else 0
+        if monthly >= 100:
+            return have
+        print(f"  cache {sid} only {monthly} months — fetching full series")
+        return fetch_fred_series(_session(), sid, start="1990-01-01")
+
+    dgs5 = _fred_or_fetch("DGS5", _col(policy, "DGS5"))
+    dgs30 = _fred_or_fetch("DGS30", _col(policy, "DGS30"))
+    dfii = _fred_or_fetch("DFII10", _col(policy, "DFII10"))
     need = {"DGS5": dgs5, "DGS30": dgs30, "DFII10": dfii, "DGS2": dgs2, "DGS10": dgs10, "TB3MS": tb3, "FEDFUNDS": funds}
     missing = [k for k, s in need.items() if int(s.dropna().shape[0]) < 8]
     if missing:
