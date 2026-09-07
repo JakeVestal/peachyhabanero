@@ -3,272 +3,115 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Treasury cubes</title>
+  <title>peachyhabanero</title>
   <link rel="stylesheet" href="style.css"/>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
 <header>
   <div class="header-top">
-    <p class="navline">cubes · <a href="fed.html">fed view</a> · <a href="data.html">data</a> · <a href="methodology.html">methodology</a> · <a href="boundaries.html">boundaries</a></p>
+    <p class="navline"><a href="index.html">home</a> · <a href="sustainability.html">sustainability</a> · <a href="fiscal-dominance.html">fiscal dominance</a> · <a href="data.html">data</a></p>
     <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
   </div>
-  <h1>TREASURY CUBES</h1>
-  <p>
-    These two cubes are the Treasury’s problem, not the Fed’s. The stock,
-    the till, the book coupon, and whether a hike is fiscally unthinkable
-    are fiscal objects. The Fed’s mandate is prices, employment, and
-    moderate long-term rates — not the best financing position of the
-    United States.
+  <h1>PEACHYHABANERO</h1>
+  <p class="sub">
+    Named series. Named arithmetic. Public data. The pages here watch
+    pressure on the Treasury to fund the government, and pressure on the
+    Fed to run its mandate — and the months when those two instructions
+    cannot both be followed.
   </p>
-  <p>
-    The Sustainability Cube (left) defines a <b>Danger Zone</b> within
-    which the US debt stock is at high risk of entering a self-reinforcing
-    feedback loop of runaway debt and interest, as well as a <b>Death
-    Zone</b> in which such a feedback loop is all but certain.</p>
-
-  <p>
-    The Fiscal Dominance Cube (right) is still a Treasury question: the
-    region in which a rate hike would be unthinkable on fiscal arithmetic
-    even if inflation printed hot and the Fed’s inflation mandate would
-    otherwise demand one. That is the contest — Treasury cannot support
-    the hike; the mandate may still require it.
-  </p>
-  <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
-<div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
-  <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
-    <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
-    <button class="neon-btn" type="button" id="btn-tax">tax</button>
+
+<section class="home-bio">
+  <div class="bio-card">
+    <h2>About</h2>
+    <p>
+      <!-- swap this block for a real bio -->
+      Short bio goes here. One or two paragraphs: who is writing this,
+      what the project is for, and what it is not (not a forecast shop,
+      not a trading signal).
+    </p>
+    <p class="sub">
+      Placeholder. Replace with affiliation, research interest, and
+      the rule of the site: every plotted number traces to a FRED or
+      Fiscal Data series a reader can open.
+    </p>
+    <p class="socials">
+      <a href="https://www.linkedin.com/in/YOUR-HANDLE" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://x.com/JakeVestal" target="_blank" rel="noopener">X</a>
+      <a href="https://github.com/JakeVestal" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:hello@peachyhabanero.com">email</a>
+    </p>
   </div>
-  <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
-    Toggle interest / tax vs interest / receipts on both cubes and the
-    distance plot. Tax is NIPA current tax receipts
-    (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a>).
-    Receipts is NIPA current receipts
-    (<a href="https://fred.stlouisfed.org/series/FGRECPT" style="color: #00f0ff; text-decoration: none;">FGRECPT</a>)
-    — taxes plus contributions for social insurance, income on assets, and
-    the rest of the current-receipts envelope.
-  </span>
-</div>
+</section>
+
 <section>
-  <div class="grid-2">
-    <div id="cube-sustain"></div>
-    <div id="cube-fail"></div>
+  <h2>Analyses</h2>
+  <p class="sub">Live pages first. Gray cards are queued.</p>
+  <div class="card-grid">
+
+    <a class="analysis-card" href="sustainability.html">
+      <span class="card-kicker" style="color:#00f0ff">Treasury · live</span>
+      <h3>Sustainability Cube</h3>
+      <p>
+        Interest / till, the refi gap, and public debt / GDP. Danger
+        and death zones on the Treasury book — when service crowds
+        the budget and the roll feeds the stock.
+      </p>
+    </a>
+
+    <a class="analysis-card" href="fiscal-dominance.html">
+      <span class="card-kicker" style="color:#ff2bd6">Treasury · live</span>
+      <h3>Fiscal Dominance Cube</h3>
+      <p>
+        Funds versus the book coupon, interest versus receipts, and
+        the primary deficit. The region where a hike is fiscally
+        unthinkable even if the inflation mandate wants one.
+      </p>
+    </a>
+
+    <a class="analysis-card" href="data.html">
+      <span class="card-kicker" style="color:#c4a35a">Pipeline · live</span>
+      <h3>Data &amp; calculations</h3>
+      <p>
+        Raw FRED and Fiscal Data tables, the quarterly complete
+        cases, and the worked arithmetic behind every axis.
+      </p>
+    </a>
+
+    <article class="analysis-card is-queued">
+      <span class="card-kicker">Fed · in progress</span>
+      <h3>Fed View</h3>
+      <p>
+        Inflation gap, employment gap, term premium, and what the
+        FOMC actually did. Stays off the public nav until the page
+        is finished.
+      </p>
+    </article>
+
+    <article class="analysis-card is-queued">
+      <span class="card-kicker">Fiscal history · queued</span>
+      <h3>Debt added, by president</h3>
+      <p>
+        Dollars (and share of GDP) each administration added to the
+        stock. Named series only — no vibes ranking.
+      </p>
+    </article>
+
+    <article class="analysis-card is-queued">
+      <span class="card-kicker">Next</span>
+      <h3>Another note</h3>
+      <p>
+        Slot for the next object: contest months, auction stress,
+        who holds the book. Duplicate this card when you add one.
+      </p>
+    </article>
+
   </div>
 </section>
-<section>
-  <h2>Distance to the Danger Zone / Death Zone over time </h2>
-  <p class="sub">
-    Tracks score-space distance to the nearest point on the Danger (s≥1) or
-    Death Zone (s≥2) octant. This distance is positive if a set of
-    quarterly prints falls outside or on a face, and negative if inside.
-    Note that this metric is a calculated distance across all three
-    score-space dimensions, and is not a raw percent or basis point measure.
-  </p>
-  <div id="dist-plot"></div>
-  <p class="sub">
-    Point color on the sustainability path is <b>interest-burden stress</b>:
-    a 0–1 blend of the three score-space coordinates
-    (20% debt/GDP, 35% interest share, 25% refi gap) plus a 20% sleeve for
-    <b>interest / GDP</b> (`A091 / GDP`), piecewise through 3.0% (warn) and
-    4.5% (death). That sleeve is not a cube axis. It is only the color so a
-    high till-share quarter that is still a small slice of GDP does not
-    look the same as one that is already a program.
-  </p>
-</section>
 
-<section>
-  <h2>Description of Each Axis and its Tripwire Levels</h2>
-  <article class="axis-block">
-    <h3 class="axis-head">1  · Interest / Till</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-1"></div>
-      <div class="axis-copy">
-        <p>
-          Share of this quarter’s incoming cash (the “till”) already spoken
-          for by interest on the existing book, and not available to fund
-          the government's operations.
-        </p>
-        <p class="stat">100 × A091RC1Q027SBEA / FGRECPT &nbsp; (tax toggle: / W006RC1Q027SBEA)</p>
-        <p>
-          Interest and the till are both NIPA SAAR so the ratio stays inside
-          one vintage. Intrest is fetched from FRED item <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">A091RC1Q027SBEA</a>
-          By default, the till is set to <b>current receipts</b>
-          (<a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>):
-          taxes, social-insurance contributions, income on assets, and the
-          rest of the current-receipts envelope. That is the cash that can
-          service the book. The buttons above the cubes switch the
-          denominator to tax receipts only
-          (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">W006RC1Q027SBEA</a>):
-          same theory, smaller till.
-        </p>
-        <p>
-          The <b style="color:#c4a35a">Danger Zone</b> is
-          <b style="color:#c4a35a">20%</b> of receipts. Federal receipts run
-          near 17% of GDP; 20% × 0.17 ≈ 3.4% of GDP of interest — the same
-          order as OMB function 050 (national defense). 0.03 / 0.17 ≈ 18,
-          rounded to 20.
-        </p>
-        <p>
-          The <b style="color:#ff2bd6">Death Zone</b> is
-          <b style="color:#ff2bd6">30%</b>. Same map: 30% × 0.17 ≈ 5% of GDP
-          of interest. That is past the postwar US sample and well past “the
-          same size as defense.” It is a labeled step on that identity, not a
-          fitted cliff.
-        </p>
-      </div>
-    </div>
-  </article>
-
-  <article class="axis-block">
-    <h3 class="axis-head">2  ·  Refi Gap</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-2"></div>
-      <div class="axis-copy">
-        <p>
-          The <b>Refi Gap</b> is the difference between the
-          <b>marginal</b> rate the book would clear at if it were marked
-          to the current Treasury curve by remaining maturity, and the
-          <b>coupon that the marketable stock already carries</b>.
-        </p>
-        <p class="stat">marginal − stock coupon</p>
-        <p>
-          The Treasury issues new debt to pay what is already out. If the
-          gap is positive, new issue costs more than the stock and the
-          book’s carrying rate has to rise as it rolls. If the gap is
-          negative, rolls cheapen the book.
-        </p>
-        <p>
-          <b>Stock coupon</b> is not constructed. It is the Treasury
-          Fiscal Data print
-          <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Average Interest Rates on U.S. Treasury Securities</a>,
-          row <b>Total Marketable</b>
-          (<a href="https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates">v2/accounting/od/avg_interest_rates</a>).
-          That is the carrying rate on marketable debt only.
-        </p>
-        <p>
-          <b>Marginal</b> is constructed. Each month we take every
-          marketable CUSIP on MSPD
-          <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>,
-          remaining life = maturity − record date, and collapse principal
-          into buckets. Those weights times the CMT stand-in for that
-          bucket:
-        </p>
-        <p class="stat">
-          0–1y × <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>
-          + 1–3y × <a href="https://fred.stlouisfed.org/series/DGS2">DGS2</a>
-          + 3–7y × <a href="https://fred.stlouisfed.org/series/DGS5">DGS5</a>
-          + 7–10y × <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>
-          + 10y+ × <a href="https://fred.stlouisfed.org/series/DGS30">DGS30</a>
-          + FRN × <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
-        </p>
-        <p>
-          TIPS are not in that sum. The TIPS yield we would use
-          (<a href="https://fred.stlouisfed.org/series/DFII10">DFII10</a>)
-          is real; the coupon we subtract is nominal. Mixing them would
-          move the gap for a unit reason. TIPS stay in the <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>
-          weights so the share is visible; the other buckets are
-          renormalized. FRNs stay in the sum (FEDFUNDS is already
-          nominal).
-        </p>
-      </div>
-    </div>
-  </article>
-
-  <article class="axis-block">
-    <h3 class="axis-head">3  ·  Debt held by the public / GDP</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-3"></div>
-      <div class="axis-copy">
-        <p>
-          Reported directly by FRED, Debt Held by the Public as a percentage
-          of GDP (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">
-          FYGFGDQ188S</a>) provides the of existing debt stock the that the
-          till and the coupon have to carry; in other words, it reflects the
-          overall debt burden that taxpayers and the government must manage
-          and pay interest on. This is distinct from gross federal debt
-          (<a href="https://fred.stlouisfed.org/series/GFDEGDQ188S">
-          GFDEGDQ188S</a>), which includes intra-governmental IOUs that the
-          government writes to itself and do not roll into the market.
-        </p>
-        <p>
-          The <b style="color:#c4a35a">Danger Zone</b> for <b>Debt held by the
-          public/GDP</b> is set to<b style="color:#c4a35a">100%</b> following the
-          round figure that the <a
-                href="https://www.cbo.gov/publication/61332">Congressional Budget Office (CBO)</a> and the <a
-                href="https://www.imf.org/-/media/files/publications/fiscal-monitor/2025/october/english/foreword.pdf">IMF Fiscal Monitor</a>
-          have identified as a warning level for fiscal risk. The
-          <b style="color:#ff2bd6">Death Zone</b> was set to <b>140%</b>,
-          because at that point the US would reach Italy/Greece-crisis levels, but
-          without the advantage of Japan’s captive domestic bid for refinancing.
-        </p>
-      </div>
-    </div>
-  </article>
-
-  <article class="axis-block">
-    <h3 class="axis-head">4  ·  y(funds − book coupon)</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-5"></div>
-      <div class="axis-copy">
-        <p>
-          Same metric as <b>2 · Refi gap</b> except the left-hand rate is
-          <a href="https://fred.stlouisfed.org/series/FEDFUNDS">FEDFUNDS</a>
-          instead of m: funds − Fiscal Data Total Marketable coupon.
-          This plot is the cube coordinate, not the raw gap:
-        <p class="stat">F1 = −(x₁ − 0) / σ</p>
-        <p>, σ from 2000-01-01.
-          Sign is flipped so F1 &gt; 0 means funds are already at or
-          under the book — a hike is then a fiscal tightening of the stock.
-        </p>
-      </div>
-    </div>
-  </article>
-
-  <article class="axis-block">
-    <h3 class="axis-head">5  ·  y(Interest / Receipts)</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-4"></div>
-      <div class="axis-copy">
-        <p>
-          Same series as axis 1 with till=receipts, except transformed as a
-          sigma-scaled distance from the threshold. 20% is subtracted from each
-          measurement of Interest/Revenue and divided by the standard
-          deviation from 2000-01-01.
-        </p>
-      </div>
-    </div>
-  </article>
-
-
-
-  <article class="axis-block">
-    <h3 class="axis-head">6  primary / GDP</h3>
-    <div class="axis-row">
-      <div class="axis-plot" id="ax-6"></div>
-      <div class="axis-copy">
-        <p>
-          Are operations still open. Magenta wire at 0: still borrowing
-          after interest.
-        </p>
-        <p class="stat">100 × (FGEXPND − A091RC1Q027SBEA − FGRECPT) / GDP</p>
-        <p>
-          All four of the named series are NIPA / BEA SAAR, same vintage as
-          axis 1. Uses primary deficit, not the headline unified deficit:
-          interest is stripped so this axis asks “are we borrowing for
-          operations,” not “is the till already paying the coupon” (that is
-          axes 1 and 5). If positive, we're borrowing for operations;
-          otherwise if negative. Together with axis 3 completes the stock
-          identity Δ(debt/GDP) ≈ (r − g)×stock + primary.
-        </p>
-      </div>
-    </div>
-  </article>
-</section>
 <footer>
-  peachyhabanero · <a href="fed.html">fed view</a> · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
+  peachyhabanero.com · public data ·
+  <a href="https://github.com/JakeVestal/peachyhabanero">source</a>
 </footer>
-<script src="cube.js?v=21"></script>
 </body>
 </html>
