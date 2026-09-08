@@ -23,6 +23,3 @@ Thumbs.db
 # local experiment page — never ship
 /site/scratch.html
 /site/scratch.js
-
-/site/fed.js
-/site/fed.html
