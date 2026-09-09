@@ -37,13 +37,16 @@ from cube_data import (  # noqa: E402
     build_all,
     calculate_metrics,
     ensure_fomc_point_seed,
+    fetch_fred_series,
     load_fomc_point_steps,
     load_frames,
     save_frames,
     summarize,
     summarize_metrics,
     update_raw,
+    _session,
 )
+import cube_data as cube_data_mod  # noqa: E402
 from cube_visualize import (  # noqa: E402
     load_thresholds,
     quarterly_complete,
@@ -413,6 +416,80 @@ def fetch_raw() -> None:
     log_step(f"Cached raw frames successfully to {RAW_JSON}")
 
 
+def _as_q(s: pd.Series, name: str) -> pd.Series:
+    out = pd.to_numeric(s, errors="coerce").dropna() if s is not None else pd.Series(dtype="float64")
+    if out.empty:
+        return pd.Series(dtype="float64", name=name)
+    out = out.copy()
+    out.index = pd.to_datetime(out.index)
+    out = out.groupby(out.index.to_period("Q")).last()
+    out.index = out.index.to_timestamp(how="end").normalize()
+    out.name = name
+    return out
+
+
+def rebuild_primary(metrics: dict, frames: list) -> dict:
+    """If 03 is empty, form primary/GDP here from raw NIPA + GDP. Does not fill."""
+    m03 = metrics.get("03_primary_deficit_not_in_hole", pd.DataFrame())
+    n = 0
+    if m03 is not None and not m03.empty and "primary_deficit_pct_gdp" in m03.columns:
+        n = int(pd.to_numeric(m03["primary_deficit_pct_gdp"], errors="coerce").dropna().shape[0])
+    if n >= 8:
+        return metrics
+    log_step(f"03 primary empty ({n} prints) — rebuilding from NIPA + GDP")
+    by = {name: frames[i] for i, name in enumerate(FRAME_NAMES) if i < len(frames)}
+    nipa = by.get("fred_fiscal_nipa", pd.DataFrame())
+    labor = by.get("fred_labor_output", pd.DataFrame())
+
+    def col(df, sid):
+        if df is None or df.empty or sid not in df.columns:
+            return pd.Series(dtype="float64", name=sid)
+        s = pd.to_numeric(df[sid], errors="coerce")
+        s.index = pd.to_datetime(df.index)
+        return s.dropna().rename(sid)
+
+    def need(sid, have):
+        have = pd.to_numeric(have, errors="coerce").dropna() if have is not None else pd.Series(dtype="float64")
+        if int(have.shape[0]) >= 8:
+            return have.rename(sid)
+        log_step(f"{sid} only {int(have.shape[0])} prints in cache — fetching")
+        s = fetch_fred_series(_session(), sid, start="1970-01-01")
+        s = pd.to_numeric(s, errors="coerce").dropna()
+        if int(s.shape[0]) < 8:
+            raise SystemExit(f"FRED {sid} empty — https://fred.stlouisfed.org/series/{sid}")
+        return s.rename(sid)
+
+    interest = need("A091RC1Q027SBEA", col(nipa, "A091RC1Q027SBEA"))
+    receipts = need("FGRECPT", col(nipa, "FGRECPT"))
+    exp = need("FGEXPND", col(nipa, "FGEXPND"))
+    gdp = need("GDP", col(labor, "GDP"))
+    q_int = _as_q(interest, "interest")
+    q_exp = _as_q(exp, "exp")
+    q_rec = _as_q(receipts, "receipts")
+    q_gdp = _as_q(gdp, "gdp")
+    log_step(
+        f"primary inputs interest={len(q_int)} exp={len(q_exp)} "
+        f"receipts={len(q_rec)} gdp={len(q_gdp)} "
+        f"exp[{q_exp.index.min().date() if len(q_exp) else '—'}→{q_exp.index.max().date() if len(q_exp) else '—'}] "
+        f"gdp[{q_gdp.index.min().date() if len(q_gdp) else '—'}→{q_gdp.index.max().date() if len(q_gdp) else '—'}]"
+    )
+    primary_bn = ((q_exp - q_int) - q_rec).rename("primary_deficit_bn_saar")
+    primary_gdp = (100.0 * primary_bn / q_gdp).rename("primary_deficit_pct_gdp")
+    if int(primary_gdp.dropna().shape[0]) < 8:
+        raise SystemExit(
+            "primary_deficit_pct_gdp still empty after rebuild — "
+            f"quarter overlap={int(q_exp.index.intersection(q_gdp.index).nunique())}"
+        )
+    rebuilt = pd.concat([primary_gdp, primary_bn], axis=1)
+    if m03 is not None and not m03.empty:
+        for c in m03.columns:
+            if c not in rebuilt.columns:
+                rebuilt[c] = m03[c].reindex(rebuilt.index)
+    metrics["03_primary_deficit_not_in_hole"] = rebuilt.loc[primary_gdp.notna()].copy()
+    log_step(f"03 rebuilt: {int(len(metrics['03_primary_deficit_not_in_hole']))} quarters")
+    return metrics
+
+
 def process_and_publish() -> None:
     log_step("Starting data processing and publication step...")
     if not RAW_JSON.exists():
@@ -423,8 +500,11 @@ def process_and_publish() -> None:
     log_step("Ensuring FOMC point-target seed (DFEDTAR, once)...")
     ensure_fomc_point_seed()
 
+    log_step(f"cube_data.py loaded from {cube_data_mod.__file__}")
     log_step("Calculating metrics...")
     metrics = calculate_metrics(raw_path=RAW_JSON, metrics_path=METRICS_JSON, save=True)
+    frames = load_frames(RAW_JSON)
+    metrics = rebuild_primary(metrics, frames)
     print(summarize_metrics(metrics).to_string(index=False))
 
     log_step("Loading critical threshold values and standardizing data...")
