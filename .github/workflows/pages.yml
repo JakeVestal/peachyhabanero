@@ -76,8 +76,6 @@ jobs:
           key: cube-published-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
           restore-keys: |
             cube-published-v2-${{ github.ref_name }}-
-            cube-published-v2-
-            cube-published-
 
       - name: require published json from cache
         run: |

@@ -1,12 +1,16 @@
 const DATA = "data/published/cubes.json";
+const ZONE_CSV = "data/zone.csv";
 
-const ZONE_KEYS = [
+const SUS_ZONE_KEYS = [
   "debt_gdp_warn", "debt_gdp_restruct",
   "int_rec_warn", "int_rec_restruct",
   "int_tax_warn", "int_tax_restruct",
-  "int_gf_warn", "int_gf_restruct",
   "refi_gap_warn", "refi_gap_restruct",
 ];
+const FD_ZONE_KEYS = [
+  "int_gf_warn", "int_gf_restruct",
+];
+const ZONE_KEYS = SUS_ZONE_KEYS.concat(FD_ZONE_KEYS);
 
 function znum(zone, key) {
   const v = Number(zone && zone[key]);
@@ -16,9 +20,25 @@ function znum(zone, key) {
   return v;
 }
 
-function zoneMissing(zone) {
-  if (!zone) return ZONE_KEYS.slice();
-  return ZONE_KEYS.filter((k) => !Number.isFinite(Number(zone[k])));
+function zoneMissing(zone, keys) {
+  const need = keys || ZONE_KEYS;
+  if (!zone) return need.slice();
+  return need.filter((k) => !Number.isFinite(Number(zone[k])));
+}
+
+function parseZoneCsv(text) {
+  const out = {};
+  String(text || "").split(/\r?\n/).forEach((line, i) => {
+    const t = line.trim();
+    if (!t) return;
+    if (i === 0 && /^key\s*,/i.test(t)) return;
+    const comma = t.indexOf(",");
+    if (comma < 0) return;
+    const k = t.slice(0, comma).trim();
+    const v = Number(t.slice(comma + 1).trim());
+    if (k && Number.isFinite(v)) out[k] = v;
+  });
+  return out;
 }
 
 function flagMissing(el, msg) {
@@ -819,7 +839,13 @@ async function main() {
     return;
   }
   const pack = await res.json();
-  const zone = pack.zone;
+  let zoneFile = {};
+  try {
+    const zr = await fetch(ZONE_CSV);
+    if (zr.ok) zoneFile = parseZoneCsv(await zr.text());
+  } catch (e) { /* committed csv missing — pack.zone only */ }
+  // Git zone.csv wins. cubes.json zone is a snapshot and goes stale on HTML-only deploys.
+  const zone = Object.assign({}, pack.zone || {}, zoneFile);
   const sus = (pack.sustain || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   const fail = (pack.fail || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   if ((wantSus && !sus.length) || (wantFail && !fail.length) || (!wantSus && !wantFail && !sus.length)) {
@@ -827,7 +853,11 @@ async function main() {
     return;
   }
   const ls = (sus.length ? sus : fail)[(sus.length ? sus : fail).length - 1];
-  const missZ = zoneMissing(zone);
+  const need = [];
+  if (wantSus) need.push.apply(need, SUS_ZONE_KEYS);
+  if (wantFail) need.push.apply(need, FD_ZONE_KEYS);
+  if (!need.length) need.push.apply(need, ZONE_KEYS);
+  const missZ = zoneMissing(zone, need);
   if (missZ.length) {
     const msg = `zone missing ${missZ.join(", ")} — not drawing guessed wires`;
     if (stamp) stamp.innerHTML = `<span class="err">${msg}</span>`;
