@@ -153,7 +153,7 @@ def load_zone(path: Path) -> dict:
         "int_rec_restruct": 30.0,
         "int_tax_warn": 25.0,
         "int_tax_restruct": 40.0,
-        "refi_gap_warn": 0.50,
+        "refi_gap_warn": 0.75,
         "refi_gap_restruct": 1.00,
     }
 
