@@ -318,15 +318,14 @@ function failTraces(rows, tax, showRates) {
     traces.push(wire(0, recF3, 0, recF2, 0, recF1, "#c4a35a", "2018-Q1 hike record", 3, true));
   }
   traces.push({
-      type: "scatter3d",
-      x: rows.map((r) => r.F3), y: f2, z: rows.map((r) => r.F1),
-      mode: "lines",
-      line: { color: "rgba(0,240,255,0.35)", width: 3 },
-      hoverinfo: "skip",
-      name: "path",
-      connectgaps: false,
-    },
-  ];
+    type: "scatter3d",
+    x: rows.map((r) => r.F3), y: f2, z: rows.map((r) => r.F1),
+    mode: "lines",
+    line: { color: "rgba(0,240,255,0.35)", width: 3 },
+    hoverinfo: "skip",
+    name: "path",
+    connectgaps: false,
+  });
 
   // scatter3d: circle / diamond / x only. No text glyphs (they render gold in WebGL).
   // Inside = magenta outline, fill is the action color. Never a magenta fill.
