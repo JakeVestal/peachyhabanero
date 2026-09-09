@@ -79,10 +79,24 @@ jobs:
 
       - name: require published json from cache
         run: |
+          set -euo pipefail
           test -s site/data/published/cubes.json || {
             echo "missing site/data/published/cubes.json — run nightly-data first"
             exit 1
           }
+          python3 - <<'PY'
+          import json, sys
+          pack = json.load(open("site/data/published/cubes.json"))
+          fail = pack.get("fail") or []
+          n_f2 = sum(1 for r in fail if r.get("F2") is not None)
+          if len(fail) < 8 or n_f2 < 8:
+              print(
+                  "restored cubes.json has no F2 — HTML-only deploy would blank the FD cube. Run nightly-data first.",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+          print(f"ok {len(fail)} fail rows, {n_f2} with F2, generated_at={pack.get('generated_at')}")
+          PY
 
       - uses: actions/configure-pages@v5
 

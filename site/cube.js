@@ -673,7 +673,7 @@ function drawFdDist(el, rows, tax) {
   }, { responsive: true, displaylogo: false });
 }
 
-function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
+function drawFdDeltaVsDist(el, rows) {
   const mag = "#ff2bd6";
   const f2key = "F2";
   const groups = [
@@ -681,9 +681,6 @@ function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
     { k: "hike", color: "#39ff14", symbol: "triangle-up", size: 12, name: "hike" },
     { k: "cut", color: "#ff4d4d", symbol: "triangle-down", size: 12, name: "cut" },
   ];
-  function xy(d, adj) {
-    return yIsDistance ? { x: adj, y: d } : { x: d, y: adj };
-  }
   const traces = groups.map((g) => {
     const xs = [];
     const ys = [];
@@ -693,9 +690,8 @@ function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
       const d = signedDistOctant(r.F1, r[f2key], r.F3);
       const adj = rateAdj(r);
       if (!Number.isFinite(d) || adj == null) return;
-      const p = xy(d, adj);
-      xs.push(p.x);
-      ys.push(p.y);
+      xs.push(d);
+      ys.push(adj);
       const inn = isInside(r, f2key);
       const tgt = Number(r.target_end);
       const tgtBit = Number.isFinite(tgt) ? `  target ${tgt.toFixed(2)}%` : "";
@@ -722,9 +718,8 @@ function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
     const d = signedDistOctant(r.F1, r[f2key], r.F3);
     const adj = rateAdj(r);
     if (!Number.isFinite(d) || adj == null) return;
-    const p = xy(d, adj);
-    ix.push(p.x);
-    iy.push(p.y);
+    ix.push(d);
+    iy.push(adj);
   });
   if (ix.length) {
     traces.push({
@@ -742,21 +737,9 @@ function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
   }
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
-  const distAxis = {
-    title: { text: "signed distance (σ), same as 01.  0 = face", font: { size: 11, color: "#9fb3c8" } },
-    gridcolor: "rgba(196,163,90,0.12)",
-    zeroline: false,
-  };
-  const deltaAxis = {
-    title: { text: "quarterly net FOMC Δ (pp)", font: { size: 11, color: "#9fb3c8" } },
-    gridcolor: "rgba(196,163,90,0.12)",
-    zeroline: false,
-  };
   return Plotly.newPlot(el, traces, {
     title: {
-      text: yIsDistance
-        ? "Distance (01) vs FOMC Δ. Below 0 = inside."
-        : "FOMC Δ vs distance. Left of 0 = inside.",
+      text: "FOMC Δ vs signed distance (01). Left of 0 = inside.",
       font: { size: 14, color: "#00f0ff" },
     },
     paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
@@ -765,17 +748,20 @@ function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
     autosize: true,
     height: 420,
     width: w || undefined,
-    xaxis: yIsDistance ? deltaAxis : distAxis,
-    yaxis: yIsDistance ? distAxis : deltaAxis,
-    shapes: yIsDistance
-      ? [
-          { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1.5, dash: "dot" } },
-          { type: "line", yref: "paper", y0: 0, y1: 1, x0: 0, x1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } },
-        ]
-      : [
-          { type: "line", yref: "paper", y0: 0, y1: 1, x0: 0, x1: 0, line: { color: mag, width: 1.5, dash: "dot" } },
-          { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } },
-        ],
+    xaxis: {
+      title: { text: "signed distance (σ), same as 01.  0 = face", font: { size: 11, color: "#9fb3c8" } },
+      gridcolor: "rgba(196,163,90,0.12)",
+      zeroline: false,
+    },
+    yaxis: {
+      title: { text: "quarterly net FOMC Δ (pp)", font: { size: 11, color: "#9fb3c8" } },
+      gridcolor: "rgba(196,163,90,0.12)",
+      zeroline: false,
+    },
+    shapes: [
+      { type: "line", yref: "paper", y0: 0, y1: 1, x0: 0, x1: 0, line: { color: mag, width: 1.5, dash: "dot" } },
+      { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } },
+    ],
     legend: {
       font: { size: 10, color: "#9fb3c8" },
       bgcolor: "rgba(7,8,12,0.55)",
@@ -858,11 +844,16 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function fetchFresh(url) {
+  const u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now();
+  return fetch(u, { cache: "no-store" });
+}
+
 async function main() {
   const stamp = $("stamp");
   const wantSus = Boolean($("cube-sustain"));
   const wantFail = Boolean($("cube-fail"));
-  const res = await fetch(DATA);
+  const res = await fetchFresh(DATA);
   if (!res.ok) {
     if (stamp) stamp.innerHTML = `<span class="err">${res.status} cubes.json — run python scripts/build_site_data.py --process</span>`;
     return;
@@ -870,7 +861,7 @@ async function main() {
   const pack = await res.json();
   let zoneFile = {};
   try {
-    const zr = await fetch(ZONE_CSV);
+    const zr = await fetchFresh(ZONE_CSV);
     if (zr.ok) zoneFile = parseZoneCsv(await zr.text());
   } catch (e) { /* committed csv missing — pack.zone only */ }
   // Git zone.csv wins. cubes.json zone is a snapshot and goes stale on HTML-only deploys.
@@ -907,7 +898,6 @@ async function main() {
   const opts = { responsive: true, displaylogo: false };
   let tax = Boolean($("btn-tax") && $("btn-tax").classList.contains("active"));
   let showRates = Boolean($("tog-rates") && $("tog-rates").checked);
-  let yIsDistance = !($("btn-y-delta") && $("btn-y-delta").classList.contains("active"));
 
   function sustainLayout(burden) {
     return layout3d(
@@ -977,7 +967,7 @@ async function main() {
   await drawSustain();
   if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax);
   if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax);
-  if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail, tax, yIsDistance);
+  if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail);
   drawSixAxes(sus, fail, zone, tax);
 
   function setBurden(next) {
@@ -995,20 +985,10 @@ async function main() {
       } catch (e) { /* plot not on this page */ }
     }
     if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax);
-    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, tax, yIsDistance);
+    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail);
   }
   if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
   if ($("btn-rec")) $("btn-rec").onclick = () => setBurden(false);
-  function setYMode(dist) {
-    yIsDistance = dist;
-    const bd = $("btn-y-dist");
-    const be = $("btn-y-delta");
-    if (bd) bd.classList.toggle("active", dist);
-    if (be) be.classList.toggle("active", !dist);
-    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, tax, yIsDistance);
-  }
-  if ($("btn-y-dist")) $("btn-y-dist").onclick = () => setYMode(true);
-  if ($("btn-y-delta")) $("btn-y-delta").onclick = () => setYMode(false);
   const rateTog = $("tog-rates");
   if (rateTog) {
     showRates = Boolean(rateTog.checked);

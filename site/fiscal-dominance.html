@@ -68,7 +68,7 @@
     <a href="https://fred.stlouisfed.org/series/W780RC1Q027SBEA">W780</a>
     ). NIPA consolidates intra-gov interest, so A091 is already the
     public coupon. W780 is social-insurance contributions (cash-exhausted
-    while OASI runs a cash deficit).
+    while OASI runs a cash deficit). No till toggle — that ratio is the cube.
   </span>
 </div>
 
@@ -102,15 +102,11 @@
   <h2>02  /  Distance and FOMC Δ</h2>
   <p class="sub">
     Same signed σ-distance as in 01 (negative = inside, 0 = the magenta
-    face), plotted against quarterly net FOMC Δ. Default puts distance
-    on y. Toggle to put Δ on y. Missing FOMC prints are omitted, not
-    plotted as a hold. Magenta ring = inside the box.
+    face) on x; quarterly net FOMC Δ on y. Distance is the independent
+    variable: did being inside the box change the hike / hold / cut.
+    Missing FOMC prints are omitted, not plotted as a hold. Magenta
+    ring = inside the box.
   </p>
-  <div class="toolbar" style="display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap;">
-    <button class="neon-btn active" type="button" id="btn-y-dist">y: distance</button>
-    <button class="neon-btn" type="button" id="btn-y-delta">y: FOMC Δ</button>
-    <span style="font-size:0.85rem;color:#9fb3c8;">Distance is the 01 series, not a new metric.</span>
-  </div>
   <div id="fd-delta-plot"></div>
 </section>
 
@@ -182,6 +178,6 @@
 <footer>
   peachyhabanero · <a href="index.html">home</a> · <a href="sustainability.html">sustainability</a> · <a href="data.html">data</a>
 </footer>
-<script src="cube.js?v=36"></script>
+<script src="cube.js"></script>
 </body>
 </html>
