@@ -604,11 +604,8 @@ function drawFdDist(el, rows, tax) {
   const shapes = [
     { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1, dash: "dot" } },
   ];
+  const annotations = [];
   if (Number.isFinite(recD) && recDate != null) {
-    shapes.push(
-      { type: "line", xref: "paper", x0: 0, x1: 1, y0: recD, y1: recD, line: { color: recPink, width: 1.5, dash: "dot" } },
-      { type: "line", xref: "x", x0: recDate, x1: recDate, yref: "paper", y0: 0, y1: 1, line: { color: recPink, width: 1.5, dash: "dot" } }
-    );
     traces.push({
       type: "scatter",
       mode: "markers",
@@ -617,6 +614,23 @@ function drawFdDist(el, rows, tax) {
       text: [`2018-Q1 hike record (not a wire)<br>${String(recDate).slice(0, 10)}<br>distance ${recD.toFixed(2)} — deepest hike inside the box in this sample.`],
       hoverinfo: "text",
       marker: { color: recPink, size: 11, symbol: "diamond", line: { color: mag, width: 1.5 } },
+    });
+    annotations.push({
+      x: recDate,
+      y: recD,
+      text: "2018-Q1 hike record",
+      showarrow: true,
+      arrowhead: 3,
+      arrowsize: 1,
+      arrowwidth: 1.2,
+      arrowcolor: recPink,
+      ax: 56,
+      ay: -36,
+      font: { color: recPink, size: 11, family: "IBM Plex Mono, ui-monospace, monospace" },
+      bgcolor: "rgba(7,8,12,0.82)",
+      bordercolor: recPink,
+      borderwidth: 1,
+      borderpad: 4,
     });
   }
   const node = document.getElementById(el);
@@ -632,6 +646,7 @@ function drawFdDist(el, rows, tax) {
     xaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     yaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     shapes,
+    annotations,
     legend: {
       font: { size: 10, color: "#9fb3c8" },
       bgcolor: "rgba(7,8,12,0.55)",
