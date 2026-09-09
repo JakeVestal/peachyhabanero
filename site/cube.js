@@ -315,7 +315,27 @@ function failTraces(rows, tax, showRates) {
   const recF2 = rec ? num(rec, f2key) : null;
   const recF3 = rec ? num(rec, "F3") : null;
   if (recF1 != null && recF2 != null && recF3 != null) {
-    traces.push(wire(0, recF3, 0, recF2, 0, recF1, "#c4a35a", "2018-Q1 hike record", 3, true));
+    // Inner octant: 2018-Q1 is the near corner; far vertex is the same as the magenta box.
+    traces.push(wire(recF3, hi, recF2, hi, recF1, hi, "#ff9ad8", "2018-Q1 hike record", 5, true));
+    traces.push({
+      type: "scatter3d",
+      x: [recF3], y: [recF2], z: [recF1],
+      mode: "markers",
+      marker: {
+        size: 10,
+        color: "#ff9ad8",
+        symbol: "diamond",
+        line: { color: "#ff2bd6", width: 2 },
+      },
+      hovertext: [
+        `${String(rec.date).slice(0, 10)} — hike-record corner<br>` +
+        `F1=${recF1.toFixed(2)}  F2=${recF2.toFixed(2)}  F3=${recF3.toFixed(2)}<br>` +
+        `Deepest hike inside the box in this sample.`
+      ],
+      hovertemplate: "%{hovertext}<extra></extra>",
+      name: "2018-Q1 corner",
+      showlegend: false,
+    });
   }
   traces.push({
     type: "scatter3d",
@@ -546,7 +566,7 @@ function drawFdDist(el, rows, tax) {
   const traces = [
     {
       x: xs, y: ys,
-      name: tax ? "distance (tax)" : "distance (receipts)",
+      name: "distance (general-fund)",
       line: { color: mag, width: 2.5 },
       type: "scatter", mode: "lines",
       text: lineTips, hoverinfo: "text",
@@ -557,6 +577,28 @@ function drawFdDist(el, rows, tax) {
     marks("cut", "#ff4d4d", "triangle-down", 11),
     marks("missing", "#7f93a6", "x", 9),
   ];
+  const recIdx = rows.findIndex((r) => String(r.date).slice(0, 10) === "2018-03-31");
+  const recD = recIdx >= 0 ? ys[recIdx] : null;
+  const recDate = recIdx >= 0 ? rows[recIdx].date : null;
+  const recPink = "#ff9ad8";
+  const shapes = [
+    { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1, dash: "dot" } },
+  ];
+  if (Number.isFinite(recD) && recDate != null) {
+    shapes.push(
+      { type: "line", xref: "paper", x0: 0, x1: 1, y0: recD, y1: recD, line: { color: recPink, width: 1.5, dash: "dot" } },
+      { type: "line", xref: "x", x0: recDate, x1: recDate, yref: "paper", y0: 0, y1: 1, line: { color: recPink, width: 1.5, dash: "dot" } }
+    );
+    traces.push({
+      type: "scatter",
+      mode: "markers",
+      x: [recDate], y: [recD],
+      name: "2018-Q1 hike record",
+      text: [`2018-Q1 hike record (not a wire)<br>${String(recDate).slice(0, 10)}<br>distance ${recD.toFixed(2)} — deepest hike inside the box in this sample.`],
+      hoverinfo: "text",
+      marker: { color: recPink, size: 11, symbol: "diamond", line: { color: mag, width: 1.5 } },
+    });
+  }
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
   return Plotly.newPlot(el, traces, {
@@ -569,7 +611,7 @@ function drawFdDist(el, rows, tax) {
     width: w || undefined,
     xaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     yaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
-    shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1, dash: "dot" } }],
+    shapes,
     legend: {
       font: { size: 10, color: "#9fb3c8" },
       bgcolor: "rgba(7,8,12,0.55)",
@@ -848,9 +890,9 @@ async function main() {
       if (showRates && !ft.nAdj) {
         note.innerHTML = `<span class="err">rate decisions on, but cubes.json has no rate_adjust — the published JSON is stale. Push src/cube_data.py + scripts/build_site_data.py and rerun nightly (fetch + process).</span>`;
       } else if (showRates) {
-        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Gold dashed = 2018-Q1 hike record (inner corner).`;
+        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Light dashed magenta = 2018-Q1 hike record (inner corner).`;
       } else {
-        note.textContent = recOk ? "Gold dashed cube: 2018-Q1, deepest hike inside the box in this sample." : "";
+        note.textContent = recOk ? "Light dashed magenta cube: 2018-Q1, deepest hike inside the box in this sample." : "";
       }
       if (!recOk) {
         note.innerHTML = (note.innerHTML || note.textContent || "") +
