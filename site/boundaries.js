@@ -55,13 +55,13 @@ async function main() {
   }
   const pack = await res.json();
   const zone = pack.zone;
-  if (!zone || !Number.isFinite(Number(zone.refi_gap_death))) {
+  if (!zone || !Number.isFinite(Number(zone.refi_gap_restruct))) {
     stamp.innerHTML = `<span class="err">cubes.json missing zone — rerun --process</span>`;
     return;
   }
   const sus = (pack.sustain || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   const fail = (pack.fail || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  stamp.textContent = `zone refi death = ${zone.refi_gap_death} · ${pack.generated_at || ""}`;
+  stamp.textContent = `zone refi restruct = ${zone.refi_gap_restruct} · ${pack.generated_at || ""}`;
 
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
@@ -71,18 +71,18 @@ async function main() {
   async function paint() {
     const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
     const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
-    const tillDeath = tax ? zone.int_tax_death : zone.int_rec_death;
+    const tillRestructuring = tax ? zone.int_tax_restruct : zone.int_rec_restruct;
     const tillName = tax ? "tax" : "receipts";
     const f2key = tax ? "F2_tax" : "F2_rec";
     await draw("b-debt", sus, "debt_gdp_pct",
       "Debt held by public / GDP (%)", gold,
-      [hline(zone.debt_gdp_warn, "#ffbf00"), hline(zone.debt_gdp_death, mag)]);
+      [hline(zone.debt_gdp_warn, "#ffbf00"), hline(zone.debt_gdp_restruct, mag)]);
     await draw("b-int", sus, tillCol,
       `Interest / ${tillName} (%)`, cyan,
-      [hline(tillWarn, "#ffbf00"), hline(tillDeath, mag)]);
+      [hline(tillWarn, "#ffbf00"), hline(tillRestructuring, mag)]);
     await draw("b-refi", sus, "refi_gap",
       "Refi gap  (marginal − stock, pp)", gold,
-      [hline(zone.refi_gap_warn, "#ffbf00"), hline(zone.refi_gap_death, mag)]);
+      [hline(zone.refi_gap_warn, "#ffbf00"), hline(zone.refi_gap_restruct, mag)]);
     await draw("b-f1x", fail, "funds_minus_stock",
       "F1 raw  funds − stock coupon (pp)  ·  plotted Z", cyan, [hline(0, mag)]);
     await draw("b-f2x", fail, tillCol,

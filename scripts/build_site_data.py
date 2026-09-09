@@ -148,13 +148,13 @@ def load_zone(path: Path) -> dict:
         return {str(r["key"]): float(r["value"]) for _, r in z.iterrows()}
     return {
         "debt_gdp_warn": 100.0,
-        "debt_gdp_death": 140.0,
+        "debt_gdp_restruct": 140.0,
         "int_rec_warn": 20.0,
-        "int_rec_death": 30.0,
+        "int_rec_restruct": 30.0,
         "int_tax_warn": 25.0,
-        "int_tax_death": 40.0,
+        "int_tax_restruct": 40.0,
         "refi_gap_warn": 0.50,
-        "refi_gap_death": 1.00,
+        "refi_gap_restruct": 1.00,
     }
 
 
@@ -169,16 +169,16 @@ def _qe(s: pd.Series) -> pd.Series:
     return s.sort_index().resample("QE").last()
 
 
-def _piecewise(v: pd.Series, warn: float, death: float) -> pd.Series:
+def _piecewise(v: pd.Series, warn: float, restruct: float) -> pd.Series:
     v = v.astype(float)
     out = pd.Series(np.nan, index=v.index)
     below = v <= warn
-    mid = (v > warn) & (v <= death)
-    above = v > death
+    mid = (v > warn) & (v <= restruct)
+    above = v > restruct
     out.loc[below] = (v.loc[below] / warn).clip(lower=0)
-    span = max(death - warn, 1e-9)
+    span = max(restruct - warn, 1e-9)
     out.loc[mid] = 1.0 + (v.loc[mid] - warn) / span
-    out.loc[above] = 2.0 + (v.loc[above] - death) / death
+    out.loc[above] = 2.0 + (v.loc[above] - restruct) / restruct
     return out
 
 
@@ -298,19 +298,19 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     panel["F3"] = y["y3"].reindex(panel.index) if "y3" in y.columns else np.nan
     log_step(f"sigma int/rec={sig_rec:.4f}  int/tax={sig_tax:.4f}")
 
-    s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_death"])
-    s_gap = _piecewise(panel["refi_gap"], ZONE["refi_gap_warn"], ZONE["refi_gap_death"])
+    s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_restruct"])
+    s_gap = _piecewise(panel["refi_gap"], ZONE["refi_gap_warn"], ZONE["refi_gap_restruct"])
     panel["s_debt"] = s_debt
     panel["s_gap"] = s_gap
-    for burden, warn, death, col in (
-            ("rec", ZONE["int_rec_warn"], ZONE["int_rec_death"], "int_rec_pct"),
-            ("tax", ZONE["int_tax_warn"], ZONE["int_tax_death"], "int_tax_pct"),
+    for burden, warn, restruct, col in (
+            ("rec", ZONE["int_rec_warn"], ZONE["int_rec_restruct"], "int_rec_pct"),
+            ("tax", ZONE["int_tax_warn"], ZONE["int_tax_restruct"], "int_tax_pct"),
     ):
-        s_bur = _piecewise(panel[col], warn, death)
+        s_bur = _piecewise(panel[col], warn, restruct)
         panel[f"s_{burden}"] = s_bur
         cube = np.column_stack([s_debt.to_numpy(), s_bur.to_numpy(), s_gap.to_numpy()])
         panel[f"dist_warn_{burden}"] = _signed_dist(cube, 1.0)
-        panel[f"dist_death_{burden}"] = _signed_dist(cube, 2.0)
+        panel[f"dist_restruct_{burden}"] = _signed_dist(cube, 2.0)
         panel[f"stress_{burden}"] = (
                 0.20 * s_debt + 0.35 * s_bur + 0.25 * s_gap
                 + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)
