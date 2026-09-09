@@ -554,6 +554,6 @@ window.COLUMN_NOTES = {
     units: "Ratio",
     url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
     official: "Floating-rate notes. Reset is not remaining final maturity.",
-    why: "Priced off FEDFUNDS.",
+    why: "Priced off FEDFUNDS. Missing FRN weight is zero (notes do not exist before 2014); that is not a Table 3 hole. A positive FRN share with no FEDFUNDS print blanks the month.",
   },
 };

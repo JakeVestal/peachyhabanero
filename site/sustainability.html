@@ -367,8 +367,9 @@
           move the gap for a unit reason. TIPS stay in the <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>
           weights so the share is visible; the other buckets are
           renormalized. FRNs stay in the sum (FEDFUNDS is already
-          nominal). A month with weight in a published bucket and no CMT
-          is blank.
+          nominal). Missing FRN weight is zero: the notes do not exist
+          before 2014, and a NaN prefix is not a Table 3 hole. A month
+          with weight in a remaining-life bucket and no CMT is blank.
         </p>
       </div>
     </div>

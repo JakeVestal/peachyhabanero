@@ -1047,7 +1047,12 @@ def calculate_metrics(
     coupon_m = _month(avg_mkt_coupon)
     resid_extra = []
     parts = []
-    PUBLISH_BUCKETS = ("0_1Y", "1_3Y", "3_7Y", "7_10Y", "10YPLUS", "FRN")
+    CORE_BUCKETS = ("0_1Y", "1_3Y", "3_7Y", "7_10Y", "10YPLUS")
+    # FRN: missing weight = 0. The notes do not exist before 2014; a NaN
+    # prefix is not a Table 3 hole. Core remaining-life buckets: missing
+    # weight is a hole, month blank.
+    OPTIONAL_ZERO = frozenset({"FRN"})
+    PUBLISH_BUCKETS = CORE_BUCKETS + ("FRN",)
     for b, yld in ymap.items():
         w = _month(_col(resid, f"RESID_W_{b}"))
         resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
@@ -1056,12 +1061,20 @@ def calculate_metrics(
         parts.append((b, w, yld))
     idx = coupon_m.dropna().index
     for b, w, yld in parts:
+        if b in OPTIONAL_ZERO:
+            continue
         idx = idx.intersection(w.dropna().index)
     # A month stays only if every positive-weight bucket has a CMT that month.
-    # Zero weight does not require a yield. Missing weight is not treated as zero.
+    # Zero weight does not require a yield. Missing core weight is not zero.
+    # Missing FRN weight is zero.
     keep = pd.Series(True, index=idx)
+
+    def _w(b, w, ix):
+        w0 = w.reindex(ix)
+        return w0.fillna(0.0) if b in OPTIONAL_ZERO else w0
+
     for b, w, yld in parts:
-        w0 = w.reindex(idx)
+        w0 = _w(b, w, idx)
         y = yld.reindex(idx)
         keep &= ~((w0 > 1e-12) & y.isna())
     idx = idx[keep.reindex(idx).fillna(False)]
@@ -1069,13 +1082,13 @@ def calculate_metrics(
         raise RuntimeError("Table 3 × CMT overlap too short — missing weights or yields, not filling")
     wsum = None
     for b, w, yld in parts:
-        ww = w.reindex(idx)
+        ww = _w(b, w, idx)
         wsum = ww if wsum is None else wsum.add(ww)
     idx = idx[wsum.reindex(idx) > 0]
     wsum = wsum.reindex(idx)
     marg_r = None
     for b, w, yld in parts:
-        w0 = w.reindex(idx)
+        w0 = _w(b, w, idx)
         y = yld.reindex(idx)
         term = (w0 / wsum) * y
         term = term.where(w0 > 1e-12, 0.0)
