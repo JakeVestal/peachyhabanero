@@ -222,18 +222,31 @@ function sustainTraces(rows, zone, burden) {
   };
 }
 
-function failTraces(rows, tax) {
+function failTraces(rows, tax, showRates) {
   const f2key = tax ? "F2_tax" : "F2_rec";
   const f2 = rows.map((r) => r[f2key]);
+  const nAdj = rows.filter((r) => Number.isFinite(Number(r.rate_adjust))).length;
   const hover = rows.map((r) => {
     const f2v = Number(r[f2key]);
     const inside = r.F1 > 0 && f2v > 0 && r.F3 > 0;
+    const adj = Number(r.rate_adjust);
+    const tgt = Number(r.target_end);
+    let rateLine;
+    if (!Number.isFinite(adj)) {
+      rateLine = "FOMC Δ this quarter: missing — rerun --process (need DFEDTAR stitch)";
+    } else {
+      const tag = adj > 0 ? "hike" : adj < 0 ? "cut" : "hold";
+      const sign = adj > 0 ? "+" : "";
+      const tgtBit = Number.isFinite(tgt) ? `  target ${tgt.toFixed(2)}%` : "";
+      rateLine = `FOMC Δ this quarter: ${sign}${adj.toFixed(2)} pp (${tag})${tgtBit}`;
+    }
     return (
       `${inside ? "<b>INSIDE</b> " : ""}${r.date}<br>` +
       `F1=${Number(r.F1).toFixed(2)}  F2=${f2v.toFixed(2)}  F3=${Number(r.F3).toFixed(2)}<br>` +
-      `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp  (F1&gt;0 ⇒ funds ≤ book)<br>` +
+      `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp  (F1>0 ⇒ funds ≤ book)<br>` +
       `int/rec ${Number(r.int_rec_pct).toFixed(2)}%  int/tax ${Number(r.int_tax_pct).toFixed(2)}%<br>` +
-      `primary/GDP ${Number(r.primary_deficit_pct_gdp).toFixed(2)}%`
+      `primary/GDP ${Number(r.primary_deficit_pct_gdp).toFixed(2)}%<br>` +
+      rateLine
     );
   });
   const last = rows[rows.length - 1];
@@ -242,40 +255,82 @@ function failTraces(rows, tax) {
   const w3 = winAll(rows.map((r) => r.F3));
   const lo = Math.min(w1[0], w2[0], w3[0]);
   const hi = Math.max(w1[1], w2[1], w3[1]);
-  const inside = rows.filter((r) => r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0);
+
+  function kind(r) {
+    if (!showRates) return "hold";
+    const v = Number(r.rate_adjust);
+    if (!Number.isFinite(v) || v === 0) return "hold";
+    return v > 0 ? "hike" : "cut";
+  }
+  function isIn(r) {
+    return r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0;
+  }
+
   const traces = [
     wire(0, hi, 0, hi, 0, hi, "#ff2bd6", "Fiscal Dominance Zone", 4),
     {
       type: "scatter3d",
       x: rows.map((r) => r.F3), y: f2, z: rows.map((r) => r.F1),
-      mode: "lines+markers",
-      marker: { size: 5, color: "#00f0ff" },
+      mode: "lines",
       line: { color: "rgba(0,240,255,0.35)", width: 3 },
-      text: hover, hoverinfo: "text", name: "path",
+      hoverinfo: "skip",
+      name: "path",
     },
   ];
-  if (inside.length) {
+
+  // scatter3d has no triangle-up/down. diamond / x plus a text glyph.
+  const groups = [
+    { k: "hold", inn: false, symbol: "circle", color: "#00f0ff", line: "#00f0ff", size: 5, glyph: "", name: "path", legend: !showRates },
+    { k: "hold", inn: true, symbol: "circle", color: "rgba(0,240,255,0.12)", line: "#ff2bd6", size: 7, glyph: "", name: "inside", legend: true },
+    { k: "hike", inn: false, symbol: "diamond", color: "#39ff14", line: "#39ff14", size: 14, glyph: "▲", name: "hike", legend: showRates },
+    { k: "hike", inn: true, symbol: "diamond", color: "rgba(57,255,20,0.2)", line: "#ff2bd6", size: 15, glyph: "▲", name: "hike inside", legend: false },
+    { k: "cut", inn: false, symbol: "diamond", color: "#ff4d4d", line: "#ff4d4d", size: 14, glyph: "▼", name: "cut", legend: showRates },
+    { k: "cut", inn: true, symbol: "diamond", color: "rgba(255,77,77,0.2)", line: "#ff2bd6", size: 15, glyph: "▼", name: "cut inside", legend: false },
+  ];
+  groups.forEach((g) => {
+    if (!showRates && g.k !== "hold") return;
+    const idx = [];
+    rows.forEach((r, i) => {
+      if (kind(r) === g.k && isIn(r) === g.inn) idx.push(i);
+    });
+    if (!idx.length) return;
+    const useText = Boolean(g.glyph);
     traces.push({
       type: "scatter3d",
-      x: inside.map((r) => r.F3),
-      y: inside.map((r) => r[f2key]),
-      z: inside.map((r) => r.F1),
-      mode: "markers",
-      marker: { size: 8, color: "#ff2bd6", symbol: "diamond" },
-      text: hover.filter((_, i) => rows[i].F1 > 0 && Number(rows[i][f2key]) > 0 && rows[i].F3 > 0),
-      hoverinfo: "text",
-      name: `inside (${inside.length})`,
+      x: idx.map((i) => rows[i].F3),
+      y: idx.map((i) => Number(rows[i][f2key])),
+      z: idx.map((i) => rows[i].F1),
+      mode: useText ? "markers+text" : "markers",
+      marker: {
+        size: g.size,
+        color: g.color,
+        symbol: g.symbol,
+        line: { color: g.line, width: g.inn ? 3 : 2 },
+      },
+      text: useText ? idx.map(() => g.glyph) : idx.map((i) => hover[i]),
+      hovertext: idx.map((i) => hover[i]),
+      hovertemplate: "%{hovertext}<extra></extra>",
+      textfont: useText ? { size: 16, color: g.line, family: "IBM Plex Mono, sans-serif" } : undefined,
+      name: g.name,
+      showlegend: g.legend,
     });
-  }
+  });
+
   traces.push({
     type: "scatter3d",
     x: [last.F3], y: [last[f2key]], z: [last.F1],
     mode: "markers",
-    marker: { size: 10, color: "#00f0ff", symbol: "diamond" },
-    text: [hover[hover.length - 1]], hoverinfo: "text",
+    marker: {
+      size: 11,
+      color: "#00f0ff",
+      symbol: "diamond",
+      line: { color: isIn(last) ? "#ff2bd6" : "#00f0ff", width: isIn(last) ? 3 : 1 },
+    },
+    hovertext: [hover[hover.length - 1]],
+    hovertemplate: "%{hovertext}<extra></extra>",
     name: `latest ${last.date}`,
   });
-  return { traces, lo, hi };
+  return { traces, lo, hi, nAdj };
 }
 
 function drawDist(el, rows, tax) {
@@ -458,6 +513,7 @@ async function main() {
 
   const opts = { responsive: true, displaylogo: false };
   let tax = false;
+  let showRates = false;
 
   function sustainLayout(burden) {
     return layout3d(
@@ -487,7 +543,17 @@ async function main() {
 
   async function drawFail() {
     if (!$("cube-fail") || !fail.length) return;
-    const ft = failTraces(fail, tax);
+    const ft = failTraces(fail, tax, showRates);
+    const note = $("rate-note");
+    if (note) {
+      if (showRates && !ft.nAdj) {
+        note.innerHTML = `<span class="err">rate decisions on, but cubes.json has no rate_adjust — the published JSON is stale. Push src/cube_data.py + scripts/build_site_data.py and rerun nightly (fetch + process).</span>`;
+      } else if (showRates) {
+        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box.`;
+      } else {
+        note.textContent = "";
+      }
+    }
     const f2title = tax
         ? "F2  y(interest / tax − 25%)"
         : "F2  y(interest / receipts − 20%)";
@@ -498,7 +564,9 @@ async function main() {
       "F1  y(funds − stock)",
       { x: [ft.lo, ft.hi], y: [ft.lo, ft.hi], z: [ft.lo, ft.hi] }
     ));
-    await Plotly.react("cube-fail", ft.traces, layout, opts);
+    // scatter3d + Plotly.react updates the legend but keeps the old WebGL points.
+    Plotly.purge("cube-fail");
+    await Plotly.newPlot("cube-fail", ft.traces, layout, opts);
     armCubeScroll("cube-fail");
   }
 
@@ -530,6 +598,14 @@ async function main() {
   }
   if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
   if ($("btn-rec")) $("btn-rec").onclick = () => setBurden(false);
+  const rateTog = $("tog-rates");
+  if (rateTog) {
+    showRates = Boolean(rateTog.checked);
+    rateTog.addEventListener("change", () => {
+      showRates = Boolean(rateTog.checked);
+      drawFail();
+    });
+  }
 }
 
 main().catch((err) => {

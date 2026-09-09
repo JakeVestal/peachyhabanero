@@ -68,7 +68,7 @@ COLMAP = {
 RAW_KEEP = {
     "fred_policy_rates": [
         "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS5", "DGS30", "DFII10",
-        "DFEDTARU", "DFEDTARL",
+        "DFEDTAR", "DFEDTARU", "DFEDTARL",
     ],
     "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "FGEXPND"],
     "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S", "FYGFGDQ188S"],
@@ -239,6 +239,24 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     if min(int(s.dropna().shape[0]) for s in (w_bills, w_2y, w_10y, marginal, refi_gap)) < 8:
         raise SystemExit("metric 01 missing issuance weights / refi_gap — rerun calculate_metrics")
 
+    point = pd.to_numeric(_col_or(policy, "DFEDTAR"), errors="coerce")
+    point.index = pd.to_datetime(point.index)
+    upper = pd.to_numeric(_col_or(policy, "DFEDTARU"), errors="coerce")
+    upper.index = pd.to_datetime(upper.index)
+    point = point.dropna().sort_index()
+    upper = upper.dropna().sort_index()
+    if point.empty and upper.empty:
+        raise SystemExit("missing DFEDTAR / DFEDTARU — cannot compute quarterly FOMC Δ")
+    if point.empty:
+        target = upper
+    elif upper.empty:
+        target = point
+    else:
+        target = pd.concat([point, upper.loc[upper.index > point.index.max()]]).sort_index()
+    q_target = target.resample("QE").last()
+    rate_adjust = q_target.diff().rename("rate_adjust")
+    target_end = q_target.rename("target_end")
+
     panel = pd.DataFrame({
         "funds_minus_stock": funds_minus,
         "FEDFUNDS": funds,
@@ -273,6 +291,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "debt_gdp_pct": debt_pub_gdp,
         "gdp_bn": gdp,
         "int_gdp_pct": (int_bn / gdp) * 100.0,
+        "rate_adjust": rate_adjust,
+        "target_end": target_end,
     }).sort_index()
     panel = panel.loc[panel.index >= SIGMA_WINDOW_START]
     need = [

@@ -384,6 +384,15 @@ window.COLUMN_NOTES = {
       "Treasury constant-maturity 30-year yield from the H.15 / Treasury yield curve methodology.",
     why: "Back of the curve next to DGS10. Context for duration and the long-rate mandate, not a cube wire.",
   },
+  DFEDTAR: {
+    title: "Federal Funds Target Rate (DISCONTINUED)",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily NSA",
+    url: "https://fred.stlouisfed.org/series/DFEDTAR",
+    official:
+      "Level of the federal funds target rate. Discontinued after 2008-12-15 when the FOMC switched to a range.",
+    why: "Pre-range FOMC instrument. Stitched with DFEDTARU to make quarterly net hike/cut on the Fiscal Dominance Cube.",
+  },
   DFEDTARU: {
     title: "Federal Funds Target Range — Upper Limit",
     source: "Board of Governors of the Federal Reserve System (US)",
@@ -391,7 +400,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/DFEDTARU",
     official:
       "Upper limit of the FOMC federal funds target range. Series begins December 2008 when the Committee switched to a range.",
-    why: "What the Committee set, not a mandate gap. Overlay for a later “what they did” plot. Not used in the Treasury cubes.",
+    why: "Upper bound of the range, stitched after DFEDTAR. Quarterly first difference of the stitched target is net FOMC Δ on the Fiscal Dominance Cube.",
   },
   DFEDTARL: {
     title: "Federal Funds Target Range — Lower Limit",

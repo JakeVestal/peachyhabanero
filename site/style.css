@@ -117,6 +117,56 @@ footer {
   background: #00f0ff;
   color: #07080c;
 }
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  color: #9fb3c8;
+  margin-left: 6px;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .track {
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: #101826;
+  border: 1px solid var(--gold-dim);
+  position: relative;
+  flex-shrink: 0;
+}
+.switch .track::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #9fb3c8;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.switch input:checked + .track {
+  background: rgba(0, 240, 255, 0.22);
+  border-color: #00f0ff;
+}
+.switch input:checked + .track::after {
+  transform: translateX(16px);
+  background: #00f0ff;
+}
+.switch input:focus-visible + .track {
+  outline: 1px solid #00f0ff;
+  outline-offset: 2px;
+}
 .story-list { max-width: 860px; line-height: 1.6; color: var(--muted); }
 .story-list b { color: #d5e4f0; }
 .table-wrap {
