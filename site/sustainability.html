@@ -42,6 +42,28 @@
     providing reference points. They are not calculated tipping point
     thresholds — that's a separate analysis.
   </p>
+  <p class="stat" id="stamp">loading cubes.json…</p>
+</header>
+<div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
+  <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
+    <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
+    <button class="neon-btn" type="button" id="btn-tax">tax</button>
+  </div>
+  <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
+    Toggle interest / tax vs interest / receipts. Tax is current tax receipts
+    (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a>).
+    Receipts is NIPA current receipts
+    (<a href="https://fred.stlouisfed.org/series/FGRECPT" style="color: #00f0ff; text-decoration: none;">FGRECPT</a>)
+    — taxes plus contributions for social insurance, income on assets, and
+    the rest of the current-receipts envelope.
+  </span>
+</div>
+<section>
+  <div class="cube-wrap">
+    <div id="cube-sustain"></div>
+  </div>
+</section>
+<section>
   <p>
     The zones are saying:
   </p>
@@ -217,27 +239,6 @@
       </p>
     </dd>
   </dl>
-
-  <p class="stat" id="stamp">loading cubes.json…</p>
-</header>
-<div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
-  <div style="order: 1; display: flex; gap: 8px; flex-shrink: 0;">
-    <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
-    <button class="neon-btn" type="button" id="btn-tax">tax</button>
-  </div>
-  <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
-    Toggle interest / tax vs interest / receipts. Tax is current tax receipts
-    (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA" style="color: #00f0ff; text-decoration: none;">W006RC1Q027SBEA</a>).
-    Receipts is NIPA current receipts
-    (<a href="https://fred.stlouisfed.org/series/FGRECPT" style="color: #00f0ff; text-decoration: none;">FGRECPT</a>)
-    — taxes plus contributions for social insurance, income on assets, and
-    the rest of the current-receipts envelope.
-  </span>
-</div>
-<section>
-  <div class="cube-wrap">
-    <div id="cube-sustain"></div>
-  </div>
 </section>
 <section>
   <h2>Distance to the Danger Zone / Restructuring Zone over time </h2>
