@@ -1161,9 +1161,58 @@ def calculate_metrics(
         gf,
     )
 
-    # primary deficit = (outlays net of interest) - receipts; positive = deficit
-    primary_bn = ((exp - interest) - receipts).rename("primary_deficit_bn_saar")
-    primary_gdp = (100.0 * primary_bn / gdp).rename("primary_deficit_pct_gdp")
+    # primary deficit = (outlays net of interest) - receipts; positive = deficit.
+    # Stamp every series as calendar-quarter last so Jan-31 NIPA and Mar-31 GDP
+    # (same BEA quarter) actually divide.
+    def _as_q(s: pd.Series, name: str) -> pd.Series:
+        out = pd.to_numeric(s, errors="coerce").dropna() if s is not None else pd.Series(dtype="float64")
+        if out.empty:
+            return pd.Series(dtype="float64", name=name)
+        out = out.copy()
+        out.index = pd.to_datetime(out.index)
+        out = out.groupby(out.index.to_period("Q")).last()
+        out.index = out.index.to_timestamp(how="end").normalize()
+        out.name = name
+        return out
+
+    def _need_fred(sid: str, have: pd.Series) -> pd.Series:
+        n = int(pd.to_numeric(have, errors="coerce").dropna().shape[0]) if have is not None else 0
+        if n >= 8:
+            return have
+        print(f"  {sid} only {n} prints in cache — fetching full series")
+        s = fetch_fred_series(_session(), sid, start="1970-01-01")
+        s = pd.to_numeric(s, errors="coerce").dropna()
+        if int(s.shape[0]) < 8:
+            raise RuntimeError(
+                f"FRED {sid} empty — cannot build primary / GDP. "
+                f"https://fred.stlouisfed.org/series/{sid}"
+            )
+        return s.rename(sid)
+
+    gdp = _need_fred("GDP", gdp)
+    exp = _need_fred("FGEXPND", exp)
+    q_int = _as_q(interest, "interest")
+    q_exp = _as_q(exp, "exp")
+    q_rec = _as_q(receipts, "receipts")
+    q_gdp = _as_q(gdp, "gdp")
+    print(
+        "  primary inputs: "
+        f"interest={len(q_int)} exp={len(q_exp)} receipts={len(q_rec)} gdp={len(q_gdp)} "
+        f"gdp[{q_gdp.index.min().date() if len(q_gdp) else '—'}→{q_gdp.index.max().date() if len(q_gdp) else '—'}] "
+        f"exp[{q_exp.index.min().date() if len(q_exp) else '—'}→{q_exp.index.max().date() if len(q_exp) else '—'}]"
+    )
+    if min(len(q_int), len(q_exp), len(q_rec), len(q_gdp)) < 8:
+        raise RuntimeError(
+            "primary / GDP inputs too short after quarter-stamp — "
+            f"interest={len(q_int)} exp={len(q_exp)} receipts={len(q_rec)} gdp={len(q_gdp)}"
+        )
+    primary_bn = ((q_exp - q_int) - q_rec).rename("primary_deficit_bn_saar")
+    primary_gdp = (100.0 * primary_bn / q_gdp).rename("primary_deficit_pct_gdp")
+    if int(primary_gdp.dropna().shape[0]) < 8:
+        raise RuntimeError(
+            "primary_deficit_pct_gdp empty after quarter align — "
+            f"overlap would be {int(q_exp.index.intersection(q_gdp.index).nunique())} quarters"
+        )
     slack_u = (unrate - nrou).rename("unemployment_gap_pp")
     output_gap = (100.0 * (gdpc1 / gdppot - 1.0)).rename("output_gap_pct")
     metric_3 = _frame(primary_gdp, primary_bn, slack_u, output_gap)
@@ -1182,6 +1231,12 @@ def calculate_metrics(
             metric_3, "primary_deficit_pct_gdp"
         ),
     }
+    n3 = int(metrics["03_primary_deficit_not_in_hole"].shape[0])
+    if n3 < 8:
+        raise RuntimeError(
+            f"03_primary_deficit_not_in_hole has {n3} rows — "
+            "primary / GDP did not form. Copy this cube_data.py and rerun --process."
+        )
 
     if save:
         save_metrics(metrics, metrics_path)
