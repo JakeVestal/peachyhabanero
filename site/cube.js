@@ -38,6 +38,20 @@ function rateKind(r) {
   return v > 0 ? "hike" : "cut";
 }
 
+function num(r, key) {
+  const v = Number(r && r[key]);
+  return Number.isFinite(v) ? v : null;
+}
+
+// Same test the cube, the path color, and the tally card must all use.
+function isInside(r, f2key) {
+  const a = num(r, "F1");
+  const b = num(r, f2key);
+  const c = num(r, "F3");
+  if (a == null || b == null || c == null) return false;
+  return a > 0 && b > 0 && c > 0;
+}
+
 function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
   const edges = [
     [[xmin, ymin, zmin], [xmax, ymin, zmin]],
@@ -250,13 +264,13 @@ function failTraces(rows, tax, showRates) {
   const f2 = rows.map((r) => r[f2key]);
   const nAdj = rows.filter((r) => rateAdj(r) != null).length;
   const hover = rows.map((r) => {
-    const f2v = Number(r[f2key]);
-    const inside = r.F1 > 0 && f2v > 0 && r.F3 > 0;
+    const f2v = num(r, f2key);
+    const inside = isInside(r, f2key);
     const adj = rateAdj(r);
     const tgt = Number(r.target_end);
     let rateLine;
     if (adj == null) {
-      rateLine = "FOMC Δ this quarter: missing — DFEDTAR stitch required";
+      rateLine = "FOMC Δ this quarter: missing — no print, not a hold";
     } else {
       const tag = adj > 0 ? "hike" : adj < 0 ? "cut" : "hold";
       const sign = adj > 0 ? "+" : "";
@@ -265,7 +279,7 @@ function failTraces(rows, tax, showRates) {
     }
     return (
       `${inside ? "<b>INSIDE</b> " : ""}${r.date}<br>` +
-      `F1=${Number(r.F1).toFixed(2)}  F2=${f2v.toFixed(2)}  F3=${Number(r.F3).toFixed(2)}<br>` +
+      `F1=${num(r, "F1") == null ? "n/a" : num(r, "F1").toFixed(2)}  F2=${f2v == null ? "n/a" : f2v.toFixed(2)}  F3=${num(r, "F3") == null ? "n/a" : num(r, "F3").toFixed(2)}<br>` +
       `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp  (F1>0 ⇒ funds ≤ book)<br>` +
       `int/rec ${Number(r.int_rec_pct).toFixed(2)}%  int/tax ${Number(r.int_tax_pct).toFixed(2)}%<br>` +
       `primary/GDP ${Number(r.primary_deficit_pct_gdp).toFixed(2)}%<br>` +
@@ -280,13 +294,9 @@ function failTraces(rows, tax, showRates) {
   const hi = Math.max(w1[1], w2[1], w3[1]);
 
   function kind(r) {
-    const k = rateKind(r);
-    if (k === "missing") return "missing";
+    // Rates off: every finite F-space point is a location, not an FOMC claim.
     if (!showRates) return "hold";
-    return k;
-  }
-  function isIn(r) {
-    return r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0;
+    return rateKind(r);
   }
 
   const traces = [
@@ -302,41 +312,41 @@ function failTraces(rows, tax, showRates) {
     },
   ];
 
-  // scatter3d has no triangle-up/down. diamond / x plus a text glyph.
+  // scatter3d: circle / diamond / x only. No text glyphs (they render gold in WebGL).
+  // Inside = magenta outline, fill is the action color. Never a magenta fill.
   const groups = [
-    { k: "hold", inn: false, symbol: "circle", color: "#00f0ff", line: "#00f0ff", size: 5, glyph: "", name: "path", legend: !showRates },
-    { k: "hold", inn: true, symbol: "circle", color: "rgba(0,240,255,0.12)", line: "#ff2bd6", size: 7, glyph: "", name: "inside", legend: true },
-    { k: "hike", inn: false, symbol: "diamond", color: "#39ff14", line: "#39ff14", size: 14, glyph: "▲", name: "hike", legend: showRates },
-    { k: "hike", inn: true, symbol: "diamond", color: "rgba(57,255,20,0.2)", line: "#ff2bd6", size: 15, glyph: "▲", name: "hike inside", legend: false },
-    { k: "cut", inn: false, symbol: "diamond", color: "#ff4d4d", line: "#ff4d4d", size: 14, glyph: "▼", name: "cut", legend: showRates },
-    { k: "cut", inn: true, symbol: "diamond", color: "rgba(255,77,77,0.2)", line: "#ff2bd6", size: 15, glyph: "▼", name: "cut inside", legend: false },
-    { k: "missing", inn: false, symbol: "circle-open", color: "#7f93a6", line: "#7f93a6", size: 6, glyph: "", name: "no FOMC print", legend: showRates },
-    { k: "missing", inn: true, symbol: "circle-open", color: "rgba(127,147,166,0.15)", line: "#ff2bd6", size: 7, glyph: "", name: "no FOMC print inside", legend: false },
+    { k: "hold", inn: false, symbol: "circle", color: "#00f0ff", line: "#00f0ff", size: 5, name: "outside", legend: !showRates },
+    { k: "hold", inn: true, symbol: "circle-open", color: "#07080c", line: "#ff2bd6", size: 8, name: "inside (hold)", legend: true },
+    { k: "hike", inn: false, symbol: "diamond", color: "#39ff14", line: "#39ff14", size: 11, name: "hike", legend: showRates },
+    { k: "hike", inn: true, symbol: "diamond", color: "#39ff14", line: "#ff2bd6", size: 12, name: "hike inside", legend: false },
+    { k: "cut", inn: false, symbol: "diamond", color: "#ff4d4d", line: "#ff4d4d", size: 11, name: "cut", legend: showRates },
+    { k: "cut", inn: true, symbol: "diamond", color: "#ff4d4d", line: "#ff2bd6", size: 12, name: "cut inside", legend: false },
+    { k: "missing", inn: false, symbol: "x", color: "#7f93a6", line: "#7f93a6", size: 7, name: "no FOMC print", legend: showRates },
+    { k: "missing", inn: true, symbol: "x", color: "#7f93a6", line: "#ff2bd6", size: 8, name: "no FOMC print inside", legend: false },
   ];
+  const lastIdx = rows.length - 1;
   groups.forEach((g) => {
     if (!showRates && g.k !== "hold") return;
     const idx = [];
     rows.forEach((r, i) => {
-      if (kind(r) === g.k && isIn(r) === g.inn) idx.push(i);
+      if (i === lastIdx) return;
+      if (kind(r) === g.k && isInside(r, f2key) === g.inn) idx.push(i);
     });
     if (!idx.length) return;
-    const useText = Boolean(g.glyph);
     traces.push({
       type: "scatter3d",
       x: idx.map((i) => rows[i].F3),
-      y: idx.map((i) => Number(rows[i][f2key])),
+      y: idx.map((i) => num(rows[i], f2key)),
       z: idx.map((i) => rows[i].F1),
-      mode: useText ? "markers+text" : "markers",
+      mode: "markers",
       marker: {
         size: g.size,
         color: g.color,
         symbol: g.symbol,
-        line: { color: g.line, width: g.inn ? 3 : 2 },
+        line: { color: g.line, width: g.inn ? 3 : 1 },
       },
-      text: useText ? idx.map(() => g.glyph) : idx.map((i) => hover[i]),
       hovertext: idx.map((i) => hover[i]),
       hovertemplate: "%{hovertext}<extra></extra>",
-      textfont: useText ? { size: 16, color: g.line, family: "IBM Plex Mono, sans-serif" } : undefined,
       name: g.name,
       showlegend: g.legend,
     });
@@ -350,7 +360,7 @@ function failTraces(rows, tax, showRates) {
       size: 11,
       color: "#00f0ff",
       symbol: "diamond",
-      line: { color: isIn(last) ? "#ff2bd6" : "#00f0ff", width: isIn(last) ? 3 : 1 },
+      line: { color: isInside(last, f2key) ? "#ff2bd6" : "#00f0ff", width: isInside(last, f2key) ? 3 : 1 },
     },
     hovertext: [hover[hover.length - 1]],
     hovertemplate: "%{hovertext}<extra></extra>",
@@ -361,7 +371,7 @@ function failTraces(rows, tax, showRates) {
 
 function insideCensus(rows, tax) {
   const f2key = tax ? "F2_tax" : "F2_rec";
-  const inside = rows.filter((r) => r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0);
+  const inside = rows.filter((r) => isInside(r, f2key));
   const hike = [];
   const cut = [];
   const hold = [];
@@ -373,7 +383,7 @@ function insideCensus(rows, tax) {
     else if (k === "hold") hold.push(r);
     else missing.push(r);
   });
-  return { n: inside.length, hike, cut, hold, missing, last: inside[inside.length - 1] || null };
+  return { n: inside.length, inside, hike, cut, hold, missing, last: inside[inside.length - 1] || null };
 }
 
 function renderFdIndicator(rows, tax) {
@@ -383,26 +393,29 @@ function renderFdIndicator(rows, tax) {
   const other = insideCensus(rows, !tax);
   const till = tax ? "tax" : "receipts";
   const otherTill = tax ? "receipts" : "tax";
-  const dates = cur.hike.map((r) => {
+  const f2key = tax ? "F2_tax" : "F2_rec";
+  function line(r) {
+    const k = rateKind(r);
     const v = rateAdj(r);
-    const sign = v > 0 ? "+" : "";
-    return `${r.date} (${sign}${v.toFixed(2)} pp)`;
-  });
+    const d = v == null ? "" : ` ${v > 0 ? "+" : ""}${v.toFixed(2)}pp`;
+    return `${r.date} ${k}${d}  F1=${num(r, "F1").toFixed(2)} F2=${num(r, f2key).toFixed(2)} F3=${num(r, "F3").toFixed(2)}`;
+  }
+  const dates = cur.inside.map(line).join("<br>");
   el.innerHTML =
     `<h3>Did they hike from inside?</h3>` +
     `<p class="punch"><b class="hike">${cur.hike.length}</b> hike${cur.hike.length === 1 ? "" : "s"}` +
     ` from <b class="n">${cur.n}</b> interior quarter${cur.n === 1 ? "" : "s"}` +
-    ` <span style="color:#9fb3c8">(${till} till, F1,F2,F3 > 0)</span></p>` +
+    ` <span style="color:#9fb3c8">(${till} till, same test as the cube: F1>0 and F2>0 and F3>0)</span></p>` +
     `<p class="breakdown">` +
-    `<span class="hike">▲ ${cur.hike.length} hike</span> · ` +
-    `<span class="cut">▼ ${cur.cut.length} cut</span> · ` +
+    `<span class="hike">${cur.hike.length} hike</span> · ` +
+    `<span class="cut">${cur.cut.length} cut</span> · ` +
     `${cur.hold.length} hold` +
     `${cur.missing.length ? ` · <span style="color:#7f93a6">${cur.missing.length} no FOMC print</span>` : ""}` +
     `${cur.last ? ` · last inside ${cur.last.date}` : ""}` +
     `</p>` +
     `<p class="alt">${otherTill} till: ${other.n} inside, ${other.hike.length} hike${other.hike.length === 1 ? "" : "s"}` +
     `${other.hike.length ? " — " + other.hike.map((r) => r.date).join(", ") : ""}</p>` +
-    (dates.length ? `<p class="dates">inside hikes: ${dates.join(" · ")}</p>` : "");
+    (dates ? `<p class="dates">${dates}</p>` : `<p class="dates">no interior quarters on this till</p>`);
 }
 
 function drawDist(el, rows, tax) {

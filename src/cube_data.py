@@ -41,6 +41,90 @@ FISCAL_BASE = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service"
 DEFAULT_START = "1970-01-01"
 DEFAULT_RAW = Path(__file__).resolve().parent / "cube_raw_frames.json"
 DEFAULT_METRICS = Path(__file__).resolve().parent / "calculated_metrics.json"
+FOMC_POINT_SEED = Path(__file__).resolve().parents[1] / "site" / "data" / "fomc_point_target.csv"
+FOMC_POINT_END = pd.Timestamp("2008-12-15")
+
+
+def ensure_fomc_point_seed() -> Path:
+    """If the frozen FOMC change log is missing, fetch FRED DFEDTAR once and write it.
+
+    Nightly runs that already have the file do not hit FRED for this series.
+    """
+    path = FOMC_POINT_SEED
+    if path.exists():
+        try:
+            n = int(pd.read_csv(path, comment="#").dropna(how="all").shape[0])
+            if n >= 20:
+                return path
+        except Exception:
+            pass
+    print(f"seeding {path} from FRED DFEDTAR (once; discontinued 2008-12-15)")
+    sess = _session()
+    s = fetch_fred_series(sess, "DFEDTAR", start="1982-01-01")
+    s = pd.to_numeric(s, errors="coerce").dropna().sort_index()
+    s = s[~s.index.duplicated(keep="last")]
+    if int(s.shape[0]) < 20:
+        raise RuntimeError(
+            "FRED DFEDTAR empty — cannot seed FOMC point target. "
+            "https://fred.stlouisfed.org/series/DFEDTAR"
+        )
+    changed = s.ne(s.shift(1))
+    changed.iloc[0] = True
+    steps = s.loc[changed]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# FOMC federal funds POINT target. Written once from FRED DFEDTAR.",
+        "# Discontinued 2008-12-15. Not re-fetched if this file exists.",
+        "# https://fred.stlouisfed.org/series/DFEDTAR",
+        "effective_date,target_pct",
+    ]
+    for i, v in steps.items():
+        lines.append(f"{pd.Timestamp(i).strftime('%Y-%m-%d')},{float(v):.4g}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"  wrote {len(steps)} FOMC changes → {path}")
+    return path
+
+
+def load_fomc_point_steps() -> pd.Series:
+    """FOMC point-target change log. Frozen after first seed."""
+    path = ensure_fomc_point_seed()
+    raw = pd.read_csv(path, comment="#")
+    if "effective_date" not in raw.columns or "target_pct" not in raw.columns:
+        raise RuntimeError(f"{path} needs effective_date,target_pct")
+    s = pd.to_numeric(raw["target_pct"], errors="coerce")
+    s.index = pd.to_datetime(raw["effective_date"])
+    s = s.dropna().sort_index()
+    s = s[~s.index.duplicated(keep="last")].rename("DFEDTAR")
+    if int(s.shape[0]) < 20:
+        raise RuntimeError(f"{path} too short to be the FOMC change log")
+    return s
+
+
+def attach_fomc_point_target(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Put DFEDTAR on a policy frame from the frozen change log if the
+    discontinued FRED series is not already present. The target is a step:
+    it holds until the next FOMC action — that is the series, not a fill of
+    unknown values. Dates after 2008-12-15 stay blank (range era = DFEDTARU).
+    """
+    if df is None or df.empty:
+        return df
+    out = df.copy()
+    out.index = pd.to_datetime(out.index)
+    have = (
+        pd.to_numeric(out["DFEDTAR"], errors="coerce")
+        if "DFEDTAR" in out.columns
+        else pd.Series(dtype="float64")
+    )
+    pre = have.loc[have.index <= FOMC_POINT_END].dropna() if len(have) else have
+    if int(pre.shape[0]) >= 20:
+        return out
+    steps = load_fomc_point_steps()
+    union = steps.index.union(out.index).sort_values()
+    stepped = steps.reindex(union).ffill()
+    stepped = stepped.where(stepped.index <= FOMC_POINT_END)
+    out["DFEDTAR"] = stepped.reindex(out.index)
+    return out
 DEFAULT_PICKLE = DEFAULT_RAW
 DEFAULT_METRICS_PICKLE = DEFAULT_METRICS
 
@@ -74,8 +158,9 @@ FRED_GROUPS = {
         "DGS10",
         "DGS30",
         "DFII10",    # 10y TIPS real yield
-        "DFEDTARU",  # FOMC target range, upper
-        "DFEDTARL",  # FOMC target range, lower
+        "DFEDTARU",  # FOMC target range, upper (live)
+        "DFEDTARL",  # FOMC target range, lower (live)
+        # DFEDTAR is discontinued 2008-12-15 — loaded from site/data/fomc_point_target.csv, not FRED nightly.
     ],
     "fred_fiscal_nipa": [
         "A091RC1Q027SBEA",  # federal interest payments, SAAR $bn
@@ -129,7 +214,7 @@ FRED_GROUPS = {
 # IORB / RRP series may 404 on older csv combiners; fetch individually.
 OPTIONAL_FRED = {
     "IORB", "RRPONTSYD", "DFF", "ACMTP10",
-    "JTSJOL", "DFEDTARU", "DFEDTARL", "T5YIE", "T10YIE", "T5YIFR",
+    "JTSJOL", "T5YIE", "T10YIE", "T5YIFR",
     "PCETRIM12M159SFRBDAL",
 }
 
@@ -225,10 +310,14 @@ def fetch_fred_group(
             if sid in OPTIONAL_FRED:
                 print(f"  skip optional {sid}: {exc}")
                 continue
-            print(f"  WARN {sid}: {exc}")
+            raise RuntimeError(f"required FRED series {sid} failed: {exc}") from exc
     if not cols:
         return pd.DataFrame()
     out = pd.concat(cols, axis=1, sort=True).sort_index()
+    out.index = pd.to_datetime(out.index)
+    # Last actual print in the month. No ffill — a month with no observation stays absent.
+    out = out.groupby(out.index.to_period("M")).last()
+    out.index = out.index.to_timestamp(how="end").normalize()
     out.index.name = "date"
     return out
 
@@ -610,6 +699,8 @@ def build_all(start: str = DEFAULT_START, verbose: bool = True) -> list[pd.DataF
         if not df.empty:
             df.index = pd.to_datetime(df.index)
             df.index.name = "date"
+        if name == "fred_policy_rates":
+            df = attach_fomc_point_target(df)
         if verbose:
             last = df.index.max() if len(df) else None
             print(f"  -> {df.shape} last={last}")
@@ -665,6 +756,9 @@ def load_payload(path: Path | str = DEFAULT_RAW) -> dict:
         frames = [_frame_from_split(raw_frames.get(n)) for n in names]
     else:
         frames = [_frame_from_split(x) for x in raw_frames]
+    for i, n in enumerate(names):
+        if n == "fred_policy_rates" and i < len(frames):
+            frames[i] = attach_fomc_point_target(frames[i])
     return {"names": names, "frames": frames, "saved_at": payload.get("saved_at")}
 
 
@@ -750,6 +844,8 @@ def update_raw(
             print(f"  ERROR {name}: {exc} (keeping existing)")
             fresh = pd.DataFrame()
         merged = _overlap_append(old, fresh)
+        if name == "fred_policy_rates":
+            merged = attach_fomc_point_target(merged)
         if verbose:
             print(f"  -> {merged.shape} last={merged.index.max() if len(merged) else None}")
         updated.append(merged)
@@ -862,7 +958,7 @@ def calculate_metrics(
 
     # Interest is NIPA quarterly SAAR. Hold the last quarter against the
     # current stock so r_stock moves when the stock prints, not when the Bulletin does.
-    interest_m = interest.resample("ME").last().ffill()
+    interest_m = interest.resample("ME").last()
     r_stock = (100.0 * interest_m / debt_bn_m).rename("effective_avg_coupon_pct")
     r_stock = r_stock.replace([float("inf"), float("-inf")], pd.NA).dropna()
 
@@ -951,34 +1047,43 @@ def calculate_metrics(
     coupon_m = _month(avg_mkt_coupon)
     resid_extra = []
     parts = []
-    wsum = None
     PUBLISH_BUCKETS = ("0_1Y", "1_3Y", "3_7Y", "7_10Y", "10YPLUS", "FRN")
     for b, yld in ymap.items():
         w = _month(_col(resid, f"RESID_W_{b}"))
         resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
         if b not in PUBLISH_BUCKETS:
             continue
-        if wsum is None:
-            wsum = w.fillna(0.0)
-        else:
-            wsum = wsum.add(w.fillna(0.0), fill_value=0.0)
         parts.append((b, w, yld))
-    killed = []
+    idx = coupon_m.dropna().index
+    for b, w, yld in parts:
+        idx = idx.intersection(w.dropna().index)
+    # A month stays only if every positive-weight bucket has a CMT that month.
+    # Zero weight does not require a yield. Missing weight is not treated as zero.
+    keep = pd.Series(True, index=idx)
+    for b, w, yld in parts:
+        w0 = w.reindex(idx)
+        y = yld.reindex(idx)
+        keep &= ~((w0 > 1e-12) & y.isna())
+    idx = idx[keep.reindex(idx).fillna(False)]
+    if len(idx) < 8:
+        raise RuntimeError("Table 3 × CMT overlap too short — missing weights or yields, not filling")
+    wsum = None
+    for b, w, yld in parts:
+        ww = w.reindex(idx)
+        wsum = ww if wsum is None else wsum.add(ww)
+    idx = idx[wsum.reindex(idx) > 0]
+    wsum = wsum.reindex(idx)
     marg_r = None
     for b, w, yld in parts:
-        w0 = w.fillna(0.0)
-        y = yld.reindex(w0.index)
-        term = (w0 / wsum.replace(0, pd.NA)) * y
+        w0 = w.reindex(idx)
+        y = yld.reindex(idx)
+        term = (w0 / wsum) * y
         term = term.where(w0 > 1e-12, 0.0)
-        miss = (w0 > 1e-12) & y.isna()
-        if int(miss.sum()) > 0:
-            killed.append(f"{b}:{int(miss.sum())}mo")
+        if int(((w0 > 1e-12) & y.isna()).sum()) > 0:
+            raise RuntimeError(f"Table 3 × CMT hole in {b} after filters — not filling")
         marg_r = term if marg_r is None else marg_r.add(term)
     if marg_r is None or int(marg_r.dropna().shape[0]) < 8:
-        raise RuntimeError(
-            "residual marginal_rate too short — Table 3 × CMT failed"
-            + (f" ({', '.join(killed)})" if killed else "")
-        )
+        raise RuntimeError("residual marginal_rate too short — Table 3 × CMT failed")
     marginal = marg_r.rename("marginal_rate")
     refi_gap = (marginal - coupon_m).rename("refi_gap")
     resid_extra.extend([

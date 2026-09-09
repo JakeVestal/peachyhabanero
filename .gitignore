@@ -19,6 +19,7 @@ Thumbs.db
 *~
 # generated nightly — rebuilt by scripts/build_site_data.py
 /site/data/published/
+/site/data/fomc_point_target.csv
 
 # local experiment page — never ship
 /site/scratch.html

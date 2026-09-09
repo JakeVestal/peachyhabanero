@@ -35,6 +35,7 @@ from cube_data import (  # noqa: E402
     FRAME_NAMES,
     build_all,
     calculate_metrics,
+    ensure_fomc_point_seed,
     load_frames,
     save_frames,
     summarize,
@@ -248,8 +249,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     upper = upper.dropna().sort_index()
     if point.empty:
         raise SystemExit(
-            "DFEDTAR missing — pre-2008 FOMC point target is required; "
-            "no DFEDTARU-only fallback. Rerun --fetch so fred_policy_rates includes DFEDTAR."
+            "DFEDTAR empty after attaching site/data/fomc_point_target.csv — "
+            "that frozen FOMC change log is required"
         )
     if upper.empty:
         raise SystemExit("DFEDTARU missing — FOMC range upper bound required after 2008-12")
@@ -296,11 +297,9 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "target_end": target_end,
     }).sort_index()
     panel = panel.loc[panel.index >= SIGMA_WINDOW_START]
-    need = [
-        "debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap",
-        "funds_minus_stock", "primary_deficit_pct_gdp",
-    ]
-    panel = panel.dropna(subset=need)
+    # Do not dropna a shared "need" that includes refi_gap — that is a
+    # sustainability series. Requiring it here deleted every FD quarter
+    # whose Table-3 residual was blank (looked like "the cube starts in 2015").
 
     def _sigma(series, name):
         s = pd.to_numeric(series, errors="coerce").dropna()
@@ -339,8 +338,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
                 + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)
         )
 
-    sustain = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
-    fail = sustain
+    sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
+    fail = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
 
     payload = {
         "generated_at": generated_at,
@@ -368,7 +367,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     if len(fail):
         lastf = fail.iloc[-1]
         log_step(
-            f"cubes fail {len(fail)}  latest {fail.index[-1].date()}  "
+            f"cubes fail {len(fail)}  {fail.index.min().date() if len(fail) else '—'} → "
+            f"{fail.index.max().date() if len(fail) else '—'}  "
             f"F1={lastf.F1:.2f} F2rec={lastf.F2_rec:.2f} F3={lastf.F3:.2f}"
         )
 
@@ -376,6 +376,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
 def fetch_raw() -> None:
     log_step("Starting raw data fetch/update step...")
     CACHE.mkdir(parents=True, exist_ok=True)
+    log_step("Ensuring FOMC point-target seed (DFEDTAR, once)...")
+    ensure_fomc_point_seed()
     if FULL or not RAW_JSON.exists():
         log_step("Running full raw build (CUBE_FULL_REBUILD or missing cache)...")
         frames = build_all()
@@ -396,6 +398,8 @@ def process_and_publish() -> None:
 
     CACHE.mkdir(parents=True, exist_ok=True)
     PUB.mkdir(parents=True, exist_ok=True)
+    log_step("Ensuring FOMC point-target seed (DFEDTAR, once)...")
+    ensure_fomc_point_seed()
 
     log_step("Calculating metrics...")
     metrics = calculate_metrics(raw_path=RAW_JSON, metrics_path=METRICS_JSON, save=True)

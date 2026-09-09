@@ -41,6 +41,90 @@ FISCAL_BASE = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service"
 DEFAULT_START = "1970-01-01"
 DEFAULT_RAW = Path(__file__).resolve().parent / "cube_raw_frames.json"
 DEFAULT_METRICS = Path(__file__).resolve().parent / "calculated_metrics.json"
+FOMC_POINT_SEED = Path(__file__).resolve().parents[1] / "site" / "data" / "fomc_point_target.csv"
+FOMC_POINT_END = pd.Timestamp("2008-12-15")
+
+
+def ensure_fomc_point_seed() -> Path:
+    """If the frozen FOMC change log is missing, fetch FRED DFEDTAR once and write it.
+
+    Nightly runs that already have the file do not hit FRED for this series.
+    """
+    path = FOMC_POINT_SEED
+    if path.exists():
+        try:
+            n = int(pd.read_csv(path, comment="#").dropna(how="all").shape[0])
+            if n >= 20:
+                return path
+        except Exception:
+            pass
+    print(f"seeding {path} from FRED DFEDTAR (once; discontinued 2008-12-15)")
+    sess = _session()
+    s = fetch_fred_series(sess, "DFEDTAR", start="1982-01-01")
+    s = pd.to_numeric(s, errors="coerce").dropna().sort_index()
+    s = s[~s.index.duplicated(keep="last")]
+    if int(s.shape[0]) < 20:
+        raise RuntimeError(
+            "FRED DFEDTAR empty — cannot seed FOMC point target. "
+            "https://fred.stlouisfed.org/series/DFEDTAR"
+        )
+    changed = s.ne(s.shift(1))
+    changed.iloc[0] = True
+    steps = s.loc[changed]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# FOMC federal funds POINT target. Written once from FRED DFEDTAR.",
+        "# Discontinued 2008-12-15. Not re-fetched if this file exists.",
+        "# https://fred.stlouisfed.org/series/DFEDTAR",
+        "effective_date,target_pct",
+    ]
+    for i, v in steps.items():
+        lines.append(f"{pd.Timestamp(i).strftime('%Y-%m-%d')},{float(v):.4g}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"  wrote {len(steps)} FOMC changes → {path}")
+    return path
+
+
+def load_fomc_point_steps() -> pd.Series:
+    """FOMC point-target change log. Frozen after first seed."""
+    path = ensure_fomc_point_seed()
+    raw = pd.read_csv(path, comment="#")
+    if "effective_date" not in raw.columns or "target_pct" not in raw.columns:
+        raise RuntimeError(f"{path} needs effective_date,target_pct")
+    s = pd.to_numeric(raw["target_pct"], errors="coerce")
+    s.index = pd.to_datetime(raw["effective_date"])
+    s = s.dropna().sort_index()
+    s = s[~s.index.duplicated(keep="last")].rename("DFEDTAR")
+    if int(s.shape[0]) < 20:
+        raise RuntimeError(f"{path} too short to be the FOMC change log")
+    return s
+
+
+def attach_fomc_point_target(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Put DFEDTAR on a policy frame from the frozen change log if the
+    discontinued FRED series is not already present. The target is a step:
+    it holds until the next FOMC action — that is the series, not a fill of
+    unknown values. Dates after 2008-12-15 stay blank (range era = DFEDTARU).
+    """
+    if df is None or df.empty:
+        return df
+    out = df.copy()
+    out.index = pd.to_datetime(out.index)
+    have = (
+        pd.to_numeric(out["DFEDTAR"], errors="coerce")
+        if "DFEDTAR" in out.columns
+        else pd.Series(dtype="float64")
+    )
+    pre = have.loc[have.index <= FOMC_POINT_END].dropna() if len(have) else have
+    if int(pre.shape[0]) >= 20:
+        return out
+    steps = load_fomc_point_steps()
+    union = steps.index.union(out.index).sort_values()
+    stepped = steps.reindex(union).ffill()
+    stepped = stepped.where(stepped.index <= FOMC_POINT_END)
+    out["DFEDTAR"] = stepped.reindex(out.index)
+    return out
 DEFAULT_PICKLE = DEFAULT_RAW
 DEFAULT_METRICS_PICKLE = DEFAULT_METRICS
 
@@ -74,9 +158,9 @@ FRED_GROUPS = {
         "DGS10",
         "DGS30",
         "DFII10",    # 10y TIPS real yield
-        "DFEDTAR",   # FOMC point target through 2008-12-15
-        "DFEDTARU",  # FOMC target range, upper
-        "DFEDTARL",  # FOMC target range, lower
+        "DFEDTARU",  # FOMC target range, upper (live)
+        "DFEDTARL",  # FOMC target range, lower (live)
+        # DFEDTAR is discontinued 2008-12-15 — loaded from site/data/fomc_point_target.csv, not FRED nightly.
     ],
     "fred_fiscal_nipa": [
         "A091RC1Q027SBEA",  # federal interest payments, SAAR $bn
@@ -615,6 +699,8 @@ def build_all(start: str = DEFAULT_START, verbose: bool = True) -> list[pd.DataF
         if not df.empty:
             df.index = pd.to_datetime(df.index)
             df.index.name = "date"
+        if name == "fred_policy_rates":
+            df = attach_fomc_point_target(df)
         if verbose:
             last = df.index.max() if len(df) else None
             print(f"  -> {df.shape} last={last}")
@@ -670,6 +756,9 @@ def load_payload(path: Path | str = DEFAULT_RAW) -> dict:
         frames = [_frame_from_split(raw_frames.get(n)) for n in names]
     else:
         frames = [_frame_from_split(x) for x in raw_frames]
+    for i, n in enumerate(names):
+        if n == "fred_policy_rates" and i < len(frames):
+            frames[i] = attach_fomc_point_target(frames[i])
     return {"names": names, "frames": frames, "saved_at": payload.get("saved_at")}
 
 
@@ -735,10 +824,7 @@ def update_raw(
             force_full = True
         if name == "fred_policy_rates" and old is not None and len(old):
             d5 = pd.to_numeric(old.get("DGS5"), errors="coerce") if "DGS5" in old.columns else pd.Series(dtype=float)
-            tar = pd.to_numeric(old.get("DFEDTAR"), errors="coerce") if "DFEDTAR" in old.columns else pd.Series(dtype=float)
             if d5.empty or d5.notna().mean() < 0.8:
-                force_full = True
-            if tar.dropna().empty:
                 force_full = True
         if force_full:
             start = DEFAULT_START
@@ -758,6 +844,8 @@ def update_raw(
             print(f"  ERROR {name}: {exc} (keeping existing)")
             fresh = pd.DataFrame()
         merged = _overlap_append(old, fresh)
+        if name == "fred_policy_rates":
+            merged = attach_fomc_point_target(merged)
         if verbose:
             print(f"  -> {merged.shape} last={merged.index.max() if len(merged) else None}")
         updated.append(merged)
