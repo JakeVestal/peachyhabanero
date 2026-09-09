@@ -13,8 +13,8 @@
     <p class="navline">
       <a href="index.html">home</a> ·
       <a href="sustainability.html">sustainability</a> ·
-      <a href="data.html">data</a> ·
-      <a href="methodology.html">methodology</a>
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="data.html">data</a>
     </p>
     <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
   </div>
@@ -43,6 +43,11 @@
     thresholds — that's a separate analysis.
   </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
+  <p class="sub">
+    Last observation in the quarter. NIPA with NIPA, market rates from FRED,
+    book coupon from Fiscal Data. σ and the plotted path are complete
+    quarters from 2000-Q1 through the last BEA GDP print.
+  </p>
 </header>
 
 <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
@@ -292,14 +297,16 @@
         </p>
         <p>
           The <b style="color:#c4a35a">Danger Zone</b> is
-          <b style="color:#c4a35a">20%</b> of receipts. Federal receipts run
+          <b style="color:#c4a35a">20%</b> of receipts
+          (<b style="color:#c4a35a">25%</b> of tax). Federal receipts run
           near 17% of GDP; 20% × 0.17 ≈ 3.4% of GDP of interest — the same
           order as OMB function 050 (national defense). 0.03 / 0.17 ≈ 18,
           rounded to 20.
         </p>
         <p>
           The <b style="color:#ff2bd6">Restructuring Zone</b> is
-          <b style="color:#ff2bd6">30%</b>. Same map: 30% × 0.17 ≈ 5% of GDP
+          <b style="color:#ff2bd6">30%</b> of receipts
+          (<b style="color:#ff2bd6">40%</b> of tax). Same map: 30% × 0.17 ≈ 5% of GDP
           of interest. That is past the postwar US sample and well past “the
           same size as defense.” It is a labeled step on that identity, not a
           fitted cliff.
@@ -308,7 +315,7 @@
     </div>
   </article>
 
-  <article class="axis-block">
+  <article class="axis-block" id="axis-refi">
     <h3 class="axis-head">2  ·  Refi Gap</h3>
     <div class="axis-row">
       <div class="axis-plot" id="ax-2"></div>
@@ -332,12 +339,15 @@
           <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Average Interest Rates on U.S. Treasury Securities</a>,
           row <b>Total Marketable</b>
           (<a href="https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates">v2/accounting/od/avg_interest_rates</a>).
-          That is the carrying rate on marketable debt only.
+          That is the carrying rate on marketable debt only. Not NIPA
+          interest / debt: that folds in premiums, discounts, nonmarketable
+          issues, and intra-governmental accounts.
         </p>
         <p>
           <b>Marginal</b> is constructed. Each month we take every
           marketable CUSIP on MSPD
-          <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>,
+          <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>
+          (total marketable outstanding, not held-by-the-public),
           remaining life = maturity − record date, and collapse principal
           into buckets. Those weights times the CMT stand-in for that
           bucket:
@@ -357,13 +367,14 @@
           move the gap for a unit reason. TIPS stay in the <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>
           weights so the share is visible; the other buckets are
           renormalized. FRNs stay in the sum (FEDFUNDS is already
-          nominal).
+          nominal). A month with weight in a published bucket and no CMT
+          is blank.
         </p>
       </div>
     </div>
   </article>
 
-  <article class="axis-block">
+  <article class="axis-block" id="axis-debt">
     <h3 class="axis-head">3  ·  Debt held by the public / GDP</h3>
     <div class="axis-row">
       <div class="axis-plot" id="ax-3"></div>
@@ -378,6 +389,10 @@
           (<a href="https://fred.stlouisfed.org/series/GFDEGDQ188S">
           GFDEGDQ188S</a>), which includes intra-governmental IOUs that the
           government writes to itself and do not roll into the market.
+          This is the stock. The matching flow — are operations still
+          borrowing — is primary / GDP on the
+          <a href="fiscal-dominance.html">Fiscal Dominance Cube</a>.
+          They are not two spellings of one number.
         </p>
         <p>
           The <b style="color:#c4a35a">Danger Zone</b> for <b>Debt held by the
@@ -403,8 +418,8 @@
 </section>
 
 <footer>
-  peachyhabanero · <a href="index.html">home</a> · <a href="data.html">data</a> · <a href="methodology.html">methodology</a>
+  peachyhabanero · <a href="index.html">home</a> · <a href="fiscal-dominance.html">fiscal dominance</a> · <a href="data.html">data</a>
 </footer>
-<script src="cube.js?v=30"></script>
+<script src="cube.js"></script>
 </body>
 </html>
