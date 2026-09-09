@@ -869,7 +869,7 @@ def run(html_path=DEFAULT_HTML):
     z_df.index.name = "quarter_end"
     colmap = {
         "x1": "funds_minus_stock",
-        "x2": "interest_pct_receipts",
+        "x2": "interest_pct_gf_receipts",
         "x3": "primary_deficit_pct_gdp",
         "x4": "acm_10y_term_premium",
         "x5": "r_minus_g",
@@ -882,7 +882,7 @@ def run(html_path=DEFAULT_HTML):
     x_df.index.name = "quarter_end"
     titles = {
         1: "1  funds - stock coupon",
-        2: "2  interest / current receipts",
+        2: "2  interest / general-fund receipts",
         3: "3  primary deficit / GDP",
         4: "4  ACM 10y term premium",
         5: "5  r - g",

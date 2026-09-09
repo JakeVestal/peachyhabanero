@@ -8,7 +8,7 @@ The question this figure is allowed to answer:
 
 Axes are the three fiscal wires only.
     F1  y(funds − stock)         hike *is* the fiscal rate when F1 > 0
-    F2  y(interest / receipts)   coupon step is a program when F2 > 0
+    F2  y(interest / general-fund) coupon step is a program when F2 > 0
     F3  y(primary deficit / GDP) no surplus to absorb it when F3 > 0
 
 Magenta wireframe = F1>0 and F2>0 and F3>0.
@@ -61,7 +61,7 @@ FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 
 COLMAP = {
     "x1": "funds_minus_stock",
-    "x2": "interest_pct_receipts",
+    "x2": "interest_pct_gf_receipts",
     "x3": "primary_deficit_pct_gdp",
     "x4": "acm_10y_term_premium",
     "x5": "r_minus_g",
@@ -70,13 +70,13 @@ COLMAP = {
 
 AXIS_LABEL = {
     1: "F1  y(funds − stock)",
-    2: "F2  y(interest / receipts)",
+    2: "F2  y(interest / general-fund)",
     3: "F3  y(primary deficit / GDP)",
 }
 
 SERIES_TITLE = {
     1: "1  funds − stock coupon",
-    2: "2  interest / current receipts",
+    2: "2  interest / general-fund receipts",
     3: "3  primary deficit / GDP",
     4: "4  ACM 10y term premium  (amplifier)",
     5: "5  r − g  (amplifier)",
@@ -210,7 +210,7 @@ def _hover_row(idx, r, fail_tag=False):
         f"F1={r.F1:.2f}  F2={r.F2:.2f}  F3={r.F3:.2f}<br>"
         f"fiscal {int(r.n_fiscal)}/3   amplifiers {int(r.n_amp)}/3<br>"
         f"1 funds−stock {r.x1:.3f}<br>"
-        f"2 int/receipts {r.x2:.3f}<br>"
+        f"2 int/gf {r.x2:.3f}<br>"
         f"3 primary/GDP {r.x3:.3f}<br>"
         f"4 ACM TP {r.x4:.3f}<br>"
         f"5 r−g {r.x5:.3f}<br>"
@@ -235,8 +235,11 @@ def build_cube(state: pd.DataFrame) -> go.Figure:
                    CONFIG["wireframe_color"], "failure octant (1∧2∧3)")
     ]
     hover = [_hover_row(idx, r) for idx, r in state.iterrows()]
-    adj = state["rate_adjust"].fillna(0.0) if "rate_adjust" in state.columns else pd.Series(0.0, index=state.index)
-    span = float(adj.abs().max()) or 1.0
+    adj = state["rate_adjust"] if "rate_adjust" in state.columns else pd.Series(dtype="float64", index=state.index)
+    adj = pd.to_numeric(adj, errors="coerce")
+    span = float(adj.abs().max()) if adj.notna().any() else 1.0
+    if not (span and span == span) or span == 0:
+        span = 1.0
     traces.append(go.Scatter3d(
         x=state["F1"], y=state["F2"], z=state["F3"],
         mode="lines+markers",
@@ -379,7 +382,7 @@ footer {{ padding:24px 28px 40px; color:var(--muted); font-size:12px; }}
 <h1>{CONFIG["title"]}</h1>
 <p class="sub">One question: <b style="color:#e8f6ff">would a hike be unthinkable if inflation printed hot?</b> Not “how stretched is the six-vector.” That lives on the diagnostic page.</p>
 <p class="story">
-Magenta frame is the AND of three fiscal wires — funds has met the book, interest already eats a fifth of receipts, primary deficit is still open while the economy is not in a hole.
+Magenta frame is the AND of three fiscal wires — funds has met the book, interest already eats a fifth of general-fund receipts, primary deficit is still open while the economy is not in a hole.
 Amplifiers (term premium, r−g, NFCI) only color the dots.
 {n_fail} quarter{"s" if n_fail != 1 else ""} sit inside.
 Latest <span class="stat">{f_df.index.max().date()}</span>
@@ -426,7 +429,7 @@ def run(html_path=None):
         state[c] = aligned[c]
     rates = load_or_update_rate_adjust()
     state = state.join(rates[["rate_adjust"]], how="left")
-    state["rate_adjust"] = state["rate_adjust"].fillna(0.0)
+    # Missing FOMC Δ stays missing. Zero would look like a hold.
 
     fig = build_cube(state)
     series_figs = []
@@ -444,11 +447,10 @@ def run(html_path=None):
     f_df = state[["F1", "F2", "F3", "n_fiscal", "n_amp", "fail", "rate_adjust"]].copy()
     f_df.index.name = "quarter_end"
     x_fiscal = aligned.rename(columns=COLMAP)[
-        ["funds_minus_stock", "interest_pct_receipts", "primary_deficit_pct_gdp"]
+        ["funds_minus_stock", "interest_pct_gf_receipts", "primary_deficit_pct_gdp"]
     ].copy()
     x_fiscal.index.name = "quarter_end"
     rate_df = rates.reindex(state.index)[["rate_adjust"]].copy()
-    rate_df["rate_adjust"] = rate_df["rate_adjust"].fillna(0.0)
     rate_df.index.name = "quarter_end"
 
     html_path.write_text(build_page(fig, series_figs, f_df, x_fiscal, rate_df), encoding="utf-8")

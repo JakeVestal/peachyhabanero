@@ -66,7 +66,7 @@ FULL = str(os.environ.get("CUBE_FULL_REBUILD", "")).lower() in {"1", "true", "ye
 
 COLMAP = {
     "x1": "funds_minus_stock",
-    "x2": "interest_pct_receipts",
+    "x2": "interest_pct_gf_receipts",
     "x3": "primary_deficit_pct_gdp",
 }
 

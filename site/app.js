@@ -101,7 +101,7 @@ function renderColumnNotes(mount, table) {
 
 const X_COLS = {
   1: "funds_minus_stock",
-  2: "interest_pct_receipts",
+  2: "interest_pct_gf_receipts",
   3: "primary_deficit_pct_gdp",
 };
 
@@ -183,14 +183,20 @@ function recipeX(id, date, metrics, raw, qrow) {
   if (id === 2) {
     const interest = num(nipa && nipa.A091RC1Q027SBEA) ?? num(m2 && m2.interest_bn_saar);
     const receipts = num(nipa && nipa.FGRECPT) ?? num(m2 && m2.current_receipts_bn_saar);
+    const si = num(nipa && nipa.W780RC1Q027SBEA) ?? num(m2 && m2.social_insurance_contrib_bn_saar);
+    const gf = (receipts != null && si != null) ? receipts - si : num(m2 && m2.gf_receipts_bn_saar);
     const taxr = num(nipa && nipa.W006RC1Q027SBEA);
-    const rebuilt = interest != null && receipts ? (100 * interest) / receipts : null;
+    const rebuilt = interest != null && gf ? (100 * interest) / gf : null;
+    const rebuiltRec = interest != null && receipts ? (100 * interest) / receipts : null;
     const rebuiltTax = interest != null && taxr ? (100 * interest) / taxr : null;
     return [
       `NIPA interest A091RC1Q027SBEA = ${fmtN(interest, 3)} $bn SAAR.`,
       `NIPA current receipts FGRECPT = ${fmtN(receipts, 3)} $bn SAAR.`,
-      `x2 = 100 × A091 / FGRECPT = ${fmtN(rebuilt, 4)}.`,
-      `Tax till (toggle, not the default x2): 100 × A091 / W006RC1Q027SBEA = ${fmtN(rebuiltTax, 4)}.`,
+      `NIPA social-insurance contributions W780RC1Q027SBEA = ${fmtN(si, 3)} $bn SAAR.`,
+      `General-fund receipts = FGRECPT − W780 = ${fmtN(gf, 3)} $bn SAAR.`,
+      `x2 = 100 × A091 / (FGRECPT − W780) = ${fmtN(rebuilt, 4)} (the cube).`,
+      `Diagnostic only — unified receipts: 100 × A091 / FGRECPT = ${fmtN(rebuiltRec, 4)}.`,
+      `Diagnostic only — tax till: 100 × A091 / W006RC1Q027SBEA = ${fmtN(rebuiltTax, 4)}.`,
     ];
   }
   if (id === 3) {
@@ -308,7 +314,7 @@ function explainQuarterlyCol(col, row, rows, thresholds, metrics, raw) {
   const xid = Object.entries(X_COLS).find(([, name]) => name === col);
   if (xid) return recipeX(Number(xid[0]), date, metrics, raw, row);
   if (col === "funds_minus_stock") return recipeX(1, date, metrics, raw, row);
-  if (col === "interest_pct_receipts") return recipeX(2, date, metrics, raw, row);
+  if (col === "interest_pct_gf_receipts" || col === "interest_pct_receipts") return recipeX(2, date, metrics, raw, row);
   if (col === "primary_deficit_pct_gdp") return recipeX(3, date, metrics, raw, row);
   const m1 = asOf(metrics["01_funds_equals_fiscal_rate"], date);
   if (col === "refi_gap" || col === "marginal_rate" || col === "w_bills") {

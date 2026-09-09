@@ -18,7 +18,6 @@ on:
       - "src/cube_data.py"
       - "src/cube_visualize.py"
       - "src/failure_cube.py"
-      - "src/cube_critical_values.csv"
       - "site/data/cube_critical_values.csv"
       - "site/data/zone.csv"
       - "requirements.txt"
