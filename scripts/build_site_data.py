@@ -32,10 +32,12 @@ sys.path.insert(0, str(SRC))
 
 log_step("Importing local modules from src...")
 from cube_data import (  # noqa: E402
+    FOMC_POINT_END,
     FRAME_NAMES,
     build_all,
     calculate_metrics,
     ensure_fomc_point_seed,
+    load_fomc_point_steps,
     load_frames,
     save_frames,
     summarize,
@@ -71,7 +73,7 @@ RAW_KEEP = {
         "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS5", "DGS30", "DFII10",
         "DFEDTAR", "DFEDTARU", "DFEDTARL",
     ],
-    "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "FGEXPND"],
+    "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "W780RC1Q027SBEA", "FGEXPND"],
     "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S", "FYGFGDQ188S"],
     "fred_labor_output": [
         "UNRATE", "NROU", "GDP", "GDPC1", "GDPPOT", "PAYEMS", "JTSJOL",
@@ -152,6 +154,7 @@ def load_zone(path: Path) -> dict:
         "debt_gdp_warn", "debt_gdp_restruct",
         "int_rec_warn", "int_rec_restruct",
         "int_tax_warn", "int_tax_restruct",
+        "int_gf_warn", "int_gf_restruct",
         "refi_gap_warn", "refi_gap_restruct",
     )
     miss = [k for k in need if k not in out or not np.isfinite(out[k])]
@@ -223,6 +226,11 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     funds_minus = (funds - stock).rename("funds_minus_stock")
     int_rec = _qe(_col_or(m02, "interest_pct_of_current_receipts"))
     int_tax = _qe(_col_or(m02, "interest_pct_of_tax_receipts"))
+    int_gf = _qe(_col_or(m02, "interest_pct_of_gf_receipts"))
+    if int(int_gf.dropna().shape[0]) < 8:
+        raise SystemExit(
+            "missing interest_pct_of_gf_receipts — fetch W780RC1Q027SBEA and rerun --process"
+        )
     int_bn = _qe(_col_or(m02, "interest_bn_saar"))
     rec_bn = _qe(_col_or(m02, "current_receipts_bn_saar"))
     primary = _qe(_col_or(m03, "primary_deficit_pct_gdp"))
@@ -245,16 +253,27 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     point.index = pd.to_datetime(point.index)
     upper = pd.to_numeric(_col_or(policy, "DFEDTARU"), errors="coerce")
     upper.index = pd.to_datetime(upper.index)
-    point = point.dropna().sort_index()
+    steps = load_fomc_point_steps()
+    point = pd.concat([steps, point]).sort_index()
+    point = point[~point.index.duplicated(keep="last")]
     upper = upper.dropna().sort_index()
-    if point.empty:
+    if point.loc[point.index <= FOMC_POINT_END].dropna().empty:
         raise SystemExit(
             "DFEDTAR empty after attaching site/data/fomc_point_target.csv — "
             "that frozen FOMC change log is required"
         )
     if upper.empty:
         raise SystemExit("DFEDTARU missing — FOMC range upper bound required after 2008-12")
-    target = pd.concat([point, upper.loc[upper.index > point.index.max()]]).sort_index()
+    # Standing instrument on a complete month-end calendar. The target holds
+    # between meetings — that is the FOMC series, not a fill of unknown Δ.
+    cal_start = min(pd.Timestamp("1982-09-30"), point.dropna().index.min())
+    cal_end = max(pd.Timestamp.now().normalize(), upper.index.max())
+    cal = pd.date_range(cal_start, cal_end, freq="ME")
+    point_m = point.reindex(cal.union(point.index)).sort_index().ffill()
+    point_m = point_m.where(point_m.index <= FOMC_POINT_END)
+    upper_m = upper.reindex(cal.union(upper.index)).sort_index().ffill()
+    upper_m = upper_m.where(upper_m.index > FOMC_POINT_END)
+    target = point_m.combine_first(upper_m).dropna()
     q_target = target.resample("QE").last()
     rate_adjust = q_target.diff().rename("rate_adjust")
     target_end = q_target.rename("target_end")
@@ -286,6 +305,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "resid_w_frn": _qe(_col_or(m01, "resid_w_frn")),
         "int_rec_pct": int_rec,
         "int_tax_pct": int_tax,
+        "int_gf_pct": int_gf,
         "interest_bn": int_bn,
         "receipts_bn": rec_bn,
         "tax_bn": tax_bn,
@@ -312,13 +332,15 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
 
     sig_rec = _sigma(panel["int_rec_pct"], "int_rec")
     sig_tax = _sigma(panel["int_tax_pct"], "int_tax")
+    sig_gf = _sigma(panel["int_gf_pct"], "int_gf")
     if "y1" not in y.columns or "y2" not in y.columns or "y3" not in y.columns:
         raise SystemExit("standardize did not return y1/y2/y3 — cannot plot F1/F2/F3")
     panel["F1"] = y["y1"].reindex(panel.index)
+    panel["F2"] = (panel["int_gf_pct"] - ZONE["int_gf_warn"]) / sig_gf
     panel["F2_rec"] = y["y2"].reindex(panel.index)
     panel["F2_tax"] = (panel["int_tax_pct"] - ZONE["int_tax_warn"]) / sig_tax
     panel["F3"] = y["y3"].reindex(panel.index)
-    log_step(f"sigma int/rec={sig_rec:.4f}  int/tax={sig_tax:.4f}")
+    log_step(f"sigma int/gf={sig_gf:.4f}  int/rec={sig_rec:.4f}  int/tax={sig_tax:.4f}")
 
     s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_restruct"])
     s_gap = _piecewise(panel["refi_gap"], ZONE["refi_gap_warn"], ZONE["refi_gap_restruct"])
@@ -339,7 +361,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         )
 
     sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
-    fail = panel.dropna(subset=["F1", "F2_rec", "F2_tax", "F3"])
+    fail = panel.dropna(subset=["F1", "F2", "F3"])
 
     payload = {
         "generated_at": generated_at,
@@ -353,7 +375,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
             "end": str(panel.index.max().date()) if len(panel) else None,
             "n": int(len(panel)),
         },
-        "sigma": {"int_rec": sig_rec, "int_tax": sig_tax},
+        "sigma": {"int_gf": sig_gf, "int_rec": sig_rec, "int_tax": sig_tax},
         "sustain": df_to_table(sustain)["rows"][::-1],
         "fail": df_to_table(fail)["rows"][::-1],
     }
@@ -369,7 +391,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         log_step(
             f"cubes fail {len(fail)}  {fail.index.min().date() if len(fail) else '—'} → "
             f"{fail.index.max().date() if len(fail) else '—'}  "
-            f"F1={lastf.F1:.2f} F2rec={lastf.F2_rec:.2f} F3={lastf.F3:.2f}"
+            f"F1={lastf.F1:.2f} F2={lastf.F2:.2f} F3={lastf.F3:.2f}"
         )
 
 

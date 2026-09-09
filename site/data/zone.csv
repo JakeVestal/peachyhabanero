@@ -5,6 +5,8 @@ int_rec_warn,20
 int_rec_restruct,30
 int_tax_warn,25
 int_tax_restruct,40
+int_gf_warn,20
+int_gf_restruct,30
 refi_gap_warn,0.75
 refi_gap_restruct,1
 f1_raw,0

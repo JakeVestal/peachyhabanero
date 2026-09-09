@@ -32,7 +32,7 @@
     </p>
     <ol>
       <li>the funds rate is at or under the Treasury's book rate,</li>
-      <li>and interest payments make up over one fifth of Treasury revenue,</li>
+      <li>and interest paid to the public is over one fifth of general-fund receipts,</li>
       <li>and the primary deficit / GDP is positive</li>
     </ol>
     <p>
@@ -53,8 +53,6 @@
 
 <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
   <div style="order: 1; display: flex; gap: 10px; flex-shrink: 0; align-items: center; flex-wrap: wrap;">
-    <button class="neon-btn" type="button" id="btn-rec">receipts</button>
-    <button class="neon-btn active" type="button" id="btn-tax">tax</button>
     <label class="switch" for="tog-rates">
       <input type="checkbox" id="tog-rates" checked/>
       <span class="track"></span>
@@ -62,14 +60,15 @@
     </label>
   </div>
   <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
-    Default view is tax till with rate decisions on: that is where the
-    interior is nonempty. Receipts till (the larger envelope) has had
-    no interior quarters in this window. Tax is NIPA current tax receipts
-    (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">W006RC1Q027SBEA</a>).
-    Receipts is NIPA current receipts
-    (<a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>)
-    — taxes plus contributions for social insurance, income on assets, and
-    the rest of the current-receipts envelope.
+    F2 is interest to the public over general-fund receipts:
+    <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">A091</a>
+    / (
+    <a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>
+    −
+    <a href="https://fred.stlouisfed.org/series/W780RC1Q027SBEA">W780</a>
+    ). NIPA consolidates intra-gov interest, so A091 is already the
+    public coupon. W780 is social-insurance contributions (cash-exhausted
+    while OASI runs a cash deficit). No till toggle — that ratio is the cube.
   </span>
 </div>
 
@@ -92,9 +91,8 @@
   </p>
   <div id="fd-dist-plot"></div>
   <p class="sub">
-    Zero is the magenta box. The receipts / tax toggle moves F2, so the
-    path can change when the till changes. Same units as the cube
-    coordinates, not the underlying percents.
+    Zero is the magenta box. Same units as the cube coordinates, not the
+    underlying percents.
   </p>
 </section>
 
@@ -104,8 +102,7 @@
     Same signed σ-distance as in 01 (negative = inside, 0 = the magenta
     face), plotted against quarterly net FOMC Δ. Default puts distance
     on y. Toggle to put Δ on y. Missing FOMC prints are omitted, not
-    plotted as a hold. Magenta ring = inside the box. Receipts / tax
-    moves F2, so the cloud can shift with the till.
+    plotted as a hold. Magenta ring = inside the box.
   </p>
   <div class="toolbar" style="display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap;">
     <button class="neon-btn active" type="button" id="btn-y-dist">y: distance</button>
@@ -139,16 +136,16 @@
   </article>
 
   <article class="axis-block">
-    <h3 class="axis-head">2  ·  y(Interest / Receipts)</h3>
+    <h3 class="axis-head">2  ·  y(Interest / general-fund receipts)</h3>
     <div class="axis-row">
       <div class="axis-plot" id="ax-4"></div>
       <div class="axis-copy">
         <p class="sub">
-          Same series as the sustainability till axis, written as a
-          σ-scaled distance from the wire. Receipts: (int/rec − 20%) / σ.
-          Tax toggle: (int/tax − 25%) / σ.
+          NIPA interest to the public over general-fund current receipts.
+          General fund = current receipts minus social-insurance contributions.
+          Magenta wire at 0 is 20% of that till.
         </p>
-        <p class="stat">(int/receipts − 20%) / σ &nbsp; tax: (int/tax − 25%) / σ &nbsp; σ from 2000-Q1</p>
+        <p class="stat">(A091 / (FGRECPT − W780) − 20%) / σ &nbsp; σ from 2000-Q1</p>
       </div>
     </div>
   </article>

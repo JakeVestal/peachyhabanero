@@ -4,6 +4,7 @@ const ZONE_KEYS = [
   "debt_gdp_warn", "debt_gdp_restruct",
   "int_rec_warn", "int_rec_restruct",
   "int_tax_warn", "int_tax_restruct",
+  "int_gf_warn", "int_gf_restruct",
   "refi_gap_warn", "refi_gap_restruct",
 ];
 
@@ -260,7 +261,7 @@ function sustainTraces(rows, zone, burden) {
 }
 
 function failTraces(rows, tax, showRates) {
-  const f2key = tax ? "F2_tax" : "F2_rec";
+  const f2key = "F2";
   const f2 = rows.map((r) => r[f2key]);
   const nAdj = rows.filter((r) => rateAdj(r) != null).length;
   const hover = rows.map((r) => {
@@ -281,7 +282,7 @@ function failTraces(rows, tax, showRates) {
       `${inside ? "<b>INSIDE</b> " : ""}${r.date}<br>` +
       `F1=${num(r, "F1") == null ? "n/a" : num(r, "F1").toFixed(2)}  F2=${f2v == null ? "n/a" : f2v.toFixed(2)}  F3=${num(r, "F3") == null ? "n/a" : num(r, "F3").toFixed(2)}<br>` +
       `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp  (F1>0 ⇒ funds ≤ book)<br>` +
-      `int/rec ${Number(r.int_rec_pct).toFixed(2)}%  int/tax ${Number(r.int_tax_pct).toFixed(2)}%<br>` +
+      `int/gf ${Number(r.int_gf_pct).toFixed(2)}%  int/rec ${Number(r.int_rec_pct).toFixed(2)}%  int/tax ${Number(r.int_tax_pct).toFixed(2)}%<br>` +
       `primary/GDP ${Number(r.primary_deficit_pct_gdp).toFixed(2)}%<br>` +
       rateLine
     );
@@ -370,7 +371,7 @@ function failTraces(rows, tax, showRates) {
 }
 
 function insideCensus(rows, tax) {
-  const f2key = tax ? "F2_tax" : "F2_rec";
+  const f2key = "F2";
   const inside = rows.filter((r) => isInside(r, f2key));
   const hike = [];
   const cut = [];
@@ -390,16 +391,13 @@ function renderFdIndicator(rows, tax) {
   const el = $("fd-indicator");
   if (!el || !rows.length) return;
   const cur = insideCensus(rows, tax);
-  const other = insideCensus(rows, !tax);
-  const till = tax ? "tax" : "receipts";
-  const otherTill = tax ? "receipts" : "tax";
-  const f2key = tax ? "F2_tax" : "F2_rec";
+  const f2key = "F2";
   const hikeDates = cur.hike.map((r) => {
     const v = rateAdj(r);
     const sign = v > 0 ? "+" : "";
     return `${r.date} (${sign}${Number(v).toFixed(2)} pp)`;
   });
-  const cols = ["date","till","action","rate_adjust_pp","target_end","F1","F2","F3","funds_minus_stock","int_rec_pct","int_tax_pct","primary_deficit_pct_gdp"];
+  const cols = ["date","action","rate_adjust_pp","target_end","F1","F2","F3","funds_minus_stock","int_gf_pct","int_rec_pct","int_tax_pct","primary_deficit_pct_gdp"];
   const csvLines = [cols.join(",")];
   cur.inside.forEach((r) => {
     const adj = rateAdj(r);
@@ -409,11 +407,11 @@ function renderFdIndicator(rows, tax) {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     csvLines.push([
-      r.date, till, rateKind(r),
+      r.date, rateKind(r),
       adj == null ? "" : adj,
       r.target_end == null ? "" : r.target_end,
       num(r, "F1"), num(r, f2key), num(r, "F3"),
-      r.funds_minus_stock, r.int_rec_pct, r.int_tax_pct, r.primary_deficit_pct_gdp,
+      r.funds_minus_stock, r.int_gf_pct, r.int_rec_pct, r.int_tax_pct, r.primary_deficit_pct_gdp,
     ].map(cell).join(","));
   });
   if (el._csvUrl) URL.revokeObjectURL(el._csvUrl);
@@ -422,7 +420,7 @@ function renderFdIndicator(rows, tax) {
     `<h3>Did they hike from inside?</h3>` +
     `<p class="punch"><b class="hike">${cur.hike.length}</b> hike${cur.hike.length === 1 ? "" : "s"}` +
     ` from <b class="n">${cur.n}</b> interior quarter${cur.n === 1 ? "" : "s"}` +
-    ` <span style="color:#9fb3c8">(${till} till)</span></p>` +
+    ` <span style="color:#9fb3c8">(general-fund till)</span></p>` +
     `<p class="breakdown">` +
     `<span class="hike">${cur.hike.length} hike</span> · ` +
     `<span class="cut">${cur.cut.length} cut</span> · ` +
@@ -430,10 +428,8 @@ function renderFdIndicator(rows, tax) {
     `${cur.missing.length ? ` · <span style="color:#7f93a6">${cur.missing.length} no FOMC print</span>` : ""}` +
     `${cur.last ? ` · last inside ${cur.last.date}` : ""}` +
     `</p>` +
-    `<p class="alt">${otherTill} till: ${other.n} inside, ${other.hike.length} hike${other.hike.length === 1 ? "" : "s"}` +
-    `${other.hike.length ? " — " + other.hike.map((r) => r.date).join(", ") : ""}</p>` +
     (hikeDates.length ? `<p class="dates">inside hikes: ${hikeDates.join(" · ")}</p>` : "") +
-    `<p class="dl"><a download="fd-interior-${till}.csv" href="${el._csvUrl}">download interior quarters (csv)</a></p>`;
+    `<p class="dl"><a download="fd-interior-gf.csv" href="${el._csvUrl}">download interior quarters (csv)</a></p>`;
 }
 
 function drawDist(el, rows, tax) {
@@ -480,7 +476,7 @@ function signedDistOctant(f1, f2, f3) {
 
 function drawFdDist(el, rows, tax) {
   const mag = "#ff2bd6";
-  const f2key = tax ? "F2_tax" : "F2_rec";
+  const f2key = "F2";
   const ys = rows.map((r) => signedDistOctant(r.F1, r[f2key], r.F3));
   const xs = rows.map((r) => r.date);
   const lineTips = rows.map((r, i) => {
@@ -574,7 +570,7 @@ function drawFdDist(el, rows, tax) {
 
 function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
   const mag = "#ff2bd6";
-  const f2key = tax ? "F2_tax" : "F2_rec";
+  const f2key = "F2";
   const groups = [
     { k: "hold", color: "#00f0ff", symbol: "circle", size: 8, name: "hold" },
     { k: "hike", color: "#39ff14", symbol: "triangle-up", size: 12, name: "hike" },
@@ -731,10 +727,10 @@ function drawRawAxis(el, rows, col, title, color, wires) {
   }, { responsive: true, displaylogo: false, staticPlot: false });
 }
 
-function drawSixAxes(sus, fail, zone, tax) {
-  fail = sus;
+function drawSixAxes(sus, failRows, zone, tax) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
+  const fd = failRows && failRows.length ? failRows : sus;
   const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
   const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
   const tillDeath = tax ? zone.int_tax_restruct : zone.int_rec_restruct;
@@ -745,13 +741,11 @@ function drawSixAxes(sus, fail, zone, tax) {
     [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)]);
   drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
     [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)]);
-  const f2col = tax ? "F2_tax" : "F2_rec";
-  const f2name = tax ? "F2  y(int/tax − 25%)" : "F2  y(int/receipts − 20%)";
-  drawRawAxis("ax-4", sus, f2col, f2name, "#00f0ff",
+  drawRawAxis("ax-4", fd, "F2", "F2  y(int / general-fund − 20%)", "#00f0ff",
     [hline(0, mag)]);
-  drawRawAxis("ax-5", sus, "F1", "F1  y(funds − book)  flipped", "#39ff14",
+  drawRawAxis("ax-5", fd, "F1", "F1  y(funds − book)  flipped", "#39ff14",
     [hline(0, mag)]);
-  drawRawAxis("ax-6", sus, "F3", "F3  y(primary / GDP)", "#ff6b4a",
+  drawRawAxis("ax-6", fd, "F3", "F3  y(primary / GDP)", "#ff6b4a",
     [hline(0, mag)]);
 }
 
@@ -828,6 +822,10 @@ async function main() {
 
   async function drawFail() {
     if (!$("cube-fail") || !fail.length) return;
+    if (fail.every((r) => num(r, "F2") == null)) {
+      flagMissing($("cube-fail"), "cubes.json has no F2 (A091 / (FGRECPT − W780)). Fetch W780RC1Q027SBEA and rerun --process.");
+      return;
+    }
     const ft = failTraces(fail, tax, showRates);
     const note = $("rate-note");
     if (note) {
@@ -839,9 +837,7 @@ async function main() {
         note.textContent = "";
       }
     }
-    const f2title = tax
-        ? "F2  y(interest / tax − 25%)"
-        : "F2  y(interest / receipts − 20%)";
+    const f2title = "F2  y(interest / general-fund receipts − 20%)";
     const layout = keepCamera("cube-fail", layout3d(
       "Fiscal Dominance Cube",
       "F3  y(primary / GDP)",

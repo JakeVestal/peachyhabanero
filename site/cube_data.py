@@ -102,25 +102,21 @@ def load_fomc_point_steps() -> pd.Series:
 
 def attach_fomc_point_target(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Put DFEDTAR on a policy frame from the frozen change log if the
-    discontinued FRED series is not already present. The target is a step:
-    it holds until the next FOMC action — that is the series, not a fill of
-    unknown values. Dates after 2008-12-15 stay blank (range era = DFEDTARU).
+    Overlay the frozen DFEDTAR change log as a step through 2008-12-15.
+
+    The funds target is a standing instrument: it holds until the next FOMC
+    action. That is the series, not a fill of unknown meetings. A leftover
+    sparse DFEDTAR column (change dates only) is not "already attached."
+    Dates after 2008-12-15 stay blank (range era = DFEDTARU).
     """
     if df is None or df.empty:
         return df
     out = df.copy()
     out.index = pd.to_datetime(out.index)
-    have = (
-        pd.to_numeric(out["DFEDTAR"], errors="coerce")
-        if "DFEDTAR" in out.columns
-        else pd.Series(dtype="float64")
-    )
-    pre = have.loc[have.index <= FOMC_POINT_END].dropna() if len(have) else have
-    if int(pre.shape[0]) >= 20:
-        return out
     steps = load_fomc_point_steps()
-    union = steps.index.union(out.index).sort_values()
+    start = min(steps.index.min(), out.index.min())
+    months = pd.date_range(start, FOMC_POINT_END, freq="ME")
+    union = months.union(out.index).union(steps.index).sort_values()
     stepped = steps.reindex(union).ffill()
     stepped = stepped.where(stepped.index <= FOMC_POINT_END)
     out["DFEDTAR"] = stepped.reindex(out.index)
@@ -166,6 +162,7 @@ FRED_GROUPS = {
         "A091RC1Q027SBEA",  # federal interest payments, SAAR $bn
         "FGRECPT",          # federal current receipts, SAAR $bn
         "W006RC1Q027SBEA",  # federal current tax receipts, SAAR $bn
+        "W780RC1Q027SBEA",  # contributions for government social insurance, SAAR $bn
         "FGEXPND",          # federal current expenditures, SAAR $bn
     ],
     "fred_debt_stocks": [
@@ -822,6 +819,9 @@ def update_raw(
                 force_full = True
         if name == "fiscal_mspd_residual" and (old is None or old.empty or "RESID_W_0_1Y" not in getattr(old, "columns", [])):
             force_full = True
+        if name == "fred_fiscal_nipa" and old is not None and len(old):
+            if "W780RC1Q027SBEA" not in getattr(old, "columns", []):
+                force_full = True
         if name == "fred_policy_rates" and old is not None and len(old):
             d5 = pd.to_numeric(old.get("DGS5"), errors="coerce") if "DGS5" in old.columns else pd.Series(dtype=float)
             if d5.empty or d5.notna().mean() < 0.8:
@@ -1141,7 +1141,19 @@ def calculate_metrics(
     interest_over_tax = (100.0 * interest / tax_receipts).rename(
         "interest_pct_of_tax_receipts"
     )
-    metric_2 = _frame(interest_over_receipts, interest_over_tax, interest.rename("interest_bn_saar"), receipts.rename("current_receipts_bn_saar"))
+    si = _col(nipa, "W780RC1Q027SBEA")
+    gf = (receipts - si).rename("gf_receipts_bn_saar")
+    gf = gf.where(gf > 0)
+    interest_over_gf = (100.0 * interest / gf).rename("interest_pct_of_gf_receipts")
+    metric_2 = _frame(
+        interest_over_gf,
+        interest_over_receipts,
+        interest_over_tax,
+        interest.rename("interest_bn_saar"),
+        receipts.rename("current_receipts_bn_saar"),
+        si.rename("social_insurance_contrib_bn_saar"),
+        gf,
+    )
 
     # primary deficit = (outlays net of interest) - receipts; positive = deficit
     primary_bn = ((exp - interest) - receipts).rename("primary_deficit_bn_saar")
@@ -1158,7 +1170,7 @@ def calculate_metrics(
     metrics = {
         "01_funds_equals_fiscal_rate": metric_1.dropna(how="all"),
         "02_interest_share_of_receipts": _keep_where(
-            metric_2, "interest_pct_of_current_receipts"
+            metric_2, "interest_pct_of_gf_receipts"
         ),
         "03_primary_deficit_not_in_hole": _keep_where(
             metric_3, "primary_deficit_pct_gdp"

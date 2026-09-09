@@ -44,7 +44,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/A091RC1Q027SBEA",
     official:
       "BEA NIPA account code A091RC. Federal current expenditures that are interest payments, seasonally adjusted annual rate.",
-    why: "Numerator for F2 (interest / receipts) and for the effective coupon in F1 and r−g (interest ÷ debt stock).",
+    why: "NIPA federal-sector interest. Intra-gov specials are consolidated out, so this is the coupon paid to the rest of the economy — the F2 numerator.",
   },
   FGRECPT: {
     title: "Federal Government Current Receipts",
@@ -52,8 +52,8 @@ window.COLUMN_NOTES = {
     units: "Billions of dollars, quarterly SAAR",
     url: "https://fred.stlouisfed.org/series/FGRECPT",
     official:
-      "NIPA federal current receipts, seasonally adjusted annual rate. The till: taxes plus other current receipts.",
-    why: "Denominator of F2. A 100bp coupon step is a program only relative to what actually comes in.",
+      "NIPA federal current receipts, seasonally adjusted annual rate. Taxes plus social-insurance contributions plus other current receipts.",
+    why: "Unified current-receipts envelope. F2 subtracts W780 from this to get general-fund receipts.",
   },
   W006RC1Q027SBEA: {
     title: "Federal government current tax receipts",
@@ -62,7 +62,16 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/W006RC1Q027SBEA",
     official:
       "BEA NIPA federal current tax receipts only (excludes some non-tax current receipts in FGRECPT).",
-    why: "Narrower till. Side column so F2 is not an artifact of non-tax receipts.",
+    why: "Diagnostic. Narrower than the general-fund till (drops Fed remittances / miscellaneous).",
+  },
+  W780RC1Q027SBEA: {
+    title: "Federal government current receipts: Contributions for government social insurance",
+    source: "U.S. Bureau of Economic Analysis",
+    units: "Billions of dollars, quarterly SAAR",
+    url: "https://fred.stlouisfed.org/series/W780RC1Q027SBEA",
+    official:
+      "BEA NIPA account code W780RC. Federal current receipts that are contributions for government social insurance, seasonally adjusted annual rate. Same Table 3.2 vintage as FGRECPT.",
+    why: "Subtracted from FGRECPT to form the general-fund till. While OASI is cash-negative, this inflow is not spare capacity for the public coupon.",
   },
   FGEXPND: {
     title: "Federal Government Current Expenditures",
