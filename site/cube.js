@@ -1,5 +1,21 @@
 const DATA = "data/published/cubes.json";
 
+const ZONE_FALLBACK = {
+  debt_gdp_warn: 100,
+  debt_gdp_death: 140,
+  int_rec_warn: 20,
+  int_rec_death: 30,
+  int_tax_warn: 25,
+  int_tax_death: 40,
+  refi_gap_warn: 0.75,
+  refi_gap_death: 1.0,
+};
+
+function znum(zone, key) {
+  const v = Number(zone && zone[key]);
+  return Number.isFinite(v) ? v : ZONE_FALLBACK[key];
+}
+
 function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
   const edges = [
     [[xmin, ymin, zmin], [xmax, ymin, zmin]],
@@ -105,8 +121,12 @@ function winAll(vals) {
 
 function sustainTraces(rows, zone, burden) {
   const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
-  const ywarn = burden === "tax" ? zone.int_tax_warn : zone.int_rec_warn;
-  const ydeath = burden === "tax" ? zone.int_tax_death : zone.int_rec_death;
+  const ywarn = znum(zone, burden === "tax" ? "int_tax_warn" : "int_rec_warn");
+  const ydeath = znum(zone, burden === "tax" ? "int_tax_death" : "int_rec_death");
+  const xwarn = znum(zone, "debt_gdp_warn");
+  const xdeath = znum(zone, "debt_gdp_death");
+  const zwarn = znum(zone, "refi_gap_warn");
+  const zdeath = znum(zone, "refi_gap_death");
   const stressCol = burden === "tax" ? "stress_tax" : "stress_rec";
   const distW = burden === "tax" ? "dist_warn_tax" : "dist_warn_rec";
   const distD = burden === "tax" ? "dist_death_tax" : "dist_death_rec";
@@ -121,14 +141,14 @@ function sustainTraces(rows, zone, burden) {
   );
   const last = rows[rows.length - 1];
   const xmin = Math.min(0, ...rows.map((r) => Number(r.debt_gdp_pct)).filter(Number.isFinite));
-  const xmax = Math.max(200, zone.debt_gdp_death || 140, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
+  const xmax = Math.max(200, xdeath, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
   const ymin = Math.min(10, ...rows.map((r) => Number(r[ycol])).filter(Number.isFinite));
   const ymax = Math.max(ydeath + 8, ...rows.map((r) => r[ycol]), 0) + 3;
-  const zmax = Math.max(5, zone.refi_gap_death || 1, ...rows.map((r) => r.refi_gap), 0) + 0.4;
+  const zmax = Math.max(5, zdeath, ...rows.map((r) => r.refi_gap), 0) + 0.4;
   const zmin = Math.min(-2, ...rows.map((r) => r.refi_gap), 0) - 0.3;
   const traces = [
-    wire(zone.debt_gdp_warn, xmax, ywarn, ymax, zone.refi_gap_warn, zmax, "#ffbf00", "Danger Zone", 3),
-    wire(zone.debt_gdp_death, xmax, ydeath, ymax, zone.refi_gap_death, zmax, "#ff2bd6", "Restructuring Zone", 4),
+    wire(xwarn, xmax, ywarn, ymax, zwarn, zmax, "#c4a35a", "Danger Zone", 5),
+    wire(xdeath, xmax, ydeath, ymax, zdeath, zmax, "#ff2bd6", "Restructuring Zone", 5),
     {
       type: "scatter3d",
       x: rows.map((r) => r.debt_gdp_pct),
