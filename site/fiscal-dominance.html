@@ -53,16 +53,18 @@
 
 <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
   <div style="order: 1; display: flex; gap: 10px; flex-shrink: 0; align-items: center; flex-wrap: wrap;">
-    <button class="neon-btn active" type="button" id="btn-rec">receipts</button>
-    <button class="neon-btn" type="button" id="btn-tax">tax</button>
+    <button class="neon-btn" type="button" id="btn-rec">receipts</button>
+    <button class="neon-btn active" type="button" id="btn-tax">tax</button>
     <label class="switch" for="tog-rates">
-      <input type="checkbox" id="tog-rates"/>
+      <input type="checkbox" id="tog-rates" checked/>
       <span class="track"></span>
       rate decisions
     </label>
   </div>
   <span style="order: 2; flex: 1; font-size: 0.85rem; line-height: 1.4; color: #9fb3c8;">
-    Toggle interest / tax vs interest / receipts. Tax is NIPA current tax receipts
+    Default view is tax till with rate decisions on: that is where the
+    interior is nonempty. Receipts till (the larger envelope) has had
+    no interior quarters in this window. Tax is NIPA current tax receipts
     (<a href="https://fred.stlouisfed.org/series/W006RC1Q027SBEA">W006RC1Q027SBEA</a>).
     Receipts is NIPA current receipts
     (<a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>)
@@ -97,7 +99,24 @@
 </section>
 
 <section>
-  <h2>02  /  each axis</h2>
+  <h2>02  /  Distance and FOMC Δ</h2>
+  <p class="sub">
+    Same signed σ-distance as in 01 (negative = inside, 0 = the magenta
+    face), plotted against quarterly net FOMC Δ. Default puts distance
+    on y. Toggle to put Δ on y. Missing FOMC prints are omitted, not
+    plotted as a hold. Magenta ring = inside the box. Receipts / tax
+    moves F2, so the cloud can shift with the till.
+  </p>
+  <div class="toolbar" style="display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap;">
+    <button class="neon-btn active" type="button" id="btn-y-dist">y: distance</button>
+    <button class="neon-btn" type="button" id="btn-y-delta">y: FOMC Δ</button>
+    <span style="font-size:0.85rem;color:#9fb3c8;">Distance is the 01 series, not a new metric.</span>
+  </div>
+  <div id="fd-delta-plot"></div>
+</section>
+
+<section>
+  <h2>03  /  each axis</h2>
 
   <article class="axis-block">
     <h3 class="axis-head">1  ·  y(funds − book coupon)</h3>

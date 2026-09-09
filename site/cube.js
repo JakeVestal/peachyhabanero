@@ -394,18 +394,35 @@ function renderFdIndicator(rows, tax) {
   const till = tax ? "tax" : "receipts";
   const otherTill = tax ? "receipts" : "tax";
   const f2key = tax ? "F2_tax" : "F2_rec";
-  function line(r) {
-    const k = rateKind(r);
+  const hikeDates = cur.hike.map((r) => {
     const v = rateAdj(r);
-    const d = v == null ? "" : ` ${v > 0 ? "+" : ""}${v.toFixed(2)}pp`;
-    return `${r.date} ${k}${d}  F1=${num(r, "F1").toFixed(2)} F2=${num(r, f2key).toFixed(2)} F3=${num(r, "F3").toFixed(2)}`;
-  }
-  const dates = cur.inside.map(line).join("<br>");
+    const sign = v > 0 ? "+" : "";
+    return `${r.date} (${sign}${Number(v).toFixed(2)} pp)`;
+  });
+  const cols = ["date","till","action","rate_adjust_pp","target_end","F1","F2","F3","funds_minus_stock","int_rec_pct","int_tax_pct","primary_deficit_pct_gdp"];
+  const csvLines = [cols.join(",")];
+  cur.inside.forEach((r) => {
+    const adj = rateAdj(r);
+    const cell = (v) => {
+      if (v == null || v === "") return "";
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    csvLines.push([
+      r.date, till, rateKind(r),
+      adj == null ? "" : adj,
+      r.target_end == null ? "" : r.target_end,
+      num(r, "F1"), num(r, f2key), num(r, "F3"),
+      r.funds_minus_stock, r.int_rec_pct, r.int_tax_pct, r.primary_deficit_pct_gdp,
+    ].map(cell).join(","));
+  });
+  if (el._csvUrl) URL.revokeObjectURL(el._csvUrl);
+  el._csvUrl = URL.createObjectURL(new Blob([csvLines.join("\n")], { type: "text/csv" }));
   el.innerHTML =
     `<h3>Did they hike from inside?</h3>` +
     `<p class="punch"><b class="hike">${cur.hike.length}</b> hike${cur.hike.length === 1 ? "" : "s"}` +
     ` from <b class="n">${cur.n}</b> interior quarter${cur.n === 1 ? "" : "s"}` +
-    ` <span style="color:#9fb3c8">(${till} till, same test as the cube: F1>0 and F2>0 and F3>0)</span></p>` +
+    ` <span style="color:#9fb3c8">(${till} till)</span></p>` +
     `<p class="breakdown">` +
     `<span class="hike">${cur.hike.length} hike</span> · ` +
     `<span class="cut">${cur.cut.length} cut</span> · ` +
@@ -415,7 +432,8 @@ function renderFdIndicator(rows, tax) {
     `</p>` +
     `<p class="alt">${otherTill} till: ${other.n} inside, ${other.hike.length} hike${other.hike.length === 1 ? "" : "s"}` +
     `${other.hike.length ? " — " + other.hike.map((r) => r.date).join(", ") : ""}</p>` +
-    (dates ? `<p class="dates">${dates}</p>` : `<p class="dates">no interior quarters on this till</p>`);
+    (hikeDates.length ? `<p class="dates">inside hikes: ${hikeDates.join(" · ")}</p>` : "") +
+    `<p class="dl"><a download="fd-interior-${till}.csv" href="${el._csvUrl}">download interior quarters (csv)</a></p>`;
 }
 
 function drawDist(el, rows, tax) {
@@ -554,6 +572,118 @@ function drawFdDist(el, rows, tax) {
   }, { responsive: true, displaylogo: false });
 }
 
+function drawFdDeltaVsDist(el, rows, tax, yIsDistance) {
+  const mag = "#ff2bd6";
+  const f2key = tax ? "F2_tax" : "F2_rec";
+  const groups = [
+    { k: "hold", color: "#00f0ff", symbol: "circle", size: 8, name: "hold" },
+    { k: "hike", color: "#39ff14", symbol: "triangle-up", size: 12, name: "hike" },
+    { k: "cut", color: "#ff4d4d", symbol: "triangle-down", size: 12, name: "cut" },
+  ];
+  function xy(d, adj) {
+    return yIsDistance ? { x: adj, y: d } : { x: d, y: adj };
+  }
+  const traces = groups.map((g) => {
+    const xs = [];
+    const ys = [];
+    const tips = [];
+    rows.forEach((r) => {
+      if (rateKind(r) !== g.k) return;
+      const d = signedDistOctant(r.F1, r[f2key], r.F3);
+      const adj = rateAdj(r);
+      if (!Number.isFinite(d) || adj == null) return;
+      const p = xy(d, adj);
+      xs.push(p.x);
+      ys.push(p.y);
+      const inn = isInside(r, f2key);
+      const tgt = Number(r.target_end);
+      const tgtBit = Number.isFinite(tgt) ? `  target ${tgt.toFixed(2)}%` : "";
+      tips.push(
+        `${inn ? "<b>INSIDE</b> " : ""}${r.date}<br>` +
+        `distance ${d.toFixed(2)}  (0 = face, same as 01)<br>` +
+        `FOMC Δ ${adj > 0 ? "+" : ""}${adj.toFixed(2)} pp (${g.k})${tgtBit}<br>` +
+        `F1=${num(r, "F1").toFixed(2)}  F2=${num(r, f2key).toFixed(2)}  F3=${num(r, "F3").toFixed(2)}`
+      );
+    });
+    return {
+      type: "scatter",
+      mode: "markers",
+      x: xs, y: ys, name: g.name,
+      text: tips, hoverinfo: "text",
+      marker: { color: g.color, size: g.size, symbol: g.symbol, line: { color: g.color, width: 1 } },
+    };
+  });
+  const ix = [];
+  const iy = [];
+  rows.forEach((r) => {
+    if (rateKind(r) === "missing") return;
+    if (!isInside(r, f2key)) return;
+    const d = signedDistOctant(r.F1, r[f2key], r.F3);
+    const adj = rateAdj(r);
+    if (!Number.isFinite(d) || adj == null) return;
+    const p = xy(d, adj);
+    ix.push(p.x);
+    iy.push(p.y);
+  });
+  if (ix.length) {
+    traces.push({
+      type: "scatter",
+      mode: "markers",
+      x: ix, y: iy, name: "inside",
+      hoverinfo: "skip",
+      marker: {
+        color: "rgba(0,0,0,0)",
+        size: 14,
+        symbol: "circle",
+        line: { color: mag, width: 2 },
+      },
+    });
+  }
+  const node = document.getElementById(el);
+  const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
+  const distAxis = {
+    title: { text: "signed distance (σ), same as 01.  0 = face", font: { size: 11, color: "#9fb3c8" } },
+    gridcolor: "rgba(196,163,90,0.12)",
+    zeroline: false,
+  };
+  const deltaAxis = {
+    title: { text: "quarterly net FOMC Δ (pp)", font: { size: 11, color: "#9fb3c8" } },
+    gridcolor: "rgba(196,163,90,0.12)",
+    zeroline: false,
+  };
+  return Plotly.newPlot(el, traces, {
+    title: {
+      text: yIsDistance
+        ? "Distance (01) vs FOMC Δ. Below 0 = inside."
+        : "FOMC Δ vs distance. Left of 0 = inside.",
+      font: { size: 14, color: "#00f0ff" },
+    },
+    paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
+    font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
+    margin: { l: 56, r: 16, t: 52, b: 48 },
+    autosize: true,
+    height: 420,
+    width: w || undefined,
+    xaxis: yIsDistance ? deltaAxis : distAxis,
+    yaxis: yIsDistance ? distAxis : deltaAxis,
+    shapes: yIsDistance
+      ? [
+          { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1.5, dash: "dot" } },
+          { type: "line", yref: "paper", y0: 0, y1: 1, x0: 0, x1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } },
+        ]
+      : [
+          { type: "line", yref: "paper", y0: 0, y1: 1, x0: 0, x1: 0, line: { color: mag, width: 1.5, dash: "dot" } },
+          { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } },
+        ],
+    legend: {
+      font: { size: 10, color: "#9fb3c8" },
+      bgcolor: "rgba(7,8,12,0.55)",
+      orientation: "h",
+      x: 0.5, xanchor: "center", y: 1.02, yanchor: "bottom",
+    },
+  }, { responsive: true, displaylogo: false });
+}
+
 
 function hline(y, color) {
   return {
@@ -666,8 +796,9 @@ async function main() {
   }
 
   const opts = { responsive: true, displaylogo: false };
-  let tax = false;
-  let showRates = false;
+  let tax = Boolean($("btn-tax") && $("btn-tax").classList.contains("active"));
+  let showRates = Boolean($("tog-rates") && $("tog-rates").checked);
+  let yIsDistance = !($("btn-y-delta") && $("btn-y-delta").classList.contains("active"));
 
   function sustainLayout(burden) {
     return layout3d(
@@ -729,6 +860,7 @@ async function main() {
   await drawSustain();
   if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax);
   if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax);
+  if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail, tax, yIsDistance);
   drawSixAxes(sus, fail, zone, tax);
 
   function setBurden(next) {
@@ -746,9 +878,20 @@ async function main() {
       } catch (e) { /* plot not on this page */ }
     }
     if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax);
+    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, tax, yIsDistance);
   }
   if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
   if ($("btn-rec")) $("btn-rec").onclick = () => setBurden(false);
+  function setYMode(dist) {
+    yIsDistance = dist;
+    const bd = $("btn-y-dist");
+    const be = $("btn-y-delta");
+    if (bd) bd.classList.toggle("active", dist);
+    if (be) be.classList.toggle("active", !dist);
+    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, tax, yIsDistance);
+  }
+  if ($("btn-y-dist")) $("btn-y-dist").onclick = () => setYMode(true);
+  if ($("btn-y-delta")) $("btn-y-delta").onclick = () => setYMode(false);
   const rateTog = $("tog-rates");
   if (rateTog) {
     showRates = Boolean(rateTog.checked);

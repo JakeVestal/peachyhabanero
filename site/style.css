@@ -291,7 +291,7 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
   .axis-row { flex-wrap: wrap; }
   .axis-plot { flex-basis: var(--axis-plot-w); }
 }
-#cube-sustain, #cube-fail, #dist-plot, #fd-dist-plot {
+#cube-sustain, #cube-fail, #dist-plot, #fd-dist-plot, #fd-delta-plot {
   background: var(--panel);
   border: 1px solid var(--gold-dim);
   border-radius: 10px;
@@ -436,12 +436,13 @@ a.analysis-card:hover { border-color: var(--cyan); }
 }
 .fd-indicator .dates {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 12px;
-  color: #9fb3c8;
+  font-size: 13px;
+  color: #39ff14;
   margin: 8px 0 0;
-  line-height: 1.55;
-  max-height: 240px;
-  overflow: auto;
+}
+.fd-indicator .dl {
+  margin: 8px 0 0;
+  font-size: 13px;
 }
 .page-sus .axis-copy p,
 .page-fd .axis-copy p {
@@ -468,7 +469,8 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .page-sus #dist-plot,
 .page-fd .cube-wrap,
 .page-fd #cube-fail,
-.page-fd #fd-dist-plot {
+.page-fd #fd-dist-plot,
+.page-fd #fd-delta-plot {
   max-width: none;
   width: 100%;
 }
