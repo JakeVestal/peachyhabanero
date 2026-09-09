@@ -241,7 +241,7 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
   .axis-row { flex-wrap: wrap; }
   .axis-plot { flex-basis: var(--axis-plot-w); }
 }
-#cube-sustain, #cube-fail, #dist-plot {
+#cube-sustain, #cube-fail, #dist-plot, #fd-dist-plot {
   background: var(--panel);
   border: 1px solid var(--gold-dim);
   border-radius: 10px;
@@ -381,7 +381,8 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .page-sus #cube-sustain,
 .page-sus #dist-plot,
 .page-fd .cube-wrap,
-.page-fd #cube-fail {
+.page-fd #cube-fail,
+.page-fd #fd-dist-plot {
   max-width: none;
   width: 100%;
 }

@@ -312,6 +312,48 @@ function drawDist(el, rows, tax) {
   }, { responsive: true, displaylogo: false });
 }
 
+function signedDistOctant(f1, f2, f3) {
+  const d = [Number(f1), Number(f2), Number(f3)];
+  if (d.some((v) => !Number.isFinite(v))) return null;
+  const short = d.map((v) => Math.max(0, -v));
+  if (short.some((v) => v > 0)) return Math.hypot(short[0], short[1], short[2]);
+  return -Math.min(d[0], d[1], d[2]);
+}
+
+function drawFdDist(el, rows, tax) {
+  const mag = "#ff2bd6";
+  const rec = rows.map((r) => signedDistOctant(r.F1, r.F2_rec, r.F3));
+  const tx = rows.map((r) => signedDistOctant(r.F1, r.F2_tax, r.F3));
+  const xs = rows.map((r) => r.date);
+  const traces = [
+    { x: xs, y: tx, name: "distance (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
+    { x: xs, y: rec, name: "distance (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+  ];
+  const node = document.getElementById(el);
+  const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
+  return Plotly.newPlot(el, traces, {
+    title: { text: "σ-space distance. 0 = face of the fiscal-dominance octant.", font: { size: 14, color: "#00f0ff" } },
+    paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
+    font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
+    margin: { l: 48, r: 16, t: 44, b: 36 },
+    autosize: true,
+    height: 340,
+    width: w || undefined,
+    xaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
+    yaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
+    shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1, dash: "dot" } }],
+    legend: {
+      font: { size: 10, color: "#9fb3c8" },
+      bgcolor: "rgba(7,8,12,0.55)",
+      orientation: "h",
+      x: 0.5,
+      xanchor: "center",
+      y: 0.95,
+      yanchor: "bottom",
+    },
+  }, { responsive: true, displaylogo: false });
+}
+
 
 function hline(y, color) {
   return {
@@ -463,6 +505,7 @@ async function main() {
   await drawFail();
   await drawSustain();
   if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax);
+  if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax);
   drawSixAxes(sus, fail, zone, tax);
 
   function setBurden(next) {
@@ -477,6 +520,11 @@ async function main() {
     if ($("dist-plot")) {
       try {
         Plotly.restyle("dist-plot", { visible: tax ? [true, true, false, false] : [false, false, true, true] });
+      } catch (e) { /* plot not on this page */ }
+    }
+    if ($("fd-dist-plot")) {
+      try {
+        Plotly.restyle("fd-dist-plot", { visible: tax ? [true, false] : [false, true] });
       } catch (e) { /* plot not on this page */ }
     }
   }
