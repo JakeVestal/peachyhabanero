@@ -101,6 +101,40 @@ function keepCamera(id, layout) {
   return layout;
 }
 
+function armCubeScroll(id) {
+  const plot = document.getElementById(id);
+  if (!plot || plot.dataset.scrollArmed === "1") return;
+  plot.dataset.scrollArmed = "1";
+  const wrap = plot.closest(".cube-wrap") || plot.parentElement;
+  wrap.classList.add("cube-wrap");
+
+  plot.addEventListener("wheel", (e) => {
+    e.stopImmediatePropagation();
+  }, { capture: true, passive: true });
+
+  let shield = wrap.querySelector(".cube-shield");
+  if (!shield) {
+    shield = document.createElement("button");
+    shield.type = "button";
+    shield.className = "cube-shield";
+    shield.setAttribute("aria-label", "Click to rotate the cube. Scroll still moves the page.");
+    shield.innerHTML = "<span>click to rotate</span>";
+    wrap.appendChild(shield);
+  }
+
+  const lock = () => wrap.classList.remove("is-live");
+  const unlock = () => wrap.classList.add("is-live");
+  shield.addEventListener("click", (e) => {
+    e.preventDefault();
+    unlock();
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (!wrap.classList.contains("is-live")) return;
+    if (wrap.contains(e.target)) return;
+    lock();
+  });
+}
+
 function win(vals) {
   const s = vals.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
   if (!s.length) return [-0.2, 1];
@@ -245,30 +279,37 @@ function failTraces(rows, tax) {
 }
 
 function drawDist(el, rows, tax) {
+  const gold = "#c4a35a";
+  const mag = "#ff2bd6";
   const traces = [
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_tax), name: "dist_warn (tax)", line: { color: "#ffbf00", width: 2 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_tax), name: "dist_death (tax)", line: { color: "#ff2bd6", width: 2 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_rec), name: "dist_warn (receipts)", line: { color: "#00f0ff", width: 2 }, type: "scatter", mode: "lines", visible: !tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_rec), name: "dist_death (receipts)", line: { color: "#7aa2ff", width: 2 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_tax), name: "Danger (tax)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_tax), name: "Restructuring (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_rec), name: "Danger (receipts)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_rec), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
   ];
+  const node = document.getElementById(el);
+  const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
   return Plotly.newPlot(el, traces, {
-    title: { text: "Score-space distance. 1 = warn face, 2 = death face.", font: { size: 14, color: "#00f0ff" } },
+    title: { text: "Score-space distance. 1 = danger face, 2 = restructure face.", font: { size: 14, color: "#00f0ff" } },
     paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
-    margin: { l: 48, r: 16, t: 44, b: 36 }, height: 300,
+    margin: { l: 48, r: 16, t: 44, b: 36 },
+    autosize: true,
+    height: 340,
+    width: w || undefined,
     xaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     yaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
     shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: "rgba(232,246,255,0.35)", width: 1, dash: "dot" } }],
     legend: {
       font: { size: 10, color: "#9fb3c8" },
       bgcolor: "rgba(7,8,12,0.55)",
-      orientation: 'h',
+      orientation: "h",
       x: 0.5,
-      xanchor: 'center',
+      xanchor: "center",
       y: 0.95,
-      yanchor: 'bottom'
+      yanchor: "bottom",
     },
-  }, { responsive: false, displaylogo: false });
+  }, { responsive: true, displaylogo: false });
 }
 
 
@@ -295,8 +336,8 @@ function drawRawAxis(el, rows, col, title, color, wires) {
   }
   const box = node;
   const cs = window.getComputedStyle(box);
-  const w = Math.round(parseFloat(cs.width)) || 680;
-  const h = Math.round(parseFloat(cs.height)) || 340;
+  const w = Math.round(box.clientWidth || parseFloat(cs.width)) || 680;
+  const h = Math.round(box.clientHeight || parseFloat(cs.height)) || 340;
   return Plotly.newPlot(el, [{
     type: "scatter", mode: "lines",
     x: xs, y: ys, name: col,
@@ -306,14 +347,15 @@ function drawRawAxis(el, rows, col, title, color, wires) {
     paper_bgcolor: "#07080c",
     plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 10 },
-    margin: { l: 44, r: 8, t: 36, b: 28 },
+    margin: { l: 44, r: 16, t: 36, b: 28 },
+    autosize: true,
     height: h,
     width: w,
     showlegend: false,
     xaxis: { gridcolor: "rgba(196,163,90,0.12)", zeroline: false },
     yaxis: { gridcolor: "rgba(196,163,90,0.12)", zeroline: false },
     shapes: wires || [],
-  }, { responsive: false, displaylogo: false, staticPlot: false });
+  }, { responsive: true, displaylogo: false, staticPlot: false });
 }
 
 function drawSixAxes(sus, fail, zone, tax) {
@@ -398,6 +440,7 @@ async function main() {
       )
     );
     await Plotly.react("cube-sustain", drawn.traces, layout, opts);
+    armCubeScroll("cube-sustain");
   }
 
   async function drawFail() {
@@ -414,6 +457,7 @@ async function main() {
       { x: [ft.lo, ft.hi], y: [ft.lo, ft.hi], z: [ft.lo, ft.hi] }
     ));
     await Plotly.react("cube-fail", ft.traces, layout, opts);
+    armCubeScroll("cube-fail");
   }
 
   await drawFail();

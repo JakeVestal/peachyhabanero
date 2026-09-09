@@ -21,6 +21,46 @@ html, body {
   color: var(--ink);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
+a {
+  color: #b8fbff;
+  background: rgba(0, 240, 255, 0.16);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.5);
+  padding: 0 0.22em;
+  margin: 0 0.04em;
+  border-radius: 3px;
+  text-decoration: none;
+}
+a:hover {
+  color: #07080c;
+  background: #00f0ff;
+  border-bottom-color: #00f0ff;
+}
+.navline a,
+.socials a,
+footer a {
+  background: none;
+  border-bottom: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+}
+.navline a { color: #00f0ff; }
+.navline a:hover,
+.socials a:hover,
+footer a:hover {
+  color: #ff2bd6;
+  background: none;
+}
+.gh-badge,
+a.analysis-card {
+  background: none;
+  border-bottom: none;
+  margin: 0;
+}
+a.analysis-card:hover {
+  background: none;
+  color: inherit;
+}
 header, footer, section, nav { padding-left: 28px; padding-right: 28px; }
 header {
   padding-top: 28px;
@@ -153,6 +193,7 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
   margin: 8px 0 28px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--gold-faint);
+  scroll-margin-top: 20px;
 }
 .axis-head {
   margin: 0 0 12px;
@@ -290,3 +331,116 @@ a.analysis-card:hover { border-color: var(--cyan); }
   opacity: 0.55;
   cursor: default;
 }
+
+/* Cube pages: stacked axis blocks, full page width */
+.page-sus .sub,
+.page-fd .sub {
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: none;
+}
+.page-sus .col-card,
+.page-fd .col-card {
+  max-width: none;
+  width: 100%;
+  padding: 16px 18px;
+}
+.page-sus .col-card h3,
+.page-fd .col-card h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.page-sus .col-card p,
+.page-sus .col-card .why,
+.page-fd .col-card p,
+.page-fd .col-card .why {
+  font-size: 16px;
+  line-height: 1.7;
+}
+.page-sus .axis-copy p,
+.page-fd .axis-copy p {
+  font-size: 16px;
+  line-height: 1.7;
+}
+.page-sus .axis-copy .stat,
+.page-fd .axis-copy .stat {
+  font-size: 15px;
+}
+.page-sus h2,
+.page-fd h2 {
+  font-size: 16px;
+}
+.page-sus .toolbar,
+.page-fd .toolbar {
+  max-width: none;
+  width: calc(100% - 56px);
+  margin: 0 28px 10px;
+  box-sizing: border-box;
+}
+.page-sus .cube-wrap,
+.page-sus #cube-sustain,
+.page-sus #dist-plot,
+.page-fd .cube-wrap,
+.page-fd #cube-fail {
+  max-width: none;
+  width: 100%;
+}
+.page-sus .axis-row,
+.page-fd .axis-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.page-sus .axis-plot,
+.page-fd .axis-plot {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  height: var(--axis-plot-h);
+}
+.page-sus .axis-plot .js-plotly-plot,
+.page-sus .axis-plot .plot-container,
+.page-sus .axis-plot .svg-container,
+.page-fd .axis-plot .js-plotly-plot,
+.page-fd .axis-plot .plot-container,
+.page-fd .axis-plot .svg-container {
+  width: 100% !important;
+  height: var(--axis-plot-h) !important;
+}
+.page-sus .axis-copy,
+.page-fd .axis-copy {
+  flex: none;
+  width: 100%;
+}
+.cube-wrap { position: relative; }
+.cube-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: grab;
+  touch-action: pan-y;
+  color: inherit;
+}
+.cube-shield span {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #9fb3c8;
+  background: rgba(7, 8, 12, 0.72);
+  border: 1px solid var(--gold-dim);
+  border-radius: 999px;
+  padding: 4px 10px;
+  pointer-events: none;
+}
+.cube-wrap.is-live .cube-shield {
+  display: none;
+}
+
