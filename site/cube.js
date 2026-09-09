@@ -106,27 +106,29 @@ function winAll(vals) {
 function sustainTraces(rows, zone, burden) {
   const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
   const ywarn = burden === "tax" ? zone.int_tax_warn : zone.int_rec_warn;
-  const yrestruct = burden === "tax" ? zone.int_tax_restruct : zone.int_rec_restruct;
+  const ydeath = burden === "tax" ? zone.int_tax_death : zone.int_rec_death;
   const stressCol = burden === "tax" ? "stress_tax" : "stress_rec";
   const distW = burden === "tax" ? "dist_warn_tax" : "dist_warn_rec";
-  const distD = burden === "tax" ? "dist_restruct_tax" : "dist_restruct_rec";
+  const distD = burden === "tax" ? "dist_death_tax" : "dist_death_rec";
   const hover = rows.map((r) =>
     `${r.date}<br>` +
     `debt/GDP ${Number(r.debt_gdp_pct).toFixed(1)}%<br>` +
     `int/rec ${Number(r.int_rec_pct).toFixed(1)}%  int/tax ${Number(r.int_tax_pct).toFixed(1)}%<br>` +
     `refi gap ${Number(r.refi_gap) >= 0 ? "+" : ""}${Number(r.refi_gap).toFixed(2)} pp<br>` +
     `dist_warn ${Number(r[distW]) >= 0 ? "+" : ""}${Number(r[distW]).toFixed(2)}  ` +
-    `dist_restruct ${Number(r[distD]) >= 0 ? "+" : ""}${Number(r[distD]).toFixed(2)}<br>` +
+    `dist_death ${Number(r[distD]) >= 0 ? "+" : ""}${Number(r[distD]).toFixed(2)}<br>` +
     `stress ${Number(r[stressCol]).toFixed(2)} (color only; int/GDP sleeve is not an axis)`
   );
   const last = rows[rows.length - 1];
-  const xmax = Math.max(200, ...rows.map((r) => r.debt_gdp_pct), 0) + 5;
-  const ymax = Math.max(yrestruct + 8, ...rows.map((r) => r[ycol]), 0) + 3;
-  const zmax = Math.max(5, ...rows.map((r) => r.refi_gap), 0) + 0.3;
-  const zmin = Math.min(-1, ...rows.map((r) => r.refi_gap), 0) - 0.2;
-  return [
+  const xmin = Math.min(0, ...rows.map((r) => Number(r.debt_gdp_pct)).filter(Number.isFinite));
+  const xmax = Math.max(200, zone.debt_gdp_death || 140, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
+  const ymin = Math.min(10, ...rows.map((r) => Number(r[ycol])).filter(Number.isFinite));
+  const ymax = Math.max(ydeath + 8, ...rows.map((r) => r[ycol]), 0) + 3;
+  const zmax = Math.max(5, zone.refi_gap_death || 1, ...rows.map((r) => r.refi_gap), 0) + 0.4;
+  const zmin = Math.min(-2, ...rows.map((r) => r.refi_gap), 0) - 0.3;
+  const traces = [
     wire(zone.debt_gdp_warn, xmax, ywarn, ymax, zone.refi_gap_warn, zmax, "#ffbf00", "Danger Zone", 3),
-    wire(zone.debt_gdp_restruct, xmax, yrestruct, ymax, zone.refi_gap_restruct, zmax, "#ff2bd6", "Restructuring Zone", 4),
+    wire(zone.debt_gdp_death, xmax, ydeath, ymax, zone.refi_gap_death, zmax, "#ff2bd6", "Restructuring Zone", 4),
     {
       type: "scatter3d",
       x: rows.map((r) => r.debt_gdp_pct),
@@ -156,6 +158,14 @@ function sustainTraces(rows, zone, burden) {
       name: `latest ${last.date}`,
     },
   ];
+  return {
+    traces,
+    ranges: {
+      x: [xmin, xmax],
+      y: [ymin, ymax],
+      z: [zmin, zmax],
+    },
+  };
 }
 
 function failTraces(rows, tax) {
@@ -217,12 +227,12 @@ function failTraces(rows, tax) {
 function drawDist(el, rows, tax) {
   const traces = [
     { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_tax), name: "dist_warn (tax)", line: { color: "#ffbf00", width: 2 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_restruct_tax), name: "dist_restruct (tax)", line: { color: "#ff2bd6", width: 2 }, type: "scatter", mode: "lines", visible: tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_tax), name: "dist_death (tax)", line: { color: "#ff2bd6", width: 2 }, type: "scatter", mode: "lines", visible: tax },
     { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_rec), name: "dist_warn (receipts)", line: { color: "#00f0ff", width: 2 }, type: "scatter", mode: "lines", visible: !tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_restruct_rec), name: "dist_restruct (receipts)", line: { color: "#7aa2ff", width: 2 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_rec), name: "dist_death (receipts)", line: { color: "#7aa2ff", width: 2 }, type: "scatter", mode: "lines", visible: !tax },
   ];
   return Plotly.newPlot(el, traces, {
-    title: { text: "Score-space distance. 1 = warn face, 2 = restruct face.", font: { size: 14, color: "#00f0ff" } },
+    title: { text: "Score-space distance. 1 = warn face, 2 = death face.", font: { size: 14, color: "#00f0ff" } },
     paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
     margin: { l: 48, r: 16, t: 44, b: 36 }, height: 300,
@@ -292,14 +302,14 @@ function drawSixAxes(sus, fail, zone, tax) {
   const mag = "#ff2bd6";
   const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
   const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
-  const tillRestructuring = tax ? zone.int_tax_restruct : zone.int_rec_restruct;
+  const tillDeath = tax ? zone.int_tax_death : zone.int_rec_death;
   const tillName = tax ? "int / tax (%)" : "int / receipts (%)";
   drawRawAxis("ax-1", sus, tillCol, `${tillName}`, "#00f0ff",
-    [hline(tillWarn, gold), hline(tillRestructuring, mag)]);
+    [hline(tillWarn, gold), hline(tillDeath, mag)]);
   drawRawAxis("ax-2", sus, "refi_gap", "refi gap (pp)", "#ffbf00",
-    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)]);
+    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_death, mag)]);
   drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
-    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)]);
+    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_death, mag)]);
   const f2col = tax ? "F2_tax" : "F2_rec";
   const f2name = tax ? "F2  y(int/tax − 25%)" : "F2  y(int/receipts − 20%)";
   drawRawAxis("ax-4", sus, f2col, f2name, "#00f0ff",
@@ -310,34 +320,37 @@ function drawSixAxes(sus, fail, zone, tax) {
     [hline(0, mag)]);
 }
 
+function $(id) {
+  return document.getElementById(id);
+}
+
 async function main() {
-  const stamp = document.getElementById("stamp");
+  const stamp = $("stamp");
+  const wantSus = Boolean($("cube-sustain"));
+  const wantFail = Boolean($("cube-fail"));
   const res = await fetch(DATA);
   if (!res.ok) {
-    stamp.innerHTML = `<span class="err">${res.status} cubes.json — run python scripts/build_site_data.py --process</span>`;
+    if (stamp) stamp.innerHTML = `<span class="err">${res.status} cubes.json — run python scripts/build_site_data.py --process</span>`;
     return;
   }
   const pack = await res.json();
   const zone = pack.zone;
   const sus = (pack.sustain || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   const fail = (pack.fail || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  if (!sus.length || !fail.length) {
-    stamp.innerHTML = `<span class="err">cubes.json is empty — rerun --process after a fetch</span>`;
+  if ((wantSus && !sus.length) || (wantFail && !fail.length) || (!wantSus && !wantFail && !sus.length)) {
+    if (stamp) stamp.innerHTML = `<span class="err">cubes.json is empty — rerun --process after a fetch</span>`;
     return;
   }
-  const ls = sus[sus.length - 1];
-  const lf = fail[fail.length - 1];
-  const couponSrc = pack.coupon_source;
-  const restruct = zone && zone.refi_gap_restruct;
-  if (couponSrc !== "fiscal_data_marketable" || !Number.isFinite(Number(restruct))) {
-    stamp.innerHTML = `<span class="err">cubes.json missing coupon_source or zone.refi_gap_restruct — rerun --process</span>`;
+  const ls = (sus.length ? sus : fail)[(sus.length ? sus : fail).length - 1];
+  if (!zone) {
+    if (stamp) stamp.innerHTML = `<span class="err">cubes.json missing zone — rerun --process</span>`;
     return;
   }
-  const win = pack.sigma_window || {};
-  const mix = pack.refinance_rule || "w_bills = MSPD bills share; remainder 2:1 DGS2:DGS10";
-  stamp.innerHTML =
-      `<b>Latest data point: ${ls.date}</b><br>` +
-      `New points become available when BEA prints quarterly GDP.</p>`;
+  if (stamp) {
+    stamp.innerHTML =
+        `<b>Latest data point: ${ls.date}</b><br>` +
+        `New points become available when BEA prints quarterly GDP.`;
+  }
 
   const opts = { responsive: true, displaylogo: false };
   let tax = false;
@@ -352,11 +365,23 @@ async function main() {
   }
 
   async function drawSustain() {
-    const layout = keepCamera("cube-sustain", sustainLayout(tax ? "tax" : "rec"));
-    await Plotly.react("cube-sustain", sustainTraces(sus, zone, tax ? "tax" : "rec"), layout, opts);
+    if (!$("cube-sustain") || !sus.length) return;
+    const drawn = sustainTraces(sus, zone, tax ? "tax" : "rec");
+    const layout = keepCamera(
+      "cube-sustain",
+      layout3d(
+        "Sustainability Cube",
+        "Debt held by public / GDP (%)",
+        tax ? "Interest / tax (%)" : "Interest / receipts (%)",
+        "Refi gap  (marginal − stock, pp)",
+        drawn.ranges
+      )
+    );
+    await Plotly.react("cube-sustain", drawn.traces, layout, opts);
   }
 
   async function drawFail() {
+    if (!$("cube-fail") || !fail.length) return;
     const ft = failTraces(fail, tax);
     const f2title = tax
         ? "F2  y(interest / tax − 25%)"
@@ -373,22 +398,30 @@ async function main() {
 
   await drawFail();
   await drawSustain();
-  await drawDist("dist-plot", sus, tax);
+  if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax);
   drawSixAxes(sus, fail, zone, tax);
 
   function setBurden(next) {
     tax = next;
-    document.getElementById("btn-tax").classList.toggle("active", tax);
-    document.getElementById("btn-rec").classList.toggle("active", !tax);
+    const btnTax = $("btn-tax");
+    const btnRec = $("btn-rec");
+    if (btnTax) btnTax.classList.toggle("active", tax);
+    if (btnRec) btnRec.classList.toggle("active", !tax);
     drawSustain();
     drawFail();
     drawSixAxes(sus, fail, zone, tax);
-    Plotly.restyle("dist-plot", { visible: tax ? [true, true, false, false] : [false, false, true, true] });
+    if ($("dist-plot")) {
+      try {
+        Plotly.restyle("dist-plot", { visible: tax ? [true, true, false, false] : [false, false, true, true] });
+      } catch (e) { /* plot not on this page */ }
+    }
   }
-  document.getElementById("btn-tax").onclick = () => setBurden(true);
-  document.getElementById("btn-rec").onclick = () => setBurden(false);
+  if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
+  if ($("btn-rec")) $("btn-rec").onclick = () => setBurden(false);
 }
 
 main().catch((err) => {
-  document.getElementById("stamp").innerHTML = `<span class="err">${err.message}</span>`;
+  const stamp = document.getElementById("stamp");
+  if (stamp) stamp.innerHTML = `<span class="err">${err.message}</span>`;
+  else console.error(err);
 });
