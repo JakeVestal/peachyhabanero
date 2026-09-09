@@ -333,6 +333,49 @@ function failTraces(rows, tax, showRates) {
   return { traces, lo, hi, nAdj };
 }
 
+function insideCensus(rows, tax) {
+  const f2key = tax ? "F2_tax" : "F2_rec";
+  const inside = rows.filter((r) => r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0);
+  const hike = [];
+  const cut = [];
+  const hold = [];
+  inside.forEach((r) => {
+    const v = Number(r.rate_adjust);
+    if (Number.isFinite(v) && v > 0) hike.push(r);
+    else if (Number.isFinite(v) && v < 0) cut.push(r);
+    else hold.push(r);
+  });
+  return { n: inside.length, hike, cut, hold, last: inside[inside.length - 1] || null };
+}
+
+function renderFdIndicator(rows, tax) {
+  const el = $("fd-indicator");
+  if (!el || !rows.length) return;
+  const cur = insideCensus(rows, tax);
+  const other = insideCensus(rows, !tax);
+  const till = tax ? "tax" : "receipts";
+  const otherTill = tax ? "receipts" : "tax";
+  const dates = cur.hike.map((r) => {
+    const v = Number(r.rate_adjust);
+    const sign = v > 0 ? "+" : "";
+    return `${r.date} (${sign}${v.toFixed(2)} pp)`;
+  });
+  el.innerHTML =
+    `<h3>Did they hike from inside?</h3>` +
+    `<p class="punch"><b class="hike">${cur.hike.length}</b> hike${cur.hike.length === 1 ? "" : "s"}` +
+    ` from <b class="n">${cur.n}</b> interior quarter${cur.n === 1 ? "" : "s"}` +
+    ` <span style="color:#9fb3c8">(${till} till, F1,F2,F3 > 0)</span></p>` +
+    `<p class="breakdown">` +
+    `<span class="hike">▲ ${cur.hike.length} hike</span> · ` +
+    `<span class="cut">▼ ${cur.cut.length} cut</span> · ` +
+    `${cur.hold.length} hold` +
+    `${cur.last ? ` · last inside ${cur.last.date}` : ""}` +
+    `</p>` +
+    `<p class="alt">${otherTill} till: ${other.n} inside, ${other.hike.length} hike${other.hike.length === 1 ? "" : "s"}` +
+    `${other.hike.length ? " — " + other.hike.map((r) => r.date).join(", ") : ""}</p>` +
+    (dates.length ? `<p class="dates">inside hikes: ${dates.join(" · ")}</p>` : "");
+}
+
 function drawDist(el, rows, tax) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
@@ -377,12 +420,72 @@ function signedDistOctant(f1, f2, f3) {
 
 function drawFdDist(el, rows, tax) {
   const mag = "#ff2bd6";
-  const rec = rows.map((r) => signedDistOctant(r.F1, r.F2_rec, r.F3));
-  const tx = rows.map((r) => signedDistOctant(r.F1, r.F2_tax, r.F3));
+  const f2key = tax ? "F2_tax" : "F2_rec";
+  const ys = rows.map((r) => signedDistOctant(r.F1, r[f2key], r.F3));
   const xs = rows.map((r) => r.date);
+  const lineTips = rows.map((r, i) => {
+    const d = ys[i];
+    const dBit = Number.isFinite(d) ? d.toFixed(2) : "n/a";
+    const where = Number.isFinite(d) && d < 0 ? "INSIDE" : "outside";
+    return `${r.date}  ${where}<br>distance ${dBit}<br>F1=${Number(r.F1).toFixed(2)}  F2=${Number(r[f2key]).toFixed(2)}  F3=${Number(r.F3).toFixed(2)}`;
+  });
+
+  function kindOf(r) {
+    const v = Number(r.rate_adjust);
+    if (!Number.isFinite(v) || v === 0) return "hold";
+    return v > 0 ? "hike" : "cut";
+  }
+  function tip(r, i, tag) {
+    const adj = Number(r.rate_adjust);
+    const tgt = Number(r.target_end);
+    const d = ys[i];
+    const dBit = Number.isFinite(d) ? d.toFixed(2) : "n/a";
+    const where = Number.isFinite(d) && d < 0 ? "INSIDE" : "outside";
+    let rateLine;
+    if (!Number.isFinite(adj)) rateLine = "FOMC Δ this quarter: missing";
+    else {
+      const sign = adj > 0 ? "+" : "";
+      const tgtBit = Number.isFinite(tgt) ? `  target ${tgt.toFixed(2)}%` : "";
+      rateLine = `FOMC Δ this quarter: ${sign}${adj.toFixed(2)} pp (${tag})${tgtBit}`;
+    }
+    return (
+      `<b>${tag.toUpperCase()}</b> ${r.date}  ${where}<br>` +
+      `${rateLine}<br>` +
+      `distance ${dBit}<br>` +
+      `F1=${Number(r.F1).toFixed(2)}  F2=${Number(r[f2key]).toFixed(2)}  F3=${Number(r.F3).toFixed(2)}`
+    );
+  }
+  function marks(tag, color, symbol, size) {
+    const mx = [];
+    const my = [];
+    const mt = [];
+    rows.forEach((r, i) => {
+      if (kindOf(r) !== tag) return;
+      if (!Number.isFinite(ys[i])) return;
+      mx.push(r.date);
+      my.push(ys[i]);
+      mt.push(tip(r, i, tag));
+    });
+    return {
+      type: "scatter",
+      mode: "markers",
+      x: mx, y: my, name: tag,
+      text: mt, hoverinfo: "text",
+      marker: { color, size, symbol, line: { color, width: 1 } },
+    };
+  }
+
   const traces = [
-    { x: xs, y: tx, name: "distance (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
-    { x: xs, y: rec, name: "distance (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+    {
+      x: xs, y: ys,
+      name: tax ? "distance (tax)" : "distance (receipts)",
+      line: { color: mag, width: 2.5 },
+      type: "scatter", mode: "lines",
+      text: lineTips, hoverinfo: "text",
+    },
+    marks("hold", "#00f0ff", "circle", 6),
+    marks("hike", "#39ff14", "triangle-up", 11),
+    marks("cut", "#ff4d4d", "triangle-down", 11),
   ];
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
@@ -568,6 +671,7 @@ async function main() {
     Plotly.purge("cube-fail");
     await Plotly.newPlot("cube-fail", ft.traces, layout, opts);
     armCubeScroll("cube-fail");
+    renderFdIndicator(fail, tax);
   }
 
   await drawFail();
@@ -590,11 +694,7 @@ async function main() {
         Plotly.restyle("dist-plot", { visible: tax ? [true, true, false, false] : [false, false, true, true] });
       } catch (e) { /* plot not on this page */ }
     }
-    if ($("fd-dist-plot")) {
-      try {
-        Plotly.restyle("fd-dist-plot", { visible: tax ? [true, false] : [false, true] });
-      } catch (e) { /* plot not on this page */ }
-    }
+    if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax);
   }
   if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
   if ($("btn-rec")) $("btn-rec").onclick = () => setBurden(false);

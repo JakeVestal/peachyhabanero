@@ -407,6 +407,39 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-size: 16px;
   line-height: 1.7;
 }
+.fd-indicator {
+  margin-top: 14px;
+}
+.fd-indicator h3 {
+  color: #ff2bd6;
+}
+.fd-indicator .punch {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 18px;
+  margin: 4px 0 10px;
+}
+.fd-indicator .punch b.hike { color: #39ff14; }
+.fd-indicator .punch b.cut { color: #ff4d4d; }
+.fd-indicator .punch b.n { color: #ff2bd6; }
+.fd-indicator .breakdown {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+  color: #c8d6e5;
+  margin: 0 0 8px;
+}
+.fd-indicator .breakdown .hike { color: #39ff14; }
+.fd-indicator .breakdown .cut { color: #ff4d4d; }
+.fd-indicator .alt {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+.fd-indicator .dates {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  color: #39ff14;
+  margin: 8px 0 0;
+}
 .page-sus .axis-copy p,
 .page-fd .axis-copy p {
   font-size: 16px;
