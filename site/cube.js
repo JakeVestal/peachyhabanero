@@ -53,7 +53,7 @@ function isInside(r, f2key) {
   return a > 0 && b > 0 && c > 0;
 }
 
-function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
+function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width, dashed) {
   const edges = [
     [[xmin, ymin, zmin], [xmax, ymin, zmin]],
     [[xmax, ymin, zmin], [xmax, ymax, zmin]],
@@ -69,10 +69,17 @@ function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
     [[xmin, ymax, zmin], [xmin, ymax, zmax]],
   ];
   const xs = [], ys = [], zs = [];
+  // scatter3d ignores line.dash — break each edge into on/off segments.
+  const segs = dashed ? 10 : 1;
   edges.forEach(([a, b]) => {
-    xs.push(a[0], b[0], null);
-    ys.push(a[1], b[1], null);
-    zs.push(a[2], b[2], null);
+    for (let i = 0; i < segs; i++) {
+      if (dashed && i % 2) continue;
+      const t0 = i / segs;
+      const t1 = (i + 1) / segs;
+      xs.push(a[0] + (b[0] - a[0]) * t0, a[0] + (b[0] - a[0]) * t1, null);
+      ys.push(a[1] + (b[1] - a[1]) * t0, a[1] + (b[1] - a[1]) * t1, null);
+      zs.push(a[2] + (b[2] - a[2]) * t0, a[2] + (b[2] - a[2]) * t1, null);
+    }
   });
   return {
     type: "scatter3d", mode: "lines",
@@ -302,7 +309,15 @@ function failTraces(rows, tax, showRates) {
 
   const traces = [
     wire(0, hi, 0, hi, 0, hi, "#ff2bd6", "Fiscal Dominance Zone", 4),
-    {
+  ];
+  const rec = rows.find((r) => String(r.date).slice(0, 10) === "2018-03-31");
+  const recF1 = rec ? num(rec, "F1") : null;
+  const recF2 = rec ? num(rec, f2key) : null;
+  const recF3 = rec ? num(rec, "F3") : null;
+  if (recF1 != null && recF2 != null && recF3 != null) {
+    traces.push(wire(0, recF3, 0, recF2, 0, recF1, "#c4a35a", "2018-Q1 hike record", 3, true));
+  }
+  traces.push({
       type: "scatter3d",
       x: rows.map((r) => r.F3), y: f2, z: rows.map((r) => r.F1),
       mode: "lines",
@@ -828,13 +843,19 @@ async function main() {
     }
     const ft = failTraces(fail, tax, showRates);
     const note = $("rate-note");
+    const recQ = fail.find((r) => String(r.date).slice(0, 10) === "2018-03-31");
+    const recOk = recQ && num(recQ, "F1") != null && num(recQ, "F2") != null && num(recQ, "F3") != null;
     if (note) {
       if (showRates && !ft.nAdj) {
         note.innerHTML = `<span class="err">rate decisions on, but cubes.json has no rate_adjust — the published JSON is stale. Push src/cube_data.py + scripts/build_site_data.py and rerun nightly (fetch + process).</span>`;
       } else if (showRates) {
-        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box.`;
+        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Gold dashed = 2018-Q1 hike record (inner corner).`;
       } else {
-        note.textContent = "";
+        note.textContent = recOk ? "Gold dashed cube: 2018-Q1, deepest hike inside the box in this sample." : "";
+      }
+      if (!recOk) {
+        note.innerHTML = (note.innerHTML || note.textContent || "") +
+          ` <span class="err">2018-03-31 not in cubes.json — no record cube.</span>`;
       }
     }
     const f2title = "F2  y(interest / general-fund receipts − 20%)";
