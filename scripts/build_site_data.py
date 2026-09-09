@@ -432,7 +432,17 @@ def process_and_publish() -> None:
     aligned = quarterly_complete(metrics, thresh).sort_index()
     aligned = aligned.loc[aligned.index >= SIGMA_WINDOW_START]
     if aligned.empty:
-        raise SystemExit(f"no complete quarters on or after {SIGMA_WINDOW_START}")
+        bits = []
+        for _, row in thresh.iterrows():
+            mk, hc = str(row["metric_key"]), str(row["headline_column"])
+            n = 0
+            if mk in metrics and hc in metrics[mk].columns:
+                n = int(pd.to_numeric(metrics[mk][hc], errors="coerce").dropna().shape[0])
+            bits.append(f"{mk}.{hc}={n}")
+        raise SystemExit(
+            f"no complete quarters on or after {SIGMA_WINDOW_START} — "
+            + " ".join(bits)
+        )
     log_step(f"sigma window {aligned.index.min().date()} → {aligned.index.max().date()}  n={len(aligned)}")
     y, s_bits = standardize(aligned, thresh)
     state = embed(y, s_bits, (1, 2, 3), ()).sort_index()

@@ -25,27 +25,23 @@ from cube_data import (
 from macro_drivers import JACOBIAN_CSV, HERE as DRIVERS_HERE, fit_jacobian, load_or_update_drivers, project_forces
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_THRESH = HERE / "cube_critical_values.csv"
+ROOT = HERE.parent
+DEFAULT_THRESH = ROOT / "site" / "data" / "cube_critical_values.csv"
 DEFAULT_HTML = HERE / "cube_trajectory.html"
 PLANE_COLORS = ["#5eead4", "#fb7185", "#a78bfa", "#fbbf24", "#38bdf8", "#f472b6"]
 NEON = ["#00f0ff", "#ff2bd6", "#39ff14", "#ffbf00", "#7aa2ff", "#ff6b4a"]
 
 
 def load_thresholds(path=DEFAULT_THRESH):
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"missing {path} — site/data/cube_critical_values.csv is the only copy"
+        )
     df = pd.read_csv(path)
     df["metric_id"] = pd.to_numeric(df["metric_id"], errors="coerce").astype(int)
     df["critical_value"] = pd.to_numeric(df["critical_value"], errors="coerce")
     return df.sort_values("metric_id")
-
-
-def extract_headlines(metrics, thresh):
-    cols = {}
-    for _, row in thresh.iterrows():
-        mid = int(row["metric_id"])
-        series = pd.to_numeric(metrics[row["metric_key"]][row["headline_column"]], errors="coerce")
-        series.index = pd.to_datetime(series.index)
-        cols[f"x{mid}"] = series.resample("ME").last().ffill(limit=2)
-    return pd.concat(cols, axis=1).sort_index().dropna(how="any")
 
 
 def quarterly_complete(metrics, thresh):
@@ -53,7 +49,17 @@ def quarterly_complete(metrics, thresh):
     cols = {}
     for _, row in thresh.iterrows():
         mid = int(row["metric_id"])
-        series = pd.to_numeric(metrics[row["metric_key"]][row["headline_column"]], errors="coerce").dropna()
+        mk = str(row["metric_key"])
+        hc = str(row["headline_column"])
+        if mk not in metrics:
+            raise KeyError(f"metrics missing {mk}")
+        if hc not in metrics[mk].columns:
+            raise KeyError(
+                f"{mk} has no column {hc} — calculated_metrics is stale. "
+                "Fetch W780RC1Q027SBEA then process "
+                "(python scripts/build_site_data.py, no --process-only)."
+            )
+        series = pd.to_numeric(metrics[mk][hc], errors="coerce").dropna()
         series.index = pd.to_datetime(series.index)
         cols[f"x{mid}"] = series.resample("QE").last()
     return pd.concat(cols, axis=1).sort_index().dropna(how="any")
@@ -68,7 +74,7 @@ def standardize(aligned, thresh):
         c = float(row["critical_value"])
         sigma = float(x.std(ddof=1))
         if not np.isfinite(sigma) or sigma == 0:
-            sigma = 1.0
+            raise ValueError(f"sigma undefined for metric {mid} — refusing to plot a fake scale")
         # One sign convention for the whole site. at_or_below (F1 only):
         # flip so y>0 means the unthinkable side (funds at or under the book).
         raw = (x - c) / sigma
