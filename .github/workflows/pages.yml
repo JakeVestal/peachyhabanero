@@ -73,9 +73,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: site/data/published
-          key: cube-published-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
+          key: cube-published-v3-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            cube-published-v2-${{ github.ref_name }}-
+            cube-published-v3-${{ github.ref_name }}-
 
       - name: require published json from cache
         run: |

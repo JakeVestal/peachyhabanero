@@ -97,7 +97,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: site/data/published
-          key: cube-published-v2-${{ github.ref_name }}-${{ steps.week.outputs.iso }}
+          key: cube-published-v3-${{ github.ref_name }}-${{ github.run_id }}
 
       - uses: actions/configure-pages@v5
 
