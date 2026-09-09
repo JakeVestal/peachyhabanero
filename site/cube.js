@@ -41,6 +41,18 @@ function parseZoneCsv(text) {
   return out;
 }
 
+function distWarn(r, burden) {
+  const v = Number(r["dist_warn_" + burden]);
+  return Number.isFinite(v) ? v : null;
+}
+function distRestruct(r, burden) {
+  // same series; column was renamed death → restruct
+  const a = Number(r["dist_restruct_" + burden]);
+  if (Number.isFinite(a)) return a;
+  const b = Number(r["dist_death_" + burden]);
+  return Number.isFinite(b) ? b : null;
+}
+
 function flagMissing(el, msg) {
   if (!el) return;
   el.innerHTML = `<p class="err" style="border:2px solid #ff2bd6;padding:12px;color:#ff2bd6;font-size:15px">${msg}</p>`;
@@ -226,17 +238,19 @@ function sustainTraces(rows, zone, burden) {
   const zwarn = znum(zone, "refi_gap_warn");
   const zdeath = znum(zone, "refi_gap_restruct");
   const stressCol = burden === "tax" ? "stress_tax" : "stress_rec";
-  const distW = burden === "tax" ? "dist_warn_tax" : "dist_warn_rec";
-  const distD = burden === "tax" ? "dist_restruct_tax" : "dist_restruct_rec";
-  const hover = rows.map((r) =>
-    `${r.date}<br>` +
-    `debt/GDP ${Number(r.debt_gdp_pct).toFixed(1)}%<br>` +
-    `int/rec ${Number(r.int_rec_pct).toFixed(1)}%  int/tax ${Number(r.int_tax_pct).toFixed(1)}%<br>` +
-    `refi gap ${Number(r.refi_gap) >= 0 ? "+" : ""}${Number(r.refi_gap).toFixed(2)} pp<br>` +
-    `dist_warn ${Number(r[distW]) >= 0 ? "+" : ""}${Number(r[distW]).toFixed(2)}  ` +
-    `dist_restruct ${Number(r[distD]) >= 0 ? "+" : ""}${Number(r[distD]).toFixed(2)}<br>` +
-    `stress ${Number(r[stressCol]).toFixed(2)} (color only; int/GDP sleeve is not an axis)`
-  );
+  const hover = rows.map((r) => {
+    const dw = distWarn(r, burden);
+    const dd = distRestruct(r, burden);
+    return (
+      `${r.date}<br>` +
+      `debt/GDP ${Number(r.debt_gdp_pct).toFixed(1)}%<br>` +
+      `int/rec ${Number(r.int_rec_pct).toFixed(1)}%  int/tax ${Number(r.int_tax_pct).toFixed(1)}%<br>` +
+      `refi gap ${Number(r.refi_gap) >= 0 ? "+" : ""}${Number(r.refi_gap).toFixed(2)} pp<br>` +
+      `dist_warn ${dw == null ? "n/a" : ((dw >= 0 ? "+" : "") + dw.toFixed(2))}  ` +
+      `dist_restruct ${dd == null ? "n/a" : ((dd >= 0 ? "+" : "") + dd.toFixed(2))}<br>` +
+      `stress ${Number(r[stressCol]).toFixed(2)} (color only; int/GDP sleeve is not an axis)`
+    );
+  });
   const last = rows[rows.length - 1];
   const xmin = Math.min(0, ...rows.map((r) => Number(r.debt_gdp_pct)).filter(Number.isFinite));
   const xmax = Math.max(200, xdeath, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
@@ -490,10 +504,10 @@ function drawDist(el, rows, tax) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
   const traces = [
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_tax), name: "Danger (tax)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_restruct_tax), name: "Restructuring (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_rec), name: "Danger (receipts)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_restruct_rec), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => distWarn(r, "tax")), name: "Danger (tax)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => distRestruct(r, "tax")), name: "Restructuring (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => distWarn(r, "rec")), name: "Danger (receipts)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => distRestruct(r, "rec")), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
   ];
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
