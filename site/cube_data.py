@@ -130,7 +130,7 @@ FRED_GROUPS = {
 # IORB / RRP series may 404 on older csv combiners; fetch individually.
 OPTIONAL_FRED = {
     "IORB", "RRPONTSYD", "DFF", "ACMTP10",
-    "JTSJOL", "DFEDTARU", "DFEDTARL", "T5YIE", "T10YIE", "T5YIFR",
+    "JTSJOL", "T5YIE", "T10YIE", "T5YIFR",
     "PCETRIM12M159SFRBDAL",
 }
 
@@ -226,10 +226,14 @@ def fetch_fred_group(
             if sid in OPTIONAL_FRED:
                 print(f"  skip optional {sid}: {exc}")
                 continue
-            print(f"  WARN {sid}: {exc}")
+            raise RuntimeError(f"required FRED series {sid} failed: {exc}") from exc
     if not cols:
         return pd.DataFrame()
     out = pd.concat(cols, axis=1, sort=True).sort_index()
+    out.index = pd.to_datetime(out.index)
+    # Last actual print in the month. No ffill — a month with no observation stays absent.
+    out = out.groupby(out.index.to_period("M")).last()
+    out.index = out.index.to_timestamp(how="end").normalize()
     out.index.name = "date"
     return out
 
@@ -866,7 +870,7 @@ def calculate_metrics(
 
     # Interest is NIPA quarterly SAAR. Hold the last quarter against the
     # current stock so r_stock moves when the stock prints, not when the Bulletin does.
-    interest_m = interest.resample("ME").last().ffill()
+    interest_m = interest.resample("ME").last()
     r_stock = (100.0 * interest_m / debt_bn_m).rename("effective_avg_coupon_pct")
     r_stock = r_stock.replace([float("inf"), float("-inf")], pd.NA).dropna()
 
@@ -955,34 +959,43 @@ def calculate_metrics(
     coupon_m = _month(avg_mkt_coupon)
     resid_extra = []
     parts = []
-    wsum = None
     PUBLISH_BUCKETS = ("0_1Y", "1_3Y", "3_7Y", "7_10Y", "10YPLUS", "FRN")
     for b, yld in ymap.items():
         w = _month(_col(resid, f"RESID_W_{b}"))
         resid_extra.append(w.rename(f"resid_w_{b.lower()}"))
         if b not in PUBLISH_BUCKETS:
             continue
-        if wsum is None:
-            wsum = w.fillna(0.0)
-        else:
-            wsum = wsum.add(w.fillna(0.0), fill_value=0.0)
         parts.append((b, w, yld))
-    killed = []
+    idx = coupon_m.dropna().index
+    for b, w, yld in parts:
+        idx = idx.intersection(w.dropna().index)
+    # A month stays only if every positive-weight bucket has a CMT that month.
+    # Zero weight does not require a yield. Missing weight is not treated as zero.
+    keep = pd.Series(True, index=idx)
+    for b, w, yld in parts:
+        w0 = w.reindex(idx)
+        y = yld.reindex(idx)
+        keep &= ~((w0 > 1e-12) & y.isna())
+    idx = idx[keep.reindex(idx).fillna(False)]
+    if len(idx) < 8:
+        raise RuntimeError("Table 3 × CMT overlap too short — missing weights or yields, not filling")
+    wsum = None
+    for b, w, yld in parts:
+        ww = w.reindex(idx)
+        wsum = ww if wsum is None else wsum.add(ww)
+    idx = idx[wsum.reindex(idx) > 0]
+    wsum = wsum.reindex(idx)
     marg_r = None
     for b, w, yld in parts:
-        w0 = w.fillna(0.0)
-        y = yld.reindex(w0.index)
-        term = (w0 / wsum.replace(0, pd.NA)) * y
+        w0 = w.reindex(idx)
+        y = yld.reindex(idx)
+        term = (w0 / wsum) * y
         term = term.where(w0 > 1e-12, 0.0)
-        miss = (w0 > 1e-12) & y.isna()
-        if int(miss.sum()) > 0:
-            killed.append(f"{b}:{int(miss.sum())}mo")
+        if int(((w0 > 1e-12) & y.isna()).sum()) > 0:
+            raise RuntimeError(f"Table 3 × CMT hole in {b} after filters — not filling")
         marg_r = term if marg_r is None else marg_r.add(term)
     if marg_r is None or int(marg_r.dropna().shape[0]) < 8:
-        raise RuntimeError(
-            "residual marginal_rate too short — Table 3 × CMT failed"
-            + (f" ({', '.join(killed)})" if killed else "")
-        )
+        raise RuntimeError("residual marginal_rate too short — Table 3 × CMT failed")
     marginal = marg_r.rename("marginal_rate")
     refi_gap = (marginal - coupon_m).rename("refi_gap")
     resid_extra.extend([

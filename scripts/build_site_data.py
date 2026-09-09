@@ -143,19 +143,20 @@ def write_json(path: Path, payload) -> None:
 
 
 def load_zone(path: Path) -> dict:
-    if path.exists():
-        z = pd.read_csv(path)
-        return {str(r["key"]): float(r["value"]) for _, r in z.iterrows()}
-    return {
-        "debt_gdp_warn": 100.0,
-        "debt_gdp_restruct": 140.0,
-        "int_rec_warn": 20.0,
-        "int_rec_restruct": 30.0,
-        "int_tax_warn": 25.0,
-        "int_tax_restruct": 40.0,
-        "refi_gap_warn": 0.75,
-        "refi_gap_restruct": 1.00,
-    }
+    if not path.exists():
+        raise SystemExit(f"missing {path} — zone wires are required, no hardcoded fallback")
+    z = pd.read_csv(path)
+    out = {str(r["key"]): float(r["value"]) for _, r in z.iterrows()}
+    need = (
+        "debt_gdp_warn", "debt_gdp_restruct",
+        "int_rec_warn", "int_rec_restruct",
+        "int_tax_warn", "int_tax_restruct",
+        "refi_gap_warn", "refi_gap_restruct",
+    )
+    miss = [k for k in need if k not in out or not np.isfinite(out[k])]
+    if miss:
+        raise SystemExit(f"zone.csv missing/nonfinite: {', '.join(miss)}")
+    return out
 
 
 ZONE = load_zone(DATA / "zone.csv")
@@ -245,14 +246,14 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     upper.index = pd.to_datetime(upper.index)
     point = point.dropna().sort_index()
     upper = upper.dropna().sort_index()
-    if point.empty and upper.empty:
-        raise SystemExit("missing DFEDTAR / DFEDTARU — cannot compute quarterly FOMC Δ")
     if point.empty:
-        target = upper
-    elif upper.empty:
-        target = point
-    else:
-        target = pd.concat([point, upper.loc[upper.index > point.index.max()]]).sort_index()
+        raise SystemExit(
+            "DFEDTAR missing — pre-2008 FOMC point target is required; "
+            "no DFEDTARU-only fallback. Rerun --fetch so fred_policy_rates includes DFEDTAR."
+        )
+    if upper.empty:
+        raise SystemExit("DFEDTARU missing — FOMC range upper bound required after 2008-12")
+    target = pd.concat([point, upper.loc[upper.index > point.index.max()]]).sort_index()
     q_target = target.resample("QE").last()
     rate_adjust = q_target.diff().rename("rate_adjust")
     target_end = q_target.rename("target_end")
@@ -312,10 +313,12 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
 
     sig_rec = _sigma(panel["int_rec_pct"], "int_rec")
     sig_tax = _sigma(panel["int_tax_pct"], "int_tax")
-    panel["F2_rec"] = y["y2"].reindex(panel.index) if "y2" in y.columns else (panel["int_rec_pct"] - ZONE["int_rec_warn"]) / sig_rec
+    if "y1" not in y.columns or "y2" not in y.columns or "y3" not in y.columns:
+        raise SystemExit("standardize did not return y1/y2/y3 — cannot plot F1/F2/F3")
+    panel["F1"] = y["y1"].reindex(panel.index)
+    panel["F2_rec"] = y["y2"].reindex(panel.index)
     panel["F2_tax"] = (panel["int_tax_pct"] - ZONE["int_tax_warn"]) / sig_tax
-    panel["F1"] = y["y1"].reindex(panel.index) if "y1" in y.columns else np.nan
-    panel["F3"] = y["y3"].reindex(panel.index) if "y3" in y.columns else np.nan
+    panel["F3"] = y["y3"].reindex(panel.index)
     log_step(f"sigma int/rec={sig_rec:.4f}  int/tax={sig_tax:.4f}")
 
     s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_restruct"])

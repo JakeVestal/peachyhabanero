@@ -1,19 +1,41 @@
 const DATA = "data/published/cubes.json";
 
-const ZONE_FALLBACK = {
-  debt_gdp_warn: 100,
-  debt_gdp_death: 140,
-  int_rec_warn: 20,
-  int_rec_death: 30,
-  int_tax_warn: 25,
-  int_tax_death: 40,
-  refi_gap_warn: 0.75,
-  refi_gap_death: 1.0,
-};
+const ZONE_KEYS = [
+  "debt_gdp_warn", "debt_gdp_restruct",
+  "int_rec_warn", "int_rec_restruct",
+  "int_tax_warn", "int_tax_restruct",
+  "refi_gap_warn", "refi_gap_restruct",
+];
 
 function znum(zone, key) {
   const v = Number(zone && zone[key]);
-  return Number.isFinite(v) ? v : ZONE_FALLBACK[key];
+  if (!Number.isFinite(v)) {
+    throw new Error("zone." + key + " missing — refusing to draw a guessed wire");
+  }
+  return v;
+}
+
+function zoneMissing(zone) {
+  if (!zone) return ZONE_KEYS.slice();
+  return ZONE_KEYS.filter((k) => !Number.isFinite(Number(zone[k])));
+}
+
+function flagMissing(el, msg) {
+  if (!el) return;
+  el.innerHTML = `<p class="err" style="border:2px solid #ff2bd6;padding:12px;color:#ff2bd6;font-size:15px">${msg}</p>`;
+}
+
+// Number(null) === 0 in JS — missing FOMC Δ must never look like a hold.
+function rateAdj(r) {
+  if (r == null || r.rate_adjust == null || r.rate_adjust === "") return null;
+  const v = Number(r.rate_adjust);
+  return Number.isFinite(v) ? v : null;
+}
+function rateKind(r) {
+  const v = rateAdj(r);
+  if (v == null) return "missing";
+  if (v === 0) return "hold";
+  return v > 0 ? "hike" : "cut";
 }
 
 function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width) {
@@ -156,21 +178,21 @@ function winAll(vals) {
 function sustainTraces(rows, zone, burden) {
   const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
   const ywarn = znum(zone, burden === "tax" ? "int_tax_warn" : "int_rec_warn");
-  const ydeath = znum(zone, burden === "tax" ? "int_tax_death" : "int_rec_death");
+  const ydeath = znum(zone, burden === "tax" ? "int_tax_restruct" : "int_rec_restruct");
   const xwarn = znum(zone, "debt_gdp_warn");
-  const xdeath = znum(zone, "debt_gdp_death");
+  const xdeath = znum(zone, "debt_gdp_restruct");
   const zwarn = znum(zone, "refi_gap_warn");
-  const zdeath = znum(zone, "refi_gap_death");
+  const zdeath = znum(zone, "refi_gap_restruct");
   const stressCol = burden === "tax" ? "stress_tax" : "stress_rec";
   const distW = burden === "tax" ? "dist_warn_tax" : "dist_warn_rec";
-  const distD = burden === "tax" ? "dist_death_tax" : "dist_death_rec";
+  const distD = burden === "tax" ? "dist_restruct_tax" : "dist_restruct_rec";
   const hover = rows.map((r) =>
     `${r.date}<br>` +
     `debt/GDP ${Number(r.debt_gdp_pct).toFixed(1)}%<br>` +
     `int/rec ${Number(r.int_rec_pct).toFixed(1)}%  int/tax ${Number(r.int_tax_pct).toFixed(1)}%<br>` +
     `refi gap ${Number(r.refi_gap) >= 0 ? "+" : ""}${Number(r.refi_gap).toFixed(2)} pp<br>` +
     `dist_warn ${Number(r[distW]) >= 0 ? "+" : ""}${Number(r[distW]).toFixed(2)}  ` +
-    `dist_death ${Number(r[distD]) >= 0 ? "+" : ""}${Number(r[distD]).toFixed(2)}<br>` +
+    `dist_restruct ${Number(r[distD]) >= 0 ? "+" : ""}${Number(r[distD]).toFixed(2)}<br>` +
     `stress ${Number(r[stressCol]).toFixed(2)} (color only; int/GDP sleeve is not an axis)`
   );
   const last = rows[rows.length - 1];
@@ -202,6 +224,7 @@ function sustainTraces(rows, zone, burden) {
       },
       line: { color: "rgba(0,240,255,0.35)", width: 3 },
       text: hover, hoverinfo: "text", name: "path",
+      connectgaps: false,
     },
     {
       type: "scatter3d",
@@ -225,15 +248,15 @@ function sustainTraces(rows, zone, burden) {
 function failTraces(rows, tax, showRates) {
   const f2key = tax ? "F2_tax" : "F2_rec";
   const f2 = rows.map((r) => r[f2key]);
-  const nAdj = rows.filter((r) => Number.isFinite(Number(r.rate_adjust))).length;
+  const nAdj = rows.filter((r) => rateAdj(r) != null).length;
   const hover = rows.map((r) => {
     const f2v = Number(r[f2key]);
     const inside = r.F1 > 0 && f2v > 0 && r.F3 > 0;
-    const adj = Number(r.rate_adjust);
+    const adj = rateAdj(r);
     const tgt = Number(r.target_end);
     let rateLine;
-    if (!Number.isFinite(adj)) {
-      rateLine = "FOMC Δ this quarter: missing — rerun --process (need DFEDTAR stitch)";
+    if (adj == null) {
+      rateLine = "FOMC Δ this quarter: missing — DFEDTAR stitch required";
     } else {
       const tag = adj > 0 ? "hike" : adj < 0 ? "cut" : "hold";
       const sign = adj > 0 ? "+" : "";
@@ -257,10 +280,10 @@ function failTraces(rows, tax, showRates) {
   const hi = Math.max(w1[1], w2[1], w3[1]);
 
   function kind(r) {
+    const k = rateKind(r);
+    if (k === "missing") return "missing";
     if (!showRates) return "hold";
-    const v = Number(r.rate_adjust);
-    if (!Number.isFinite(v) || v === 0) return "hold";
-    return v > 0 ? "hike" : "cut";
+    return k;
   }
   function isIn(r) {
     return r.F1 > 0 && Number(r[f2key]) > 0 && r.F3 > 0;
@@ -275,6 +298,7 @@ function failTraces(rows, tax, showRates) {
       line: { color: "rgba(0,240,255,0.35)", width: 3 },
       hoverinfo: "skip",
       name: "path",
+      connectgaps: false,
     },
   ];
 
@@ -286,6 +310,8 @@ function failTraces(rows, tax, showRates) {
     { k: "hike", inn: true, symbol: "diamond", color: "rgba(57,255,20,0.2)", line: "#ff2bd6", size: 15, glyph: "▲", name: "hike inside", legend: false },
     { k: "cut", inn: false, symbol: "diamond", color: "#ff4d4d", line: "#ff4d4d", size: 14, glyph: "▼", name: "cut", legend: showRates },
     { k: "cut", inn: true, symbol: "diamond", color: "rgba(255,77,77,0.2)", line: "#ff2bd6", size: 15, glyph: "▼", name: "cut inside", legend: false },
+    { k: "missing", inn: false, symbol: "circle-open", color: "#7f93a6", line: "#7f93a6", size: 6, glyph: "", name: "no FOMC print", legend: showRates },
+    { k: "missing", inn: true, symbol: "circle-open", color: "rgba(127,147,166,0.15)", line: "#ff2bd6", size: 7, glyph: "", name: "no FOMC print inside", legend: false },
   ];
   groups.forEach((g) => {
     if (!showRates && g.k !== "hold") return;
@@ -339,13 +365,15 @@ function insideCensus(rows, tax) {
   const hike = [];
   const cut = [];
   const hold = [];
+  const missing = [];
   inside.forEach((r) => {
-    const v = Number(r.rate_adjust);
-    if (Number.isFinite(v) && v > 0) hike.push(r);
-    else if (Number.isFinite(v) && v < 0) cut.push(r);
-    else hold.push(r);
+    const k = rateKind(r);
+    if (k === "hike") hike.push(r);
+    else if (k === "cut") cut.push(r);
+    else if (k === "hold") hold.push(r);
+    else missing.push(r);
   });
-  return { n: inside.length, hike, cut, hold, last: inside[inside.length - 1] || null };
+  return { n: inside.length, hike, cut, hold, missing, last: inside[inside.length - 1] || null };
 }
 
 function renderFdIndicator(rows, tax) {
@@ -356,7 +384,7 @@ function renderFdIndicator(rows, tax) {
   const till = tax ? "tax" : "receipts";
   const otherTill = tax ? "receipts" : "tax";
   const dates = cur.hike.map((r) => {
-    const v = Number(r.rate_adjust);
+    const v = rateAdj(r);
     const sign = v > 0 ? "+" : "";
     return `${r.date} (${sign}${v.toFixed(2)} pp)`;
   });
@@ -369,6 +397,7 @@ function renderFdIndicator(rows, tax) {
     `<span class="hike">▲ ${cur.hike.length} hike</span> · ` +
     `<span class="cut">▼ ${cur.cut.length} cut</span> · ` +
     `${cur.hold.length} hold` +
+    `${cur.missing.length ? ` · <span style="color:#7f93a6">${cur.missing.length} no FOMC print</span>` : ""}` +
     `${cur.last ? ` · last inside ${cur.last.date}` : ""}` +
     `</p>` +
     `<p class="alt">${otherTill} till: ${other.n} inside, ${other.hike.length} hike${other.hike.length === 1 ? "" : "s"}` +
@@ -381,9 +410,9 @@ function drawDist(el, rows, tax) {
   const mag = "#ff2bd6";
   const traces = [
     { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_tax), name: "Danger (tax)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_tax), name: "Restructuring (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_restruct_tax), name: "Restructuring (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
     { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_warn_rec), name: "Danger (receipts)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_death_rec), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => r.dist_restruct_rec), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
   ];
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
@@ -431,18 +460,16 @@ function drawFdDist(el, rows, tax) {
   });
 
   function kindOf(r) {
-    const v = Number(r.rate_adjust);
-    if (!Number.isFinite(v) || v === 0) return "hold";
-    return v > 0 ? "hike" : "cut";
+    return rateKind(r);
   }
   function tip(r, i, tag) {
-    const adj = Number(r.rate_adjust);
+    const adj = rateAdj(r);
     const tgt = Number(r.target_end);
     const d = ys[i];
     const dBit = Number.isFinite(d) ? d.toFixed(2) : "n/a";
     const where = Number.isFinite(d) && d < 0 ? "INSIDE" : "outside";
     let rateLine;
-    if (!Number.isFinite(adj)) rateLine = "FOMC Δ this quarter: missing";
+    if (adj == null) rateLine = "FOMC Δ this quarter: missing — DFEDTAR not in published stitch";
     else {
       const sign = adj > 0 ? "+" : "";
       const tgtBit = Number.isFinite(tgt) ? `  target ${tgt.toFixed(2)}%` : "";
@@ -482,10 +509,12 @@ function drawFdDist(el, rows, tax) {
       line: { color: mag, width: 2.5 },
       type: "scatter", mode: "lines",
       text: lineTips, hoverinfo: "text",
+      connectgaps: false,
     },
     marks("hold", "#00f0ff", "circle", 6),
     marks("hike", "#39ff14", "triangle-up", 11),
     marks("cut", "#ff4d4d", "triangle-down", 11),
+    marks("missing", "#7f93a6", "x", 9),
   ];
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
@@ -542,6 +571,7 @@ function drawRawAxis(el, rows, col, title, color, wires) {
     type: "scatter", mode: "lines",
     x: xs, y: ys, name: col,
     line: { color, width: 2 },
+    connectgaps: false,
   }], {
     title: { text: title, font: { color: "#00f0ff", size: 12 } },
     paper_bgcolor: "#07080c",
@@ -564,14 +594,14 @@ function drawSixAxes(sus, fail, zone, tax) {
   const mag = "#ff2bd6";
   const tillCol = tax ? "int_tax_pct" : "int_rec_pct";
   const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
-  const tillDeath = tax ? zone.int_tax_death : zone.int_rec_death;
+  const tillDeath = tax ? zone.int_tax_restruct : zone.int_rec_restruct;
   const tillName = tax ? "int / tax (%)" : "int / receipts (%)";
   drawRawAxis("ax-1", sus, tillCol, `${tillName}`, "#00f0ff",
     [hline(tillWarn, gold), hline(tillDeath, mag)]);
   drawRawAxis("ax-2", sus, "refi_gap", "refi gap (pp)", "#ffbf00",
-    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_death, mag)]);
+    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)]);
   drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
-    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_death, mag)]);
+    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)]);
   const f2col = tax ? "F2_tax" : "F2_rec";
   const f2name = tax ? "F2  y(int/tax − 25%)" : "F2  y(int/receipts − 20%)";
   drawRawAxis("ax-4", sus, f2col, f2name, "#00f0ff",
@@ -604,14 +634,22 @@ async function main() {
     return;
   }
   const ls = (sus.length ? sus : fail)[(sus.length ? sus : fail).length - 1];
-  if (!zone) {
-    if (stamp) stamp.innerHTML = `<span class="err">cubes.json missing zone — rerun --process</span>`;
+  const missZ = zoneMissing(zone);
+  if (missZ.length) {
+    const msg = `zone missing ${missZ.join(", ")} — not drawing guessed wires`;
+    if (stamp) stamp.innerHTML = `<span class="err">${msg}</span>`;
+    flagMissing($("cube-sustain"), msg);
+    flagMissing($("cube-fail"), msg);
     return;
   }
+  const nMissAdj = (wantFail ? fail : sus).filter((r) => rateKind(r) === "missing").length;
   if (stamp) {
     stamp.innerHTML =
         `<b>Latest data point: ${ls.date}</b><br>` +
-        `New points become available when BEA prints quarterly GDP.`;
+        `New points become available when BEA prints quarterly GDP.` +
+        (nMissAdj
+          ? `<br><span class="err">FOMC Δ missing for ${nMissAdj} quarters (DFEDTAR not stitched). Grey × is not a hold.</span>`
+          : "");
   }
 
   const opts = { responsive: true, displaylogo: false };
