@@ -50,7 +50,7 @@ function nowcastHover(nc) {
   if (!nc) return "";
   const src = nc.nipa_source || nc.model || "nowcast";
   return (
-    `<b>NOWCAST ${nc.quarter_end}</b> — not a BEA print<br>` +
+    `<b>AI FORECAST ${nc.quarter_end}</b> — not a BEA print<br>` +
     `nipa: ${src}<br>` +
     `debt/GDP ${fmtNow(Number(nc.debt_gdp_pct), 1)}%  ` +
     `int/rec ${fmtNow(Number(nc.int_rec_pct), 1)}%  int/tax ${fmtNow(Number(nc.int_tax_pct), 1)}%<br>` +
@@ -113,7 +113,7 @@ function nowcastSusTrace(nc, tax) {
     glow: 16,
     glowOpacity: 0.28,
     hover: nowcastHover(nc),
-    name: `nowcast ${nc.quarter_end} (not a print)`,
+    name: `AI forecast ${nc.quarter_end} (not a print)`,
   });
 }
 
@@ -130,7 +130,7 @@ function nowcastFailTrace(nc) {
     glowOpacity: 0.28,
     hover: nowcastHover(nc),
     hovertemplate: "%{hovertext}<extra></extra>",
-    name: `nowcast ${nc.quarter_end} (not a print)`,
+    name: `AI forecast ${nc.quarter_end} (not a print)`,
   });
 }
 
@@ -198,7 +198,7 @@ function nowcastGhost1d(nc, x, y, extra, color) {
       type: "scatter",
       mode: "markers",
       x: [x], y: [y],
-      name: `nowcast ${nc.quarter_end} glow`,
+      name: `AI forecast ${nc.quarter_end} glow`,
       hoverinfo: "skip",
       showlegend: false,
       marker: { size: 22, color: fill, symbol: "circle", opacity: 0.22, line: { width: 0 } },
@@ -207,7 +207,7 @@ function nowcastGhost1d(nc, x, y, extra, color) {
       type: "scatter",
       mode: "markers",
       x: [x], y: [y],
-      name: `nowcast ${nc.quarter_end}`,
+      name: `AI forecast ${nc.quarter_end}`,
       text: [hover],
       hoverinfo: "text",
       marker: { size: 9, color: fill, symbol: "circle", line: { color: "#ffbf00", width: 3 } },
@@ -695,12 +695,12 @@ function drawDist(el, rows, tax, nc, zone) {
   if (d && qe) {
     traces.push.apply(traces, nowcastGhost1d(
       nc, qe, d.warn,
-      `nowcast dist_warn ${Number.isFinite(d.warn) ? d.warn.toFixed(2) : "n/a"}`,
+      `AI forecast · dist_warn ${Number.isFinite(d.warn) ? d.warn.toFixed(2) : "n/a"}`,
       gold
     ));
     traces.push.apply(traces, nowcastGhost1d(
       nc, qe, d.restruct,
-      `nowcast dist_restruct ${Number.isFinite(d.restruct) ? d.restruct.toFixed(2) : "n/a"}`,
+      `AI forecast · dist_restruct ${Number.isFinite(d.restruct) ? d.restruct.toFixed(2) : "n/a"}`,
       mag
     ));
   }
@@ -849,8 +849,8 @@ function drawFdDist(el, rows, tax, nc) {
       nc.quarter_end,
       nd,
       Number.isFinite(nd)
-        ? `nowcast σ-distance ${nd.toFixed(2)} (0 = face)`
-        : "nowcast σ-distance n/a"
+        ? `AI forecast · σ-distance ${nd.toFixed(2)} (0 = face)`
+        : "AI forecast · σ-distance n/a"
     ));
   }
   const node = document.getElementById(el);
@@ -985,7 +985,7 @@ function hline(y, color) {
   };
 }
 
-function drawRawAxis(el, rows, col, title, color, wires) {
+function drawRawAxis(el, rows, col, title, color, wires, nc, ncVal) {
   const xs = [], ys = [];
   rows.forEach((r) => {
     const v = Number(r[col]);
@@ -1003,12 +1003,21 @@ function drawRawAxis(el, rows, col, title, color, wires) {
   const cs = window.getComputedStyle(box);
   const w = Math.round(box.clientWidth || parseFloat(cs.width)) || 680;
   const h = Math.round(box.clientHeight || parseFloat(cs.height)) || 340;
-  return Plotly.newPlot(el, [{
+  const traces = [{
     type: "scatter", mode: "lines",
     x: xs, y: ys, name: col,
     line: { color, width: 2 },
     connectgaps: false,
-  }], {
+  }];
+  const ncv = Number(ncVal);
+  traces.push.apply(traces, nowcastGhost1d(
+    nc,
+    nc && nc.quarter_end,
+    ncv,
+    `AI forecast · ${col} ${Number.isFinite(ncv) ? ncv.toFixed(2) : "n/a"}`,
+    color
+  ));
+  return Plotly.newPlot(el, traces, {
     title: { text: title, font: { color: "#00f0ff", size: 12 } },
     paper_bgcolor: "#07080c",
     plot_bgcolor: "#0b0f16",
@@ -1024,7 +1033,7 @@ function drawRawAxis(el, rows, col, title, color, wires) {
   }, { responsive: true, displaylogo: false, staticPlot: false });
 }
 
-function drawSixAxes(sus, failRows, zone, tax) {
+function drawSixAxes(sus, failRows, zone, tax, nc) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
   const fd = failRows && failRows.length ? failRows : sus;
@@ -1032,18 +1041,19 @@ function drawSixAxes(sus, failRows, zone, tax) {
   const tillWarn = tax ? zone.int_tax_warn : zone.int_rec_warn;
   const tillDeath = tax ? zone.int_tax_restruct : zone.int_rec_restruct;
   const tillName = tax ? "int / tax (%)" : "int / receipts (%)";
+  const tillVal = tax ? (nc && nc.int_tax_pct) : (nc && nc.int_rec_pct);
   drawRawAxis("ax-1", sus, tillCol, `${tillName}`, "#00f0ff",
-    [hline(tillWarn, gold), hline(tillDeath, mag)]);
+    [hline(tillWarn, gold), hline(tillDeath, mag)], nc, tillVal);
   drawRawAxis("ax-2", sus, "refi_gap", "refi gap (pp)", "#ffbf00",
-    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)]);
+    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)], nc, nc && nc.refi_gap);
   drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
-    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)]);
+    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)], nc, nc && nc.debt_gdp_pct);
   drawRawAxis("ax-4", fd, "F2", "F2  y(int / general-fund − 20%)", "#00f0ff",
-    [hline(0, mag)]);
+    [hline(0, mag)], nc, nc && nc.F2);
   drawRawAxis("ax-5", fd, "F1", "F1  y(funds − book)  flipped", "#39ff14",
-    [hline(0, mag)]);
+    [hline(0, mag)], nc, nc && nc.F1);
   drawRawAxis("ax-6", fd, "F3", "F3  y(primary / GDP)", "#ff6b4a",
-    [hline(0, mag)]);
+    [hline(0, mag)], nc, nc && nc.F3);
 }
 
 function $(id) {
@@ -1183,7 +1193,7 @@ async function main() {
   if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax, nowcast, zone);
   if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax, nowcast);
   if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail);
-  drawSixAxes(sus, fail, zone, tax);
+  drawSixAxes(sus, fail, zone, tax, nowcast);
 
   function setBurden(next) {
     tax = next;
@@ -1193,7 +1203,7 @@ async function main() {
     if (btnRec) btnRec.classList.toggle("active", !tax);
     drawSustain();
     drawFail();
-    drawSixAxes(sus, fail, zone, tax);
+    drawSixAxes(sus, fail, zone, tax, nowcast);
     if ($("dist-plot") && sus.length) drawDist("dist-plot", sus, tax, nowcast, zone);
     if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax, nowcast);
     if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail);
