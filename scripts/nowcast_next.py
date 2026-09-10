@@ -224,12 +224,25 @@ Live Treasury / Fed market rates (Python owns refi; do not overwrite):
 {json.dumps(yields, indent=2)}
 Last book coupon (Fiscal Data Total Marketable, %): {coupon}
 
-Search the open web. Prefer official statistical agencies, then institutions, then market press, then blogs:
-  BEA, Atlanta Fed GDPNow, CBO, Treasury Fiscal Data, Monthly Treasury Statement, FRED,
+Search the open web. Start by determining the global economic and political 
+situation. Some things to consider: 
+- will the Fed hike/cut rates between now and end of quarter? 
+- have there been any developments in war/defense that might affect bond 
+yields and therefore influence your final number?
+- are there any political, financial, or news events that should be folded in to your forecast?
+
+When you search for numbers, you might consider:
+BEA, Atlanta Fed GDPNow, CBO, Treasury Fiscal Data, Monthly Treasury 
+  Statement, FRED,
   Reuters, Bloomberg, WSJ, Seeking Alpha, Calculated Risk, respectable financial blogs.
-Weigh credibility. Name what you used. Also apply your own reasoning to the 
-question - will there be a rate hike/cut between now and end of quarter? Any 
-national / political / military news, or any movement in the yield curve? 
+Weigh credibility. Name what you used. 
+
+take your numbers, adjust them (if you deem appropriate) according to your view
+of the overall macro situation of the economy, and come up with your rationale
+for why you think your final reported numbers are the best forecast you can 
+make. Put that rationale in the "rationale" part of the JSON object defined 
+below, <= 300 words. If you decided to bump a number up or down, briefly 
+state why.
 
 Return ONLY JSON, numbers not strings except rationale/sources:
   gdp_bn                 # NIPA GDP, current $, SAAR, billions (same unit as last rows)
@@ -239,9 +252,7 @@ Return ONLY JSON, numbers not strings except rationale/sources:
   w780_bn_saar           # W780RC1Q027SBEA (contributions for gov social insurance)
   fgexpnd_bn_saar        # FGEXPND current expenditures, SAAR, billions
   debt_held_public_bn    # debt held by the public, billions, same unit as GDP
-  rationale              # <= 150 words. mention if a number is a last-print 
-  copy and justify your answers -- what economic forces are driving your 
-  prediction?
+  rationale              # <= 300 words but try to be concise.
   sources                # array of {{"title": "...", "uri": "https://..."}} you actually used
 
 Do NOT return F1, F2, F3, refi, funds, int/receipts, primary/GDP, or debt/GDP. Python computes those from the prints.
