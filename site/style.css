@@ -601,4 +601,10 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .join-table tr.is-inside td { color: #ff9ad8; }
 .join-table tr.is-collision td { color: #39ff14; }
 .join-table tr.is-record td { outline: 1px solid #ff2bd6; }
+.join-table tr.is-collision-treas td { color: #ff2bd6; }
+.join-fold { margin: 14px 0 8px; }
+.join-fold summary { cursor: pointer; color: #00f0ff; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.join-toolbar { display: flex; gap: 12px; align-items: center; margin: 8px 0; font-size: 13px; color: var(--muted); }
+.join-mx { border-collapse: collapse; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; }
+.join-mx th, .join-mx td { padding: 6px 10px; border-bottom: 1px solid var(--gold-faint); }
 
