@@ -92,6 +92,18 @@ footer {
   padding: 24px 28px 40px;
   border-top: 1px solid var(--gold);
 }
+.grok-credit {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.grok-credit a {
+  color: #9fb3c8;
+  border-bottom: 1px solid var(--gold-dim);
+}
+.grok-credit a:hover { color: #00f0ff; }
 .hidden { display: none; }
 .tabs {
   display: flex;
