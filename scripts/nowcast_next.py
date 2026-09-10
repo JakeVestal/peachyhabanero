@@ -31,13 +31,15 @@ PUB = Path(os.environ.get("CUBE_DATA_DIR", ROOT / "site" / "data")) / "published
 CUBES = PUB / "cubes.json"
 OUT = PUB / "nowcast.json"
 FRED = "https://api.stlouisfed.org/fred/series/observations"
-GEMINI_MODELS = [
-    os.environ.get("GEMINI_MODEL", "").strip(),
-    "gemini-2.0-flash",
+# 1.5-flash is gone. 2.0-flash is shut down. 2.5-flash 404s on new AI Studio keys.
+# Prefer current Flash; if those 404 too, list live generateContent flash models.
+DEFAULT_GEMINI_MODELS = (
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
     "gemini-2.5-flash",
-    "gemini-1.5-flash",
-]
-GEMINI_MODELS = [m for m in GEMINI_MODELS if m]
+)
 BUCKETS = (
     ("resid_w_0_1y", "TB3MS"),
     ("resid_w_1_3y", "DGS2"),
@@ -145,6 +147,43 @@ def extract_grounding(data: dict) -> dict:
     return {"search_queries": queries, "sources": sources}
 
 
+def resolve_gemini_models(sess: requests.Session, key: str) -> list[str]:
+    pinned = (os.environ.get("GEMINI_MODEL") or "").strip()
+    out: list[str] = []
+    if pinned:
+        out.append(pinned)
+    for m in DEFAULT_GEMINI_MODELS:
+        if m not in out:
+            out.append(m)
+    try:
+        r = sess.get(
+            "https://generativelanguage.googleapis.com/v1beta/models",
+            params={"key": key, "pageSize": 100},
+            timeout=30,
+        )
+        if r.status_code != 200:
+            log(f"models.list {r.status_code} {r.text[:160]}")
+            return out
+        live = []
+        for m in r.json().get("models") or []:
+            name = (m.get("name") or "").split("/")[-1]
+            methods = m.get("supportedGenerationMethods") or []
+            if "generateContent" not in methods:
+                continue
+            low = name.lower()
+            if "flash" not in low:
+                continue
+            if any(x in low for x in ("image", "tts", "live", "exp")):
+                continue
+            if name not in out:
+                live.append(name)
+        out.extend(live)
+        log("gemini catalog: " + ", ".join(out))
+    except Exception as e:
+        log(f"models.list {type(e).__name__}: {e}")
+    return out
+
+
 def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tuple[dict | None, str, dict]:
     key = (os.environ.get("GEMINI_API_KEY") or "").strip()
     empty_meta = {"search_queries": [], "sources": [], "prompt_rows": last_rows[-6:], "grounded": False}
@@ -190,8 +229,10 @@ Rules:
 - rationale: <= 40 words, name the sources you used.
 """
     headers = {"Content-Type": "application/json"}
-    last_err = "no model"
-    for model in GEMINI_MODELS:
+    sess = requests.Session()
+    models = resolve_gemini_models(sess, key)
+    errors = []
+    for model in models:
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
             f"?key={key}"
@@ -207,10 +248,13 @@ Rules:
             if tools:
                 body["tools"] = tools
             try:
-                r = requests.post(url, headers=headers, json=body, timeout=90)
+                r = sess.post(url, headers=headers, json=body, timeout=90)
                 if r.status_code >= 400:
                     last_err = f"{model} {r.status_code} {r.text[:240]}"
                     log(last_err)
+                    errors.append(last_err)
+                    if r.status_code == 404:
+                        break
                     continue
                 data = r.json()
                 text = (
@@ -238,8 +282,9 @@ Rules:
             except Exception as e:
                 last_err = f"{model} {type(e).__name__}: {e}"
                 log(last_err)
+                errors.append(last_err)
                 continue
-    return None, last_err, empty_meta
+    return None, " | ".join(errors[-6:]) or "no model", empty_meta
 
 
 def main() -> int:
