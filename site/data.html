@@ -27,6 +27,7 @@
     <button class="neon-btn" data-tab="metrics">03 calculated</button>
     <button class="neon-btn" data-tab="raw">04 raw inputs</button>
     <button class="neon-btn" data-tab="catalog">05 raw catalog</button>
+    <button class="neon-btn" data-tab="nowcast">06 nowcast</button>
   </nav>
 
   <section id="panel-story" class="panel">
@@ -78,6 +79,17 @@
     <h2>05  /  what is in the cache</h2>
     <p class="sub" id="raw-note"></p>
     <div id="tbl-catalog"></div>
+  </section>
+
+  <section id="panel-nowcast" class="panel hidden">
+    <h2 id="nowcast">06  /  next-quarter nowcast</h2>
+    <p class="sub">
+      Not a BEA print. Refi, funds−coupon, and F1 are arithmetic from live
+      CMTs × last Table 3 weights. NIPA axes are Gemini Flash when a key
+      ran, otherwise held at the last print. Sources below are what Gemini
+      returned via Google Search grounding that night.
+    </p>
+    <div id="nowcast-view"><p class="sub">loading nowcast.json…</p></div>
   </section>
 
   <footer>

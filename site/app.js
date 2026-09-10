@@ -1,6 +1,6 @@
 const DATA = "./data/published";
 
-const TABS = ["story", "thresholds", "quarterly", "metrics", "raw", "catalog"];
+const TABS = ["story", "thresholds", "quarterly", "metrics", "raw", "catalog", "nowcast"];
 
 const PENNY_COLS = new Set([
   "DEBT_HELD_PUBLIC",
@@ -75,6 +75,10 @@ function showTab(name) {
     document.getElementById(`panel-${t}`).classList.toggle("hidden", t !== name);
     document.querySelector(`[data-tab="${t}"]`).classList.toggle("active", t === name);
   });
+  if (history.replaceState) {
+    const base = location.pathname.split("/").pop() || "data.html";
+    history.replaceState(null, "", name === "nowcast" ? `${base}#nowcast` : base);
+  }
 }
 
 function renderColumnNotes(mount, table) {
@@ -340,6 +344,108 @@ function explainQuarterlyCol(col, row, rows, thresholds, metrics, raw) {
   return [`Value copied from the quarterly embed. No further raw recipe on file.`];
 }
 
+function renderNowcast(mount, nc) {
+  if (!mount) return;
+  if (!nc) {
+    mount.innerHTML = `<p class="err">nowcast.json missing — run python scripts/nowcast_next.py after process.</p>`;
+    return;
+  }
+  const g = nc.gemini || {};
+  const rates = nc.rates || {};
+  const yields = rates.yields || {};
+  const ydates = rates.yield_dates || {};
+  const est = g.estimates || {};
+  const srcs = g.sources || [];
+  const queries = g.search_queries || [];
+  const prompt = g.prompt_rows || [];
+  const numCell = (v, d = 2) => (v == null || !Number.isFinite(Number(v)) ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: d }));
+  const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ESC[c]);
+  const axes = [
+    ["quarter_end", nc.quarter_end],
+    ["from last print", nc.from_date],
+    ["generated", nc.generated_at],
+    ["nipa_source", nc.nipa_source],
+    ["model", g.model || nc.model || "—"],
+    ["grounded", g.ran ? String(Boolean(g.grounded)) : "Gemini did not run"],
+    ["debt/GDP %", numCell(nc.debt_gdp_pct, 2)],
+    ["int/rec %", numCell(nc.int_rec_pct, 2)],
+    ["int/tax %", numCell(nc.int_tax_pct, 2)],
+    ["int/gf %", numCell(nc.int_gf_pct, 2)],
+    ["refi gap pp", numCell(nc.refi_gap, 2)],
+    ["funds − coupon", numCell(nc.funds_minus_stock, 2)],
+    ["F1", numCell(nc.F1, 2)],
+    ["F2", numCell(nc.F2, 2)],
+    ["F3", numCell(nc.F3, 2)],
+    ["primary / GDP %", numCell(nc.primary_deficit_pct_gdp, 2)],
+  ];
+  const yieldRows = Object.keys(yields).sort().map((sid) =>
+    `<tr><td>${sid}</td><td>${numCell(yields[sid], 3)}</td><td>${ydates[sid] || ""}</td></tr>`
+  ).join("");
+  const estRows = Object.keys(est).map((k) =>
+    `<tr><td>${k}</td><td>${numCell(est[k], 3)}</td></tr>`
+  ).join("");
+  const qList = queries.length
+    ? `<ul>${queries.map((q) => `<li>${esc(q)}</li>`).join("")}</ul>`
+    : `<p class="sub">No search queries in the API response (grounding off or the call fell back to tools-less JSON).</p>`;
+  const sList = srcs.length
+    ? `<ul>${srcs.map((s) => {
+        const uri = s.uri || s.url || "";
+        const title = s.title || uri;
+        const safe = /^https?:\/\//i.test(uri) ? uri : "";
+        return `<li>${safe ? `<a href="${esc(safe)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}</li>`;
+      }).join("")}</ul>`
+    : `<p class="sub">No grounding URIs stored. If Gemini ran without Google Search, this stays empty.</p>`;
+  const promptMount = "tbl-nowcast-prompt";
+  mount.innerHTML = `
+    <article class="col-card">
+      <h3>not a print</h3>
+      <p>${esc(nc.note || "")}</p>
+      <p><b>rationale.</b> ${esc(g.rationale || nc.rationale || "—")}</p>
+      ${g.skip && !g.ran ? `<p class="sub">skip: ${esc(g.skip)}</p>` : ""}
+    </article>
+    <article class="col-card">
+      <h3>plotted nowcast</h3>
+      <div class="table-scroll"><table><tbody>
+        ${axes.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${v == null ? "—" : esc(v)}</td></tr>`).join("")}
+      </tbody></table></div>
+    </article>
+    <article class="col-card">
+      <h3>rates Python fetched (not Gemini)</h3>
+      <p class="sub">${esc(rates.refi_rule || "")}</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>series</th><th>last</th><th>as of</th></tr></thead>
+        <tbody>${yieldRows || `<tr><td colspan="3">no live yields</td></tr>`}</tbody>
+      </table></div>
+      <p class="sub">coupon ${numCell(rates.coupon, 3)} · marginal ${numCell(rates.marginal, 3)}</p>
+    </article>
+    <article class="col-card">
+      <h3>Gemini NIPA estimates</h3>
+      ${estRows
+        ? `<div class="table-scroll"><table><thead><tr><th>key</th><th>value</th></tr></thead><tbody>${estRows}</tbody></table></div>`
+        : `<p class="sub">No Gemini estimates. NIPA is the last print.</p>`}
+    </article>
+    <article class="col-card">
+      <h3>search queries</h3>
+      ${qList}
+    </article>
+    <article class="col-card">
+      <h3>sources Gemini cited</h3>
+      ${sList}
+    </article>
+    <div id="${promptMount}"></div>
+  `;
+  if (prompt.length) {
+    renderTable(
+      document.getElementById(promptMount),
+      { columns: Object.keys(prompt[0]), rows: prompt, n_rows: prompt.length },
+      "nowcast-prompt-rows"
+    );
+    const bar = document.querySelector(`#${promptMount} .table-bar span`);
+    if (bar) bar.textContent = `${prompt.length} last cube rows sent to Gemini`;
+  }
+}
+
 function picker(mount, names, onPick) {
   mount.innerHTML = names
     .map((n, i) => `<button class="neon-btn${i === 0 ? " active" : ""}" data-name="${n}">${n}</button>`)
@@ -357,7 +463,7 @@ function picker(mount, names, onPick) {
 async function load() {
   const stamp = document.getElementById("stamp");
   try {
-    const [quarterly, metrics, raw, thresholds] = await Promise.all([
+    const [quarterly, metrics, raw, thresholds, nowcast] = await Promise.all([
       fetch(`${DATA}/quarterly.json`).then((r) => {
         if (!r.ok) throw new Error(`${r.status} quarterly.json`);
         return r.json();
@@ -365,6 +471,7 @@ async function load() {
       fetch(`${DATA}/calculated_metrics.json`).then((r) => r.json()),
       fetch(`${DATA}/raw_inputs.json`).then((r) => r.json()),
       fetch(`${DATA}/thresholds.json`).then((r) => r.json()),
+      fetch(`${DATA}/nowcast.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]);
 
     stamp.textContent = `generated ${quarterly.generated_at || metrics.generated_at || "?"} · ${
@@ -432,6 +539,7 @@ async function load() {
     });
 
     document.getElementById("raw-note").textContent = raw.note || "";
+    renderNowcast(document.getElementById("nowcast-view"), nowcast);
     const catRows = raw.catalog || [];
     renderTable(
       document.getElementById("tbl-catalog"),
@@ -453,5 +561,7 @@ document.getElementById("tabs").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-tab]");
   if (btn) showTab(btn.dataset.tab);
 });
+
+if (location.hash === "#nowcast") showTab("nowcast");
 
 load();

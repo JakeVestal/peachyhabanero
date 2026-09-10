@@ -128,10 +128,28 @@ def residual_marginal(row: dict, yields: dict) -> tuple[float | None, dict]:
     return m, used
 
 
-def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tuple[dict | None, str]:
+def extract_grounding(data: dict) -> dict:
+    cands = data.get("candidates") or []
+    gm = (cands[0].get("groundingMetadata") if cands else None) or {}
+    queries = [str(q) for q in (gm.get("webSearchQueries") or []) if q]
+    sources = []
+    seen = set()
+    for ch in gm.get("groundingChunks") or []:
+        web = ch.get("web") or ch.get("retrievedContext") or {}
+        uri = web.get("uri") or web.get("url")
+        title = web.get("title") or uri
+        if not uri or uri in seen:
+            continue
+        seen.add(uri)
+        sources.append({"title": str(title), "uri": str(uri)})
+    return {"search_queries": queries, "sources": sources}
+
+
+def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tuple[dict | None, str, dict]:
     key = (os.environ.get("GEMINI_API_KEY") or "").strip()
+    empty_meta = {"search_queries": [], "sources": [], "prompt_rows": last_rows[-6:], "grounded": False}
     if not key:
-        return None, "no GEMINI_API_KEY"
+        return None, "no GEMINI_API_KEY", empty_meta
     slim = []
     for r in last_rows[-6:]:
         slim.append({
@@ -146,6 +164,7 @@ def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tu
             "primary_deficit_pct_gdp": r.get("primary_deficit_pct_gdp"),
             "debt_gdp_pct": r.get("debt_gdp_pct"),
         })
+    empty_meta["prompt_rows"] = slim
     prompt = f"""You estimate the NEXT US quarterly NIPA/fiscal prints for peachyhabanero cubes.
 Today (UTC): {datetime.now(timezone.utc).strftime("%Y-%m-%d")}.
 Target quarter-end: {target}.
@@ -206,12 +225,21 @@ Rules:
                 parsed = json.loads(text)
                 parsed["_model"] = model
                 parsed["_grounded"] = bool(tools)
-                return parsed, f"{model}"
+                g = extract_grounding(data)
+                meta = {
+                    "search_queries": g["search_queries"],
+                    "sources": g["sources"],
+                    "prompt_rows": slim,
+                    "grounded": bool(tools) and bool(g["sources"] or g["search_queries"]),
+                    "model": model,
+                }
+                log(f"gemini {model} grounded={meta['grounded']} sources={len(meta['sources'])}")
+                return parsed, f"{model}", meta
             except Exception as e:
                 last_err = f"{model} {type(e).__name__}: {e}"
                 log(last_err)
                 continue
-    return None, last_err
+    return None, last_err, empty_meta
 
 
 def main() -> int:
@@ -273,7 +301,18 @@ def main() -> int:
     )
     f1 = f1_fn(fms) if (f1_fn and fms is not None) else None
 
-    nipa, nipa_src = gemini_nipa(target, rows, {**yields, "dates": yield_dates}, coupon)
+    nipa, nipa_src, gemini_meta = gemini_nipa(target, rows, {**yields, "dates": yield_dates}, coupon)
+    gemini_block = {
+        "ran": False,
+        "skip": nipa_src,
+        "model": None,
+        "grounded": False,
+        "rationale": None,
+        "search_queries": [],
+        "sources": [],
+        "prompt_rows": gemini_meta.get("prompt_rows") or [],
+        "estimates": None,
+    }
     if nipa:
         interest = fnum(nipa.get("interest_bn_saar")) or fnum(last.get("interest_bn"))
         receipts = fnum(nipa.get("receipts_bn_saar")) or fnum(last.get("receipts_bn"))
@@ -293,6 +332,24 @@ def main() -> int:
         rationale = str(nipa.get("rationale") or "")
         model = nipa.get("_model")
         nipa_label = f"gemini:{nipa_src}"
+        gemini_block.update({
+            "ran": True,
+            "skip": None,
+            "model": model,
+            "grounded": bool(gemini_meta.get("grounded")),
+            "rationale": rationale,
+            "search_queries": gemini_meta.get("search_queries") or [],
+            "sources": gemini_meta.get("sources") or [],
+            "estimates": {
+                "interest_bn_saar": fnum(nipa.get("interest_bn_saar")),
+                "receipts_bn_saar": fnum(nipa.get("receipts_bn_saar")),
+                "tax_bn_saar": fnum(nipa.get("tax_bn_saar")),
+                "gf_receipts_bn_saar": fnum(nipa.get("gf_receipts_bn_saar")),
+                "gdp_bn": fnum(nipa.get("gdp_bn")),
+                "primary_deficit_pct_gdp": fnum(nipa.get("primary_deficit_pct_gdp")),
+                "debt_held_by_public_pct_gdp": fnum(nipa.get("debt_held_by_public_pct_gdp")),
+            },
+        })
     else:
         log(f"gemini skipped: {nipa_src}")
         interest = fnum(last.get("interest_bn"))
@@ -306,6 +363,7 @@ def main() -> int:
         rationale = "NIPA held at last print (no Gemini). Refi/F1 from live CMTs."
         model = None
         nipa_label = "last_print"
+        gemini_block["rationale"] = rationale
 
     int_rec = (100.0 * interest / receipts) if (interest and receipts) else fnum(last.get("int_rec_pct"))
     int_tax = (100.0 * interest / tax) if (interest and tax) else fnum(last.get("int_tax_pct"))
@@ -322,6 +380,7 @@ def main() -> int:
         "model": model,
         "nipa_source": nipa_label,
         "rationale": rationale,
+        "gemini": gemini_block,
         "rates": {
             "yields": yields,
             "yield_dates": yield_dates,

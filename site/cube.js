@@ -104,6 +104,59 @@ function distRestruct(r, burden) {
   return Number.isFinite(b) ? b : null;
 }
 
+function piecewiseScore(v, warn, restruct) {
+  const x = Number(v), w = Number(warn), d = Number(restruct);
+  if (![x, w, d].every(Number.isFinite) || w === 0 || d === 0) return null;
+  if (x <= w) return Math.max(0, x / w);
+  if (x <= d) return 1 + (x - w) / Math.max(d - w, 1e-9);
+  return 2 + (x - d) / d;
+}
+
+function signedDistScores(s1, s2, s3, thresh) {
+  const scores = [s1, s2, s3].map(Number);
+  if (scores.some((v) => !Number.isFinite(v))) return null;
+  const delta = scores.map((v) => v - thresh);
+  const short = delta.map((v) => Math.max(0, -v));
+  if (short.some((v) => v > 0)) return Math.hypot(short[0], short[1], short[2]);
+  return -Math.min(delta[0], delta[1], delta[2]);
+}
+
+function nowcastSusDist(nc, zone, burden) {
+  if (!nc || !zone) return null;
+  const till = burden === "tax" ? nc.int_tax_pct : nc.int_rec_pct;
+  const sDebt = piecewiseScore(nc.debt_gdp_pct, zone.debt_gdp_warn, zone.debt_gdp_restruct);
+  const sTill = piecewiseScore(
+    till,
+    burden === "tax" ? zone.int_tax_warn : zone.int_rec_warn,
+    burden === "tax" ? zone.int_tax_restruct : zone.int_rec_restruct
+  );
+  const sGap = piecewiseScore(nc.refi_gap, zone.refi_gap_warn, zone.refi_gap_restruct);
+  if ([sDebt, sTill, sGap].some((v) => v == null)) return null;
+  return {
+    warn: signedDistScores(sDebt, sTill, sGap, 1),
+    restruct: signedDistScores(sDebt, sTill, sGap, 2),
+  };
+}
+
+function nowcastGhost1d(nc, x, y, extra) {
+  if (!nc || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return {
+    type: "scatter",
+    mode: "markers",
+    x: [x],
+    y: [y],
+    name: `nowcast ${nc.quarter_end}`,
+    text: [nowcastHover(nc) + (extra ? `<br>${extra}` : "")],
+    hoverinfo: "text",
+    marker: {
+      size: 11,
+      color: "#c4a35a",
+      symbol: "diamond",
+      line: { color: "#ffbf00", width: 2 },
+    },
+  };
+}
+
 function flagMissing(el, msg) {
   if (!el) return;
   el.innerHTML = `<p class="err" style="border:2px solid #ff2bd6;padding:12px;color:#ff2bd6;font-size:15px">${msg}</p>`;
@@ -578,7 +631,7 @@ function renderFdIndicator(rows, tax) {
     `<p class="dl"><a download="fd-interior-gf.csv" href="${el._csvUrl}">download interior quarters (csv)</a></p>`;
 }
 
-function drawDist(el, rows, tax) {
+function drawDist(el, rows, tax, nc, zone) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
   const traces = [
@@ -587,6 +640,22 @@ function drawDist(el, rows, tax) {
     { x: rows.map((r) => r.date), y: rows.map((r) => distWarn(r, "rec")), name: "Danger (receipts)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
     { x: rows.map((r) => r.date), y: rows.map((r) => distRestruct(r, "rec")), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
   ];
+  const d = nowcastSusDist(nc, zone, tax ? "tax" : "rec");
+  const qe = nc && nc.quarter_end;
+  if (d && qe) {
+    const gWarn = nowcastGhost1d(nc, qe, d.warn, `nowcast dist_warn ${Number.isFinite(d.warn) ? d.warn.toFixed(2) : "n/a"}`);
+    const gRes = nowcastGhost1d(nc, qe, d.restruct, `nowcast dist_restruct ${Number.isFinite(d.restruct) ? d.restruct.toFixed(2) : "n/a"}`);
+    if (gWarn) {
+      gWarn.name = `nowcast danger ${qe}`;
+      gWarn.marker.color = gold;
+      traces.push(gWarn);
+    }
+    if (gRes) {
+      gRes.name = `nowcast restruct ${qe}`;
+      gRes.marker.color = mag;
+      traces.push(gRes);
+    }
+  }
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
   return Plotly.newPlot(el, traces, {
@@ -620,7 +689,7 @@ function signedDistOctant(f1, f2, f3) {
   return -Math.min(d[0], d[1], d[2]);
 }
 
-function drawFdDist(el, rows, tax) {
+function drawFdDist(el, rows, tax, nc) {
   const mag = "#ff2bd6";
   const f2key = "F2";
   const ys = rows.map((r) => signedDistOctant(r.F1, r[f2key], r.F3));
@@ -724,6 +793,18 @@ function drawFdDist(el, rows, tax) {
       borderwidth: 1,
       borderpad: 4,
     });
+  }
+  if (nc && nc.quarter_end) {
+    const nd = signedDistOctant(nc.F1, nc.F2, nc.F3);
+    const ghost = nowcastGhost1d(
+      nc,
+      nc.quarter_end,
+      nd,
+      Number.isFinite(nd)
+        ? `nowcast σ-distance ${nd.toFixed(2)} (0 = face)`
+        : "nowcast σ-distance n/a"
+    );
+    if (ghost) traces.push(ghost);
   }
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
@@ -1052,8 +1133,8 @@ async function main() {
 
   await drawFail();
   await drawSustain();
-  if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax);
-  if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax);
+  if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax, nowcast, zone);
+  if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax, nowcast);
   if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail);
   drawSixAxes(sus, fail, zone, tax);
 
@@ -1066,12 +1147,8 @@ async function main() {
     drawSustain();
     drawFail();
     drawSixAxes(sus, fail, zone, tax);
-    if ($("dist-plot")) {
-      try {
-        Plotly.restyle("dist-plot", { visible: tax ? [true, true, false, false] : [false, false, true, true] });
-      } catch (e) { /* plot not on this page */ }
-    }
-    if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax);
+    if ($("dist-plot") && sus.length) drawDist("dist-plot", sus, tax, nowcast, zone);
+    if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax, nowcast);
     if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail);
   }
   if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
