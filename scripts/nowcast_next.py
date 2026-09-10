@@ -155,7 +155,10 @@ Live market (do NOT overwrite these; Python owns refi):
 {json.dumps(yields, indent=2)}
 Last book coupon (Fiscal Data Total Marketable, %): {coupon}
 
-Search public sources if you can (BEA, FRED, CBO, JEC, Treasury Fiscal Data, Reuters FOMC).
+Look for analyst reports, articles, posts, blogs, and anywhere credible 
+people discuss the market. Give preference to official government or 
+institutional prints, information or press releases. 
+
 Return ONLY JSON with these keys (numbers, not strings):
   interest_bn_saar, receipts_bn_saar, tax_bn_saar, gf_receipts_bn_saar,
   gdp_bn, primary_deficit_pct_gdp, debt_held_by_public_pct_gdp,
