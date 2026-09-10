@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Treasury cubes — scratch</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+    <p class="navline"><a href="index.html">home</a> · <a href="fed.html">fed view</a> · <a href="data.html">data</a> · scratch</p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <h1>SCRATCH</h1>
+    <p class="sub">
+      Local only. Gitignored. Characteristic series only. No published Fed
+      plot yet. Long rates = ACM 10y term premium. Employment = NROU − UNRATE
+      (up = mandate looking met). Inflation = PCE yoy − 2.
+    </p>
+    <p class="sub" id="stamp">loading raw_inputs.json…</p>
+  </header>
+
+  <section>
+    <h2>2018 join — interior FD × mandate gaps × FOMC Δ</h2>
+    <p class="sub">
+      Table, not a cube. Each fail-row quarter: inside the FD octant
+      (F1>0, F2>0, F3>0) vs PCE yoy−2 and NROU−UNRATE vs net FOMC Δ.
+      <b>Collision</b> = inside <em>and</em> hiked <em>and</em> PCE above target
+      (mandate said hike while in the box — 2018 is the type specimen).
+      <b>Hike, no heat</b> = inside and hiked with PCE at or under 2.
+      <b>Hold in heat</b> = inside and did not hike while PCE was above 2.
+      Pre-2012 PCE gap uses the same 2% lens. Missing FOMC Δ is omitted, not a hold.
+    </p>
+    <p class="sub" id="join-tally">joining…</p>
+    <div class="join-scroll">
+      <table class="join-table" id="join-table">
+        <thead>
+          <tr>
+            <th>date</th><th>inside</th><th>Δ pp</th><th>action</th>
+            <th>PCE−2</th><th>NROU−U</th><th>F1</th><th>F2</th><th>F3</th><th>label</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div id="plot-join-scatter"></div>
+      <div id="plot-join-time"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Money — M2 velocity, M2 stock, bank loans (keg, not yet folded)</h2>
+    <p class="sub">
+      Nightly adds these. Empty until you run fetch. M2V = keg thermometer.
+      M2SL = stock. TOTLL = private credit volume (Cp). Ig is A091, already pulled.
+    </p>
+    <div id="plot-m2v"></div>
+    <div class="grid-2" style="margin-top:16px">
+      <div id="plot-m2sl"></div>
+      <div id="plot-totll"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Long rates — ACM 10y term premium</h2>
+    <p class="sub">
+      THREEFYTP10. What duration charges beyond the expected path of funds
+      and inflation. Candidate characteristic series for the long-rate mandate.
+    </p>
+    <div id="plot-acm"></div>
+  </section>
+
+  <section>
+    <h2>Companions — not the axis</h2>
+    <div class="grid-2">
+      <div>
+        <p class="sub"><b>DGS10</b> — nominal 10y. Headline long rate. Mixes path + inflation + premium.</p>
+        <div id="plot-dgs10"></div>
+      </div>
+      <div>
+        <p class="sub"><b>DFII10</b> — 10y TIPS real yield. Board language, still mixed.</p>
+        <div id="plot-dfii10"></div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <p class="sub"><b>T5YIFR</b> — 5y5y forward inflation. Anchoring check, belongs with prices not duration.</p>
+      <div id="plot-t5yifr"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Employment — NROU − UNRATE</h2>
+    <p class="sub">
+      Characteristic series for maximum employment. Positive: unemployment
+      below CBO natural rate — mandate looks met. Negative: slack. NROU is
+      quarterly; held across the months in the quarter. Not a payroll print.
+    </p>
+    <div id="plot-ugap"></div>
+  </section>
+
+  <section>
+    <h2>Inflation — PCE yoy − 2%</h2>
+    <p class="sub">
+      12-month % change in <b>PCEPI</b> minus 2. Official FOMC target from
+      January 2012. Pre-2012 is the same 2% applied as today’s lens, not a
+      historical Committee target. Adjustable pre-2012 target comes later.
+      Up = above target = price-stability mandate missed.
+    </p>
+    <div id="plot-pigap"></div>
+    <p class="sub" style="margin-top:16px"><b>PCE yoy</b> — the raw 12-month rate. Dotted line at 2%.</p>
+    <div id="plot-pceyoy"></div>
+  </section>
+
+  <section>
+    <h2>Treasury stock mix — MSPD original class</h2>
+    <p class="sub">
+      Monthly share of marketable debt <b>held by the public</b> from MSPD
+      Table 1. Y is original security class, not remaining maturity.
+      A 10-year with eleven months left still sits on Notes. Bills / notes
+      / bonds / TIPS / FRN sum toward 1. FRNs are missing-as-zero before
+      2014. This is the time-varying mix we already download; the cube
+      still uses bills + a 2:1 prior on the rest. Remaining-life CUSIPs
+      are not in this plot.
+    </p>
+    <div id="plot-mix3d" style="min-height:520px"></div>
+  </section>
+
+  <section>
+    <h2>Remaining maturity — MSPD Table 3</h2>
+    <p class="sub">
+      Same book, different Y. Each CUSIP’s weight sits in
+      <b>remaining</b> life: 0–1y, 1–3y, 3–7y, 7–10y, 10y+, plus TIPS and
+      FRN off to the side. A 10-year with eleven months left is in 0–1y.
+      Amounts are Table 3 outstanding (issued if outstanding is null).
+      Not held-by-the-public — Table 3 is total marketable outstanding.
+    </p>
+    <div id="plot-resid3d" style="min-height:520px"></div>
+    <p class="sub" style="margin-top:16px">
+      <b>marginal_residual</b> = those weights × TB3MS / DGS2 / DGS5 /
+      DGS10 / DGS30 / DFII10 / FEDFUNDS. Cube still uses bills + 2:1
+      until we swap it. Months with TIPS weight and no DFII10 print
+      are left blank (no fallback).
+    </p>
+    <div id="plot-marg-compare"></div>
+    <div id="plot-refi-compare" style="margin-top:16px"></div>
+  </section>
+
+  <section>
+    <h2>Robustness — auction $ vs MSPD bills share</h2>
+    <p class="sub">
+      Reminder: the published refi axis uses <b>MSPD bills / marketable stock</b>,
+      then 2:1 DGS2:DGS10 on the rest. Auction dollars are the <i>flow that
+      actually rolled this quarter</i> — bills turn over faster than the stock
+      share, so a referee will ask whether the warn face moves. This plot is
+      that check. It is not the cube. Do not promote it until the mapping
+      from every security type to TB3MS/DGS2/DGS10 is written down and
+      incomplete quarters are allowed to go missing (no fallback).
+    </p>
+    <div id="plot-auction-share"></div>
+    <div id="plot-auction-refi" style="margin-top:16px"></div>
+  </section>
+
+  <section>
+    <h2>What the FOMC did — target range and Δ</h2>
+    <p class="sub">
+      Instrument, not a mandate axis. Band is <b>DFEDTARL–DFEDTARU</b> (range
+      from Dec 2008). Line is <b>FEDFUNDS</b>. Markers are month-end first
+      difference of the upper bound: magenta hike, lime cut. Holds are the
+      months with no marker. Pre-2008 there is no range in this pull —
+      only effective funds.
+    </p>
+    <div id="plot-fomc"></div>
+    <div id="plot-delta"></div>
+  </section>
+
+  <footer>scratch · peachyhabanero · not deployed</footer>
+  <script src="scratch.js"></script>
+</body>
+</html>
