@@ -344,7 +344,12 @@ function sustainTraces(rows, zone, burden, nc) {
       type: "scatter3d",
       x: [last.debt_gdp_pct], y: [last[ycol]], z: [last.refi_gap],
       mode: "markers",
-      marker: { size: 10, color: "#00f0ff", symbol: "diamond" },
+      marker: {
+        size: 14,
+        color: "#00f0ff",
+        symbol: "circle",
+        line: { color: "#ffbf00", width: 3 },
+      },
       text: [hover[hover.length - 1]], hoverinfo: "text",
       name: `latest ${last.date}`,
     },
