@@ -56,8 +56,7 @@ function nowcastHover(nc) {
     `int/rec ${fmtNow(Number(nc.int_rec_pct), 1)}%  int/tax ${fmtNow(Number(nc.int_tax_pct), 1)}%<br>` +
     `refi ${Number(nc.refi_gap) >= 0 ? "+" : ""}${fmtNow(Number(nc.refi_gap), 2)} pp  ` +
     `funds−coupon ${fmtNow(Number(nc.funds_minus_stock), 2)}<br>` +
-    `F1 ${fmtNow(Number(nc.F1), 2)}  F2 ${fmtNow(Number(nc.F2), 2)}  F3 ${fmtNow(Number(nc.F3), 2)}<br>` +
-    `${nc.rationale || ""}`
+    `F1 ${fmtNow(Number(nc.F1), 2)}  F2 ${fmtNow(Number(nc.F2), 2)}  F3 ${fmtNow(Number(nc.F3), 2)}`
   );
 }
 

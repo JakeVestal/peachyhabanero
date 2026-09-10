@@ -233,6 +233,17 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
 .col-card a { color: #00f0ff; }
 .col-card .why { color: var(--muted); }
 .col-card .why b { color: #ff2bd6; }
+.rationale-card {
+  border-left: 3px solid var(--gold);
+}
+.rationale-card h3 { color: #c4a35a; }
+.rationale-body { max-width: 72ch; }
+.rationale-body p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 10px 0;
+}
 .navline { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted); margin: 0 0 10px; }
 .navline a { color: #00f0ff; }
 #cube { width: 100%; min-height: 820px; }

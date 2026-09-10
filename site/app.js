@@ -391,13 +391,21 @@ function renderNowcast(mount, nc) {
         return `<li>${safe ? `<a href="${esc(safe)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}</li>`;
       }).join("")}</ul>`
     : `<p class="sub">Gemini returned no sources array.</p>`;
+  const rationaleRaw = String(g.rationale || nc.rationale || "").trim();
+  const rationaleHtml = rationaleRaw
+    ? rationaleRaw.split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join("")
+    : `<p class="sub">No rationale in nowcast.json.</p>`;
   const promptMount = "tbl-nowcast-prompt";
   mount.innerHTML = `
     <article class="col-card">
       <h3>not a print</h3>
       <p>${esc(nc.note || "")}</p>
-      <p><b>rationale.</b> ${esc(g.rationale || nc.rationale || "—")}</p>
       ${g.skip && !g.ran ? `<p class="sub">skip: ${esc(g.skip)}</p>` : ""}
+    </article>
+    <article class="col-card rationale-card">
+      <h3>rationale</h3>
+      <p class="sub">Gemini’s write-up: the prints, the rate path, the news, the curve. Not a BEA print. Cube math is Python’s.</p>
+      <div class="rationale-body">${rationaleHtml}</div>
     </article>
     <article class="col-card">
       <h3>plotted nowcast</h3>
