@@ -44,9 +44,12 @@
   </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
   <p class="sub">
-    Last observation in the quarter. NIPA with NIPA, market rates from FRED,
-    book coupon from Fiscal Data. σ and the plotted path are complete
-    quarters from 2000-Q1 through the last BEA GDP print.
+    The color of the dot on the sustainability chart shows a simple metric for
+    <b>interest-burden stress</b>. It combines four metrics into a single
+    weighted average score: debt/GDP (20%), interest share (35%), and
+    refinancing gap (25%)—plus an extra metric for <b>interest/GDP</b> (20%).
+    Coloring this way helps communicate that a high interest share for a
+    smaller economy isn't as severe as one for a larger economy.
   </p>
 </header>
 
@@ -72,7 +75,7 @@
 </section>
 
 <section>
-  <h2>00  /  the zones are saying</h2>
+  <h2>00  /  What the zones are saying</h2>
   <div class="col-card">
     <h3><span style="color:#c4a35a">Danger Zone</span></h3>
     <p>
@@ -106,12 +109,6 @@
       there, and neither has the postwar US.
     </p>
   </div>
-  <p class="sub">
-    The axes, and the boundary zones for each, are defined, justified, and
-    discussed as follows. Scroll down past the 3d plot to see plots of each
-    axis with its boundary zone and a detailed description of how each axis
-    is calculated from raw data, with sources.
-  </p>
 </section>
 
 <section>
@@ -259,15 +256,7 @@
     score-space dimensions, and is not a raw percent or basis point measure.
   </p>
   <div id="dist-plot"></div>
-  <p class="sub">
-    Point color on the sustainability path is <b>interest-burden stress</b>:
-    a 0–1 blend of the three score-space coordinates
-    (20% debt/GDP, 35% interest share, 25% refi gap) plus a 20% sleeve for
-    <b>interest / GDP</b> (`A091 / GDP`), piecewise through 3.0% (warn) and
-    4.5% (restruct). That sleeve is not a cube axis. It is only the color so a
-    high till-share quarter that is still a small slice of GDP does not
-    look the same as one that is already a program.
-  </p>
+
 </section>
 
 <section>

@@ -197,6 +197,7 @@ FRED_GROUPS = {
         "DRTSCILM",         # SLOOS C&I tightening
         "BAMLC0A0CM",       # IG OAS
         "BAMLH0A0HYM2",     # HY OAS
+        "TOTLL",            # commercial bank loans and leases, $bn (H.8) — private credit volume
     ],
     "fred_inflation": [
         "PCEPI",
@@ -205,6 +206,8 @@ FRED_GROUPS = {
         "CPIAUCSL",                 # headline CPI-U
         "MICH",                     # Michigan 1y inflation expectations
         "PCETRIM12M159SFRBDAL",     # Dallas Fed 12m trimmed-mean PCE
+        "M2V",                      # velocity of M2, quarterly
+        "M2SL",                     # M2 stock, monthly SA $bn
     ],
 }
 
@@ -813,24 +816,38 @@ def update_raw(
     for i, name in enumerate(FRAME_NAMES):
         old = frames[i] if i < len(frames) else pd.DataFrame()
         force_full = False
+        force_why = None
         if name == "fiscal_mspd_composition" and old is not None and len(old):
             notes = pd.to_numeric(old.get("MSPD_NOTES_PUBLIC_MN"), errors="coerce") if "MSPD_NOTES_PUBLIC_MN" in old.columns else pd.Series(dtype=float)
             if notes.empty or notes.notna().mean() < 0.8:
                 force_full = True
+                force_why = "MSPD class dollars sparse — full Table 1 rebuild"
         if name == "fiscal_mspd_residual" and (old is None or old.empty or "RESID_W_0_1Y" not in getattr(old, "columns", [])):
             force_full = True
+            force_why = "Table 3 residual missing — full rebuild"
         if name == "fred_fiscal_nipa" and old is not None and len(old):
             if "W780RC1Q027SBEA" not in getattr(old, "columns", []):
                 force_full = True
+                force_why = "W780 missing — full NIPA rebuild"
         if name == "fred_policy_rates" and old is not None and len(old):
             d5 = pd.to_numeric(old.get("DGS5"), errors="coerce") if "DGS5" in old.columns else pd.Series(dtype=float)
             if d5.empty or d5.notna().mean() < 0.8:
                 force_full = True
+                force_why = "DGS5 sparse — full policy-rate rebuild"
+        cols = set(getattr(old, "columns", [])) if old is not None else set()
+        if name == "fred_inflation" and old is not None and len(old):
+            if "M2V" not in cols or "M2SL" not in cols:
+                force_full = True
+                force_why = "M2V/M2SL missing — full inflation+money rebuild"
+        if name == "fred_financial_conditions" and old is not None and len(old):
+            if "TOTLL" not in cols:
+                force_full = True
+                force_why = "TOTLL missing — full financial-conditions rebuild"
         if force_full:
             start = DEFAULT_START
             old = pd.DataFrame()
             if verbose:
-                print(f"  MSPD class dollars sparse — full Table 1 rebuild from {start}")
+                print(f"  {force_why or 'full rebuild'} from {start}")
         elif old is not None and len(old):
             last = pd.to_datetime(old.index.max())
             start = (last - timedelta(days=lookback_days)).date().isoformat()

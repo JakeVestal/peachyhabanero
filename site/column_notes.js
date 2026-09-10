@@ -339,6 +339,33 @@ window.COLUMN_NOTES = {
       "MSPD Table 1 total public debt outstanding, millions of dollars.",
     why: "Middle-priority debt stock for the effective coupon: penny first, then MSPD, then GFDEBTN.",
   },
+  M2V: {
+    title: "Velocity of M2 Money Stock",
+    source: "Federal Reserve Bank of St. Louis / BEA",
+    units: "Ratio, quarterly SA",
+    url: "https://fred.stlouisfed.org/series/M2V",
+    official:
+      "Nominal GDP divided by the M2 money stock. How many times M2 turns over in a year.",
+    why: "Keg thermometer. Extra coupon from a hike is sleeping while velocity is low; a tick-up is the reallocation into goods. Not a cube axis yet.",
+  },
+  M2SL: {
+    title: "M2 (seasonally adjusted)",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Billions of dollars, monthly SA",
+    url: "https://fred.stlouisfed.org/series/M2SL",
+    official:
+      "M2 money stock, seasonally adjusted. H.6 Money Stock Measures.",
+    why: "Stock behind M2V so velocity is not a black box. Not a cube axis.",
+  },
+  TOTLL: {
+    title: "Loans and Leases in Bank Credit, All Commercial Banks",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Billions of dollars, weekly, SA",
+    url: "https://fred.stlouisfed.org/series/TOTLL",
+    official:
+      "H.8 Assets and Liabilities of Commercial Banks. Total loans and leases in bank credit.",
+    why: "Private credit volume Cp. Paired with NIPA federal interest (A091) as Ig. Not TCMDO — that includes federal debt.",
+  },
   MSPD_BILLS_SHARE_MARKETABLE: {
     title: "Bills as a share of marketable debt held by the public",
     source: "Derived from MSPD Table 1",

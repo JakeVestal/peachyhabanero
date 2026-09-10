@@ -121,9 +121,15 @@ function wire(xmin, xmax, ymin, ymax, zmin, zmax, color, name, width, dashed) {
   };
 }
 
+function isNarrow() {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches;
+}
+
 function axis3d(title) {
+  const narrow = isNarrow();
   return {
-    title,
+    title: { text: title, font: { size: narrow ? 10 : 12 } },
+    tickfont: { size: narrow ? 9 : 11 },
     backgroundcolor: "rgba(0,0,0,0)",
     showbackground: false,
     showgrid: false,
@@ -136,6 +142,7 @@ function axis3d(title) {
 }
 
 function layout3d(title, xt, yt, zt, ranges) {
+  const narrow = isNarrow();
   const scene = {
     xaxis: Object.assign(axis3d(xt), ranges ? { range: ranges.x } : {}),
     yaxis: Object.assign(axis3d(yt), ranges ? { range: ranges.y } : {}),
@@ -150,22 +157,22 @@ function layout3d(title, xt, yt, zt, ranges) {
   };
 
   return {
-    title: { text: title, font: { color: "#00f0ff", size: 14 } },
+    title: { text: title, font: { color: "#00f0ff", size: narrow ? 13 : 14 } },
     paper_bgcolor: "#07080c",
     plot_bgcolor: "#07080c",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace" },
     scene,
     legend: {
-      font: { size: 10, color: "#9fb3c8" },
-      bgcolor: "rgba(7,8,12,0.55)",
-      orientation: 'h',
+      font: { size: narrow ? 9 : 10, color: "#9fb3c8" },
+      bgcolor: "rgba(7,8,12,0.72)",
+      orientation: "h",
       x: 0.5,
-      xanchor: 'center',
-      y: 1.12,
-      yanchor: 'bottom'
+      xanchor: "center",
+      y: narrow ? -0.08 : 1.12,
+      yanchor: narrow ? "top" : "bottom",
     },
-    margin: { l: 0, r: 0, t: 48, b: 72 },
-    height: 720,
+    margin: narrow ? { l: 0, r: 0, t: 36, b: 118 } : { l: 0, r: 0, t: 48, b: 72 },
+    height: narrow ? 460 : 720,
     uirevision: "keep-camera",
   };
 }
@@ -381,17 +388,17 @@ function failTraces(rows, tax, showRates) {
     connectgaps: false,
   });
 
-  // scatter3d: circle / diamond / x only. No text glyphs (they render gold in WebGL).
-  // Inside = magenta outline, fill is the action color. Never a magenta fill.
+  // scatter3d: circle only (diamonds read as slabs on WebGL/mobile).
+  // Fill is the action color, ~50% opacity. Inside = magenta outline, never a magenta fill.
   const groups = [
-    { k: "hold", inn: false, symbol: "circle", color: "#00f0ff", line: "#00f0ff", size: 5, name: "outside", legend: !showRates },
-    { k: "hold", inn: true, symbol: "circle-open", color: "#07080c", line: "#ff2bd6", size: 8, name: "inside (hold)", legend: true },
-    { k: "hike", inn: false, symbol: "diamond", color: "#39ff14", line: "#39ff14", size: 11, name: "hike", legend: showRates },
-    { k: "hike", inn: true, symbol: "diamond", color: "#39ff14", line: "#ff2bd6", size: 12, name: "hike inside", legend: false },
-    { k: "cut", inn: false, symbol: "diamond", color: "#ff4d4d", line: "#ff4d4d", size: 11, name: "cut", legend: showRates },
-    { k: "cut", inn: true, symbol: "diamond", color: "#ff4d4d", line: "#ff2bd6", size: 12, name: "cut inside", legend: false },
-    { k: "missing", inn: false, symbol: "x", color: "#7f93a6", line: "#7f93a6", size: 7, name: "no FOMC print", legend: showRates },
-    { k: "missing", inn: true, symbol: "x", color: "#7f93a6", line: "#ff2bd6", size: 8, name: "no FOMC print inside", legend: false },
+    { k: "hold", inn: false, color: "rgba(0,240,255,0.45)", line: "rgba(0,240,255,0.25)", size: 4, name: "outside", legend: !showRates },
+    { k: "hold", inn: true, color: "rgba(0,240,255,0.45)", line: "#ff2bd6", size: 5, name: "inside (hold)", legend: true },
+    { k: "hike", inn: false, color: "rgba(57,255,20,0.50)", line: "rgba(57,255,20,0.25)", size: 4, name: "hike", legend: showRates },
+    { k: "hike", inn: true, color: "rgba(57,255,20,0.50)", line: "#ff2bd6", size: 5, name: "hike inside", legend: false },
+    { k: "cut", inn: false, color: "rgba(255,77,77,0.50)", line: "rgba(255,77,77,0.25)", size: 4, name: "cut", legend: showRates },
+    { k: "cut", inn: true, color: "rgba(255,77,77,0.50)", line: "#ff2bd6", size: 5, name: "cut inside", legend: false },
+    { k: "missing", inn: false, color: "rgba(127,147,166,0.45)", line: "rgba(127,147,166,0.25)", size: 4, name: "no FOMC print", legend: showRates },
+    { k: "missing", inn: true, color: "rgba(127,147,166,0.45)", line: "#ff2bd6", size: 5, name: "no FOMC print inside", legend: false },
   ];
   const lastIdx = rows.length - 1;
   groups.forEach((g) => {
@@ -411,8 +418,9 @@ function failTraces(rows, tax, showRates) {
       marker: {
         size: g.size,
         color: g.color,
-        symbol: g.symbol,
-        line: { color: g.line, width: g.inn ? 3 : 1 },
+        symbol: "circle",
+        opacity: 0.85,
+        line: { color: g.line, width: g.inn ? 2 : 0.5 },
       },
       hovertext: idx.map((i) => hover[i]),
       hovertemplate: "%{hovertext}<extra></extra>",
@@ -426,10 +434,10 @@ function failTraces(rows, tax, showRates) {
     x: [last.F3], y: [last[f2key]], z: [last.F1],
     mode: "markers",
     marker: {
-      size: 11,
-      color: "#00f0ff",
-      symbol: "diamond",
-      line: { color: isInside(last, f2key) ? "#ff2bd6" : "#00f0ff", width: isInside(last, f2key) ? 3 : 1 },
+      size: 7,
+      color: "rgba(0,240,255,0.85)",
+      symbol: "circle",
+      line: { color: isInside(last, f2key) ? "#ff2bd6" : "#00f0ff", width: isInside(last, f2key) ? 2.5 : 1 },
     },
     hovertext: [hover[hover.length - 1]],
     hovertemplate: "%{hovertext}<extra></extra>",
@@ -606,10 +614,10 @@ function drawFdDist(el, rows, tax) {
       text: lineTips, hoverinfo: "text",
       connectgaps: false,
     },
-    marks("hold", "#00f0ff", "circle", 6),
-    marks("hike", "#39ff14", "triangle-up", 11),
-    marks("cut", "#ff4d4d", "triangle-down", 11),
-    marks("missing", "#7f93a6", "x", 9),
+    marks("hold", "#00f0ff", "circle", 5),
+    marks("hike", "#39ff14", "triangle-up", 8),
+    marks("cut", "#ff4d4d", "triangle-down", 8),
+    marks("missing", "#7f93a6", "x", 7),
   ];
   const recIdx = rows.findIndex((r) => String(r.date).slice(0, 10) === "2018-03-31");
   const recD = recIdx >= 0 ? ys[recIdx] : null;
@@ -895,7 +903,7 @@ async function main() {
           : "");
   }
 
-  const opts = { responsive: true, displaylogo: false };
+  const opts = { responsive: true, displaylogo: false, displayModeBar: !isNarrow() };
   let tax = Boolean($("btn-tax") && $("btn-tax").classList.contains("active"));
   let showRates = Boolean($("tog-rates") && $("tog-rates").checked);
 

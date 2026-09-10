@@ -289,7 +289,11 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
 .axis-copy .stat { font-size: 13px; margin: 0 0 12px; }
 @media (max-width: 720px) {
   .axis-row { flex-wrap: wrap; }
-  .axis-plot { flex-basis: var(--axis-plot-w); }
+  .axis-plot {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
 }
 #cube-sustain, #cube-fail, #dist-plot, #fd-dist-plot, #fd-delta-plot {
   background: var(--panel);
@@ -532,4 +536,46 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .cube-wrap.is-live .cube-shield {
   display: none;
 }
+
+@media (max-width: 720px) {
+  html, body { overflow-x: hidden; }
+  header, footer, section, nav { padding-left: 14px; padding-right: 14px; }
+  footer { padding: 20px 14px 32px; }
+  h1 { font-size: 1.28rem; letter-spacing: 0.05em; }
+  .header-top { flex-wrap: wrap; }
+  .navline { font-size: 11px; line-height: 1.65; }
+  .page-sus .toolbar,
+  .page-fd .toolbar {
+    width: calc(100% - 28px);
+    margin: 0 14px 10px;
+  }
+  #cube-sustain, #cube-fail { min-height: 460px; }
+  .js-plotly-plot .modebar,
+  .js-plotly-plot .modebar-container { display: none !important; }
+  .cube-shield span { font-size: 10px; right: 8px; bottom: 8px; }
+  .neon-btn, .gh-badge { min-height: 36px; }
+  .switch { transform: scale(1.05); }
+}
+
+.join-scroll { overflow-x: auto; border: 1px solid var(--gold-dim); border-radius: 10px; }
+.join-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+}
+.join-table th, .join-table td {
+  padding: 6px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--gold-faint);
+  white-space: nowrap;
+}
+.join-table th:first-child, .join-table td:first-child,
+.join-table th:nth-child(2), .join-table td:nth-child(2),
+.join-table th:nth-child(4), .join-table td:nth-child(4),
+.join-table th:last-child, .join-table td:last-child { text-align: left; }
+.join-table th { color: #9fb3c8; font-weight: 500; }
+.join-table tr.is-inside td { color: #ff9ad8; }
+.join-table tr.is-collision td { color: #39ff14; }
+.join-table tr.is-record td { outline: 1px solid #ff2bd6; }
 

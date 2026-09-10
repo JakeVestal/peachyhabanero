@@ -84,9 +84,10 @@ RAW_KEEP = {
     "fred_term_premium": [
         "THREEFYTP10", "T10Y2Y", "T10Y3M", "T5YIE", "T10YIE", "T5YIFR",
     ],
-    "fred_financial_conditions": ["NFCI", "DRTSCILM", "BAMLC0A0CM", "BAMLH0A0HYM2"],
+    "fred_financial_conditions": ["NFCI", "DRTSCILM", "BAMLC0A0CM", "BAMLH0A0HYM2", "TOTLL"],
     "fred_inflation": [
         "PCEPILFE", "PCEPI", "CPILFESL", "CPIAUCSL", "MICH", "PCETRIM12M159SFRBDAL",
+        "M2V", "M2SL",
     ],
     "fiscal_mspd_composition": [
         "MSPD_BILLS_PUBLIC_MN",
@@ -216,6 +217,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     fiscal = by.get("fred_fiscal_nipa", pd.DataFrame())
     debt = by.get("fred_debt_stocks", pd.DataFrame())
     labor = by.get("fred_labor_output", pd.DataFrame())
+    infl = by.get("fred_inflation", pd.DataFrame())
 
     stock_fd = _qe(_col_or(m01, "treasury_avg_marketable_coupon_pct"))
     if int(stock_fd.dropna().shape[0]) < 8:
@@ -243,6 +245,20 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     gdp = _qe(_col_or(labor, "GDP"))
     debt_pub_gdp = _qe(_col_or(debt, "FYGFGDQ188S"))
     tax_bn = _qe(_col_or(fiscal, "W006RC1Q027SBEA"))
+
+    def _yoy_pct(s: pd.Series) -> pd.Series:
+        out = pd.to_numeric(s, errors="coerce").dropna()
+        if out.empty:
+            return pd.Series(dtype="float64")
+        out.index = pd.to_datetime(out.index)
+        m = out.groupby(out.index.to_period("M")).last()
+        m.index = m.index.to_timestamp(how="end").normalize()
+        return (m / m.shift(12) - 1.0) * 100.0
+
+    pce_yoy = _yoy_pct(_col_or(infl, "PCEPI"))
+    pce_core_yoy = _yoy_pct(_col_or(infl, "PCEPILFE"))
+    unrate_q = _qe(_col_or(labor, "UNRATE"))
+    nrou_q = _qe(_col_or(labor, "NROU"))
 
     w_bills = _qe(_col_or(m01, "w_bills"))
     w_2y = _qe(_col_or(m01, "w_2y"))
@@ -318,6 +334,13 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "int_gdp_pct": (int_bn / gdp) * 100.0,
         "rate_adjust": rate_adjust,
         "target_end": target_end,
+        "pce_yoy": _qe(pce_yoy),
+        "pce_gap": _qe(pce_yoy) - 2.0,
+        "pce_core_yoy": _qe(pce_core_yoy),
+        "pce_core_gap": _qe(pce_core_yoy) - 2.0,
+        "unrate": unrate_q,
+        "nrou": nrou_q,
+        "emp_gap": nrou_q - unrate_q,
     }).sort_index()
     panel = panel.loc[panel.index >= SIGMA_WINDOW_START]
     # Do not dropna a shared "need" that includes refi_gap — that is a
