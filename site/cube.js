@@ -190,7 +190,7 @@ function nowcastSusDist(nc, zone, burden) {
 }
 
 function nowcastGhost1d(nc, x, y, extra, color) {
-  if (!nc || !Number.isFinite(x) || !Number.isFinite(y)) return [];
+  if (!nc || x == null || x === "" || !Number.isFinite(Number(y))) return [];
   const fill = color || "#c4a35a";
   const hover = nowcastHover(nc) + (extra ? `<br>${extra}` : "");
   return [
