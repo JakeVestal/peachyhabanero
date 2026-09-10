@@ -5,10 +5,10 @@ Rate axes (refi, funds−coupon, F1) are arithmetic: last Table-3 remaining-
 maturity weights × today's FRED CMTs, TIPS dropped, rest renormalized, minus
 the last Fiscal Data book coupon. That is the same rule as the cube.
 
-NIPA axes (interest, receipts, tax, gf receipts, GDP, primary, debt) are a
-Gemini guess if GEMINI_API_KEY is set. If the key is missing or the call
-fails, those stay at the last printed quarter and are labeled last_print —
-we do not invent NIPA. The ghost still plots because the curve can move.
+NIPA axes: Gemini searches for the next *prints* (GDP, A091, FGRECPT,
+W006, W780, FGEXPND, debt held by the public). Python then builds every
+ratio, refi gap, and F1/F2/F3. σ is the published sample plus the
+nowcast row. Gemini never returns cube coordinates.
 
 Writes site/data/published/nowcast.json. Never raises out of main: a dead
 nowcast must not fail nightly.
@@ -72,13 +72,16 @@ def next_qe(date_s: str) -> str:
     return f"{d.year}-{last}"
 
 
-def affine(xs, ys):
-    a = np.array([(fnum(x), fnum(y)) for x, y in zip(xs, ys)], dtype=float)
-    a = a[np.isfinite(a).all(axis=1)]
+def series_sigma(vals, extra=None):
+    xs = [fnum(v) for v in vals]
+    if extra is not None:
+        xs.append(extra)
+    a = np.array([x for x in xs if x is not None], dtype=float)
+    a = a[np.isfinite(a)]
     if len(a) < 8:
         return None
-    b, c = np.polyfit(a[:, 0], a[:, 1], 1)
-    return lambda x, b=b, c=c: float(b * float(x) + c)
+    s = float(a.std(ddof=1))
+    return s if np.isfinite(s) and s > 0 else None
 
 
 def fred_last(sess: requests.Session, sid: str, key: str):
@@ -204,29 +207,33 @@ def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tu
             "debt_gdp_pct": r.get("debt_gdp_pct"),
         })
     empty_meta["prompt_rows"] = slim
-    prompt = f"""You estimate the NEXT US quarterly NIPA/fiscal prints for peachyhabanero cubes.
+    prompt = f"""You estimate the NEXT US quarterly NIPA/fiscal PRINTS. You do not score cubes.
+
 Today (UTC): {datetime.now(timezone.utc).strftime("%Y-%m-%d")}.
 Target quarter-end: {target}.
-Last complete cube rows (oldest to newest):
+Last complete cube rows, same units (oldest to newest):
 {json.dumps(slim, indent=2)}
-Live market (do NOT overwrite these; Python owns refi):
+Live Treasury / Fed market rates (Python owns refi; do not overwrite):
 {json.dumps(yields, indent=2)}
 Last book coupon (Fiscal Data Total Marketable, %): {coupon}
 
-Look for analyst reports, articles, posts, blogs, and anywhere credible 
-people discuss the market. Give preference to official government or 
-institutional prints, information or press releases. 
+Search the open web. Prefer official statistical agencies, then institutions, then market press, then blogs:
+  BEA, Atlanta Fed GDPNow, CBO, Treasury Fiscal Data, Monthly Treasury Statement, FRED,
+  Reuters, Bloomberg, WSJ, Seeking Alpha, Calculated Risk, respectable financial blogs.
+Weigh credibility. Name what you used.
 
-Return ONLY JSON with these keys (numbers, not strings):
-  interest_bn_saar, receipts_bn_saar, tax_bn_saar, gf_receipts_bn_saar,
-  gdp_bn, primary_deficit_pct_gdp, debt_held_by_public_pct_gdp,
-  rationale
-Rules:
-- gf_receipts_bn_saar is FGRECPT minus W780RC1Q027SBEA (current receipts minus contributions for gov social insurance).
-- primary_deficit_pct_gdp is 100*(FGEXPND - A091 - FGRECPT)/GDP, same sign as the cube (positive = still borrowing for operations).
-- Do not estimate refi gap, funds, or F1/F2/F3. Python computes those.
-- If you cannot see a better number than the last print, copy the last print and say so in rationale.
-- rationale: <= 40 words, name the sources you used.
+Return ONLY JSON, numbers not strings:
+  gdp_bn                 # NIPA GDP, current $, SAAR, billions (same unit as last rows)
+  interest_bn_saar       # A091RC1Q027SBEA
+  receipts_bn_saar       # FGRECPT
+  tax_bn_saar            # W006RC1Q027SBEA
+  w780_bn_saar           # W780RC1Q027SBEA (contributions for gov social insurance)
+  fgexpnd_bn_saar        # FGEXPND current expenditures, SAAR, billions
+  debt_held_public_bn    # debt held by the public, billions, same unit as GDP
+  rationale              # <= 50 words, name sources; say if a number is a last-print copy
+
+Do NOT return F1, F2, F3, refi, funds, int/receipts, primary/GDP, or debt/GDP. Python computes those from the prints.
+If you cannot beat the last print for a series, copy the last print and say so in rationale.
 """
     headers = {"Content-Type": "application/json"}
     sess = requests.Session()
@@ -339,12 +346,17 @@ def main() -> int:
     funds = fnum(yields.get("FEDFUNDS"))
     fms = (funds - coupon) if (funds is not None and coupon is not None) else None
 
-    f1_fn = affine([r.get("funds_minus_stock") for r in fail], [r.get("F1") for r in fail])
-    f3_fn = affine(
-        [r.get("primary_deficit_pct_gdp") for r in fail],
-        [r.get("F3") for r in fail],
-    )
-    f1 = f1_fn(fms) if (f1_fn and fms is not None) else None
+    last_interest = fnum(last.get("interest_bn"))
+    last_receipts = fnum(last.get("receipts_bn"))
+    last_tax = fnum(last.get("tax_bn"))
+    last_gdp = fnum(last.get("gdp_bn"))
+    last_gf_pct = fnum(last.get("int_gf_pct"))
+    last_gf = (last_interest / (last_gf_pct / 100.0)) if (last_interest and last_gf_pct) else None
+    last_w780 = (last_receipts - last_gf) if (last_receipts is not None and last_gf is not None) else None
+    last_primary = fnum(last.get("primary_deficit_pct_gdp"))
+    last_expnd = None
+    if last_primary is not None and last_gdp and last_interest is not None and last_receipts is not None:
+        last_expnd = last_primary / 100.0 * last_gdp + last_interest + last_receipts
 
     nipa, nipa_src, gemini_meta = gemini_nipa(target, rows, {**yields, "dates": yield_dates}, coupon)
     gemini_block = {
@@ -359,19 +371,24 @@ def main() -> int:
         "estimates": None,
     }
     if nipa:
-        interest = fnum(nipa.get("interest_bn_saar")) or fnum(last.get("interest_bn"))
-        receipts = fnum(nipa.get("receipts_bn_saar")) or fnum(last.get("receipts_bn"))
-        tax = fnum(nipa.get("tax_bn_saar")) or fnum(last.get("tax_bn"))
-        gf = fnum(nipa.get("gf_receipts_bn_saar"))
-        if gf is None and interest is not None and fnum(last.get("int_gf_pct")):
-            # last gf = interest / (int_gf/100)
-            last_gf_pct = fnum(last.get("int_gf_pct"))
-            gf = interest / (last_gf_pct / 100.0) if last_gf_pct else None
-        gdp = fnum(nipa.get("gdp_bn")) or fnum(last.get("gdp_bn"))
-        primary = fnum(nipa.get("primary_deficit_pct_gdp"))
+        interest = fnum(nipa.get("interest_bn_saar")) or last_interest
+        receipts = fnum(nipa.get("receipts_bn_saar")) or last_receipts
+        tax = fnum(nipa.get("tax_bn_saar")) or last_tax
+        w780 = fnum(nipa.get("w780_bn_saar"))
+        if w780 is None:
+            w780 = last_w780
+        gf = (receipts - w780) if (receipts is not None and w780 is not None) else last_gf
+        gdp = fnum(nipa.get("gdp_bn")) or last_gdp
+        expnd = fnum(nipa.get("fgexpnd_bn_saar"))
+        if expnd is None:
+            expnd = last_expnd
+        primary = None
+        if expnd is not None and interest is not None and receipts is not None and gdp:
+            primary = 100.0 * (expnd - interest - receipts) / gdp
         if primary is None:
-            primary = fnum(last.get("primary_deficit_pct_gdp"))
-        debt_gdp = fnum(nipa.get("debt_held_by_public_pct_gdp"))
+            primary = last_primary
+        debt_bn = fnum(nipa.get("debt_held_public_bn"))
+        debt_gdp = (100.0 * debt_bn / gdp) if (debt_bn is not None and gdp) else None
         if debt_gdp is None:
             debt_gdp = fnum(last.get("debt_gdp_pct"))
         rationale = str(nipa.get("rationale") or "")
@@ -386,24 +403,24 @@ def main() -> int:
             "search_queries": gemini_meta.get("search_queries") or [],
             "sources": gemini_meta.get("sources") or [],
             "estimates": {
+                "gdp_bn": fnum(nipa.get("gdp_bn")),
                 "interest_bn_saar": fnum(nipa.get("interest_bn_saar")),
                 "receipts_bn_saar": fnum(nipa.get("receipts_bn_saar")),
                 "tax_bn_saar": fnum(nipa.get("tax_bn_saar")),
-                "gf_receipts_bn_saar": fnum(nipa.get("gf_receipts_bn_saar")),
-                "gdp_bn": fnum(nipa.get("gdp_bn")),
-                "primary_deficit_pct_gdp": fnum(nipa.get("primary_deficit_pct_gdp")),
-                "debt_held_by_public_pct_gdp": fnum(nipa.get("debt_held_by_public_pct_gdp")),
+                "w780_bn_saar": fnum(nipa.get("w780_bn_saar")),
+                "fgexpnd_bn_saar": fnum(nipa.get("fgexpnd_bn_saar")),
+                "debt_held_public_bn": fnum(nipa.get("debt_held_public_bn")),
             },
         })
     else:
         log(f"gemini skipped: {nipa_src}")
-        interest = fnum(last.get("interest_bn"))
-        receipts = fnum(last.get("receipts_bn"))
-        tax = fnum(last.get("tax_bn"))
-        last_gf_pct = fnum(last.get("int_gf_pct"))
-        gf = (interest / (last_gf_pct / 100.0)) if (interest and last_gf_pct) else None
-        gdp = fnum(last.get("gdp_bn"))
-        primary = fnum(last.get("primary_deficit_pct_gdp"))
+        interest = last_interest
+        receipts = last_receipts
+        tax = last_tax
+        gf = last_gf
+        gdp = last_gdp
+        expnd = last_expnd
+        primary = last_primary
         debt_gdp = fnum(last.get("debt_gdp_pct"))
         rationale = "NIPA held at last print (no Gemini). Refi/F1 from live CMTs."
         model = None
@@ -413,9 +430,17 @@ def main() -> int:
     int_rec = (100.0 * interest / receipts) if (interest and receipts) else fnum(last.get("int_rec_pct"))
     int_tax = (100.0 * interest / tax) if (interest and tax) else fnum(last.get("int_tax_pct"))
     int_gf = (100.0 * interest / gf) if (interest and gf) else fnum(last.get("int_gf_pct"))
-    f2_raw = zone.get("f2_raw", 20.0)
-    f2 = ((int_gf - f2_raw) / sig_gf) if (int_gf is not None and sig_gf) else None
-    f3 = f3_fn(primary) if (f3_fn and primary is not None) else None
+    f2_raw = zone.get("int_gf_warn")
+    if f2_raw is None:
+        f2_raw = zone.get("f2_raw", 20.0)
+
+    sig_fms = series_sigma([r.get("funds_minus_stock") for r in fail], fms)
+    sig_pri = series_sigma([r.get("primary_deficit_pct_gdp") for r in fail], primary)
+    sig_gf_ext = series_sigma([r.get("int_gf_pct") for r in fail], int_gf) or sig_gf
+    # Same rule as cube_visualize.standardize: F1 flips (at_or_below 0), F3 is (x-0)/σ.
+    f1 = (-(fms) / sig_fms) if (fms is not None and sig_fms) else None
+    f2 = ((int_gf - f2_raw) / sig_gf_ext) if (int_gf is not None and sig_gf_ext and f2_raw is not None) else None
+    f3 = (primary / sig_pri) if (primary is not None and sig_pri) else None
 
     payload = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -448,10 +473,16 @@ def main() -> int:
         "F1": f1,
         "F2": f2,
         "F3": f3,
+        "sigma_used": {
+            "funds_minus_stock": sig_fms,
+            "int_gf": sig_gf_ext,
+            "primary_deficit_pct_gdp": sig_pri,
+            "includes_nowcast_row": True,
+        },
         "note": (
-            "Gold diamond on the cubes is this object. Refi and F1 are code. "
-            "NIPA is Gemini if a key was present, else the last BEA/Fiscal print. "
-            "Not a BEA print."
+            "Gold ghost on the cubes is this object. Gemini estimates prints only. "
+            "Python computes ratios, refi, and F1/F2/F3. σ is the published sample "
+            "plus this nowcast row. Not a BEA print."
         ),
     }
     PUB.mkdir(parents=True, exist_ok=True)

@@ -84,10 +84,11 @@
   <section id="panel-nowcast" class="panel hidden">
     <h2 id="nowcast">06  /  next-quarter nowcast</h2>
     <p class="sub">
-      Not a BEA print. Refi, funds−coupon, and F1 are arithmetic from live
-      CMTs × last Table 3 weights. NIPA axes are Gemini Flash when a key
-      ran, otherwise held at the last print. Sources below are what Gemini
-      returned via Google Search grounding that night.
+      Not a BEA print. Gemini searches for the next prints (GDP, A091,
+      FGRECPT, W006, W780, FGEXPND, debt held by the public). Python then
+      builds every ratio, the refi gap, and F1/F2/F3. σ is the published
+      sample plus this nowcast row. Live CMTs × last Table 3 weights own
+      refi. Sources below are Google Search grounding from that night.
     </p>
     <div id="nowcast-view"><p class="sub">loading nowcast.json…</p></div>
   </section>

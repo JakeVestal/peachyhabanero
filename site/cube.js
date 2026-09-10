@@ -61,35 +61,86 @@ function nowcastHover(nc) {
   );
 }
 
+function glowDot3d(x, y, z, opt) {
+  const hover = opt.hover || "";
+  const tpl = opt.hovertemplate;
+  return [
+    {
+      type: "scatter3d",
+      x: [x], y: [y], z: [z],
+      mode: "markers",
+      marker: {
+        size: opt.glow,
+        color: opt.fill,
+        symbol: "circle",
+        opacity: opt.glowOpacity == null ? 0.2 : opt.glowOpacity,
+        line: { width: 0 },
+      },
+      hoverinfo: "skip",
+      showlegend: false,
+      name: `${opt.name} glow`,
+    },
+    {
+      type: "scatter3d",
+      x: [x], y: [y], z: [z],
+      mode: "markers",
+      marker: {
+        size: opt.size,
+        color: opt.fill,
+        symbol: "circle",
+        line: { color: opt.line, width: opt.lineWidth },
+      },
+      text: tpl ? undefined : [hover],
+      hoverinfo: tpl ? undefined : "text",
+      hovertext: tpl ? [hover] : undefined,
+      hovertemplate: tpl,
+      name: opt.name,
+    },
+  ];
+}
+
 function nowcastSusTrace(nc, tax) {
-  if (!nc) return null;
+  if (!nc) return [];
   const y = Number(tax ? nc.int_tax_pct : nc.int_rec_pct);
   const x = Number(nc.debt_gdp_pct);
   const z = Number(nc.refi_gap);
-  if (![x, y, z].every(Number.isFinite)) return null;
-  return {
-    type: "scatter3d",
-    x: [x], y: [y], z: [z],
-    mode: "markers",
-    marker: { size: 11, color: "#c4a35a", symbol: "diamond", line: { color: "#ffbf00", width: 2 } },
-    text: [nowcastHover(nc)], hoverinfo: "text",
+  if (![x, y, z].every(Number.isFinite)) return [];
+  return glowDot3d(x, y, z, {
+    fill: "#c4a35a",
+    line: "#ffbf00",
+    lineWidth: 3,
+    size: 8,
+    glow: 16,
+    glowOpacity: 0.28,
+    hover: nowcastHover(nc),
     name: `nowcast ${nc.quarter_end} (not a print)`,
-  };
+  });
 }
 
 function nowcastFailTrace(nc) {
-  if (!nc) return null;
+  if (!nc) return [];
   const x = Number(nc.F3), y = Number(nc.F2), z = Number(nc.F1);
-  if (![x, y, z].every(Number.isFinite)) return null;
-  return {
-    type: "scatter3d",
-    x: [x], y: [y], z: [z],
-    mode: "markers",
-    marker: { size: 11, color: "#c4a35a", symbol: "diamond", line: { color: "#ffbf00", width: 2 } },
-    hovertext: [nowcastHover(nc)],
+  if (![x, y, z].every(Number.isFinite)) return [];
+  return glowDot3d(x, y, z, {
+    fill: "#c4a35a",
+    line: "#ffbf00",
+    lineWidth: 3,
+    size: 8,
+    glow: 16,
+    glowOpacity: 0.28,
+    hover: nowcastHover(nc),
     hovertemplate: "%{hovertext}<extra></extra>",
     name: `nowcast ${nc.quarter_end} (not a print)`,
-  };
+  });
+}
+
+function fdLatestFill(r, showRates) {
+  if (!showRates) return "rgba(0,240,255,0.9)";
+  const k = rateKind(r);
+  if (k === "hike") return "rgba(57,255,20,0.9)";
+  if (k === "cut") return "rgba(255,77,77,0.9)";
+  if (k === "missing") return "rgba(127,147,166,0.9)";
+  return "rgba(0,240,255,0.9)";
 }
 
 function distWarn(r, burden) {
@@ -138,23 +189,30 @@ function nowcastSusDist(nc, zone, burden) {
   };
 }
 
-function nowcastGhost1d(nc, x, y, extra) {
-  if (!nc || !Number.isFinite(x) || !Number.isFinite(y)) return null;
-  return {
-    type: "scatter",
-    mode: "markers",
-    x: [x],
-    y: [y],
-    name: `nowcast ${nc.quarter_end}`,
-    text: [nowcastHover(nc) + (extra ? `<br>${extra}` : "")],
-    hoverinfo: "text",
-    marker: {
-      size: 11,
-      color: "#c4a35a",
-      symbol: "diamond",
-      line: { color: "#ffbf00", width: 2 },
+function nowcastGhost1d(nc, x, y, extra, color) {
+  if (!nc || !Number.isFinite(x) || !Number.isFinite(y)) return [];
+  const fill = color || "#c4a35a";
+  const hover = nowcastHover(nc) + (extra ? `<br>${extra}` : "");
+  return [
+    {
+      type: "scatter",
+      mode: "markers",
+      x: [x], y: [y],
+      name: `nowcast ${nc.quarter_end} glow`,
+      hoverinfo: "skip",
+      showlegend: false,
+      marker: { size: 22, color: fill, symbol: "circle", opacity: 0.22, line: { width: 0 } },
     },
-  };
+    {
+      type: "scatter",
+      mode: "markers",
+      x: [x], y: [y],
+      name: `nowcast ${nc.quarter_end}`,
+      text: [hover],
+      hoverinfo: "text",
+      marker: { size: 9, color: fill, symbol: "circle", line: { color: "#ffbf00", width: 3 } },
+    },
+  ];
 }
 
 function flagMissing(el, msg) {
@@ -393,23 +451,19 @@ function sustainTraces(rows, zone, burden, nc) {
       text: hover, hoverinfo: "text", name: "path",
       connectgaps: false,
     },
-    {
-      type: "scatter3d",
-      x: [last.debt_gdp_pct], y: [last[ycol]], z: [last.refi_gap],
-      mode: "markers",
-      marker: {
-        size: 14,
-        color: "#00f0ff",
-        symbol: "circle",
-        line: { color: "#ffbf00", width: 3 },
-      },
-      text: [hover[hover.length - 1]], hoverinfo: "text",
-      name: `latest ${last.date}`,
-    },
   ];
-  const ghost = nowcastSusTrace(nc, burden === "tax");
-  if (ghost) {
-    traces.push(ghost);
+  traces.push.apply(traces, glowDot3d(last.debt_gdp_pct, last[ycol], last.refi_gap, {
+    fill: "#00f0ff",
+    line: "#ffbf00",
+    lineWidth: 4,
+    size: 8,
+    glow: 13,
+    glowOpacity: 0.18,
+    hover: hover[hover.length - 1],
+    name: `latest ${last.date}`,
+  }));
+  traces.push.apply(traces, nowcastSusTrace(nc, burden === "tax"));
+  if (nc && Number.isFinite(Number(nc.debt_gdp_pct))) {
     xmax = Math.max(xmax, Number(nc.debt_gdp_pct) || 0);
     ymax = Math.max(ymax, Number(burden === "tax" ? nc.int_tax_pct : nc.int_rec_pct) || 0);
     zmax = Math.max(zmax, Number(nc.refi_gap) || 0);
@@ -546,23 +600,19 @@ function failTraces(rows, tax, showRates, nc) {
     });
   });
 
-  traces.push({
-    type: "scatter3d",
-    x: [last.F3], y: [last[f2key]], z: [last.F1],
-    mode: "markers",
-    marker: {
-      size: 7,
-      color: "rgba(0,240,255,0.85)",
-      symbol: "circle",
-      line: { color: isInside(last, f2key) ? "#ff2bd6" : "#00f0ff", width: isInside(last, f2key) ? 2.5 : 1 },
-    },
-    hovertext: [hover[hover.length - 1]],
+  traces.push.apply(traces, glowDot3d(last.F3, last[f2key], last.F1, {
+    fill: fdLatestFill(last, showRates),
+    line: "#ffbf00",
+    lineWidth: 4,
+    size: 8,
+    glow: 13,
+    glowOpacity: 0.18,
+    hover: hover[hover.length - 1],
     hovertemplate: "%{hovertext}<extra></extra>",
     name: `latest ${last.date}`,
-  });
-  const ghost = nowcastFailTrace(nc);
-  if (ghost) {
-    traces.push(ghost);
+  }));
+  traces.push.apply(traces, nowcastFailTrace(nc));
+  if (nc) {
     const xs = [Number(nc.F1), Number(nc.F2), Number(nc.F3)].filter(Number.isFinite);
     xs.forEach((v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); });
   }
@@ -643,18 +693,16 @@ function drawDist(el, rows, tax, nc, zone) {
   const d = nowcastSusDist(nc, zone, tax ? "tax" : "rec");
   const qe = nc && nc.quarter_end;
   if (d && qe) {
-    const gWarn = nowcastGhost1d(nc, qe, d.warn, `nowcast dist_warn ${Number.isFinite(d.warn) ? d.warn.toFixed(2) : "n/a"}`);
-    const gRes = nowcastGhost1d(nc, qe, d.restruct, `nowcast dist_restruct ${Number.isFinite(d.restruct) ? d.restruct.toFixed(2) : "n/a"}`);
-    if (gWarn) {
-      gWarn.name = `nowcast danger ${qe}`;
-      gWarn.marker.color = gold;
-      traces.push(gWarn);
-    }
-    if (gRes) {
-      gRes.name = `nowcast restruct ${qe}`;
-      gRes.marker.color = mag;
-      traces.push(gRes);
-    }
+    traces.push.apply(traces, nowcastGhost1d(
+      nc, qe, d.warn,
+      `nowcast dist_warn ${Number.isFinite(d.warn) ? d.warn.toFixed(2) : "n/a"}`,
+      gold
+    ));
+    traces.push.apply(traces, nowcastGhost1d(
+      nc, qe, d.restruct,
+      `nowcast dist_restruct ${Number.isFinite(d.restruct) ? d.restruct.toFixed(2) : "n/a"}`,
+      mag
+    ));
   }
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
@@ -796,15 +844,14 @@ function drawFdDist(el, rows, tax, nc) {
   }
   if (nc && nc.quarter_end) {
     const nd = signedDistOctant(nc.F1, nc.F2, nc.F3);
-    const ghost = nowcastGhost1d(
+    traces.push.apply(traces, nowcastGhost1d(
       nc,
       nc.quarter_end,
       nd,
       Number.isFinite(nd)
         ? `nowcast σ-distance ${nd.toFixed(2)} (0 = face)`
         : "nowcast σ-distance n/a"
-    );
-    if (ghost) traces.push(ghost);
+    ));
   }
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
@@ -1059,7 +1106,7 @@ async function main() {
           ? `<br><span class="err">FOMC Δ missing for ${nMissAdj} quarters (DFEDTAR not stitched). Grey × is not a hold.</span>`
           : "") +
         (nowcast && nowcast.quarter_end
-          ? `<br>Gold diamond: nowcast for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}). Not a BEA print. Refi/F1 from live CMTs × last Table 3 weights.`
+          ? `<br>Gold ghost: nowcast for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}). Not a BEA print. Refi/F1 from live CMTs × last Table 3 weights. F2/F3 = (x − wire) / σ with the nowcast row folded into σ.`
           : "");
   }
 
