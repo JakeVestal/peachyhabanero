@@ -24,3 +24,6 @@ Thumbs.db
 # local experiment page — never ship
 /site/scratch.html
 /site/scratch.js
+
+# apply-latest-patch.sh leftovers — do not commit
+*.bak-before-patch

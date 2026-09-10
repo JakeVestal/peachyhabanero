@@ -101,7 +101,9 @@ if (( check_st != 0 )); then
       *"already exists in working directory")
         f="${line#error: }"
         f="${f%: already exists in working directory}"
-        bak="${f}.bak-before-patch"
+        bakdir="${TMPDIR:-/tmp}/peachyhabanero-baks"
+        mkdir -p "$bakdir"
+        bak="$bakdir/$(basename "$f").bak-before-patch"
         echo "exists, moving aside: $f -> $bak"
         mv "$f" "$bak"
         backed=1
