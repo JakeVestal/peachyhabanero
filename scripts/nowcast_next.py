@@ -227,7 +227,9 @@ Last book coupon (Fiscal Data Total Marketable, %): {coupon}
 Search the open web. Prefer official statistical agencies, then institutions, then market press, then blogs:
   BEA, Atlanta Fed GDPNow, CBO, Treasury Fiscal Data, Monthly Treasury Statement, FRED,
   Reuters, Bloomberg, WSJ, Seeking Alpha, Calculated Risk, respectable financial blogs.
-Weigh credibility. Name what you used.
+Weigh credibility. Name what you used. Also apply your own reasoning to the 
+question - will there be a rate hike/cut between now and end of quarter? Any 
+national / political / military news, or any movement in the yield curve? 
 
 Return ONLY JSON, numbers not strings except rationale/sources:
   gdp_bn                 # NIPA GDP, current $, SAAR, billions (same unit as last rows)
@@ -237,7 +239,9 @@ Return ONLY JSON, numbers not strings except rationale/sources:
   w780_bn_saar           # W780RC1Q027SBEA (contributions for gov social insurance)
   fgexpnd_bn_saar        # FGEXPND current expenditures, SAAR, billions
   debt_held_public_bn    # debt held by the public, billions, same unit as GDP
-  rationale              # <= 50 words; say if a number is a last-print copy
+  rationale              # <= 150 words. mention if a number is a last-print 
+  copy and justify your answers -- what economic forces are driving your 
+  prediction?
   sources                # array of {{"title": "...", "uri": "https://..."}} you actually used
 
 Do NOT return F1, F2, F3, refi, funds, int/receipts, primary/GDP, or debt/GDP. Python computes those from the prints.
