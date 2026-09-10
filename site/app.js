@@ -356,7 +356,6 @@ function renderNowcast(mount, nc) {
   const ydates = rates.yield_dates || {};
   const est = g.estimates || {};
   const srcs = g.sources || [];
-  const queries = g.search_queries || [];
   const prompt = g.prompt_rows || [];
   const numCell = (v, d = 2) => (v == null || !Number.isFinite(Number(v)) ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: d }));
   const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -367,7 +366,6 @@ function renderNowcast(mount, nc) {
     ["generated", nc.generated_at],
     ["nipa_source", nc.nipa_source],
     ["model", g.model || nc.model || "—"],
-    ["grounded", g.ran ? String(Boolean(g.grounded)) : "Gemini did not run"],
     ["debt/GDP %", numCell(nc.debt_gdp_pct, 2)],
     ["int/rec %", numCell(nc.int_rec_pct, 2)],
     ["int/tax %", numCell(nc.int_tax_pct, 2)],
@@ -385,9 +383,6 @@ function renderNowcast(mount, nc) {
   const estRows = Object.keys(est).map((k) =>
     `<tr><td>${k}</td><td>${numCell(est[k], 3)}</td></tr>`
   ).join("");
-  const qList = queries.length
-    ? `<ul>${queries.map((q) => `<li>${esc(q)}</li>`).join("")}</ul>`
-    : `<p class="sub">No search queries in the API response (grounding off or the call fell back to tools-less JSON).</p>`;
   const sList = srcs.length
     ? `<ul>${srcs.map((s) => {
         const uri = s.uri || s.url || "";
@@ -395,7 +390,7 @@ function renderNowcast(mount, nc) {
         const safe = /^https?:\/\//i.test(uri) ? uri : "";
         return `<li>${safe ? `<a href="${esc(safe)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}</li>`;
       }).join("")}</ul>`
-    : `<p class="sub">No grounding URIs stored. If Gemini ran without Google Search, this stays empty.</p>`;
+    : `<p class="sub">Gemini returned no sources array.</p>`;
   const promptMount = "tbl-nowcast-prompt";
   mount.innerHTML = `
     <article class="col-card">
@@ -424,10 +419,6 @@ function renderNowcast(mount, nc) {
       ${estRows
         ? `<div class="table-scroll"><table><thead><tr><th>key</th><th>value</th></tr></thead><tbody>${estRows}</tbody></table></div>`
         : `<p class="sub">No Gemini estimates. NIPA is the last print.</p>`}
-    </article>
-    <article class="col-card">
-      <h3>search queries</h3>
-      ${qList}
     </article>
     <article class="col-card">
       <h3>sources Gemini cited</h3>

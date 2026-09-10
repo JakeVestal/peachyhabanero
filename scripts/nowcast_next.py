@@ -133,21 +133,28 @@ def residual_marginal(row: dict, yields: dict) -> tuple[float | None, dict]:
     return m, used
 
 
-def extract_grounding(data: dict) -> dict:
-    cands = data.get("candidates") or []
-    gm = (cands[0].get("groundingMetadata") if cands else None) or {}
-    queries = [str(q) for q in (gm.get("webSearchQueries") or []) if q]
-    sources = []
-    seen = set()
-    for ch in gm.get("groundingChunks") or []:
-        web = ch.get("web") or ch.get("retrievedContext") or {}
-        uri = web.get("uri") or web.get("url")
-        title = web.get("title") or uri
+def parse_sources(raw) -> list[dict]:
+    """Gemini's own sources array. No invented URIs. http(s) only."""
+    if isinstance(raw, dict):
+        raw = raw.get("sources") or raw.get("items") or list(raw.values())
+    if not isinstance(raw, list):
+        return []
+    out, seen = [], set()
+    for item in raw:
+        if isinstance(item, str):
+            uri, title = item.strip(), item.strip()
+        elif isinstance(item, dict):
+            uri = str(item.get("uri") or item.get("url") or item.get("href") or "").strip()
+            title = str(item.get("title") or item.get("name") or uri).strip()
+        else:
+            continue
         if not uri or uri in seen:
             continue
+        if not (uri.startswith("http://") or uri.startswith("https://")):
+            continue
         seen.add(uri)
-        sources.append({"title": str(title), "uri": str(uri)})
-    return {"search_queries": queries, "sources": sources}
+        out.append({"title": title or uri, "uri": uri})
+    return out
 
 
 def resolve_gemini_models(sess: requests.Session, key: str) -> list[str]:
@@ -189,7 +196,7 @@ def resolve_gemini_models(sess: requests.Session, key: str) -> list[str]:
 
 def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tuple[dict | None, str, dict]:
     key = (os.environ.get("GEMINI_API_KEY") or "").strip()
-    empty_meta = {"search_queries": [], "sources": [], "prompt_rows": last_rows[-6:], "grounded": False}
+    empty_meta = {"sources": [], "prompt_rows": last_rows[-6:]}
     if not key:
         return None, "no GEMINI_API_KEY", empty_meta
     slim = []
@@ -222,7 +229,7 @@ Search the open web. Prefer official statistical agencies, then institutions, th
   Reuters, Bloomberg, WSJ, Seeking Alpha, Calculated Risk, respectable financial blogs.
 Weigh credibility. Name what you used.
 
-Return ONLY JSON, numbers not strings:
+Return ONLY JSON, numbers not strings except rationale/sources:
   gdp_bn                 # NIPA GDP, current $, SAAR, billions (same unit as last rows)
   interest_bn_saar       # A091RC1Q027SBEA
   receipts_bn_saar       # FGRECPT
@@ -230,10 +237,12 @@ Return ONLY JSON, numbers not strings:
   w780_bn_saar           # W780RC1Q027SBEA (contributions for gov social insurance)
   fgexpnd_bn_saar        # FGEXPND current expenditures, SAAR, billions
   debt_held_public_bn    # debt held by the public, billions, same unit as GDP
-  rationale              # <= 50 words, name sources; say if a number is a last-print copy
+  rationale              # <= 50 words; say if a number is a last-print copy
+  sources                # array of {{"title": "...", "uri": "https://..."}} you actually used
 
 Do NOT return F1, F2, F3, refi, funds, int/receipts, primary/GDP, or debt/GDP. Python computes those from the prints.
 If you cannot beat the last print for a series, copy the last print and say so in rationale.
+sources must be real http(s) URLs. Empty array if you used only the last-print rows we sent.
 """
     headers = {"Content-Type": "application/json"}
     sess = requests.Session()
@@ -244,53 +253,45 @@ If you cannot beat the last print for a series, copy the last print and say so i
             f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
             f"?key={key}"
         )
-        for tools in ([{"google_search": {}}], None):
-            body = {
-                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.2,
-                    "responseMimeType": "application/json",
-                },
-            }
-            if tools:
-                body["tools"] = tools
-            try:
-                r = sess.post(url, headers=headers, json=body, timeout=90)
-                if r.status_code >= 400:
-                    last_err = f"{model} {r.status_code} {r.text[:240]}"
-                    log(last_err)
-                    errors.append(last_err)
-                    if r.status_code == 404:
-                        break
-                    continue
-                data = r.json()
-                text = (
-                    data.get("candidates", [{}])[0]
-                    .get("content", {})
-                    .get("parts", [{}])[0]
-                    .get("text", "")
-                )
-                text = text.strip()
-                if text.startswith("```"):
-                    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)
-                parsed = json.loads(text)
-                parsed["_model"] = model
-                parsed["_grounded"] = bool(tools)
-                g = extract_grounding(data)
-                meta = {
-                    "search_queries": g["search_queries"],
-                    "sources": g["sources"],
-                    "prompt_rows": slim,
-                    "grounded": bool(tools) and bool(g["sources"] or g["search_queries"]),
-                    "model": model,
-                }
-                log(f"gemini {model} grounded={meta['grounded']} sources={len(meta['sources'])}")
-                return parsed, f"{model}", meta
-            except Exception as e:
-                last_err = f"{model} {type(e).__name__}: {e}"
+        body = {
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.2,
+                "responseMimeType": "application/json",
+            },
+        }
+        try:
+            r = sess.post(url, headers=headers, json=body, timeout=90)
+            if r.status_code >= 400:
+                last_err = f"{model} {r.status_code} {r.text[:240]}"
                 log(last_err)
                 errors.append(last_err)
                 continue
+            data = r.json()
+            text = (
+                data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [{}])[0]
+                .get("text", "")
+            )
+            text = text.strip()
+            if text.startswith("```"):
+                text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)
+            parsed = json.loads(text)
+            parsed["_model"] = model
+            sources = parse_sources(parsed.get("sources"))
+            meta = {
+                "sources": sources,
+                "prompt_rows": slim,
+                "model": model,
+            }
+            log(f"gemini {model} sources={len(sources)}")
+            return parsed, f"{model}", meta
+        except Exception as e:
+            last_err = f"{model} {type(e).__name__}: {e}"
+            log(last_err)
+            errors.append(last_err)
+            continue
     return None, " | ".join(errors[-6:]) or "no model", empty_meta
 
 
@@ -363,9 +364,7 @@ def main() -> int:
         "ran": False,
         "skip": nipa_src,
         "model": None,
-        "grounded": False,
         "rationale": None,
-        "search_queries": [],
         "sources": [],
         "prompt_rows": gemini_meta.get("prompt_rows") or [],
         "estimates": None,
@@ -398,10 +397,8 @@ def main() -> int:
             "ran": True,
             "skip": None,
             "model": model,
-            "grounded": bool(gemini_meta.get("grounded")),
             "rationale": rationale,
-            "search_queries": gemini_meta.get("search_queries") or [],
-            "sources": gemini_meta.get("sources") or [],
+            "sources": gemini_meta.get("sources") or parse_sources(nipa.get("sources")),
             "estimates": {
                 "gdp_bn": fnum(nipa.get("gdp_bn")),
                 "interest_bn_saar": fnum(nipa.get("interest_bn_saar")),
