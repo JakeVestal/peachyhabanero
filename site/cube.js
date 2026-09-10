@@ -1,5 +1,6 @@
 const DATA = "data/published/cubes.json";
 const ZONE_CSV = "data/zone.csv";
+const NOWCAST = "data/published/nowcast.json";
 
 const SUS_ZONE_KEYS = [
   "debt_gdp_warn", "debt_gdp_restruct",
@@ -39,6 +40,56 @@ function parseZoneCsv(text) {
     if (k && Number.isFinite(v)) out[k] = v;
   });
   return out;
+}
+
+function fmtNow(v, n) {
+  return Number.isFinite(v) ? v.toFixed(n) : "n/a";
+}
+
+function nowcastHover(nc) {
+  if (!nc) return "";
+  const src = nc.nipa_source || nc.model || "nowcast";
+  return (
+    `<b>NOWCAST ${nc.quarter_end}</b> — not a BEA print<br>` +
+    `nipa: ${src}<br>` +
+    `debt/GDP ${fmtNow(Number(nc.debt_gdp_pct), 1)}%  ` +
+    `int/rec ${fmtNow(Number(nc.int_rec_pct), 1)}%  int/tax ${fmtNow(Number(nc.int_tax_pct), 1)}%<br>` +
+    `refi ${Number(nc.refi_gap) >= 0 ? "+" : ""}${fmtNow(Number(nc.refi_gap), 2)} pp  ` +
+    `funds−coupon ${fmtNow(Number(nc.funds_minus_stock), 2)}<br>` +
+    `F1 ${fmtNow(Number(nc.F1), 2)}  F2 ${fmtNow(Number(nc.F2), 2)}  F3 ${fmtNow(Number(nc.F3), 2)}<br>` +
+    `${nc.rationale || ""}`
+  );
+}
+
+function nowcastSusTrace(nc, tax) {
+  if (!nc) return null;
+  const y = Number(tax ? nc.int_tax_pct : nc.int_rec_pct);
+  const x = Number(nc.debt_gdp_pct);
+  const z = Number(nc.refi_gap);
+  if (![x, y, z].every(Number.isFinite)) return null;
+  return {
+    type: "scatter3d",
+    x: [x], y: [y], z: [z],
+    mode: "markers",
+    marker: { size: 11, color: "#c4a35a", symbol: "diamond", line: { color: "#ffbf00", width: 2 } },
+    text: [nowcastHover(nc)], hoverinfo: "text",
+    name: `nowcast ${nc.quarter_end} (not a print)`,
+  };
+}
+
+function nowcastFailTrace(nc) {
+  if (!nc) return null;
+  const x = Number(nc.F3), y = Number(nc.F2), z = Number(nc.F1);
+  if (![x, y, z].every(Number.isFinite)) return null;
+  return {
+    type: "scatter3d",
+    x: [x], y: [y], z: [z],
+    mode: "markers",
+    marker: { size: 11, color: "#c4a35a", symbol: "diamond", line: { color: "#ffbf00", width: 2 } },
+    hovertext: [nowcastHover(nc)],
+    hovertemplate: "%{hovertext}<extra></extra>",
+    name: `nowcast ${nc.quarter_end} (not a print)`,
+  };
 }
 
 function distWarn(r, burden) {
@@ -236,7 +287,7 @@ function winAll(vals) {
   return [lo - 0.08 * room, hi + 0.08 * room];
 }
 
-function sustainTraces(rows, zone, burden) {
+function sustainTraces(rows, zone, burden, nc) {
   const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
   const ywarn = znum(zone, burden === "tax" ? "int_tax_warn" : "int_rec_warn");
   const ydeath = znum(zone, burden === "tax" ? "int_tax_restruct" : "int_rec_restruct");
@@ -260,11 +311,11 @@ function sustainTraces(rows, zone, burden) {
   });
   const last = rows[rows.length - 1];
   const xmin = Math.min(0, ...rows.map((r) => Number(r.debt_gdp_pct)).filter(Number.isFinite));
-  const xmax = Math.max(200, xdeath, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
+  let xmax = Math.max(200, xdeath, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
   const ymin = Math.min(10, ...rows.map((r) => Number(r[ycol])).filter(Number.isFinite));
-  const ymax = Math.max(ydeath + 8, ...rows.map((r) => r[ycol]), 0) + 3;
-  const zmax = Math.max(5, zdeath, ...rows.map((r) => r.refi_gap), 0) + 0.4;
-  const zmin = Math.min(-2, ...rows.map((r) => r.refi_gap), 0) - 0.3;
+  let ymax = Math.max(ydeath + 8, ...rows.map((r) => r[ycol]), 0) + 3;
+  let zmax = Math.max(5, zdeath, ...rows.map((r) => r.refi_gap), 0) + 0.4;
+  let zmin = Math.min(-2, ...rows.map((r) => r.refi_gap), 0) - 0.3;
   const traces = [
     wire(xwarn, xmax, ywarn, ymax, zwarn, zmax, "#c4a35a", "Danger Zone", 5),
     wire(xdeath, xmax, ydeath, ymax, zdeath, zmax, "#ff2bd6", "Restructuring Zone", 5),
@@ -298,6 +349,14 @@ function sustainTraces(rows, zone, burden) {
       name: `latest ${last.date}`,
     },
   ];
+  const ghost = nowcastSusTrace(nc, burden === "tax");
+  if (ghost) {
+    traces.push(ghost);
+    xmax = Math.max(xmax, Number(nc.debt_gdp_pct) || 0);
+    ymax = Math.max(ymax, Number(burden === "tax" ? nc.int_tax_pct : nc.int_rec_pct) || 0);
+    zmax = Math.max(zmax, Number(nc.refi_gap) || 0);
+    zmin = Math.min(zmin, Number(nc.refi_gap) || 0);
+  }
   return {
     traces,
     ranges: {
@@ -308,7 +367,7 @@ function sustainTraces(rows, zone, burden) {
   };
 }
 
-function failTraces(rows, tax, showRates) {
+function failTraces(rows, tax, showRates, nc) {
   const f2key = "F2";
   const f2 = rows.map((r) => r[f2key]);
   const nAdj = rows.filter((r) => rateAdj(r) != null).length;
@@ -339,8 +398,8 @@ function failTraces(rows, tax, showRates) {
   const w1 = winAll(rows.map((r) => r.F1));
   const w2 = winAll(f2);
   const w3 = winAll(rows.map((r) => r.F3));
-  const lo = Math.min(w1[0], w2[0], w3[0]);
-  const hi = Math.max(w1[1], w2[1], w3[1]);
+  let lo = Math.min(w1[0], w2[0], w3[0]);
+  let hi = Math.max(w1[1], w2[1], w3[1]);
 
   function kind(r) {
     // Rates off: every finite F-space point is a location, not an FOMC claim.
@@ -443,6 +502,12 @@ function failTraces(rows, tax, showRates) {
     hovertemplate: "%{hovertext}<extra></extra>",
     name: `latest ${last.date}`,
   });
+  const ghost = nowcastFailTrace(nc);
+  if (ghost) {
+    traces.push(ghost);
+    const xs = [Number(nc.F1), Number(nc.F2), Number(nc.F3)].filter(Number.isFinite);
+    xs.forEach((v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); });
+  }
   return { traces, lo, hi, nAdj };
 }
 
@@ -867,6 +932,12 @@ async function main() {
     return;
   }
   const pack = await res.json();
+  let nowcast = null;
+  try {
+    const nr = await fetchFresh(NOWCAST);
+    if (nr.ok) nowcast = await nr.json();
+  } catch (e) { /* optional */ }
+  if (nowcast && nowcast.not_a_print !== true) nowcast = null;
   let zoneFile = {};
   try {
     const zr = await fetchFresh(ZONE_CSV);
@@ -900,6 +971,9 @@ async function main() {
         `New points become available when BEA prints quarterly GDP.` +
         (nMissAdj
           ? `<br><span class="err">FOMC Δ missing for ${nMissAdj} quarters (DFEDTAR not stitched). Grey × is not a hold.</span>`
+          : "") +
+        (nowcast && nowcast.quarter_end
+          ? `<br>Gold diamond: nowcast for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}). Not a BEA print. Refi/F1 from live CMTs × last Table 3 weights.`
           : "");
   }
 
@@ -918,7 +992,7 @@ async function main() {
 
   async function drawSustain() {
     if (!$("cube-sustain") || !sus.length) return;
-    const drawn = sustainTraces(sus, zone, tax ? "tax" : "rec");
+    const drawn = sustainTraces(sus, zone, tax ? "tax" : "rec", nowcast);
     const layout = keepCamera(
       "cube-sustain",
       layout3d(
@@ -939,7 +1013,7 @@ async function main() {
       flagMissing($("cube-fail"), "cubes.json has no F2 (A091 / (FGRECPT − W780)). Fetch W780RC1Q027SBEA and rerun --process.");
       return;
     }
-    const ft = failTraces(fail, tax, showRates);
+    const ft = failTraces(fail, tax, showRates, nowcast);
     const note = $("rate-note");
     const recQ = fail.find((r) => String(r.date).slice(0, 10) === "2018-03-31");
     const recOk = recQ && num(recQ, "F1") != null && num(recQ, "F2") != null && num(recQ, "F3") != null;

@@ -14,6 +14,7 @@ on:
     branches: [main]
     paths:
       - "scripts/build_site_data.py"
+      - "scripts/nowcast_next.py"
       - ".github/workflows/nightly-data.yml"
       - "src/cube_data.py"
       - "src/cube_visualize.py"
@@ -71,6 +72,15 @@ jobs:
           CUBE_DATA_DIR: ${{ github.workspace }}/site/data
           CUBE_FULL_REBUILD: ${{ github.event.inputs.full_rebuild }}
         run: python scripts/build_site_data.py
+
+      - name: nowcast next print
+        continue-on-error: true
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          CUBE_DATA_DIR: ${{ github.workspace }}/site/data
+        run: python scripts/nowcast_next.py
 
       - name: save raw-frame cache
         continue-on-error: true

@@ -61,7 +61,7 @@ if (( check_st != 0 )); then
   backed=0
   while IFS= read -r line; do
     case "$line" in
-      "error: "*: already exists in working directory)
+      *"already exists in working directory")
         f="${line#error: }"
         f="${f%: already exists in working directory}"
         bak="${f}.bak-before-patch"
