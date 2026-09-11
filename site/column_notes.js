@@ -107,7 +107,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/FDHBFIN",
     official:
       "Treasury securities held by foreign and international investors. Level, billions of dollars.",
-    why: "Scratch 04e: the foreign slice of Δ public. Residual after SOMA and this series is domestic private + discrepancy. Not a cube axis.",
+    why: "Who is Financing the Treasury: the foreign slice of extra public debt. Leftover after the Fed’s portfolio and this series is U.S. private holders plus lag. Not a cube axis.",
   },
   GFDEGDQ188S: {
     title: "Federal Debt: Total Public Debt as Percent of Gross Domestic Product",
@@ -116,7 +116,16 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/GFDEGDQ188S",
     official:
       "Total public debt divided by GDP, percent.",
-    why: "Scale check. Not a wire. Lets a reader see the stock ratio next to the flow wires.",
+    why: "Scale check. Not a wire. Lets a reader see the total-stock ratio next to the public-stock wire.",
+  },
+  FYGFGDQ188S: {
+    title: "Federal Debt Held by the Public as Percent of Gross Domestic Product",
+    source: "U.S. Office of Management and Budget / BEA via FRED",
+    units: "Percent of GDP, quarterly",
+    url: "https://fred.stlouisfed.org/series/FYGFGDQ188S",
+    official:
+      "Debt held by the public divided by GDP, percent. Excludes intragovernmental holdings.",
+    why: "Sustainability cube stock axis. This is the public float versus the economy, not total debt including trust-fund IOUs.",
   },
   UNRATE: {
     title: "Unemployment Rate",
@@ -618,5 +627,61 @@ window.COLUMN_NOTES = {
     url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
     official: "Floating-rate notes. Reset is not remaining final maturity.",
     why: "Priced off FEDFUNDS. Missing FRN weight is zero (notes do not exist before 2014); that is not a Table 3 hole. A positive FRN share with no FEDFUNDS print blanks the month.",
+  },
+  RESID_AMT_0_1Y: {
+    title: "Marketable principal with remaining life under 1 year",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars outstanding (plus issued if outstanding missing)",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Sum of CUSIP principal with maturity − record_date under 1 year. Companion to RESID_W_0_1Y.",
+    why: "Dollar stock that reprices inside a year. Input to the mechanical extra-coupon impulse. Weight is this amount over the bucketed total.",
+  },
+  RESID_AMT_1_3Y: {
+    title: "Marketable principal with remaining life 1–3 years",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Companion to RESID_W_1_3Y.",
+    why: "Dollar stock in the 1–3y remaining-life bucket.",
+  },
+  RESID_AMT_3_7Y: {
+    title: "Marketable principal with remaining life 3–7 years",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Companion to RESID_W_3_7Y.",
+    why: "Dollar stock in the 3–7y remaining-life bucket.",
+  },
+  RESID_AMT_7_10Y: {
+    title: "Marketable principal with remaining life 7–10 years",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Companion to RESID_W_7_10Y.",
+    why: "Dollar stock in the 7–10y remaining-life bucket.",
+  },
+  RESID_AMT_10YPLUS: {
+    title: "Marketable principal with remaining life 10 years or more",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Companion to RESID_W_10YPLUS.",
+    why: "Dollar stock in the 10y+ remaining-life bucket.",
+  },
+  RESID_AMT_TIPS: {
+    title: "Marketable TIPS principal (any remaining life)",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Companion to RESID_W_TIPS.",
+    why: "TIPS dollar stock. Dropped from published marginal and other buckets renormalized.",
+  },
+  RESID_AMT_FRN: {
+    title: "Marketable FRN principal (any remaining life)",
+    source: "U.S. Treasury Fiscal Data — MSPD Table 3",
+    units: "Dollars",
+    url: "https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding",
+    official: "Companion to RESID_W_FRN.",
+    why: "FRN dollar stock. Stays in the marginal mix, priced off FEDFUNDS.",
   },
 };

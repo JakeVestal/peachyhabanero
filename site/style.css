@@ -409,6 +409,40 @@ a.analysis-card:hover { border-color: var(--cyan); }
   cursor: default;
 }
 
+.page-fin .sub,
+.page-article .sub {
+  font-size: 17px;
+  line-height: 1.7;
+}
+.article-body {
+  max-width: 46rem;
+  padding-left: 28px;
+  padding-right: 28px;
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.article-body h2 {
+  color: var(--cyan);
+  font-size: 16px;
+  margin: 2.2em 0 0.7em;
+  letter-spacing: 0.06em;
+}
+.article-body p { margin: 0 0 1.05em; }
+.article-body ul, .article-body ol {
+  margin: 0 0 1.2em;
+  padding-left: 1.3em;
+}
+.article-body li { margin: 0 0 0.55em; }
+.article-body blockquote {
+  margin: 0 0 1.2em;
+  padding: 0.4em 0 0.4em 1em;
+  border-left: 3px solid var(--gold);
+  color: #e8f6ff;
+  font-size: 1.08em;
+  line-height: 1.55;
+}
+
 /* Cube pages: stacked axis blocks, full page width */
 .page-sus .sub,
 .page-fd .sub {

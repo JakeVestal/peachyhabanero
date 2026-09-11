@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Who is Financing the Treasury</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body class="page-fin">
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      <a href="data.html">data</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>WHO IS FINANCING THE TREASURY</h1>
+  <p class="sub">
+    When the United States borrows more, someone has to hold the extra bonds.
+    This page asks who that someone is — the Federal Reserve, foreign investors,
+    or everyone else — using named public series, not a vibe.
+  </p>
+  <p class="stat" id="stamp">loading published data…</p>
+</header>
+
+<section>
+  <h2>00  /  the question</h2>
+  <p class="sub">
+    “Debt held by the public” is the stock of Treasury securities that is not
+    an IOU from one government account to another. It <em>includes</em> what
+    the Federal Reserve holds. So a rise in that stock is not automatically
+    “the market bought it,” and it is not automatically “the Fed printed.”
+    We split the quarter-to-quarter change into three piles:
+  </p>
+  <table class="join-table eq-key">
+    <thead><tr><th>pile</th><th>what it is</th><th>series</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>extra public debt</td>
+        <td>Change in debt held by the public (includes the Fed)</td>
+        <td><a href="https://fred.stlouisfed.org/series/FYGFDPUN">FYGFDPUN</a> · $mn, plotted $bn</td>
+      </tr>
+      <tr>
+        <td>Fed</td>
+        <td>Change in Treasuries the Fed holds outright in its own portfolio</td>
+        <td><a href="https://fred.stlouisfed.org/series/WSHOTSL">WSHOTSL</a> · $mn Wednesday, plotted $bn</td>
+      </tr>
+      <tr>
+        <td>foreign</td>
+        <td>Change in holdings by foreign and international investors</td>
+        <td><a href="https://fred.stlouisfed.org/series/FDHBFIN">FDHBFIN</a> · $bn, arrives with a lag</td>
+      </tr>
+      <tr>
+        <td>leftover</td>
+        <td>Extra public debt minus Fed minus foreign. U.S. banks, money-market funds, pensions, households, state and local governments — plus foreign buying that has not printed yet. A bucket, not a person.</td>
+        <td>derived</td>
+      </tr>
+      <tr>
+        <td>overnight cash at the Fed</td>
+        <td>Not a holding of public debt. Money-market funds parking cash at the Fed overnight. When this falls, that cash often buys Treasury bills instead. Shown as a note, not in the sum.</td>
+        <td><a href="https://fred.stlouisfed.org/series/RRPONTSYD">RRPONTSYD</a> · $bn</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="sub">
+    The Fed reports on Wednesdays. The Treasury reports public debt at
+    quarter-end. Foreign holdings arrive later. Leftover is labeled, not
+    forced to zero. No filled-in guesses.
+  </p>
+</section>
+
+<section>
+  <h2>01  /  the picture</h2>
+  <div class="col-card" id="who-card">joining holders…</div>
+  <div id="plot-who" style="margin-top:16px"></div>
+  <p class="sub">
+    Dotted verticals: early 2018 (the last time the Fed hiked while fiscal
+    conditions were already tight), December 2021 (the Fed signaled the end
+    of easy money), March 2022 (first hike of that cycle).
+  </p>
+  <details class="join-fold">
+    <summary>Quarterly table (2021 onward)</summary>
+    <div class="join-scroll">
+      <table class="join-table" id="who-table">
+        <thead>
+          <tr>
+            <th>date</th><th>extra public $bn</th><th>Fed</th><th>foreign</th>
+            <th>leftover</th><th>Δ overnight at Fed</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section>
+  <h2>02  /  how to read it</h2>
+  <p class="sub">
+    <b>2020</b> is the easy year. The tall cyan bars are the Fed buying
+    Treasuries in size. Private holders even sold some of what they already
+    owned to the Fed. When the government needed to borrow a great deal, the
+    central bank took the paper.
+  </p>
+  <p class="sub">
+    <b>2022 into mid-2023</b> is the opposite. Public debt still rose.
+    The Fed’s Treasury holdings <em>fell</em> — it was shrinking the portfolio
+    it had built up. Foreigners reduced their holdings a bit too. So the
+    leftover is larger than the new debt: private buyers took the new bonds
+    <em>and</em> the bonds officials were selling. That is arithmetic, not a
+    glitch.
+  </p>
+  <p class="sub">
+    <b>The most recent four quarters</b> still say leftover is most of the
+    flow. The Fed is a small buyer again, not 2020. Overnight cash parked at
+    the Fed has fallen a long way from its peak; some of that cash likely
+    bought bills, which would show up in leftover, not as Fed buying.
+  </p>
+  <p class="sub">
+    Two cautions. Leftover is a bucket. And the foreign series lags, so some
+    of what looks domestic this quarter may be foreign next revision.
+  </p>
+</section>
+
+<section>
+  <h2>03  /  the mix of the book</h2>
+  <p class="sub">
+    How much of the existing debt comes due inside a year is the other half
+    of the financing story. A larger short-term share means more of the book
+    has to be refinanced soon, at whatever rate the market is offering.
+    <a href="article-house.html">The House article</a> is about a deliberate
+    shift toward that short end.
+  </p>
+  <div id="plot-bills"></div>
+  <div id="plot-longs" style="margin-top:16px"></div>
+</section>
+
+<section>
+  <h2>04  /  related</h2>
+  <p class="sub">
+    The
+    <a href="sustainability.html">Sustainability Cube</a>
+    is the Treasury’s position: interest versus incoming cash, the gap
+    between new borrowing rates and the rate already on the books, and debt
+    versus the size of the economy.
+    The
+    <a href="fiscal-dominance.html">Fiscal Dominance Cube</a>
+    asks when those same objects start to constrain the Fed.
+    <a href="data.html">Reference data</a>
+    is the audit trail for every series on this page.
+  </p>
+</section>
+
+<footer>
+  peachyhabanero · <a href="index.html">home</a> · <a href="sustainability.html">sustainability</a> · <a href="data.html">data</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+<script src="financing.js"></script>
+<script src="nav-scratch.js"></script>
+</body>
+</html>
