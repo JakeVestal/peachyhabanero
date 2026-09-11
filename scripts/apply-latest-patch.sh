@@ -17,11 +17,15 @@
 # Files the patch wants to *add* that already exist (scratch.html / .js
 # are gitignored, so git apply refuses) are moved aside as
 # *.bak-before-patch, then the patch version is written.
+#
+# On success, append the patch basename to notes/patch-record.txt
+# (gitignored). One line per applied patch, in order.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DOWNLOADS="${DOWNLOADS:-$HOME/Downloads}"
+RECORD="$ROOT/notes/patch-record.txt"
 cd "$ROOT"
 
 if [[ ! -d .git ]]; then
@@ -119,3 +123,7 @@ fi
 
 git apply "$latest"
 echo "applied."
+
+mkdir -p "$(dirname "$RECORD")"
+echo "$(basename "$latest")" >> "$RECORD"
+echo "recorded: $RECORD"

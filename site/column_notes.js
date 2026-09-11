@@ -98,7 +98,16 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/FYGFDPUN",
     official:
       "Debt held by the public (excludes intragovernmental holdings).",
-    why: "Public float, not the Social Security trust-fund circularity. Context for what the market has to roll.",
+    why: "Public float, not the Social Security trust-fund circularity. Context for what the market has to roll. Includes SOMA.",
+  },
+  FDHBFIN: {
+    title: "Federal Debt Held by Foreign and International Investors",
+    source: "U.S. Department of the Treasury / FRB via FRED",
+    units: "Billions of dollars, quarterly",
+    url: "https://fred.stlouisfed.org/series/FDHBFIN",
+    official:
+      "Treasury securities held by foreign and international investors. Level, billions of dollars.",
+    why: "Scratch 04e: the foreign slice of Δ public. Residual after SOMA and this series is domestic private + discrepancy. Not a cube axis.",
   },
   GFDEGDQ188S: {
     title: "Federal Debt: Total Public Debt as Percent of Gross Domestic Product",
