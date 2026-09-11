@@ -442,33 +442,92 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-size: 17px;
   line-height: 1.7;
 }
+
+/* News column: same measure for dek, body, captions, and charts.
+   Body is dimmer than UI chrome so a long read doesn’t glare. */
+.page-article {
+  --story: 42rem;
+  --story-ink: #b0bec9;
+  --story-head: #d8e2ea;
+  --story-kicker: var(--lime);
+}
+.page-article header,
+.page-article article,
+.page-article section,
+.page-article footer {
+  max-width: var(--story);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(18px, 4vw, 28px);
+  padding-right: clamp(18px, 4vw, 28px);
+}
+.page-article header {
+  padding-bottom: 28px;
+}
+.page-article h1 {
+  color: var(--story-head);
+  font-size: clamp(1.45rem, 3.4vw, 1.85rem);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  margin: 6px 0 14px;
+}
+.page-article .card-kicker {
+  color: var(--gold);
+}
+.page-article .sub {
+  max-width: none;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  letter-spacing: 0.012em;
+  color: #8b9eac;
+}
 .article-body {
-  max-width: 46rem;
-  padding-left: 28px;
-  padding-right: 28px;
-  font-size: 18px;
-  line-height: 1.75;
-  color: var(--ink);
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 1.0625rem;
+  line-height: 1.82;
+  letter-spacing: 0.014em;
+  font-weight: 400;
+  color: var(--story-ink);
 }
 .article-body h2 {
-  color: var(--cyan);
-  font-size: 16px;
-  margin: 2.2em 0 0.7em;
-  letter-spacing: 0.06em;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 1.18rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--story-kicker);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin: 2.1em 0 0.7em;
 }
-.article-body p { margin: 0 0 1.05em; }
+.article-body p { margin: 0 0 1.28em; }
 .article-body ul, .article-body ol {
-  margin: 0 0 1.2em;
-  padding-left: 1.3em;
+  margin: 0 0 1.35em;
+  padding-left: 1.25em;
 }
-.article-body li { margin: 0 0 0.55em; }
+.article-body li {
+  margin: 0 0 0.65em;
+  line-height: 1.75;
+}
 .article-body blockquote {
-  margin: 0 0 1.2em;
-  padding: 0.4em 0 0.4em 1em;
+  margin: 0 0 1.5em;
+  padding: 0.15em 0 0.15em 1.05em;
   border-left: 3px solid var(--gold);
-  color: #e8f6ff;
-  font-size: 1.08em;
-  line-height: 1.55;
+  color: #c4d0d9;
+  font-size: 1.06rem;
+  line-height: 1.72;
+  letter-spacing: 0.01em;
+}
+.page-article .col-card,
+.page-article .join-fold {
+  max-width: none;
+}
+.page-article footer {
+  margin-top: 12px;
 }
 
 /* Cube pages: stacked axis blocks, full page width */
