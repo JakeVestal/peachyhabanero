@@ -27,4 +27,4 @@ Thumbs.db
 
 # apply-latest-patch.sh leftovers — do not commit
 *.bak-before-patch
-/notes/REGIME-LOCK.md
+/notes/
