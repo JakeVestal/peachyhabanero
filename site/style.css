@@ -54,12 +54,17 @@ footer a:hover {
 .gh-badge,
 a.analysis-card {
   background: none;
-  border-bottom: none;
   margin: 0;
+}
+a.analysis-card {
+  /* global `a { border-bottom }` was wiping the card's bottom edge */
+  border: 1px solid var(--gold-dim);
+  padding: 16px 18px 18px;
 }
 a.analysis-card:hover {
   background: none;
   color: inherit;
+  border-color: var(--cyan);
 }
 header, footer, section, nav { padding-left: 28px; padding-right: 28px; }
 header {
