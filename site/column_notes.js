@@ -366,6 +366,33 @@ window.COLUMN_NOTES = {
       "H.8 Assets and Liabilities of Commercial Banks. Total loans and leases in bank credit.",
     why: "Private credit volume Cp. Paired with NIPA federal interest (A091) as Ig. Not TCMDO — that includes federal debt.",
   },
+  WALCL: {
+    title: "Assets: Total Assets: Total Assets (Less Eliminations from Consolidation): Wednesday Level",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Millions of dollars, weekly NSA, Wednesday",
+    url: "https://fred.stlouisfed.org/series/WALCL",
+    official:
+      "H.4.1 Factors Affecting Reserve Balances. All Federal Reserve Banks, total assets, Wednesday level.",
+    why: "Did the Fed’s balance sheet take the paper. QT is WALCL falling; absorption is WALCL rising while the Treasury is issuing. Scratch 04d. Not a cube axis.",
+  },
+  WSHOTSL: {
+    title: "Assets: Securities Held Outright: U.S. Treasury Securities: Wednesday Level",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Millions of dollars, weekly NSA, Wednesday",
+    url: "https://fred.stlouisfed.org/series/WSHOTSL",
+    official:
+      "H.4.1. SOMA outright Treasury holdings, Wednesday level. The slice of WALCL that is Treasuries, not MBS.",
+    why: "Fed bid for the Treasury book specifically. Pair with WALCL: MBS runoff can shrink the BS while SOMA still rolls Treasuries.",
+  },
+  RRPONTSYD: {
+    title: "Overnight Reverse Repurchase Agreements: Treasury Securities Sold by the Federal Reserve in the Temporary Open Market Operations",
+    source: "Federal Reserve Bank of New York",
+    units: "Billions of dollars, daily NSA",
+    url: "https://fred.stlouisfed.org/series/RRPONTSYD",
+    official:
+      "ON RRP take-up. Cash parked at the Fed overnight against Treasury collateral.",
+    why: "Money-fund / GSE cash that is not in the Treasury auction and not in bank reserves. A drain of WALCL’s other side. Optional fetch if FRED 404s.",
+  },
   MSPD_BILLS_SHARE_MARKETABLE: {
     title: "Bills as a share of marketable debt held by the public",
     source: "Derived from MSPD Table 1",

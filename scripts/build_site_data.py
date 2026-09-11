@@ -74,7 +74,7 @@ COLMAP = {
 RAW_KEEP = {
     "fred_policy_rates": [
         "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS5", "DGS30", "DFII10",
-        "DFEDTAR", "DFEDTARU", "DFEDTARL",
+        "DFEDTAR", "DFEDTARU", "DFEDTARL", "RRPONTSYD",
     ],
     "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "W780RC1Q027SBEA", "FGEXPND"],
     "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S", "FYGFGDQ188S"],
@@ -89,6 +89,7 @@ RAW_KEEP = {
         "PCEPILFE", "PCEPI", "CPILFESL", "CPIAUCSL", "MICH", "PCETRIM12M159SFRBDAL",
         "M2V", "M2SL",
     ],
+    "fred_official_holdings": ["WSHOTSL", "WALCL", "FDHBFIN"],
     "fiscal_mspd_composition": [
         "MSPD_BILLS_PUBLIC_MN",
         "MSPD_NOTES_PUBLIC_MN",

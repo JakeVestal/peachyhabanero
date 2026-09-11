@@ -190,6 +190,7 @@ FRED_GROUPS = {
     ],
     "fred_official_holdings": [
         "WSHOTSL",          # Fed SOMA Treasuries, $mn, Wednesday
+        "WALCL",            # Fed total assets, $mn, Wednesday (H.4.1)
         "FDHBFIN",          # federal debt held by foreign/international, $bn
     ],
     "fred_financial_conditions": [
@@ -834,6 +835,9 @@ def update_raw(
             if d5.empty or d5.notna().mean() < 0.8:
                 force_full = True
                 force_why = "DGS5 sparse — full policy-rate rebuild"
+            if "RRPONTSYD" not in getattr(old, "columns", []):
+                force_full = True
+                force_why = "RRPONTSYD missing — full policy-rate rebuild"
         cols = set(getattr(old, "columns", [])) if old is not None else set()
         if name == "fred_inflation" and old is not None and len(old):
             if "M2V" not in cols or "M2SL" not in cols:
@@ -843,6 +847,10 @@ def update_raw(
             if "TOTLL" not in cols:
                 force_full = True
                 force_why = "TOTLL missing — full financial-conditions rebuild"
+        if name == "fred_official_holdings" and old is not None and len(old):
+            if "WALCL" not in cols or "WSHOTSL" not in cols:
+                force_full = True
+                force_why = "WALCL/WSHOTSL missing — full official-holdings rebuild"
         if force_full:
             start = DEFAULT_START
             old = pd.DataFrame()
@@ -860,6 +868,19 @@ def update_raw(
         except Exception as exc:
             print(f"  ERROR {name}: {exc} (keeping existing)")
             fresh = pd.DataFrame()
+        if (
+            old is not None and len(old)
+            and fresh is not None and len(fresh)
+        ):
+            missing = [c for c in fresh.columns if c not in set(old.columns)]
+            if missing:
+                if verbose:
+                    print(f"  new columns {missing} — full rebuild of {name} from {DEFAULT_START}")
+                try:
+                    fresh = FETCHERS[name](sess, DEFAULT_START)
+                    old = pd.DataFrame()
+                except Exception as exc:
+                    print(f"  ERROR full rebuild {name}: {exc} (keeping existing; new cols dropped)")
         merged = _overlap_append(old, fresh)
         if name == "fred_policy_rates":
             merged = attach_fomc_point_target(merged)

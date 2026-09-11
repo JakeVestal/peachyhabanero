@@ -66,9 +66,14 @@
   <section id="panel-raw" class="panel hidden">
     <h2>04  /  raw columns (Treasury formulas + Fed-mandate store)</h2>
     <p class="sub">
-      Same frames as the nightly cache. New mandate series (PCE/CPI, payrolls,
-      JOLTS, breakevens, target range) are stored here as raw levels. No gaps
-      or Fed plot yet — that comes after the cache has a full history.
+      Same frames as the nightly cache. Official holdings —
+      <a href="https://fred.stlouisfed.org/series/WALCL">WALCL</a>
+      (Fed total assets),
+      <a href="https://fred.stlouisfed.org/series/WSHOTSL">WSHOTSL</a>
+      (SOMA Treasuries), FDHBFIN — and
+      <a href="https://fred.stlouisfed.org/series/RRPONTSYD">RRPONTSYD</a>
+      (ON RRP) live in 04 raw. New mandate series (PCE/CPI, payrolls,
+      JOLTS, breakevens, target range) are stored here as raw levels.
     </p>
     <div id="raw-picker" class="toolbar"></div>
     <div id="raw-col-notes"></div>
@@ -99,5 +104,6 @@
   </footer>
   <script src="column_notes.js?v=7"></script>
   <script src="app.js?v=4"></script>
+  <script src="nav-scratch.js"></script>
 </body>
 </html>
