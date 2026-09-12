@@ -756,3 +756,13 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .join-mx { border-collapse: collapse; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; }
 .join-mx th, .join-mx td { padding: 6px 10px; border-bottom: 1px solid var(--gold-faint); }
 
+.article-body h2 .h-sub {
+  display: block;
+  margin-top: 0.4em;
+  font-size: 0.78em;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: #8b9eac;
+  text-transform: none;
+}
