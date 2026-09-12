@@ -85,7 +85,7 @@
   <p>
     Bond desks talk about “duration” as if it were a thing you could buy or
     sell — which it is. The word does a lot of work, but the formula
-    everyone learns is enough to start:
+    everyone learns in basic finance is enough to start with:
   </p>
   <p class="stat">ΔP ≈ −D × Δy</p>
   <table class="join-table eq-key">
@@ -112,7 +112,7 @@
     <li>
       <b>Buying back older 10- to 30-year Treasuries</b> — taking long
       bonds out of public hands. Official phrasing: “liquidity support”
-      for off-the-run longs. Arithmetic: fewer long bonds for the market
+      for off-the-run longs. The consequence is fewer long bonds for the market
       to hold.
     </li>
     <li>
@@ -120,15 +120,14 @@
       comes due in a year or less. <a
             href="https://www.investopedia.com/terms/o/operation-twist.asp">
       Commentators</a> (and even <a
-            href="https://www.richmondfed.org/publications/research/econ_focus/2012/q4/jargon_alert">the Fed itself, in 2011
-    </a>) call a mix-shift like this "Operation Twist", and it can sound like
+            href="https://www.richmondfed.org/publications/research/econ_focus/2012/q4/jargon_alert">the Fed itself, in 2011</a>)
+      call a mix-shift like this "Operation Twist", and it can sound like
       Quantitative Easing (QE) because it involves buying bonds. But is not QE.
-      Under QE, the central bank’s balance sheet <em>grows</em>. Under Twist,
-      size stays roughly flat and only the <em>mix</em> changes. Bessent’s
-      version is even one book over because in this case, the Fed’s portfolio
-      is not the one twisting: it's the Treasury’s, and the net result of the
-      twist is a new <em>liability mix</em> — more T-bills, fewer notes and
-      bonds — and the<em>stock</em> of debt can still grow with the deficit.
+      Under QE, the central bank’s balance sheet <em>grows</em>. Under a Twist,
+      size stays roughly flat and only the <em>mix</em> changes. Right now, the
+      Fed’s portfolio is not the one twisting: it's the Treasury’s, and the net
+      result of the twist is a new <em>liability mix</em> — more T-bills, fewer
+      notes and bonds.
     </li>
   </ol>
   <p>
@@ -142,14 +141,15 @@
 
   <h2>A hedge-fund trade, run by the Treasury</h2>
   <p>
-    Recently, when Treasury raised the cap on the amount of the debt mix that
-    could be "twisted" or rearranged in the manner just described, it <a
+    When Treasury recently raised the cap on the amount of the debt mix that
+    could be "twisted" or rearranged at one time in the manner just described,
+    it <a
           href="https://www.cnbc.com/2026/09/09/treasury-department-to-buy-back-6-billion-in-longer-term-debt-triple-the-normal-level.html">made a lot of news</a>.
-    This might sound odd, because $6 billion against tens of trillions of
-    debt alredy on the market is not a very large number. In fact, on
-    September 9 the announcement did not even hold the market: long yields rose
-    that day. The point is <b>the stance</b>. Issuance is no longer being
-    sold as a neutral plumbing exercise. <b>The Secretary is taking a
+    This might sound like much ado about nothing, because $6 billion against
+    tens of trillions of debt alredy on the market is not a very large number.
+    In fact, on September 9 the announcement did not even hold the market: long
+    yields rose that day. The point is <b>the stance</b>. Issuance is no longer
+    being sold as a neutral plumbing exercise. <b>The Secretary is taking a
     view</b>. He is trading one kind of sensitivity for another, while claiming
     that this move is based on asymmetric information he has access to.
   </p>
@@ -169,7 +169,7 @@
     a yen-based buyer rolling a dollar hedge pays roughly the gap between U.S.
     and Japanese short rates, and a BoJ hike <em>narrows</em> that gap. The
     usual result, taught on every cross-border desk, is still <b>less
-    incremental demand for long-dated Treasuries</b>and some upward pressure on
+    incremental demand for long-dated Treasuries</b> and some upward pressure on
     U.S. long yields — not because Tokyo dumps the whole pile overnight, but
     because the next buyer is less eager. The driving factor here is the JGB
     alternative, not the hedge bill.
@@ -217,9 +217,10 @@
     Treasury debt. In 2022–23 the Fed was a <em>seller</em> — shrinking its
     Treasury portfolio — and private buyers took new debt <em>and</em> what
     the Fed was selling. In the latest year the "leftover" is still on the order
-    of two-thirds of extra public debt, meaning that the Fed is a rounding
-    error. Overnight cash that used to sit at the Fed has mostly gone; some of
-    it bought bills, which still counts as leftover, not as the central bank.
+    of two-thirds of extra public debt, meaning that the Fed's bid, such as
+    it is, is a rounding error. Overnight cash that used to sit at the Fed has
+    mostly gone; some of it bought bills, which still counts as leftover, not
+    as the central bank.
   </p>
   <p>
     So the long-end buyback is not crowding out the Fed. It is a small
@@ -245,6 +246,7 @@
     <span class="h-sub">Decreasing duration risk gets paid for by fiscal
       risk</span>
   </h2>
+
   <h3>Cost Side</h3>
   <p>
     The cost the Treasury pays as it shortens the book is extra interest
@@ -304,20 +306,25 @@
   </p>
   <p class="stat">ρ ≈ g / (D<sub>long</sub> − D<sub>bill</sub>)</p>
   <p>
-    Cheap versus expensive is that ratio, not how small the first
-    buybacks looked in the 10-year. Size scales both sides the same.
+    "Cheap versus expensive" is evaluated in terms of the ratio. How big or
+    small the first buybacks looked in the 10-year doesn't matter; size scales
+    both sides the same.
   </p>
 </article>
 
 <section>
   <div class="rho-b-bar">
     <label class="rho-b-lab">
-      chunk B
+      "Twist" chunk size B
       <input id="rho-b" type="number" min="0.1" max="2000" step="0.5" value="6"/>
       <span>$ billion</span>
     </label>
-    <p class="who-unit">ρ (gold / magenta) does not move with B. The dashed extra-coupon line does — y-axis 2 is locked so you can see it grow.</p>
   </div>
+  <p class="sub">
+    ρ (gold and magenta lines for) does not move with B. <br>
+    The dashed extra-coupon line does — y-axis 2 is locked so you can see it
+    grow.
+  </p>
   <div id="plot-rho"></div>
   <div class="col-card" id="rho-card">
     <h3 id="rho-head">Price of a $6 bn switch, latest print</h3>
@@ -347,12 +354,18 @@
     stops being a footnote.
   </p>
 
-  <h2>Did he win, later</h2>
+  <h2>So how do we know if the trade is winning?</h2>
   <p>
-    You cannot prove a counterfactual. You can pre-commit to what you
-    will look at so “winning” is not a vibe. Two horizons: four
-    quarters (was the twist even in the book?) and three years (did
-    the Japan / long-end call pay?).
+    You start by defining what “winning” means. A reasonable definition
+    might look something like the following:
+  </p>
+  <p>
+    <b>Win:</b> the long end is better than the
+    Japan / term-premium tape said it should be, <em>and</em> the extra
+    first-year coupon is smaller than that relief was worth.
+  </p>
+  <p>
+    <b>Loss:</b> longs did not care, and the short wall is bigger.
   </p>
   <div class="join-scroll">
     <table class="join-table">
@@ -392,19 +405,6 @@
       </tbody>
     </table>
   </div>
-  <p>
-    <b>Win, in one sentence:</b> the long end is better than the
-    Japan / term-premium tape said it should be, <em>and</em> the extra
-    first-year coupon is smaller than that relief was worth.
-  </p>
-  <p>
-    <b>Loss:</b> longs did not care, and the short wall is bigger.
-  </p>
-  <p>
-    Japan is a channel, not the whole scoreboard. If leftover is
-    ~70% of extra debt, the people who decide whether he won are in
-    the magenta bars, not Tokyo.
-  </p>
 </article>
 
 <section>
@@ -440,10 +440,11 @@
 </section>
 
 <article class="article-body">
-  <h2>He had other options</h2>
+  <h2>Why become the House?</h2>
+  <h3>Bessent did have other options after all</h3>
   <p>
     A Treasury secretary who worries about long yields is not required
-    to become the house.
+    to become the house. He had several other options:
   </p>
   <ol>
     <li>
@@ -472,16 +473,17 @@
   </ol>
   <p>
     The first two are boring. The third is politics. The fourth is a
-    hedge-fund book run on a sovereign balance sheet. It can work if
+    hedge-fund book run on a sovereign balance sheet. It <b>can work</b> if
     leftover stays and if Japan is the main risk to the long end. It
     works less well if leftover <em>is</em> the long end — if the
     people who have been taking extra public debt start to want a
     higher long yield as compensation, Japan or no Japan.
   </p>
 
-  <h2>Is Japan the whole picture?</h2>
+  <h2>But is Japan the whole picture?</h2>
+  <p>No.</p>
   <p>
-    Probably not. Japan is a real channel and a real holder. It is
+    Japan is a real channel and a real holder. It is
     also a country that already walked this path further than the
     United States has: a heavy government bond market, a central bank
     that became the bid, and a finance ministry that has spent decades
@@ -492,25 +494,18 @@
     bid. Japan, for years, did not.
   </p>
   <p>
-    Our foreign-holdings series does not isolate Tokyo. If Japanese
-    institutions step back, it will show up late, mixed with everyone
-    else. What we can see without waiting on that revision is simpler:
+    The foreign-holdings series does not isolate Tokyo. If Japanese
+    institutions step back, it will show up late in the numbers, mixed in with
+    everyone else. What we can see without waiting on that revision is simpler:
     <b>the Fed is not financing the extra debt. Private buyers are.
       Bessent is overlaying a small official long bid and a larger
       short-term issuance program on top of that.</b>
-    He is the house in the sense that he can see Japan and he can
-    change the mix of the U.S. book. He is not the house in the sense
-    that he can replace the magenta bars. Those bars are the people
-    he is betting will still show up — or will show up less in longs
-    and more in bills, which is the same bet written differently.
-  </p>
-  <p>
-    The cubes exist so that bet has a scoreboard for the fiscal side.
-    The financing page exists so the counterparties have names, even
-    if one of the names is “leftover.” ρ is how expensive the pair is.
-    The table above is how we will keep score. Follow the links. The
-    article is the story. The analyses are why it is allowed to be
-    this sharp.
+    He <em>is</em> the house in the sense that he can see Japan and he can
+    change the mix of the U.S. book. He <em>is not</em> the house in the sense
+    that he can replace the magenta bars if they decide they don't feel like
+    showing up. Those bars are the people he is betting will still be there —
+    or, at least, will show up less in longs and more in bills, which is the
+    same bet fundamentally.
   </p>
 
   <h2>
@@ -519,29 +514,31 @@
   </h2>
   <p>
     The first operations were small in the 10-year because they were
-    small in B. They were not free. After 2022, a twist is a cover
-    charge: extra cash interest next year for each year of duration
-    taken off the Street. That is not a hedge-fund mark. The longs
-    are retired, not marked. It is till cash —
+    small in B, but were not free. The gold and magenta lines in the ρ plot
+    show why after 2022, a Twist trade does indeed carry a cover charge
+    because the lines are above zero. It costs an extra cash premium in
+    interest next year for each year of duration taken off the Street. These
+    longs are retired, not marked the way a hegde fund might. It is till cash —
     <span class="eq">ΔI<sub>1y</sub></span> — and at $6 billion it is
     tens of millions. The till does not notice. The ranking does.
   </p>
   <p>
-    Every time ρ is positive, Bessent makes the roll a little worse
-    on purpose. He is not saying he cannot roll. The
-    <a href="sustainability.html">cubes</a> already say the short wall
-    is the fiscal object. He is <em>thickening</em> that wall to keep
-    a bid in 10s and 30s. Revealed preference: he is more afraid of
-    long yields ripping than of a slightly heavier refinancing.
+    Every time ρ is positive, Bessent makes the rolling over the Treasury's
+    debt a little worse on purpose. He is relying on always being able to roll.
+    The <a href="sustainability.html">cubes</a> say the short wall
+    is the hungry fiscal monster that he's feeding in order to keep a bid he
+    likes in the 10s and 30s. In so doing, he shows his hand somewhat: is more
+    afraid of long yields ripping than of a slightly heavier refinancing.
   </p>
   <p>
     So it is not much ado about $6 billion. It is much ado about
-    <b>which risk he chose</b>. Duration fear over roll fear. ρ is
-    the receipt. Leftover decides whether the receipt stays a
-    footnote. If the magenta bars keep taking extra public debt, he
-    can pay a tiny cover charge and call himself the house. If they
-    don’t, he pays the same ρ on a much larger B, and the man who
-    feared the long end has to live with the wall he thickened.
+    <b>which risk he chose</b>. He chose duration fear over roll fear, and ρ is
+    the price. The private market participants in the magenta bars are the ones
+    who decide whether the receipt stays a footnote or become an issue. If
+    those magenta players keep taking extra public debt, Bessent can pay a tiny
+    cover charge and still call himself the house. If they don’t, he pays the
+    same ρ on a much larger B, and the man who feared the long end has to live
+    with the short-end monster he has fed.
   </p>
 
   <h3>What this says he believes</h3>
@@ -555,7 +552,11 @@
     coupon on new longs.
   </p>
   <p>
-    That ranking is a forecast. He is acting as if:
+    If he really does have asymmetric insider information then that's
+    actually quite comforting. He knows something you don't... so relax!
+  </p>
+  <p>
+    His ranking of risk is itself a forecast. He is acting as if:
   </p>
   <ul>
     <li>
@@ -572,7 +573,7 @@
     </li>
     <li>
       <b>Congress will not shrink the deficit</b> enough to make the
-      mix debate moot, and the Fed will not eat the longs (this is a
+      mix debate moot, and the Fed will not eat the longs (again, this is a
       twist, not QE). Official duration support is Treasury’s job,
       mix-neutral, a few billion at a time.
     </li>
