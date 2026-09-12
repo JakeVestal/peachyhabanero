@@ -146,7 +146,7 @@
   <h2>The view: Japan, and the long end</h2>
   <p>
     This whole conversation started around Japan.
-    </p>
+  </p>
   <p>
     Japanese institutions have been, for decades, among the largest foreign
     holders of U.S. Treasuries. Their domestic alternative is Japanese
@@ -202,84 +202,110 @@
 
 <article class="article-body">
   <p>
-    In 2020 the Fed was the buyer. In 2022–23 the Fed was a
-    <em>seller</em> — shrinking its Treasury portfolio — and private
-    buyers took the new debt <em>and</em> what the Fed was selling.
-    In the latest year leftover is still on the order of two-thirds of
-    extra public debt. The Fed is a rounding error. Overnight cash that
-    used to sit at the Fed has mostly gone; some of it bought bills,
-    which still counts as leftover, not as the central bank.
+    Judging by the plot, it's clear that in 2020 the Fed was the buyer of
+    Treasury debt. In 2022–23 the Fed was a <em>seller</em> — shrinking its
+    Treasury portfolio — and private buyers took new debt <em>and</em> what
+    the Fed was selling. In the latest year the "leftover" is still on the order
+    of two-thirds of extra public debt, meaning that the Fed is a rounding
+    error. Overnight cash that used to sit at the Fed has mostly gone; some of
+    it bought bills, which still counts as leftover, not as the central bank.
   </p>
   <p>
     So the long-end buyback is not crowding out the Fed. It is a small
-    official bid sitting in front of a large private one. He is betting
-    that private appetite for long bonds will get worse (Japan, term
-    premium, whatever he sees) and that he can live with more bills.
-    The people on the other side of that bet are whoever is in the
-    magenta bars: money-market funds, banks, pensions, insurers,
-    households — the same domestic bid that cleared the Fed’s runoff.
-    If that bid holds, the House does not need to get bigger. If it
-    doesn’t, a few billion at a time will not be the whole story. They
-    will be the start of a much larger official presence in the long
-    end, run from the Treasury rather than the Fed.
+    official bid sitting in front of a large private one. That means Bessent
+    is betting that private appetite for long bonds will get worse (Japan, term
+    premium, whatever he sees) and that he can live with more bills and eat
+    the rollover risk.
+  </p>
+  <p>
+    <b>The people on the other side of that bet are whoever is in the
+      magenta bars</b>: money-market funds, banks, pensions, insurers,
+    households — the same domestic bid that cleared the Fed’s runoff. As long
+    as these private buyers keep showing up to bid, the House does not need to
+    get bigger by scaling up its buybacks -- Japan or no Japan. Otherwise, a
+    few billion at a time will not move the needle much. Instead, if the
+    magenta buyers start to lose their appetite for Treasury debt, it will
+    mark the start of a much larger official presence in the long end: a run
+    from the Treasury rather than the Fed.
   </p>
 
-  <h2>The price of the pair: fiscal risk per unit of sensitivity taken out</h2>
+  <h2>
+    The Price of the Pair Trade
+    <span class="h-sub">Decreasing duration risk gets paid for by fiscal
+      risk</span>
+  </h2>
+  <h3>Cost Side</h3>
   <p>
-    “He is taking duration out of the market” is a slogan until it has
-    a denominator. “The cubes look worse” is a slogan until it has a
-    numerator that moves <em>because of this trade</em>, not because
-    the deficit exists.
+    The cost the Treasury must pay as it decreases its duration risk is the
+    extra interest that it must pay over the next twelve months on the
+    now-larger pile of debt that comes due inside a year. We need to know:
   </p>
+  <dl>
+    <dt><span class="eq">g</span>, The Refi Gap</dt>
+    <dd>The rate on new borrowing minus the rate already on the books</dd>
+    <dt><span class="eq">ΔA<sub>0-1y</sub></span></dt>
+    <dd>Principal that comes due inside a year</dd>
+  </dl>
   <p>
-    The object that moves because he shortens the book is the extra
-    interest the Treasury pays over the next twelve months on the
-    larger pile of debt that comes due inside a year.
+    Knowing those parameters, we can calculate
+    <span class="eq">ΔI<sub>1y</sub></span>: the cost, in terms of change in
+    the interest rate being paid on Treasury debt maturing within a year, for
+    a given "chunk" of reallocation.
   </p>
-  <p class="stat">ΔI<sub>1y</sub> ≈ g × A<sub>0–1y</sub></p>
-  <table class="join-table eq-key">
-    <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
-    <tbody>
-    <tr>
-      <td>g</td>
-      <td>Refi gap: the rate on new borrowing minus the rate already on the books, as a decimal. Same object as the Sustainability Cube’s refinancing axis.</td>
-    </tr>
-    <tr>
-      <td>A<sub>0–1y</sub></td>
-      <td>Principal that comes due inside a year. We have this as <span class="stat">RESID_AMT_0_1Y</span> from Treasury Fiscal Data, Table 3.</td>
-    </tr>
-    <tr>
-      <td>ΔI<sub>1y</sub></td>
-      <td>Extra interest, dollars, over the next twelve months if the gap stays where it is. This is the fiscal cost of a shorter book.</td>
-    </tr>
-    </tbody>
-  </table>
+
+  <p class="stat">ΔI<sub>1y</sub> ≈ g × ΔA<sub>0–1y</sub></p>
+<!--  <table class="join-table eq-key">-->
+<!--    <thead><tr><th>symbol</th><th>meaning</th></tr></thead>-->
+<!--    <tbody>-->
+<!--    <tr>-->
+<!--      <td>g</td>-->
+<!--      <td>Refi gap: the rate on new borrowing minus the rate already on the books, as a decimal. Same object as the Sustainability Cube’s refinancing axis.</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--      <td>A<sub>0–1y</sub></td>-->
+<!--      <td>Principal that comes due inside a year. We have this as <span class="stat">RESID_AMT_0_1Y</span> from Treasury Fiscal Data, Table 3.</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--      <td>ΔI<sub>1y</sub></td>-->
+<!--      <td>Extra interest, dollars, over the next twelve months if the gap stays where it is. This is the fiscal cost of a shorter book.</td>-->
+<!--    </tr>-->
+<!--    </tbody>-->
+<!--  </table>-->
+
+  <h3>Benefit side</h3>
   <p>
-    The other side is how much long-rate <em>price</em> sensitivity he
-    took out. A buyback of B dollars of 10- to 30-year bonds, funded
-    with bills, removes about
+    The other side is the reason the "Treasury Twist" or "House" strategy is
+    appealing:  how much duration is taken out by every time Bessent
+    executes a "sell short-term, buy long-term" trade? We can calculate that by
+    reasoning that buyback of <span class="eq">B</span> dollars of 10- to
+    30-year bonds, funded with bills, results in a duration change
+    <span class="eq">ΔD</span> of about
   </p>
-  <p class="stat">B × (D<sub>long</sub> − D<sub>bill</sub>)</p>
+  <p class="stat">ΔD = B × (D<sub>long-term</sub> − D<sub>short-term</sub>)</p>
   <p>
-    dollar-duration from the public float. D_long is large; D_bill is
-    near zero. He is not “buying a negative number.” He is shrinking
-    D of the paper the public still holds.
+    dollar-duration from the public float. <span class="eq">D
+    <sub>long-term</sub></span>is large;
+    <span class="eq">D<sub>short-term</sub></span> is near zero. So every time
+    Treasury moves a chunk of long-term debt into the short-term, they're
+    reducing duration by <span class="eq">ΔD</span>, in dollars.
   </p>
+  <h3>Quantifying the Bet Ratio</h3>
   <p>
-    The bet ratio is
+    Now we can quantify Bessent's House Strategy Bet Ratio
+    <span class="eq">ρ</span> simply by taking cost / benefit:
   </p>
-  <p class="stat">ρ = ΔI<sub>1y</sub> / (duration taken out of the public float)</p>
+  <p class="stat">ρ = ΔI<sub>1y</sub> / ΔD</p>
   <p>
-    In English: <b>dollars of next-year interest per unit of long-rate
+    In English, that's <b>dollars of next-year interest per unit of long-rate
     price sensitivity removed from the market.</b> If ρ is large, he
     paid a lot of incoming cash for a little relief at the long end.
     If ρ is small, the House is cheap. You can also quote ρ as
     percentage points of interest-versus-incoming-cash per year of
     average remaining maturity shortened — same story, in the units of
-    the
-    <a href="sustainability.html">Sustainability Cube</a>.
+    the <a href="sustainability.html">Sustainability Cube</a>.
   </p>
   <p>
+    WE ARE HERE.
     A $6 billion 10–20 year operation against a short wall measured in
     trillions is a tiny duration number and a real refinancing number.
     That is why the first operations looked small in yields. Size is

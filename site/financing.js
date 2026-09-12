@@ -9,19 +9,24 @@ function layout(title, opts) {
   const mobile = isNarrow();
   const o = opts || {};
   return {
-    title: {
-      text: title,
-      font: { color: "#00f0ff", size: mobile ? 12 : 13 },
-      x: 0,
-      xanchor: "left",
-    },
+    title: title
+      ? {
+          text: title,
+          font: { color: "#00f0ff", size: mobile ? 12 : 13 },
+          x: 0,
+          xanchor: "left",
+          y: 1,
+          yanchor: "bottom",
+          pad: { t: 0, b: 8 },
+        }
+      : false,
     paper_bgcolor: "#07080c",
     plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
     margin: mobile
-      ? { l: 44, r: 8, t: 52, b: 108 }
-      : { l: 52, r: 16, t: 64, b: 52 },
-    height: o.height || (mobile ? 460 : 400),
+      ? { l: 44, r: 8, t: title ? 44 : 16, b: 112 }
+      : { l: 52, r: 16, t: title ? 48 : 20, b: 92 },
+    height: o.height || (mobile ? 480 : 420),
     xaxis: {
       gridcolor: "rgba(196,163,90,0.12)",
       zerolinecolor: "rgba(255,43,214,0.25)",
@@ -36,11 +41,12 @@ function layout(title, opts) {
     legend: {
       orientation: "h",
       x: 0,
-      y: mobile ? -0.32 : 1.18,
+      y: -0.16,
       xanchor: "left",
-      yanchor: mobile ? "top" : "bottom",
+      yanchor: "top",
       font: { size: 11, color: "#c8d6e5" },
       bgcolor: "rgba(7,8,12,0)",
+      traceorder: "normal",
     },
     showlegend: o.showlegend !== false,
     hovermode: "x unified",
@@ -107,6 +113,14 @@ function fmt(v, d) {
   return v.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d });
 }
 
+function fmtSigned(v) {
+  if (v == null || !Number.isFinite(v)) return "—";
+  const n = Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 0 });
+  if (v > 0.5) return "+" + n;
+  if (v < -0.5) return "−" + n;
+  return "0";
+}
+
 function sumWin(rows, key, a, b) {
   return rows.filter((r) => r.date >= a && r.date <= b && Number.isFinite(r[key]))
     .reduce((s, r) => s + r[key], 0);
@@ -147,16 +161,44 @@ function buyerRows(tables) {
 }
 
 function ateLine(block) {
-  if (!Number.isFinite(block.pub) || Math.abs(block.pub) < 1) return "—";
+  if (!Number.isFinite(block.pub) || Math.abs(block.pub) < 1) return "";
   const fed = 100 * block.soma / block.pub;
   const fo = 100 * block.foreign / block.pub;
   const pr = 100 * block.resid / block.pub;
-  const shares = `Fed ${fmt(fed, 0)}% · foreign ${fmt(fo, 0)}% · leftover ${fmt(pr, 0)}% of the extra public debt`;
+  const shares = `Of that extra debt: Fed ${fmt(fed, 0)}% · foreign ${fmt(fo, 0)}% · leftover ${fmt(pr, 0)}%.`;
   const officialNet = (block.soma || 0) + (block.foreign || 0);
   if (officialNet < 0) {
-    return `${shares}. Leftover over 100% is not a bug: private buyers took the new debt <em>and</em> the bonds the Fed and foreigners were selling.`;
+    return `${shares} Leftover over 100% is not a bug: private buyers took the new issuance <em>and</em> what the Fed and foreigners sold.`;
   }
-  return `${shares}.`;
+  return shares;
+}
+
+function whoWindow(label, range, block, rrpNote) {
+  return `
+    <div class="who-window">
+      <p class="who-label">${label}</p>
+      <p class="who-dates">${range}</p>
+      <div class="who-figures">
+        <div class="who-fig">
+          <span class="k">extra public debt</span>
+          <span class="v">${fmtSigned(block.pub)}</span>
+        </div>
+        <div class="who-fig">
+          <span class="k">Fed</span>
+          <span class="v">${fmtSigned(block.soma)}</span>
+        </div>
+        <div class="who-fig">
+          <span class="k">foreign</span>
+          <span class="v">${fmtSigned(block.foreign)}</span>
+        </div>
+        <div class="who-fig">
+          <span class="k">leftover</span>
+          <span class="v">${fmtSigned(block.resid)}</span>
+        </div>
+      </div>
+      <p class="who-unit">$ billion, sum of quarter-to-quarter changes</p>
+      <p>${ateLine(block)} ${rrpNote}</p>
+    </div>`;
 }
 
 async function drawWho(tables) {
@@ -192,22 +234,19 @@ async function drawWho(tables) {
   if (card) {
     card.innerHTML = `
       <h3>Who took the extra public debt</h3>
-      <p class="stat">
-        2022-Q1 → 2023-Q2 &nbsp; extra public debt ${fmt(s22.pub, 0)} $bn
-        &nbsp; Fed ${fmt(s22.soma, 0)}
-        &nbsp; foreign ${fmt(s22.foreign, 0)}
-        &nbsp; leftover ${fmt(s22.resid, 0)}
-      </p>
-      <p>${ateLine(s22)} Overnight cash parked at the Fed (reverse repo) changed by ${fmt(s22.rrp, 0)} $bn — not part of the sum.</p>
-      <p class="stat">
-        last 4 quarters (${sNow.from || "—"} → ${sNow.to || "—"})
-        &nbsp; extra public debt ${fmt(sNow.pub, 0)}
-        &nbsp; Fed ${fmt(sNow.soma, 0)}
-        &nbsp; foreign ${fmt(sNow.foreign, 0)}
-        &nbsp; leftover ${fmt(sNow.resid, 0)}
-      </p>
-      <p>${ateLine(sNow)} Reverse repo changed by ${fmt(sNow.rrp, 0)} $bn.
-        Leftover is U.S. private holders plus foreign buying that has not printed yet. It is a bucket, not a person.</p>`;
+      ${whoWindow(
+        "QT window",
+        "2022-Q1 → 2023-Q2",
+        s22,
+        `Overnight cash parked at the Fed (reverse repo) changed by ${fmtSigned(s22.rrp)} — not part of the four-way split.`
+      )}
+      ${whoWindow(
+        "Last four quarters",
+        `${sNow.from || "—"} → ${sNow.to || "—"}`,
+        sNow,
+        `Reverse repo changed by ${fmtSigned(sNow.rrp)}.`
+      )}
+      <p class="who-foot">Leftover is U.S. private holders plus foreign buying that has not printed yet. It is a bucket, not a person. Figures in $ billion.</p>`;
   }
   if (tb) {
     const show = vis.filter((r) => r.date >= "2021-01-01");
@@ -223,9 +262,9 @@ async function drawWho(tables) {
   }
   if (el) {
     await Plotly.newPlot("plot-who", [
-      { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.dSoma), name: "Fed Treasury holdings", marker: { color: "rgba(0,240,255,0.85)" } },
-      { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.dFor), name: "foreign holders", marker: { color: "rgba(196,163,90,0.85)" } },
-      { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.resid), name: "leftover (private + lag)", marker: { color: "rgba(255,43,214,0.45)" } },
+      { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.dSoma), name: "Fed", marker: { color: "rgba(0,240,255,0.85)" } },
+      { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.dFor), name: "foreign", marker: { color: "rgba(196,163,90,0.85)" } },
+      { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.resid), name: "leftover", marker: { color: "rgba(255,43,214,0.45)" } },
       { type: "scatter", mode: "lines+markers", x: vis.map((r) => r.date), y: vis.map((r) => r.dPub), name: "extra public debt", line: { color: "#e8f6ff", width: 2 }, marker: { size: 5 } },
     ], Object.assign(layout("Extra public debt, who took it ($bn, quarter to quarter)"), {
       barmode: "relative",
