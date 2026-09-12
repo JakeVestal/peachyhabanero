@@ -336,29 +336,33 @@ function extraCouponMn(gPp, bBn) {
   return gPp * 10 * bBn;
 }
 
-async function drawRho(pack) {
-  const el = document.getElementById("plot-rho");
-  const card = document.getElementById("rho-card");
-  if (!el && !card) return;
-  const rows = ((pack && pack.sustain) || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-  const vis = rows.filter((r) => r.date >= "2010-01-01" && Number.isFinite(Number(r.refi_gap)));
-  if (!vis.length) {
-    const msg = "cubes.json missing sustain.refi_gap — run the nightly refresh.";
-    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
-    if (el) el.innerHTML = `<p class="err">${msg}</p>`;
-    return;
-  }
-  const last = vis[vis.length - 1];
+function readChunkB() {
+  const inp = document.getElementById("rho-b");
+  let v = inp ? Number(inp.value) : CHUNK_BN;
+  if (!Number.isFinite(v) || v <= 0) v = CHUNK_BN;
+  if (v > 2000) v = 2000;
+  return v;
+}
+
+function mnLabel(v) {
+  if (v == null || !Number.isFinite(v)) return "—";
+  return (v >= 0 ? "+" : "−") + fmt(Math.abs(v), 0) + " mn";
+}
+
+let rhoVis = null;
+
+function fillRhoMath(last, bBn) {
+  const box = document.getElementById("rho-math");
+  const head = document.getElementById("rho-head");
+  if (head) head.textContent = "Price of a $" + fmt(bBn, bBn < 10 ? 1 : 0) + " bn switch, latest print";
+  if (!box || !last) return;
   const g = Number(last.refi_gap);
   const r10 = rhoBp(g, D_10);
   const r20 = rhoBp(g, D_20);
-  const i10 = extraCouponMn(g, CHUNK_BN);
-  const i20 = extraCouponMn(g, CHUNK_BN);
-  const d10 = CHUNK_BN * (D_10 - D_BILL);
-  const d20 = CHUNK_BN * (D_20 - D_BILL);
-  if (card) {
-    card.innerHTML = `
-      <h3>Price of a $6bn switch, latest print</h3>
+  const i = extraCouponMn(g, bBn);
+  const d10 = bBn * (D_10 - D_BILL);
+  const d20 = bBn * (D_20 - D_BILL);
+  box.innerHTML = `
       <div class="who-window">
         <p class="who-label">g from the cube</p>
         <p class="who-dates">${last.date}</p>
@@ -369,15 +373,15 @@ async function drawRho(pack) {
           </div>
           <div class="who-fig">
             <span class="k">chunk B</span>
-            <span class="v">$6 bn</span>
+            <span class="v">$${fmt(bBn, bBn < 10 ? 1 : 0)} bn</span>
           </div>
           <div class="who-fig">
-            <span class="k">ΔI<sub>1y</sub> (10s or 20s)</span>
-            <span class="v">${i10 == null ? "—" : (i10 >= 0 ? "+" : "−") + fmt(Math.abs(i10), 0) + " mn"}</span>
+            <span class="k">ΔI<sub>1y</sub></span>
+            <span class="v">${mnLabel(i)}</span>
           </div>
           <div class="who-fig">
-            <span class="k">B cancels in ρ</span>
-            <span class="v">same at $60 bn</span>
+            <span class="k">ρ vs B</span>
+            <span class="v">unchanged</span>
           </div>
         </div>
       </div>
@@ -408,26 +412,94 @@ async function drawRho(pack) {
         </div>
       </div>
       <p class="who-foot">
-        ΔI<sub>1y</sub> = (g/100) × $6bn. Duration is a labeled Macaulay mix, not each CUSIP.
-        ρ = g / (D<sub>long</sub> − D<sub>bill</sub>), in bp of extra next-year coupon per year of duration pulled.
+        ΔI<sub>1y</sub> = (g/100) × B. ΔD = B × (D<sub>long</sub> − D<sub>bill</sub>).
+        ρ = g / (D<sub>long</sub> − D<sub>bill</sub>) does not depend on B.
+        Duration is a labeled Macaulay mix, not each CUSIP.
       </p>`;
-  }
-  if (!el) return;
+}
+
+function rhoLayout(bBn) {
+  const L = layout(
+    "rho (left) and extra coupon dI for this B (right)",
+    { ytitle: "rho, bp / year of D" }
+  );
+  L.yaxis2 = {
+    overlaying: "y",
+    side: "right",
+    title: { text: "ΔI₁y, $ mn  (B = $" + fmt(bBn, bBn < 10 ? 1 : 0) + " bn)" },
+    gridcolor: "rgba(0,240,255,0.08)",
+    zerolinecolor: "rgba(255,43,214,0.25)",
+    automargin: true,
+    tickfont: { color: "#7fdfff" },
+  };
+  L.shapes = hingeShapes();
+  L.margin = Object.assign({}, L.margin, { r: isNarrow() ? 44 : 64 });
+  return L;
+}
+
+function rhoTraces(vis, bBn) {
   const xs = vis.map((r) => r.date);
-  const y10 = vis.map((r) => rhoBp(Number(r.refi_gap), D_10));
-  const y20 = vis.map((r) => rhoBp(Number(r.refi_gap), D_20));
-  await Plotly.newPlot("plot-rho", [
+  return [
     {
-      type: "scatter", mode: "lines", x: xs, y: y10,
-      name: "10s vs bills", line: { color: "#c4a35a", width: 2 },
+      type: "scatter", mode: "lines", x: xs,
+      y: vis.map((r) => rhoBp(Number(r.refi_gap), D_10)),
+      name: "ρ · 10s vs bills", line: { color: "#c4a35a", width: 2 },
     },
     {
-      type: "scatter", mode: "lines", x: xs, y: y20,
-      name: "20s vs bills", line: { color: "#ff2bd6", width: 2 },
+      type: "scatter", mode: "lines", x: xs,
+      y: vis.map((r) => rhoBp(Number(r.refi_gap), D_20)),
+      name: "ρ · 20s vs bills", line: { color: "#ff2bd6", width: 2 },
     },
-  ], Object.assign(layout("ρ: extra coupon per year of duration extracted (bp)", { ytitle: "bp / year of D" }), {
-    shapes: hingeShapes(),
-  }), { responsive: true, displaylogo: false });
+    {
+      type: "scatter", mode: "lines", x: xs,
+      y: vis.map((r) => extraCouponMn(Number(r.refi_gap), bBn)),
+      name: "ΔI₁y at this B", yaxis: "y2",
+      line: { color: "#7fdfff", width: 1.5, dash: "dash" },
+    },
+  ];
+}
+
+async function paintRho() {
+  if (!rhoVis || !rhoVis.length) return;
+  const bBn = readChunkB();
+  const last = rhoVis[rhoVis.length - 1];
+  fillRhoMath(last, bBn);
+  const el = document.getElementById("plot-rho");
+  if (!el) return;
+  await Plotly.react("plot-rho", rhoTraces(rhoVis, bBn), rhoLayout(bBn), {
+    responsive: true, displaylogo: false,
+  });
+}
+
+async function drawRho(pack) {
+  const el = document.getElementById("plot-rho");
+  const card = document.getElementById("rho-card");
+  if (!el && !card) return;
+  const rows = ((pack && pack.sustain) || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  const vis = rows.filter((r) => r.date >= "2010-01-01" && Number.isFinite(Number(r.refi_gap)));
+  if (!vis.length) {
+    const msg = "cubes.json missing sustain.refi_gap — run the nightly refresh.";
+    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
+    if (el) el.innerHTML = `<p class="err">${msg}</p>`;
+    return;
+  }
+  rhoVis = vis;
+  if (card && !document.getElementById("rho-b")) {
+    card.innerHTML = `
+      <h3 id="rho-head">Price of a $6 bn switch, latest print</h3>
+      <label class="rho-b-lab">
+        chunk B
+        <input id="rho-b" type="number" min="0.1" max="2000" step="0.5" value="6"/>
+        <span>$ billion</span>
+      </label>
+      <p class="who-unit">ρ does not move with B. The dashed line and ΔI<sub>1y</sub> / ΔD do — they scale one-for-one with the chunk.</p>
+      <div id="rho-math"></div>`;
+    const inp = document.getElementById("rho-b");
+    const onB = () => { paintRho(); };
+    inp.addEventListener("input", onB);
+    inp.addEventListener("change", onB);
+  }
+  await paintRho();
 }
 
 async function main() {

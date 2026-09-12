@@ -25,7 +25,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DOWNLOADS="${DOWNLOADS:-$HOME/Downloads}"
-RECORD="$ROOT/notes/patch-record.txt"
+RECORD="$ROOT/patch-record.txt"
 cd "$ROOT"
 
 if [[ ! -d .git ]]; then

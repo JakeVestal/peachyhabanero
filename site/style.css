@@ -318,6 +318,30 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
   line-height: 1.5;
 }
 .who-foot { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid rgba(196, 163, 90, 0.2); }
+.rho-b-lab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 2px;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.rho-b-lab input[type="number"] {
+  width: 7rem;
+  background: #0b0f16;
+  color: var(--gold);
+  border: 1px solid rgba(196, 163, 90, 0.55);
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 16px;
+}
+.rho-b-lab input[type="number"]:focus {
+  outline: none;
+  border-color: var(--gold);
+}
 .page-article .col-card .who-dates { font-size: 15px; }
 .page-article .col-card .who-fig .v { font-size: 17px; }
 .page-article .col-card p { font-size: 14px; line-height: 1.55; }
