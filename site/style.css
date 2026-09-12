@@ -449,7 +449,7 @@ a.analysis-card:hover { border-color: var(--cyan); }
   --story: 42rem;
   --story-ink: #b0bec9;
   --story-head: #d8e2ea;
-  --story-kicker: var(--lime);
+  --story-kicker: #c56a9a;
 }
 .page-article header,
 .page-article article,
@@ -528,6 +528,33 @@ a.analysis-card:hover { border-color: var(--cyan); }
 }
 .page-article footer {
   margin-top: 12px;
+}
+.draft-banner {
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  background: rgba(196, 163, 90, 0.08);
+  padding: 10px 14px;
+  margin: 0 0 1.4em;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+.page-article .join-table {
+  width: 100%;
+  min-width: 0;
+  font-size: 13px;
+  margin: 0 0 1.3em;
+}
+.page-article .eq-key td:first-child {
+  color: var(--cyan);
+  white-space: nowrap;
+}
+.page-article .stat {
+  display: block;
+  margin: 0 0 0.85em;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
 }
 
 /* Cube pages: stacked axis blocks, full page width */

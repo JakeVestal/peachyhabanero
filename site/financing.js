@@ -1,18 +1,50 @@
 /* Who is financing the extra public debt. Used by financing.html and article-house.html. */
 const RAW = "data/published/raw_inputs.json";
 
-function layout(title) {
+function isNarrow() {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches;
+}
+
+function layout(title, opts) {
+  const mobile = isNarrow();
+  const o = opts || {};
   return {
-    title: { text: title, font: { color: "#00f0ff", size: 13 } },
+    title: {
+      text: title,
+      font: { color: "#00f0ff", size: mobile ? 12 : 13 },
+      x: 0,
+      xanchor: "left",
+    },
     paper_bgcolor: "#07080c",
     plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
-    margin: { l: 52, r: 16, t: 40, b: 36 },
-    height: 360,
-    xaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
-    yaxis: { gridcolor: "rgba(196,163,90,0.12)", zerolinecolor: "rgba(255,43,214,0.25)" },
-    showlegend: false,
+    margin: mobile
+      ? { l: 44, r: 8, t: 52, b: 108 }
+      : { l: 52, r: 16, t: 64, b: 52 },
+    height: o.height || (mobile ? 460 : 400),
+    xaxis: {
+      gridcolor: "rgba(196,163,90,0.12)",
+      zerolinecolor: "rgba(255,43,214,0.25)",
+      automargin: true,
+    },
+    yaxis: {
+      gridcolor: "rgba(196,163,90,0.12)",
+      zerolinecolor: "rgba(255,43,214,0.25)",
+      automargin: true,
+      title: o.ytitle || undefined,
+    },
+    legend: {
+      orientation: "h",
+      x: 0,
+      y: mobile ? -0.32 : 1.18,
+      xanchor: "left",
+      yanchor: mobile ? "top" : "bottom",
+      font: { size: 11, color: "#c8d6e5" },
+      bgcolor: "rgba(7,8,12,0)",
+    },
+    showlegend: o.showlegend !== false,
     hovermode: "x unified",
+    autosize: true,
   };
 }
 
@@ -195,8 +227,8 @@ async function drawWho(tables) {
       { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.dFor), name: "foreign holders", marker: { color: "rgba(196,163,90,0.85)" } },
       { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.resid), name: "leftover (private + lag)", marker: { color: "rgba(255,43,214,0.45)" } },
       { type: "scatter", mode: "lines+markers", x: vis.map((r) => r.date), y: vis.map((r) => r.dPub), name: "extra public debt", line: { color: "#e8f6ff", width: 2 }, marker: { size: 5 } },
-    ], Object.assign(layout("Billions of dollars, quarter to quarter. Cyan = Fed. Amber = foreign. Magenta = leftover. White = extra public debt."), {
-      showlegend: true, height: 400, barmode: "relative",
+    ], Object.assign(layout("Extra public debt, who took it ($bn, quarter to quarter)"), {
+      barmode: "relative",
       shapes: hingeShapes(),
     }), { responsive: true, displaylogo: false });
   }
@@ -224,9 +256,8 @@ async function drawBills(tables) {
     el.innerHTML = `<p class="err">Need MSPD remaining-maturity weights</p>`;
     return;
   }
-  await Plotly.newPlot("plot-bills", traces, Object.assign(layout("How much of the book comes due inside a year (%). Amber = remaining life. Cyan dotted = bills by original class."), {
-    showlegend: true, height: 320, shapes: hingeShapes(),
-    yaxis: { title: "% of marketable", gridcolor: "rgba(196,163,90,0.12)" },
+  await Plotly.newPlot("plot-bills", traces, Object.assign(layout("Share of the book due inside a year (%)", { ytitle: "%" }), {
+    shapes: hingeShapes(),
   }), { responsive: true, displaylogo: false });
 }
 
@@ -245,9 +276,8 @@ async function drawLongs(tables) {
   if (d30.xs.length) {
     traces.push({ type: "scatter", mode: "lines", x: d30.xs, y: d30.ys, name: "30-year yield", line: { color: "#ff2bd6", width: 2 } });
   }
-  await Plotly.newPlot("plot-longs", traces, Object.assign(layout("Treasury constant-maturity yields (%). Amber = 10-year. Magenta = 30-year."), {
-    showlegend: true, height: 320, shapes: hingeShapes(),
-    yaxis: { title: "%", gridcolor: "rgba(196,163,90,0.12)" },
+  await Plotly.newPlot("plot-longs", traces, Object.assign(layout("10-year and 30-year Treasury yields (%)", { ytitle: "%" }), {
+    shapes: hingeShapes(),
   }), { responsive: true, displaylogo: false });
 }
 
@@ -272,3 +302,9 @@ async function main() {
 }
 
 main();
+window.addEventListener("resize", () => {
+  ["plot-who", "plot-bills", "plot-longs"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el && el.data) Plotly.Plots.resize(el);
+  });
+});

@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>I Am the House Now</title>
+  <meta name="robots" content="noindex, nofollow"/>
+  <title>I Am the House Now (draft)</title>
   <link rel="stylesheet" href="style.css"/>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
@@ -19,24 +20,30 @@
     </p>
     <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
   </div>
-  <p class="card-kicker" style="color:#c4a35a">Article · September 2026</p>
+  <p class="card-kicker">Draft · not on the homepage · aiming Monday</p>
   <h1>I AM THE HOUSE NOW</h1>
   <p class="sub">
     Treasury Secretary Scott Bessent said it out loud. Then he doubled,
     and tripled, the government’s purchases of its own long-term bonds.
-    This is what that trade is, who it is betting against, and why the
-    cubes on this site say the risk he accepted is not small.
+    This is what that trade is, how much fiscal risk he is taking on for
+    every unit of long-rate sensitivity he is taking out of the market,
+    who he is betting against, and how we will know later if he won.
   </p>
 </header>
 
 <article class="article-body">
+  <p class="draft-banner">
+    This piece is unfinished and is not linked from the rest of the site.
+    If you have the URL, you are looking at a draft. Target: Monday.
+  </p>
+
   <p>
     On September 8, 2026, at Southern Methodist University, Scott Bessent
-    described his job in the language of the trading floor he came from:
+    described the job in the language of the trading floor he came from:
   </p>
   <blockquote>
     “Whenever people say, Oh, well Treasury secretary is taking a risk,
-    it’s my dream. I have asymmetric information. I am the house now.
+    it’s my dream. I have asymmetric information. <b>I am the house now.</b>
     You can bet against me if you want.”
   </blockquote>
   <p class="sub">
@@ -46,42 +53,95 @@
     <a href="https://www.wsj.com/finance/investing/bessents-latest-buyback-move-leaves-investors-wanting-more-82d0268b">the Wall Street Journal</a>,
     September 9, 2026. He was talking about intervening in the yen with
     Japan, and about knowing what Japanese policymakers would do. The
-    same week, the Treasury raised a long-bond buyback to as much as
-    $6 billion — triple the usual size.
+    next day, Treasury successfully purchased $5.2 billion of the announced $6
+    billion cap (triple the usual size) in off-the-run, less-liquid long bonds.
+    Future operations for the remainder of the refunding quarter are  <a
+          href="https://home.treasury.gov/news/press-releases/sb0607">set to
+    maintain a minimum floor of $4 billion</a>.
   </p>
 
-  <h2>The hedge-fund trade, run from the Treasury</h2>
+  <h2>What he is actually doing (without the minus sign)</h2>
   <p>
-    A hedge-fund manager who wants less exposure to rising long-term
+    Bond desks talk about “duration” as if it were a thing you buy or
+    sell. The word is doing too much work, and the formula everyone
+    learns makes it worse:
+  </p>
+  <p class="stat">ΔP ≈ −D × Δy</p>
+  <table class="join-table eq-key">
+    <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
+    <tbody>
+      <tr><td>ΔP</td><td>Change in the bond’s price</td></tr>
+      <tr><td>D</td><td>Duration (a positive number: roughly, how many years of payments you are waiting on)</td></tr>
+      <tr><td>Δy</td><td>Change in yield, in decimal. Up means rates rose.</td></tr>
+      <tr><td>the minus sign</td><td>When yields go <em>up</em>, prices go <em>down</em>. That is the whole trick.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    A 30-year bond has a large D. A three-month bill has a tiny D.
+    If long-term yields rise one percentage point, the 30-year’s
+    <em>price</em> falls a lot; the bill barely flinches. The minus
+    sign is why “buying duration” sounds like you want rates to rise
+    when you actually want the opposite if you own the bond.
+  </p>
+  <p>
+    Forget the slang for a minute. Bessent is doing two operational
+    things:
+  </p>
+  <ol>
+    <li>
+      <b>Buying back older 10- to 30-year Treasuries</b> — taking long
+      bonds out of public hands. Official phrasing: “liquidity support”
+      for off-the-run longs. Arithmetic: fewer long bonds for the
+      market to hold.
+    </li>
+    <li>
+      <b>Still funding the government, mostly in bills</b> — paper that
+      comes due in a year or less. Analysts called it a Treasury
+      version of Operation Twist. Bessent has said the buybacks are
+      not QE. Both can be in the press release. The book still shortens.
+    </li>
+  </ol>
+  <h2>A hedge-fund trade, run by the Treasury</h2>
+  <p>
+    A hedge fund manager who wants less exposure to rising long-term
     yields does a simple pair: <b>own the long bond, fund it by selling
     (or issuing) the short end</b>. If long rates go up, the long bond
     falls in price — unless you have already taken supply out of that
-    market, or you are the bid. If short rates are something you can
+    market, or you are the bidder. If short rates are something you can
     roll, you accept more frequent refinancing in exchange for less
     pain at the far end of the curve.
+    In English, without “buying” or “selling” duration:
+  </p>
+  <ul>
+    <li>
+      He is <b>reducing how much the public book’s market value jumps
+      around when long-term yields move.</b> There is less 10- to
+      30-year paper sitting in private accounts to get hit when the
+      30-year yield ticks up. Long-rate <em>price</em> sensitivity of
+      the outstanding stock goes <em>down</em>.
+    </li>
+    <li>
+      He is <b>increasing how often the Treasury must refinance when
+      short-term yields move.</b> More bills means more of the debt is
+      re-priced inside twelve months. Short-rate <em>interest-bill</em>
+      sensitivity of the government goes <em>up</em>.
+    </li>
+  </ul>
+  <p>
+    That is the pair. Hedge funds would say he is “long the long end,
+    short the front.” The Treasury is not a hedge fund, but the
+    secretary used to run one, and that is the book he just described.
+    Long-rate pain for holders goes down. Refinancing pain for the
+    government goes up. He is trading one kind of sensitivity for the
+    other.
   </p>
   <p>
-    That is, in substance, what the Treasury has been doing. It is
-    buying back older 10- to 30-year bonds — “liquidity support” in the
-    official phrasing — and it still has to fund the government. The
-    fluctuating cash need is typically met by
-    <b>Treasury bills</b>, which mature in a year or less. Analysts
-    immediately called it a Treasury version of Operation Twist: fewer
-    long bonds in public hands, more short-term paper to roll.
-    Bessent has said the buybacks are about making older bonds easier
-    to trade, not about copying the Fed’s large-scale purchases. Both
-    things can be in the press release. The arithmetic of the book is
-    the same either way: <b>duration risk is being pulled in; refinancing
-    risk is being pushed out.</b>
-  </p>
-  <p>
-    The scale is still small next to the stock. A $6 billion operation
-    against tens of trillions of public debt will not, by itself, set
-    the 10-year yield. The September 9 announcement did not even hold
-    the market: long yields rose that day. The point of the article is
-    not that $6 billion is a magic number. The point is the
-    <em>stance</em>. Bessent has dropped the pretense that Treasury
-    issuance is a neutral plumbing exercise. He is taking a view.
+    The scale of any single operation is still small next to the stock.
+    $6 billion against tens of trillions will not, by itself, set the
+    10-year. On September 9 the announcement did not even hold the
+    market: long yields rose that day. The point is the stance. Issuance
+    is no longer being sold as a neutral plumbing exercise. He is
+    taking a view.
   </p>
 
   <h2>The view: Japan, and the long end</h2>
@@ -92,28 +152,24 @@
     rate, Japanese yields rise. Money that had been earning more in
     the United States, after currency hedges, starts to look less
     attractive at home. A stronger yen also makes those hedges more
-    expensive. The usual result, taught in every cross-border fixed-income
-    desk, is <b>less incremental demand for long-dated Treasuries</b>
-    and some upward pressure on U.S. long yields — not because Tokyo
-    “dumps” the whole pile overnight, but because the next buyer is
-    less eager.
+    expensive. The usual result, taught on every cross-border desk, is
+    <b>less incremental demand for long-dated Treasuries</b> and some
+    upward pressure on U.S. long yields — not because Tokyo dumps the
+    whole pile overnight, but because the next buyer is less eager.
   </p>
   <p>
     Bessent said he has insight into what the Bank of Japan and Japanese
     policymakers will do. That is the “house” claim: he is not guessing
-    the next Japanese meeting from a Bloomberg terminal. He is sitting
-    in the room where the United States and Japan already intervened
-    together in the yen, for the first time in years, in August 2026.
+    the next Japanese meeting from a terminal. He is sitting in the
+    room where the United States and Japan already intervened together
+    in the yen, in August 2026, for the first time in years.
   </p>
   <p>
-    If you believe that Japanese demand for the long end is about to
-    get worse, you do not wait to find out at auction. You try to
-    <b>absorb some long-end supply first</b> — buybacks now — and you
-    fund the government in bills, which you can roll, and which money-market
-    funds will still bid for as long as they are paid. You are selling
-    something you think you can live with (short-term debt) and buying
-    something you think other people are about to want less of (long
-    duration).
+    If you believe Japanese demand for the long end is about to get
+    worse, you do not wait to find out at auction. You try to take some
+    long bonds out of the float first, and you fund the government in
+    bills that money-market funds will still bid for as long as they
+    are paid.
   </p>
   <p>
     We do not split “Japan” out of foreign holdings on this site. The
@@ -130,21 +186,20 @@
   <p>
     The
     <a href="financing.html">Who is Financing the Treasury</a>
-    page splits every extra dollar of debt held by the public into
-    the Fed’s own portfolio, foreign investors, and leftover private
-    buyers in the United States (plus foreign buying that has not
-    shown up yet). The leftover is a bucket. It is also, right now,
-    most of the flow.
+    page splits every extra dollar of debt held by the public into the
+    Fed’s own portfolio, foreign investors, and leftover private buyers
+    in the United States (plus foreign buying that has not shown up
+    yet). Leftover is a bucket. It is also, right now, most of the flow.
   </p>
 </article>
 
 <section>
   <div class="col-card" id="who-card">loading holders…</div>
-  <div id="plot-who" style="margin-top:16px"></div>
+  <div id="plot-who"></div>
   <p class="sub">
-    Full method, series names, and the quarterly table:
+    Full method and the quarterly table:
     <a href="financing.html">Who is Financing the Treasury</a>.
-    White line = extra public debt. Cyan = Fed. Amber = foreign.
+    White = extra public debt. Cyan = Fed. Amber = foreign.
     Magenta = leftover.
   </p>
 </section>
@@ -154,70 +209,144 @@
     In 2020 the Fed was the buyer. In 2022–23 the Fed was a
     <em>seller</em> — shrinking its Treasury portfolio — and private
     buyers took the new debt <em>and</em> what the Fed was selling.
-    In the latest year the leftover is still on the order of two-thirds
-    of extra public debt. The Fed is a rounding error. Overnight cash
-    that used to sit at the Fed has mostly gone; some of it bought
-    bills, which still counts as leftover, not as the central bank.
+    In the latest year leftover is still on the order of two-thirds of
+    extra public debt. The Fed is a rounding error. Overnight cash that
+    used to sit at the Fed has mostly gone; some of it bought bills,
+    which still counts as leftover, not as the central bank.
   </p>
   <p>
-    So Bessent’s long-end bid is not crowding out the Fed. It is a
-    small official bid sitting in front of a large private one. He is
-    betting that private appetite for duration will get worse (Japan,
-    term premium, whatever he sees) and that he can live with more
-    bills. The people on the other side of that bet are whoever is
-    in the magenta bars: money-market funds, banks, pensions, insurers,
-    households — the same domestic bid that cleared quantitative
-    tightening. If that bid holds, the House does not need to get
-    bigger. If it doesn’t, buybacks of a few billion at a time will
-    not be the whole story. They will be the start of a much larger
-    official presence in the long end, run from the Treasury rather
-    than the Fed.
+    So the long-end buyback is not crowding out the Fed. It is a small
+    official bid sitting in front of a large private one. He is betting
+    that private appetite for long bonds will get worse (Japan, term
+    premium, whatever he sees) and that he can live with more bills.
+    The people on the other side of that bet are whoever is in the
+    magenta bars: money-market funds, banks, pensions, insurers,
+    households — the same domestic bid that cleared the Fed’s runoff.
+    If that bid holds, the House does not need to get bigger. If it
+    doesn’t, a few billion at a time will not be the whole story. They
+    will be the start of a much larger official presence in the long
+    end, run from the Treasury rather than the Fed.
   </p>
 
-  <h2>The other side of the trade: fiscal risk</h2>
+  <h2>The price of the pair: fiscal risk per unit of sensitivity taken out</h2>
   <p>
-    Duration risk is “what happens to the price of a long bond when
-    long rates move.” Fiscal risk, here, is “what happens to the
-    government’s own books when it leans on short-term debt and when
-    interest already takes a large bite of incoming cash.” Bessent
-    is trading the first for the second. The
-    <a href="sustainability.html">Sustainability Cube</a>
-    is the second.
+    “He is taking duration out of the market” is a slogan until it has
+    a denominator. “The cubes look worse” is a slogan until it has a
+    numerator that moves <em>because of this trade</em>, not because
+    the deficit exists.
   </p>
   <p>
-    Three things that cube tracks, in English:
+    The object that moves because he shortens the book is the extra
+    interest the Treasury pays over the next twelve months on the
+    larger pile of debt that comes due inside a year.
   </p>
-  <ul>
-    <li>
-      How much of this quarter’s incoming cash is already spoken for
-      by interest on existing debt.
-    </li>
-    <li>
-      How much more expensive new borrowing is than the rate already
-      on the books — the refinancing gap.
-    </li>
-    <li>
-      How large the public debt is relative to the economy.
-    </li>
-  </ul>
+  <p class="stat">ΔI<sub>1y</sub> ≈ g × A<sub>0–1y</sub></p>
+  <table class="join-table eq-key">
+    <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>g</td>
+        <td>Refi gap: the rate on new borrowing minus the rate already on the books, as a decimal. Same object as the Sustainability Cube’s refinancing axis.</td>
+      </tr>
+      <tr>
+        <td>A<sub>0–1y</sub></td>
+        <td>Principal that comes due inside a year. We have this as <span class="stat">RESID_AMT_0_1Y</span> from Treasury Fiscal Data, Table 3.</td>
+      </tr>
+      <tr>
+        <td>ΔI<sub>1y</sub></td>
+        <td>Extra interest, dollars, over the next twelve months if the gap stays where it is. This is the fiscal cost of a shorter book.</td>
+      </tr>
+    </tbody>
+  </table>
   <p>
-    Those are not forecasts. They are the position. Shifting the book
-    toward bills makes the refinancing gap matter more, not less:
-    more of the debt comes due inside a year, so a rise in short rates
-    hits the interest bill faster. Buying back longs can hold down
-    the long yield that mortgages and corporate borrowers look at.
-    It does not shrink the deficit. It does not retire the stock.
-    It changes <em>which</em> rate and <em>which</em> holder the
-    Treasury is married to.
+    The other side is how much long-rate <em>price</em> sensitivity he
+    took out. A buyback of B dollars of 10- to 30-year bonds, funded
+    with bills, removes about
+  </p>
+  <p class="stat">B × (D<sub>long</sub> − D<sub>bill</sub>)</p>
+  <p>
+    dollar-duration from the public float. D_long is large; D_bill is
+    near zero. He is not “buying a negative number.” He is shrinking
+    D of the paper the public still holds.
   </p>
   <p>
-    The
-    <a href="fiscal-dominance.html">Fiscal Dominance Cube</a>
-    asks a related question: at what point does the Fed, looking at
-    its own job, have to notice the Treasury’s financing problem.
-    Bessent’s trade is a Treasury answer that tries not to wait for
-    that moment — manage the long end yourself, keep the short end
-    rolling.
+    The bet ratio is
+  </p>
+  <p class="stat">ρ = ΔI<sub>1y</sub> / (duration taken out of the public float)</p>
+  <p>
+    In English: <b>dollars of next-year interest per unit of long-rate
+    price sensitivity removed from the market.</b> If ρ is large, he
+    paid a lot of incoming cash for a little relief at the long end.
+    If ρ is small, the House is cheap. You can also quote ρ as
+    percentage points of interest-versus-incoming-cash per year of
+    average remaining maturity shortened — same story, in the units of
+    the
+    <a href="sustainability.html">Sustainability Cube</a>.
+  </p>
+  <p>
+    A $6 billion 10–20 year operation against a short wall measured in
+    trillions is a tiny duration number and a real refinancing number.
+    That is why the first operations looked small in yields. Size is
+    part of the score, not a footnote.
+  </p>
+
+  <h2>Did he win, later</h2>
+  <p>
+    You cannot prove a counterfactual. You can pre-commit to what you
+    will look at so “winning” is not a vibe. Two horizons: four
+    quarters (was the twist even in the book?) and three years (did
+    the Japan / long-end call pay?).
+  </p>
+  <div class="join-scroll">
+    <table class="join-table">
+      <thead>
+        <tr>
+          <th>check</th>
+          <th>winning if</th>
+          <th>losing if</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Mix</td>
+          <td>Share due inside a year up; 10-year-plus share down, on purpose</td>
+          <td>Mix unchanged. Buybacks were a press release.</td>
+        </tr>
+        <tr>
+          <td>Long end</td>
+          <td>10-year and 30-year rich versus a simple peer (Bund, gilt, or the ACM 10-year term premium) after Japan news</td>
+          <td>Longs cheapen on BoJ / Japan anyway. The $billion ops did not matter.</td>
+        </tr>
+        <tr>
+          <td>Roll cost</td>
+          <td>ΔI<sub>1y</sub> and interest / incoming cash do not jump more than the sensitivity he bought</td>
+          <td>Short wall up, gap still positive, interest takes more of incoming cash. Paid fiscal, didn’t buy relief.</td>
+        </tr>
+        <tr>
+          <td>Bid</td>
+          <td>Leftover still takes most extra public debt; long auctions do not gap</td>
+          <td>Leftover fades or long tails blow; bills still bid. He moved the problem.</td>
+        </tr>
+        <tr>
+          <td>Size</td>
+          <td>Operations scale with the miss (he said they could) without becoming the whole bid</td>
+          <td>Ops stall at $6 billion and longs ignore them. September 9 already hinted.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    <b>Win, in one sentence:</b> the long end is better than the
+    Japan / term-premium tape said it should be, <em>and</em> the extra
+    first-year coupon is smaller than that relief was worth.
+  </p>
+  <p>
+    <b>Loss:</b> longs did not care, and the short wall is bigger.
+  </p>
+  <p>
+    Japan is a channel, not the whole scoreboard. If leftover is
+    ~70% of extra debt, the people who decide whether he won are in
+    the magenta bars, not Tokyo.
   </p>
 
   <h2>The mix he is choosing</h2>
@@ -229,34 +358,34 @@
 
 <section>
   <div id="plot-bills"></div>
-  <div id="plot-longs" style="margin-top:16px"></div>
   <p class="sub">
-    Amber, top: share of the book with remaining life under one year.
-    Below: 10-year and 30-year constant-maturity yields.
-    Same source files as the
+    Amber: remaining life under one year, Table 3. Cyan dotted: bills
+    by original class. Same files as the
     <a href="data.html">data page</a>.
   </p>
+  <div id="plot-longs"></div>
+  <p class="sub">Amber: 10-year. Magenta: 30-year. Constant maturity.</p>
 </section>
 
 <article class="article-body">
   <h2>He had other options</h2>
   <p>
     A Treasury secretary who worries about long yields is not required
-    to become the house. The menu, honestly listed:
+    to become the house.
   </p>
   <ol>
     <li>
-      <b>Status quo.</b> Keep issuing across the curve as the refunding
-      announcements have done. Let the private leftover bid — the
-      magenta bars — keep clearing. Do not pretend you can set the
-      10-year.
+      <b>Status quo.</b> Keep issuing across the curve. Let leftover
+      keep clearing. Do not pretend you can set the 10-year.
     </li>
     <li>
-      <b>Lock in duration the old-fashioned way.</b> Issue more 10-year
-      and 30-year bonds, not less. You pay today’s long rate for a
-      long time. You accept that the long yield might be higher than
-      you like, in exchange for not rolling a third of the book every
-      year. That is the opposite of Bessent’s pair.
+      <b>Lock in the long rate the old-fashioned way.</b> Issue more
+      10-year and 30-year bonds, not less. You pay today’s long rate
+      for a long time. You accept a higher long yield than you like
+      in exchange for not rolling a third of the book every year.
+      That is the opposite pair: long-rate price sensitivity of the
+      public book goes <em>up</em>; refinancing frequency goes
+      <em>down</em>.
     </li>
     <li>
       <b>Smaller deficits.</b> Less new paper, period. Congress would
@@ -264,19 +393,18 @@
       this autumn.
     </li>
     <li>
-      <b>Become the house.</b> Buy the long end, fund with bills, talk
-      like a dealer who knows the other side’s cards. That is the
-      choice.
+      <b>Become the house.</b> Take longs out of the float, fund with
+      bills, talk like a dealer who knows the other side’s cards.
+      That is the choice.
     </li>
   </ol>
   <p>
-    The first two are boring. The third is politics. The fourth is
-    a hedge-fund book run on a sovereign balance sheet. It can
-    work if the leftover bid stays and if Japan is the main risk to
-    the long end. It works less well if the leftover bid <em>is</em>
-    the long end — if the people who have been taking extra public
-    debt start to want a higher long yield as compensation, Japan
-    or no Japan.
+    The first two are boring. The third is politics. The fourth is a
+    hedge-fund book run on a sovereign balance sheet. It can work if
+    leftover stays and if Japan is the main risk to the long end. It
+    works less well if leftover <em>is</em> the long end — if the
+    people who have been taking extra public debt start to want a
+    higher long yield as compensation, Japan or no Japan.
   </p>
 
   <h2>Is Japan the whole picture?</h2>
@@ -285,8 +413,8 @@
     also a country that already walked this path further than the
     United States has: a heavy government bond market, a central bank
     that became the bid, and a finance ministry that has spent decades
-    managing duration for the state. When people say Bessent is
-    borrowing Japan’s playbook, they mean official buying of the
+    managing the state’s remaining maturity. When people say Bessent
+    is borrowing Japan’s playbook, they mean official buying of the
     long end to keep yields from running. The uncomfortable comparison
     writes itself. The United States still has a large private leftover
     bid. Japan, for years, did not.
@@ -305,10 +433,12 @@
     and more in bills, which is the same bet written differently.
   </p>
   <p>
-    The cubes on this site exist so that bet has a scoreboard. The
-    financing page exists so the counterparties have names, even if
-    one of the names is “leftover.” Follow the links. The article is
-    the story. The analyses are why it is allowed to be this sharp.
+    The cubes exist so that bet has a scoreboard for the fiscal side.
+    The financing page exists so the counterparties have names, even
+    if one of the names is “leftover.” ρ is how expensive the pair is.
+    The table above is how we will keep score. Follow the links. The
+    article is the story. The analyses are why it is allowed to be
+    this sharp.
   </p>
 
   <h2>Sources</h2>
@@ -316,32 +446,31 @@
     <li>
       <a href="https://www.nytimes.com/2026/09/09/business/economy/treasury-repurchase-bessent.html">New York Times, Sept. 9, 2026</a>
       — buyback size, market reaction, Bessent on markets “misreading”
-      the economy. The “house” line is reported in the same day’s
-      coverage.
+      the economy.
     </li>
     <li>
       <a href="https://www.wsj.com/finance/investing/bessents-latest-buyback-move-leaves-investors-wanting-more-82d0268b">Wall Street Journal, Sept. 9, 2026</a>
-      — yields to multiyear highs after the $6 billion operation was
-      announced; “I am the house now.”
+      — yields to multiyear highs after the $6 billion operation;
+      “I am the house now.”
     </li>
     <li>
       <a href="https://www.reuters.com/world/us-treasury-double-sizes-some-debt-buyback-operations-least-4-billion-2026-08-19/">Reuters, Aug. 19, 2026</a>
       — first doubling of 10- to 30-year buybacks.
     </li>
     <li>
-      Treasury’s own phrasing: liquidity support for off-the-run
-      longs, not a stated QE program. Analysts’ phrasing: a twist
-      funded by bills. We keep both.
+      Treasury’s phrasing: liquidity support for off-the-run longs,
+      not a stated QE program. Analysts’ phrasing: a twist funded by
+      bills. Both stay in the piece.
     </li>
     <li>
-      Series on the charts:
+      Series:
       <a href="https://fred.stlouisfed.org/series/FYGFDPUN">FYGFDPUN</a>,
       <a href="https://fred.stlouisfed.org/series/WSHOTSL">WSHOTSL</a>,
       <a href="https://fred.stlouisfed.org/series/FDHBFIN">FDHBFIN</a>,
       <a href="https://fred.stlouisfed.org/series/RRPONTSYD">RRPONTSYD</a>,
       <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>,
       <a href="https://fred.stlouisfed.org/series/DGS30">DGS30</a>,
-      MSPD Table 3 remaining-maturity weights.
+      MSPD Table 3 remaining-maturity amounts and weights.
       Method:
       <a href="financing.html">Who is Financing the Treasury</a>.
     </li>
@@ -349,7 +478,7 @@
 </article>
 
 <footer>
-  peachyhabanero · <a href="index.html">home</a> · <a href="financing.html">financing</a> · <a href="data.html">data</a>
+  peachyhabanero · draft · <a href="index.html">home</a> · <a href="financing.html">financing</a>
   <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
 </footer>
 <script src="financing.js"></script>
