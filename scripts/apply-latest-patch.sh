@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Apply the newest peachyhabanero*.patch in ~/Downloads, then delete every
-# matching patch there. Run from the repo root (WebStorm External Tool
-# working directory = $ProjectFileDir$).
+# Apply the highest-numbered peachyhabanero*.patch in ~/Downloads that
+# is not already in patch-record.txt.
 #
 # WebStorm → Settings → Tools → External Tools → +
 #   Name:              Apply latest peachyhabanero patch
@@ -10,16 +9,13 @@
 #   Working directory: $ProjectFileDir$
 #   [x] Open console
 #
-# Pick order: highest peachyhabanero-NNN- prefix, else newest mtime.
-# Downloads copies are always removed (success or fail) so a broken older
-# patch cannot win the next run.
+# Pick order: highest peachyhabanero-NNN- prefix not yet recorded.
+# On success: delete THAT Downloads file only, append its name to
+# patch-record.txt at the repo root. On failure: leave Downloads alone.
 #
-# Files the patch wants to *add* that already exist (scratch.html / .js
-# are gitignored, so git apply refuses) are moved aside as
-# *.bak-before-patch, then the patch version is written.
-#
-# On success, append the patch basename to notes/patch-record.txt
-# (gitignored). One line per applied patch, in order.
+# Hunks for gitignored local files (scratch, notes/) are skipped so a
+# mixed patch still applies to tracked files. A patch that is *only*
+# those files is recorded as skipped and removed so it cannot block.
 
 set -euo pipefail
 
@@ -27,6 +23,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DOWNLOADS="${DOWNLOADS:-$HOME/Downloads}"
 RECORD="$ROOT/patch-record.txt"
 cd "$ROOT"
+
+EXCLUDE=(
+  --exclude=site/scratch.html
+  --exclude=site/scratch.js
+  --exclude=notes/REGIME-LOCK.md
+  --exclude=notes/patch-record.txt
+  --exclude=notes/*
+)
 
 if [[ ! -d .git ]]; then
   echo "not a git repo: $ROOT" >&2
@@ -37,6 +41,11 @@ if [[ ! -d "$DOWNLOADS" ]]; then
   exit 1
 fi
 
+recorded() {
+  local base="$1"
+  [[ -f "$RECORD" ]] && grep -Fxq "$base" "$RECORD"
+}
+
 shopt -s nullglob
 patches=(
   "$DOWNLOADS"/peachyhabanero*.patch
@@ -46,15 +55,6 @@ if ((${#patches[@]} == 0)); then
   echo "no peachyhabanero*.patch in $DOWNLOADS" >&2
   exit 1
 fi
-
-cleanup_downloads() {
-  local f
-  for f in "${patches[@]}"; do
-    rm -f "$f"
-    echo "deleted: $f"
-  done
-}
-trap cleanup_downloads EXIT
 
 latest=""
 latest_n=-1
@@ -68,6 +68,10 @@ for f in "${patches[@]}"; do
   n=-1
   if [[ "$base" =~ peachyhabanero-([0-9]+) ]]; then
     n=$((10#${BASH_REMATCH[1]}))
+  fi
+  if recorded "$base"; then
+    echo "  $base  n=$n  already in patch-record — skip"
+    continue
   fi
   echo "  $base  n=$n  mtime=$m"
   if (( n >= 0 )); then
@@ -86,19 +90,26 @@ if [[ -z "$latest" ]]; then
   latest_n=-1
 fi
 if [[ -z "$latest" ]]; then
-  echo "could not pick a patch" >&2
-  exit 1
+  echo "nothing new to apply (all Downloads patches already recorded, or none found)"
+  exit 0
 fi
 
 echo "applying: $latest"
 
 check_err=""
 set +e
-check_err=$(git apply --check "$latest" 2>&1)
+check_err=$(git apply --check "${EXCLUDE[@]}" "$latest" 2>&1)
 check_st=$?
 set -e
 
 if (( check_st != 0 )); then
+  if echo "$check_err" | grep -qi 'no valid patches'; then
+    echo "skip: patch is only gitignored files (scratch / notes). not applying."
+    echo "$(basename "$latest")" >> "$RECORD"
+    rm -f "$latest"
+    echo "recorded skip and deleted: $latest"
+    exit 0
+  fi
   backed=0
   while IFS= read -r line; do
     case "$line" in
@@ -116,14 +127,16 @@ if (( check_st != 0 )); then
   done <<< "$check_err"
   if (( backed == 0 )); then
     echo "$check_err" >&2
+    echo "apply failed; Downloads left in place" >&2
     exit "$check_st"
   fi
-  git apply --check "$latest"
+  git apply --check "${EXCLUDE[@]}" "$latest"
 fi
 
-git apply "$latest"
+git apply "${EXCLUDE[@]}" "$latest"
 echo "applied."
 
-mkdir -p "$(dirname "$RECORD")"
 echo "$(basename "$latest")" >> "$RECORD"
 echo "recorded: $RECORD"
+rm -f "$latest"
+echo "deleted: $latest"
