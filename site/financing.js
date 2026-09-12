@@ -1,5 +1,10 @@
 /* Who is financing the extra public debt. Used by financing.html and article-house.html. */
 const RAW = "data/published/raw_inputs.json";
+const CUBES = "data/published/cubes.json";
+const D_BILL = 0.25;
+const D_10 = 8;
+const D_20 = 14;
+const CHUNK_BN = 6;
 
 function isNarrow() {
   return typeof window !== "undefined" && window.matchMedia("(max-width: 720px)").matches;
@@ -320,6 +325,111 @@ async function drawLongs(tables) {
   }), { responsive: true, displaylogo: false });
 }
 
+function rhoBp(gPp, dLong) {
+  const den = dLong - D_BILL;
+  if (!Number.isFinite(gPp) || den <= 0) return null;
+  return (100 * gPp) / den;
+}
+
+function extraCouponMn(gPp, bBn) {
+  if (!Number.isFinite(gPp) || !Number.isFinite(bBn)) return null;
+  return gPp * 10 * bBn;
+}
+
+async function drawRho(pack) {
+  const el = document.getElementById("plot-rho");
+  const card = document.getElementById("rho-card");
+  if (!el && !card) return;
+  const rows = ((pack && pack.sustain) || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  const vis = rows.filter((r) => r.date >= "2010-01-01" && Number.isFinite(Number(r.refi_gap)));
+  if (!vis.length) {
+    const msg = "cubes.json missing sustain.refi_gap — run the nightly refresh.";
+    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
+    if (el) el.innerHTML = `<p class="err">${msg}</p>`;
+    return;
+  }
+  const last = vis[vis.length - 1];
+  const g = Number(last.refi_gap);
+  const r10 = rhoBp(g, D_10);
+  const r20 = rhoBp(g, D_20);
+  const i10 = extraCouponMn(g, CHUNK_BN);
+  const i20 = extraCouponMn(g, CHUNK_BN);
+  const d10 = CHUNK_BN * (D_10 - D_BILL);
+  const d20 = CHUNK_BN * (D_20 - D_BILL);
+  if (card) {
+    card.innerHTML = `
+      <h3>Price of a $6bn switch, latest print</h3>
+      <div class="who-window">
+        <p class="who-label">g from the cube</p>
+        <p class="who-dates">${last.date}</p>
+        <div class="who-figures">
+          <div class="who-fig">
+            <span class="k">refi gap g</span>
+            <span class="v">${g >= 0 ? "+" : ""}${fmt(g, 2)} pp</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">chunk B</span>
+            <span class="v">$6 bn</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">ΔI<sub>1y</sub> (10s or 20s)</span>
+            <span class="v">${i10 == null ? "—" : (i10 >= 0 ? "+" : "−") + fmt(Math.abs(i10), 0) + " mn"}</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">B cancels in ρ</span>
+            <span class="v">same at $60 bn</span>
+          </div>
+        </div>
+      </div>
+      <div class="who-window">
+        <p class="who-label">10s vs bills &nbsp; D<sub>long</sub>=${D_10}, D<sub>bill</sub>=${D_BILL}</p>
+        <div class="who-figures">
+          <div class="who-fig">
+            <span class="k">ΔD extracted</span>
+            <span class="v">${fmt(d10, 1)} bn-years</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">ρ</span>
+            <span class="v">${r10 == null ? "—" : fmt(r10, 1)} bp / year of D</span>
+          </div>
+        </div>
+      </div>
+      <div class="who-window">
+        <p class="who-label">20s vs bills &nbsp; D<sub>long</sub>=${D_20}, D<sub>bill</sub>=${D_BILL}</p>
+        <div class="who-figures">
+          <div class="who-fig">
+            <span class="k">ΔD extracted</span>
+            <span class="v">${fmt(d20, 1)} bn-years</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">ρ</span>
+            <span class="v">${r20 == null ? "—" : fmt(r20, 1)} bp / year of D</span>
+          </div>
+        </div>
+      </div>
+      <p class="who-foot">
+        ΔI<sub>1y</sub> = (g/100) × $6bn. Duration is a labeled Macaulay mix, not each CUSIP.
+        ρ = g / (D<sub>long</sub> − D<sub>bill</sub>), in bp of extra next-year coupon per year of duration pulled.
+      </p>`;
+  }
+  if (!el) return;
+  const xs = vis.map((r) => r.date);
+  const y10 = vis.map((r) => rhoBp(Number(r.refi_gap), D_10));
+  const y20 = vis.map((r) => rhoBp(Number(r.refi_gap), D_20));
+  await Plotly.newPlot("plot-rho", [
+    {
+      type: "scatter", mode: "lines", x: xs, y: y10,
+      name: "10s vs bills", line: { color: "#c4a35a", width: 2 },
+    },
+    {
+      type: "scatter", mode: "lines", x: xs, y: y20,
+      name: "20s vs bills", line: { color: "#ff2bd6", width: 2 },
+    },
+  ], Object.assign(layout("ρ: extra coupon per year of duration extracted (bp)", { ytitle: "bp / year of D" }), {
+    shapes: hingeShapes(),
+  }), { responsive: true, displaylogo: false });
+}
+
 async function main() {
   const stamp = document.getElementById("stamp");
   let raw;
@@ -338,11 +448,17 @@ async function main() {
   await drawWho(tables);
   await drawBills(tables);
   await drawLongs(tables);
+  let pack = null;
+  try {
+    const cr = await fetch(CUBES, { cache: "no-store" });
+    if (cr.ok) pack = await cr.json();
+  } catch (e) { /* rho is optional on pages without cubes */ }
+  await drawRho(pack);
 }
 
 main();
 window.addEventListener("resize", () => {
-  ["plot-who", "plot-bills", "plot-longs"].forEach((id) => {
+  ["plot-who", "plot-bills", "plot-longs", "plot-rho"].forEach((id) => {
     const el = document.getElementById(id);
     if (el && el.data) Plotly.Plots.resize(el);
   });

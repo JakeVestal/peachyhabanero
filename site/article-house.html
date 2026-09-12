@@ -236,80 +236,92 @@
   </h2>
   <h3>Cost Side</h3>
   <p>
-    The cost the Treasury must pay as it decreases its duration risk is the
-    extra interest that it must pay over the next twelve months on the
-    now-larger pile of debt that comes due inside a year. We need to know:
+    The cost the Treasury pays as it shortens the book is extra interest
+    over the next twelve months on the <em>added</em> paper that now comes
+    due inside a year. Two inputs:
   </p>
   <dl>
-    <dt><span class="eq">g</span>, The Refi Gap</dt>
-    <dd>The rate on new borrowing minus the rate already on the books</dd>
-    <dt><span class="eq">ΔA<sub>0-1y</sub></span></dt>
-    <dd>Principal that comes due inside a year</dd>
+    <dt><span class="eq">g</span>, the refi gap</dt>
+    <dd>
+      The rate on new borrowing minus the coupon already on the books.
+      Same object as the Sustainability Cube’s refinancing axis. The cube
+      prints it in percentage points; the product below uses it as a
+      decimal.
+    </dd>
+    <dt><span class="eq">ΔA<sub>0–1y</sub></span></dt>
+    <dd>
+      The <em>change</em> in principal due inside a year. For a $B
+      long-to-bill switch, about +$B. Not the stock of the whole one-year
+      wall — that stock is the cube.
+    </dd>
   </dl>
   <p>
-    Knowing those parameters, we can calculate
-    <span class="eq">ΔI<sub>1y</sub></span>: the cost, in terms of change in
-    the interest rate being paid on Treasury debt maturing within a year, for
-    a given "chunk" of reallocation.
+    Those two give <span class="eq">ΔI<sub>1y</sub></span>: extra
+    <em>dollars</em> of interest over the next twelve months from that
+    switch, if the gap stays where it is.
   </p>
-
   <p class="stat">ΔI<sub>1y</sub> ≈ g × ΔA<sub>0–1y</sub></p>
-<!--  <table class="join-table eq-key">-->
-<!--    <thead><tr><th>symbol</th><th>meaning</th></tr></thead>-->
-<!--    <tbody>-->
-<!--    <tr>-->
-<!--      <td>g</td>-->
-<!--      <td>Refi gap: the rate on new borrowing minus the rate already on the books, as a decimal. Same object as the Sustainability Cube’s refinancing axis.</td>-->
-<!--    </tr>-->
-<!--    <tr>-->
-<!--      <td>A<sub>0–1y</sub></td>-->
-<!--      <td>Principal that comes due inside a year. We have this as <span class="stat">RESID_AMT_0_1Y</span> from Treasury Fiscal Data, Table 3.</td>-->
-<!--    </tr>-->
-<!--    <tr>-->
-<!--      <td>ΔI<sub>1y</sub></td>-->
-<!--      <td>Extra interest, dollars, over the next twelve months if the gap stays where it is. This is the fiscal cost of a shorter book.</td>-->
-<!--    </tr>-->
-<!--    </tbody>-->
-<!--  </table>-->
 
-  <h3>Benefit side</h3>
+  <h3>Benefit Side</h3>
   <p>
-    The other side is the reason the "Treasury Twist" or "House" strategy is
-    appealing:  how much duration is taken out by every time Bessent
-    executes a "sell short-term, buy long-term" trade? We can calculate that by
-    reasoning that buyback of <span class="eq">B</span> dollars of 10- to
-    30-year bonds, funded with bills, results in a duration change
-    <span class="eq">ΔD</span> of about
+    The other side is why the twist is appealing: how much duration comes
+    out of the public float each time Bessent buys longs and funds in
+    bills. A buyback of <span class="eq">B</span> dollars of 10- to
+    30-year bonds, replaced with bills, extracts
   </p>
-  <p class="stat">ΔD = B × (D<sub>long-term</sub> − D<sub>short-term</sub>)</p>
+  <p class="stat">ΔD = B × (D<sub>long</sub> − D<sub>bill</sub>)</p>
   <p>
-    dollar-duration from the public float. <span class="eq">D
-    <sub>long-term</sub></span>is large;
-    <span class="eq">D<sub>short-term</sub></span> is near zero. So every time
-    Treasury moves a chunk of long-term debt into the short-term, they're
-    reducing duration by <span class="eq">ΔD</span>, in dollars.
+    dollar-years of long-rate sensitivity.
+    <span class="eq">D<sub>long</sub></span> is large;
+    <span class="eq">D<sub>bill</sub></span> is near zero. So moving a
+    chunk of long-term debt into bills reduces duration by
+    <span class="eq">ΔD</span>.
   </p>
   <h3>Quantifying the Bet Ratio</h3>
   <p>
-    Now we can quantify Bessent's House Strategy Bet Ratio
-    <span class="eq">ρ</span> simply by taking cost / benefit:
+    Bessent’s House ratio <span class="eq">ρ</span> is cost over benefit:
   </p>
   <p class="stat">ρ = ΔI<sub>1y</sub> / ΔD</p>
   <p>
-    In English, that's <b>dollars of next-year interest per unit of long-rate
+    In English: <b>dollars of next-year interest per unit of long-rate
     price sensitivity removed from the market.</b> If ρ is large, he
     paid a lot of incoming cash for a little relief at the long end.
-    If ρ is small, the House is cheap. You can also quote ρ as
-    percentage points of interest-versus-incoming-cash per year of
-    average remaining maturity shortened — same story, in the units of
-    the <a href="sustainability.html">Sustainability Cube</a>.
+    If ρ is small, the House is cheap.
   </p>
   <p>
-    WE ARE HERE.
-    A $6 billion 10–20 year operation against a short wall measured in
-    trillions is a tiny duration number and a real refinancing number.
-    That is why the first operations looked small in yields. Size is
-    part of the score, not a footnote.
+    For a $B-for-$B switch, B cancels:
+  </p>
+  <p class="stat">ρ ≈ g / (D<sub>long</sub> − D<sub>bill</sub>)</p>
+  <p>
+    Cheap versus expensive is that ratio, not how small the first
+    buybacks looked in the 10-year. Size scales both sides the same.
+  </p>
+</article>
+
+<section>
+  <div class="col-card" id="rho-card">loading ρ…</div>
+  <div id="plot-rho"></div>
+  <p class="sub">
+    ρ in basis points of extra next-year coupon per year of duration
+    extracted. Two labeled mixes — not CUSIP duration: a 10-year at
+    Macaulay ≈ 8 years versus a 3-month bill ≈ 0.25; a 20-year ≈ 14
+    versus the same bill. g is the cube’s refi gap. Negative ρ means
+    the short wall was cheaper than the book: you were <em>paid</em> to
+    pull duration.
+  </p>
+</section>
+
+<article class="article-body">
+  <p>
+    The first $6 billion operations looked small in yields because $6
+    billion is small next to the book. That is not the same as the House
+    being cheap. ρ is the price of the pair. B is how much of the pair
+    he ran. When the refi gap was negative, shortening the book saved
+    first-year coupon. After 2022 the gap is positive: he is paying
+    extra next-year interest for each year of duration he takes off the
+    Street. If the magenta bid holds, he can keep B small. If it does
+    not, he pays the same ρ on a much larger B, and the extra coupon
+    stops being a footnote.
   </p>
 
   <h2>Did he win, later</h2>
