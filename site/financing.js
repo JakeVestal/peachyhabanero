@@ -475,7 +475,7 @@ function fillRhoMath(last, bBn) {
   const d20 = bBn * (D_20 - D_BILL);
   box.innerHTML = `
       <div class="who-window">
-        <p class="who-label">g from the cube</p>
+        <p class="who-label">g, <a href="sustainability.html#axis-refi">refi rate</a></p>
         <p class="who-dates">${last.date}</p>
         <div class="who-figures">
           <div class="who-fig">

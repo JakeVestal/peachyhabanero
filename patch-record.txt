@@ -12,3 +12,4 @@ peachyhabanero-038-rho-layout.patch
 peachyhabanero-039-apply-script.patch
 peachyhabanero-040-house-conclusion.patch
 peachyhabanero-041-win-tracker.patch
+peachyhabanero-042-gemini-guess.patch

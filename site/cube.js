@@ -48,9 +48,10 @@ function fmtNow(v, n) {
 
 function nowcastHover(nc) {
   if (!nc) return "";
-  const src = nc.nipa_source || nc.model || "nowcast";
+  const src = nc.nipa_source || nc.model || "Gemini";
   return (
-    `<b>AI FORECAST ${nc.quarter_end}</b> — not a BEA print<br>` +
+    `<b>Gemini guess ${nc.quarter_end}</b> — not a BEA print, not a trade<br>` +
+    `An AI look at the next quarter. Often wrong. Sometimes amusing.<br>` +
     `nipa: ${src}<br>` +
     `debt/GDP ${fmtNow(Number(nc.debt_gdp_pct), 1)}%  ` +
     `int/rec ${fmtNow(Number(nc.int_rec_pct), 1)}%  int/tax ${fmtNow(Number(nc.int_tax_pct), 1)}%<br>` +
@@ -82,17 +83,19 @@ function glowDot3d(x, y, z, opt) {
     {
       type: "scatter3d",
       x: [x], y: [y], z: [z],
-      mode: "markers",
+      mode: opt.label ? "markers+text" : "markers",
       marker: {
         size: opt.size,
         color: opt.fill,
-        symbol: "circle",
+        symbol: opt.symbol || "diamond",
         line: { color: opt.line, width: opt.lineWidth },
       },
-      text: tpl ? undefined : [hover],
-      hoverinfo: tpl ? undefined : "text",
-      hovertext: tpl ? [hover] : undefined,
-      hovertemplate: tpl,
+      text: opt.label ? [opt.label] : undefined,
+      textposition: "top center",
+      textfont: { color: "#c4a35a", size: 11, family: "IBM Plex Mono, ui-monospace, monospace" },
+      hoverinfo: "text",
+      hovertext: [hover],
+      hovertemplate: tpl || undefined,
       name: opt.name,
     },
   ];
@@ -112,7 +115,9 @@ function nowcastSusTrace(nc, tax) {
     glow: 16,
     glowOpacity: 0.28,
     hover: nowcastHover(nc),
-    name: `AI forecast ${nc.quarter_end} (not a print)`,
+    name: `Gemini guess ${nc.quarter_end}`,
+    label: "Gemini guess",
+    symbol: "diamond",
   });
 }
 
@@ -129,7 +134,9 @@ function nowcastFailTrace(nc) {
     glowOpacity: 0.28,
     hover: nowcastHover(nc),
     hovertemplate: "%{hovertext}<extra></extra>",
-    name: `AI forecast ${nc.quarter_end} (not a print)`,
+    name: `Gemini guess ${nc.quarter_end}`,
+    label: "Gemini guess",
+    symbol: "diamond",
   });
 }
 
@@ -197,19 +204,22 @@ function nowcastGhost1d(nc, x, y, extra, color) {
       type: "scatter",
       mode: "markers",
       x: [x], y: [y],
-      name: `AI forecast ${nc.quarter_end} glow`,
+      name: `Gemini guess ${nc.quarter_end} glow`,
       hoverinfo: "skip",
       showlegend: false,
-      marker: { size: 22, color: fill, symbol: "circle", opacity: 0.22, line: { width: 0 } },
+      marker: { size: 22, color: fill, symbol: "diamond", opacity: 0.22, line: { width: 0 } },
     },
     {
       type: "scatter",
-      mode: "markers",
+      mode: "markers+text",
       x: [x], y: [y],
-      name: `AI forecast ${nc.quarter_end}`,
-      text: [hover],
+      name: `Gemini guess ${nc.quarter_end}`,
+      text: ["Gemini guess"],
+      textposition: "top center",
+      textfont: { color: "#c4a35a", size: 10, family: "IBM Plex Mono, ui-monospace, monospace" },
+      hovertext: [hover],
       hoverinfo: "text",
-      marker: { size: 9, color: fill, symbol: "circle", line: { color: "#ffbf00", width: 3 } },
+      marker: { size: 9, color: fill, symbol: "diamond", line: { color: "#ffbf00", width: 3 } },
     },
   ];
 }
@@ -1115,7 +1125,7 @@ async function main() {
           ? `<br><span class="err">FOMC Δ missing for ${nMissAdj} quarters (DFEDTAR not stitched). Grey × is not a hold.</span>`
           : "") +
         (nowcast && nowcast.quarter_end
-          ? `<br>Gold ghost: nowcast for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}). Not a BEA print. Refi/F1 from live CMTs × last Table 3 weights. F2/F3 = (x − wire) / σ with the nowcast row folded into σ.`
+          ? `<br><b>Gemini guess</b> for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}): diamond, labeled. Not a BEA print. Often wrong. <a href="data.html#nowcast">what it said that night</a>.`
           : "");
   }
 
