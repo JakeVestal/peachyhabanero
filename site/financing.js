@@ -278,6 +278,104 @@ async function drawWho(tables) {
   }
 }
 
+async function drawWinTrack(tables) {
+  const el = document.getElementById("plot-win");
+  const card = document.getElementById("win-card");
+  if (!el && !card) return;
+  const { rows } = buyerRows(tables);
+  const seq = rows.filter((r) => r.resid != null && r.dPub != null);
+  const vis = [];
+  for (let i = 3; i < seq.length; i++) {
+    const w = seq.slice(i - 3, i + 1);
+    const pub = w.reduce((s, r) => s + r.dPub, 0);
+    const soma = w.reduce((s, r) => s + (r.dSoma || 0), 0);
+    const fo = w.reduce((s, r) => s + (r.dFor || 0), 0);
+    const resid = w.reduce((s, r) => s + r.resid, 0);
+    if (!Number.isFinite(pub) || Math.abs(pub) < 80) continue;
+    vis.push({
+      date: seq[i].date,
+      left: 100 * resid / pub,
+      off: 100 * (soma + fo) / pub,
+    });
+  }
+  const show = vis.filter((r) => r.date >= "2016-01-01");
+  if (!show.length) {
+    const msg = "Need four quarters of FYGFDPUN / WSHOTSL / FDHBFIN — run the nightly refresh.";
+    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
+    if (el) el.innerHTML = `<p class="err">${msg}</p>`;
+    return;
+  }
+  const last = show[show.length - 1];
+  const holding = last.left > last.off;
+  if (card) {
+    card.innerHTML = `
+      <h3>Bid tracker — leftover vs official</h3>
+      <div class="who-window">
+        <p class="who-label">Last four quarters through</p>
+        <p class="who-dates">${last.date}</p>
+        <div class="who-figures">
+          <div class="who-fig">
+            <span class="k">leftover</span>
+            <span class="v">${fmt(last.left, 0)}%</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">Fed + foreign</span>
+            <span class="v">${fmt(last.off, 0)}%</span>
+          </div>
+          <div class="who-fig">
+            <span class="k">cross</span>
+            <span class="v">${holding ? "magenta still above" : "magenta below"}</span>
+          </div>
+        </div>
+      </div>
+      <p class="who-foot">
+        ${holding
+          ? "Leftover is still the main bid. The $6 billion overlay can stay small. This check is not a loss."
+          : "Leftover is no longer the main bid. Official accounts are taking more of the extra debt than private leftover. The House cannot stay a rounding-error overlay — this check is a loss."}
+        Pre-committed: magenta below cyan = leftover lost the majority. Shares of extra public debt, four-quarter sum. Quarters with |Δ public| under $80bn dropped.
+      </p>`;
+  }
+  if (!el) return;
+  await Plotly.newPlot("plot-win", [
+    {
+      type: "scatter", mode: "lines",
+      x: show.map((r) => r.date), y: show.map((r) => r.left),
+      name: "leftover (private + TIC lag)",
+      line: { color: "#ff2bd6", width: 2.5 },
+    },
+    {
+      type: "scatter", mode: "lines",
+      x: show.map((r) => r.date), y: show.map((r) => r.off),
+      name: "Fed + foreign",
+      line: { color: "#00f0ff", width: 2.5 },
+    },
+  ], Object.assign(layout("Who takes extra public debt, 4-quarter share", { ytitle: "% of extra public debt" }), {
+    shapes: [
+      {
+        type: "line", xref: "paper", x0: 0, x1: 1, y0: 50, y1: 50,
+        line: { color: "rgba(196,163,90,0.85)", width: 1.5, dash: "dot" },
+      },
+      {
+        type: "line", x0: "2026-08-01", x1: "2026-08-01", y0: 0, y1: 1, yref: "paper",
+        line: { color: "rgba(196,163,90,0.85)", width: 1.5, dash: "dot" },
+      },
+    ],
+    annotations: [
+      {
+        x: "2026-08-01", y: 1, yref: "paper",
+        text: "House ops", showarrow: false,
+        xanchor: "left", yanchor: "bottom",
+        font: { color: "#c4a35a", size: 11 },
+        bgcolor: "rgba(7,8,12,0.75)",
+      },
+    ],
+    yaxis: Object.assign({}, layout("", {}).yaxis, {
+      title: "% of extra public debt",
+      range: [-20, 140],
+    }),
+  }), { responsive: true, displaylogo: false });
+}
+
 async function drawBills(tables) {
   const el = document.getElementById("plot-bills");
   if (!el) return;
@@ -537,6 +635,7 @@ async function main() {
     stamp.textContent = `published ${raw.generated_at || raw.as_of || "—"}`;
   }
   await drawWho(tables);
+  await drawWinTrack(tables);
   await drawBills(tables);
   await drawLongs(tables);
   let pack = null;
@@ -549,7 +648,7 @@ async function main() {
 
 main();
 window.addEventListener("resize", () => {
-  ["plot-who", "plot-bills", "plot-longs", "plot-rho"].forEach((id) => {
+  ["plot-who", "plot-win", "plot-bills", "plot-longs", "plot-rho"].forEach((id) => {
     const el = document.getElementById(id);
     if (el && el.data) Plotly.Plots.resize(el);
   });
