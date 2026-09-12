@@ -350,6 +350,19 @@ function mnLabel(v) {
 }
 
 let rhoVis = null;
+let rhoPlotted = false;
+
+function y2Range(vis, bBn) {
+  let gMax = 0;
+  vis.forEach((r) => {
+    const a = Math.abs(Number(r.refi_gap));
+    if (Number.isFinite(a) && a > gMax) gMax = a;
+  });
+  const bLock = Math.max(60, bBn);
+  const m = Math.abs(extraCouponMn(gMax, bLock) || 0) * 1.2;
+  const abs = Math.max(m, 40);
+  return [-abs, abs];
+}
 
 function fillRhoMath(last, bBn) {
   const box = document.getElementById("rho-math");
@@ -418,7 +431,7 @@ function fillRhoMath(last, bBn) {
       </p>`;
 }
 
-function rhoLayout(bBn) {
+function rhoLayout(bBn, vis) {
   const L = layout(
     "rho (left) and extra coupon dI for this B (right)",
     { ytitle: "rho, bp / year of D" }
@@ -426,10 +439,12 @@ function rhoLayout(bBn) {
   L.yaxis2 = {
     overlaying: "y",
     side: "right",
-    title: { text: "ΔI₁y, $ mn  (B = $" + fmt(bBn, bBn < 10 ? 1 : 0) + " bn)" },
+    title: { text: "dI 1y, $ mn  (B = $" + fmt(bBn, bBn < 10 ? 1 : 0) + " bn)" },
     gridcolor: "rgba(0,240,255,0.08)",
     zerolinecolor: "rgba(255,43,214,0.25)",
     automargin: true,
+    autorange: false,
+    range: y2Range(vis, bBn),
     tickfont: { color: "#7fdfff" },
   };
   L.shapes = hingeShapes();
@@ -466,9 +481,20 @@ async function paintRho() {
   fillRhoMath(last, bBn);
   const el = document.getElementById("plot-rho");
   if (!el) return;
-  await Plotly.react("plot-rho", rhoTraces(rhoVis, bBn), rhoLayout(bBn), {
-    responsive: true, displaylogo: false,
-  });
+  const traces = rhoTraces(rhoVis, bBn);
+  const lay = rhoLayout(bBn, rhoVis);
+  const opts = { responsive: true, displaylogo: false };
+  if (!rhoPlotted) {
+    await Plotly.newPlot("plot-rho", traces, lay, opts);
+    rhoPlotted = true;
+  } else {
+    await Plotly.react("plot-rho", traces, lay, opts);
+    await Plotly.relayout("plot-rho", {
+      "yaxis2.autorange": false,
+      "yaxis2.range": y2Range(rhoVis, bBn),
+      "yaxis2.title.text": "dI 1y, $ mn  (B = $" + fmt(bBn, bBn < 10 ? 1 : 0) + " bn)",
+    });
+  }
 }
 
 async function drawRho(pack) {
@@ -479,25 +505,18 @@ async function drawRho(pack) {
   const vis = rows.filter((r) => r.date >= "2010-01-01" && Number.isFinite(Number(r.refi_gap)));
   if (!vis.length) {
     const msg = "cubes.json missing sustain.refi_gap — run the nightly refresh.";
-    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
+    const math = document.getElementById("rho-math");
+    if (math) math.innerHTML = `<p class="err">${msg}</p>`;
+    else if (card) card.innerHTML = `<p class="err">${msg}</p>`;
     if (el) el.innerHTML = `<p class="err">${msg}</p>`;
     return;
   }
   rhoVis = vis;
-  if (card && !document.getElementById("rho-b")) {
-    card.innerHTML = `
-      <h3 id="rho-head">Price of a $6 bn switch, latest print</h3>
-      <label class="rho-b-lab">
-        chunk B
-        <input id="rho-b" type="number" min="0.1" max="2000" step="0.5" value="6"/>
-        <span>$ billion</span>
-      </label>
-      <p class="who-unit">ρ does not move with B. The dashed line and ΔI<sub>1y</sub> / ΔD do — they scale one-for-one with the chunk.</p>
-      <div id="rho-math"></div>`;
-    const inp = document.getElementById("rho-b");
-    const onB = () => { paintRho(); };
-    inp.addEventListener("input", onB);
-    inp.addEventListener("change", onB);
+  const inp = document.getElementById("rho-b");
+  if (inp && !inp.dataset.bound) {
+    inp.dataset.bound = "1";
+    inp.addEventListener("input", () => { paintRho(); });
+    inp.addEventListener("change", () => { paintRho(); });
   }
   await paintRho();
 }

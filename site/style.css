@@ -318,6 +318,16 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
   line-height: 1.5;
 }
 .who-foot { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid rgba(196, 163, 90, 0.2); }
+.rho-b-bar {
+  max-width: 860px;
+  margin: 0 0 12px;
+  padding: 10px 14px 8px;
+  border: 1px solid rgba(196, 163, 90, 0.4);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.page-article .rho-b-bar { max-width: none; }
+.rho-b-bar .who-unit { margin: 4px 0 6px; }
 .rho-b-lab {
   display: flex;
   align-items: center;
