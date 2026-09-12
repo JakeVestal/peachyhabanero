@@ -13,7 +13,7 @@ function isNarrow() {
 function layout(title, opts) {
   const mobile = isNarrow();
   const o = opts || {};
-  return {
+  const L = {
     title: title
       ? {
           text: title,
@@ -46,9 +46,9 @@ function layout(title, opts) {
     legend: {
       orientation: "h",
       x: 0,
-      y: -0.16,
+      y: o.legendTop ? 1.02 : -0.16,
       xanchor: "left",
-      yanchor: "top",
+      yanchor: o.legendTop ? "bottom" : "top",
       font: { size: 11, color: "#c8d6e5" },
       bgcolor: "rgba(7,8,12,0)",
       traceorder: "normal",
@@ -57,6 +57,13 @@ function layout(title, opts) {
     hovermode: "x unified",
     autosize: true,
   };
+  if (o.legendTop) {
+    L.margin = Object.assign({}, L.margin, {
+      t: mobile ? 72 : 64,
+      b: mobile ? 56 : 48,
+    });
+  }
+  return L;
 }
 
 function hingeShapes() {
@@ -271,7 +278,7 @@ async function drawWho(tables) {
       { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.dFor), name: "foreign", marker: { color: "rgba(196,163,90,0.85)" } },
       { type: "bar", x: vis.map((r) => r.date), y: vis.map((r) => r.resid), name: "leftover", marker: { color: "rgba(255,43,214,0.45)" } },
       { type: "scatter", mode: "lines+markers", x: vis.map((r) => r.date), y: vis.map((r) => r.dPub), name: "extra public debt", line: { color: "#e8f6ff", width: 2 }, marker: { size: 5 } },
-    ], Object.assign(layout("Extra public debt, who took it ($bn, quarter to quarter)"), {
+    ], Object.assign(layout("", { legendTop: true, ytitle: "$bn" }), {
       barmode: "relative",
       shapes: hingeShapes(),
     }), { responsive: true, displaylogo: false });
@@ -280,8 +287,7 @@ async function drawWho(tables) {
 
 async function drawWinTrack(tables) {
   const el = document.getElementById("plot-win");
-  const card = document.getElementById("win-card");
-  if (!el && !card) return;
+  if (!el) return;
   const { rows } = buyerRows(tables);
   const seq = rows.filter((r) => r.resid != null && r.dPub != null);
   const vis = [];
@@ -300,42 +306,9 @@ async function drawWinTrack(tables) {
   }
   const show = vis.filter((r) => r.date >= "2016-01-01");
   if (!show.length) {
-    const msg = "Need four quarters of FYGFDPUN / WSHOTSL / FDHBFIN — run the nightly refresh.";
-    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
-    if (el) el.innerHTML = `<p class="err">${msg}</p>`;
+    el.innerHTML = `<p class="err">Need four quarters of FYGFDPUN / WSHOTSL / FDHBFIN — run the nightly refresh.</p>`;
     return;
   }
-  const last = show[show.length - 1];
-  const holding = last.left > last.off;
-  if (card) {
-    card.innerHTML = `
-      <h3>Bid tracker — leftover vs official</h3>
-      <div class="who-window">
-        <p class="who-label">Last four quarters through</p>
-        <p class="who-dates">${last.date}</p>
-        <div class="who-figures">
-          <div class="who-fig">
-            <span class="k">leftover</span>
-            <span class="v">${fmt(last.left, 0)}%</span>
-          </div>
-          <div class="who-fig">
-            <span class="k">Fed + foreign</span>
-            <span class="v">${fmt(last.off, 0)}%</span>
-          </div>
-          <div class="who-fig">
-            <span class="k">cross</span>
-            <span class="v">${holding ? "magenta still above" : "magenta below"}</span>
-          </div>
-        </div>
-      </div>
-      <p class="who-foot">
-        ${holding
-          ? "Leftover is still the main bid. The $6 billion overlay can stay small. This check is not a loss."
-          : "Leftover is no longer the main bid. Official accounts are taking more of the extra debt than private leftover. The House cannot stay a rounding-error overlay — this check is a loss."}
-        Pre-committed: magenta below cyan = leftover lost the majority. Shares of extra public debt, four-quarter sum. Quarters with |Δ public| under $80bn dropped.
-      </p>`;
-  }
-  if (!el) return;
   await Plotly.newPlot("plot-win", [
     {
       type: "scatter", mode: "lines",
@@ -349,7 +322,7 @@ async function drawWinTrack(tables) {
       name: "Fed + foreign",
       line: { color: "#00f0ff", width: 2.5 },
     },
-  ], Object.assign(layout("Who takes extra public debt, 4-quarter share", { ytitle: "% of extra public debt" }), {
+  ], Object.assign(layout("", { legendTop: true, ytitle: "% of extra public debt" }), {
     shapes: [
       {
         type: "line", xref: "paper", x0: 0, x1: 1, y0: 50, y1: 50,

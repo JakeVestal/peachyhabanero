@@ -203,6 +203,7 @@
 </article>
 
 <section>
+  <h3 class="plot-head">Who took the extra public debt</h3>
   <div id="plot-who"></div>
   <div class="col-card" id="who-card">loading holders…</div>
   <p class="sub">
@@ -218,9 +219,13 @@
     Treasury portfolio — and private buyers took new debt <em>and</em> what
     the Fed was selling. In the latest year the "leftover" is still on the order
     of two-thirds of extra public debt, meaning that the Fed's bid, such as
-    it is, is a rounding error. Overnight cash that used to sit at the Fed has
-    mostly gone; some of it bought bills, which still counts as leftover, not
-    as the central bank.
+    it is, is a rounding error. Overnight cash parked at the Fed (the ON
+    RRP facility) has gone to about zero — that print is in
+    <a href="https://fred.stlouisfed.org/series/RRPONTSYD">RRPONTSYD</a>.
+    The usual channel, which the New York Fed has described, is money
+    funds swapping that overnight facility for Treasury bills once bills
+    paid more. Those bills sit in private hands, so they still count as
+    leftover, not as the central bank.
   </p>
   <p>
     So the long-end buyback is not crowding out the Fed. It is a small
@@ -257,15 +262,19 @@
     <dt><span class="eq">g</span>, the refi gap</dt>
     <dd>
       The rate on new borrowing minus the coupon already on the books.
-      Same object as the Sustainability Cube’s refinancing axis. The cube
-      prints it in percentage points; the product below uses it as a
+      Same object as the
+      <a href="sustainability.html#axis-refi">Sustainability Cube’s refinancing axis</a>.
+      The cube prints it in percentage points; the product below uses it as a
       decimal.
     </dd>
     <dt><span class="eq">ΔA<sub>0–1y</sub></span></dt>
     <dd>
-      The <em>change</em> in principal due inside a year. For a $B
-      long-to-bill switch, about +$B. Not the stock of the whole one-year
-      wall — that stock is the cube.
+      The <em>change</em> in
+      <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/marketable-securities-outstanding-by-remaining-maturity">principal due inside a year</a>.
+      Table 3 publishes that stock each month. For a $B long-to-bill
+      switch the change is about +$B — an identity, not a second
+      print. Not the stock of the whole one-year wall; that stock is
+      the cube.
     </dd>
   </dl>
   <p>
@@ -360,12 +369,14 @@
     might look something like the following:
   </p>
   <p>
-    <b>Win:</b> the long end is better than the
-    Japan / term-premium tape said it should be, <em>and</em> the extra
-    first-year coupon is smaller than that relief was worth.
+    <b>Win:</b> 10-year and 30-year yields do better than a simple
+    peer — Bunds, gilts, or the ACM term premium — after Japan news,
+    <em>and</em> the extra first-year interest from the shorter book
+    is smaller than that relief was worth.
   </p>
   <p>
-    <b>Loss:</b> longs did not care, and the short wall is bigger.
+    <b>Loss:</b> the 10-year ignored the buybacks, and more of the
+    debt now comes due inside a year.
   </p>
   <div class="join-scroll">
     <table class="join-table">
@@ -408,15 +419,17 @@
 </article>
 
 <section>
-  <div class="col-card" id="win-card">loading tracker…</div>
+  <h3 class="plot-head">The bid, four-quarter share — what to watch</h3>
   <div id="plot-win"></div>
   <p class="sub">
-    Four-quarter rolling share of extra public debt. Magenta: leftover
-    (private buyers + TIC lag). Cyan: Fed + foreign. They add to 100,
-    so they meet at 50%. <b>Pre-committed:</b> if magenta crosses below
-    cyan, leftover is no longer the main bid — the House cannot stay a
-    $6 billion overlay, and that check is a loss. Gold dotted line:
-    50%. Gold vertical: buybacks as House ops, August 2026.
+    This is the history of that bid, as far as the data go. Magenta:
+    leftover’s share of extra public debt over four quarters. Cyan:
+    Fed + foreign. They add to 100, so they meet at 50% (gold dotted).
+    Gold vertical: House ops, August 2026. Watch it <em>forward</em>.
+    If magenta stays above cyan, leftover is still the main bid and a
+    small House can stay small. If magenta crosses below cyan,
+    leftover lost the majority — that check is a loss, and $6 billion
+    is no longer the overlay.
   </p>
 </section>
 
@@ -440,6 +453,15 @@
 </section>
 
 <article class="article-body">
+  <p>
+    This is the ranking in the book. If the share due inside a year
+    does not rise, "The House" is just a press release. If it does rise
+    while ρ is positive, Bessent is paying the cover charge: more of the
+    stock re-prices every year so that fewer 10- and 30-year Treasuries sit in
+    public hands. Therefore, the yield lines are what he is trying to keep
+    from running. If they gap anyway, he bought mix but did not buy relief.
+  </p>
+
   <h2>Why become the House?</h2>
   <h3>Bessent did have other options after all</h3>
   <p>
@@ -516,11 +538,14 @@
     The first operations were small in the 10-year because they were
     small in B, but were not free. The gold and magenta lines in the ρ plot
     show why after 2022, a Twist trade does indeed carry a cover charge
-    because the lines are above zero. It costs an extra cash premium in
-    interest next year for each year of duration taken off the Street. These
-    longs are retired, not marked the way a hegde fund might. It is till cash —
-    <span class="eq">ΔI<sub>1y</sub></span> — and at $6 billion it is
-    tens of millions. The till does not notice. The ranking does.
+    because the lines are above zero. It costs extra cash interest next
+    year for each year of duration taken off the Street. The
+    longer-dated Treasuries are retired. The extra coupon is dollars the
+    Treasury pays next year out of incoming receipts — <span class="eq">ΔI
+    <sub>1y</sub></span> — about tens of millions on a $6 billion switch at
+    today’s gap; a mere a rounding error next to a ~$1 trillion interest
+    bill. The but although the dollar amounts are a small matter, the choice of
+    which risk to take is not.
   </p>
   <p>
     Every time ρ is positive, Bessent makes the rolling over the Treasury's
@@ -593,6 +618,27 @@
     into a larger short wall with no private long bid. That is the
     Japan comparison as an operation, not a vibe. Watch the magenta
     bars, not the press release.
+  </p>
+
+  <h3>So what about Japan?</h3>
+  <p>
+    The conversation started there and not without reason. Japan is
+    still a reason to buy the insurance: a historically large holder
+    of longer-dated Treasuries, a Bank of Japan that can lift
+    domestic yields, hedge costs that move when the yen does. It's a real and
+    genuine channel for the 10-year. It is not why the 10-year
+    yawned at $6 billion, and it is not why the magenta "leftover" is on the order
+    of two-thirds of extra public debt. Tokyo sits inside “foreign,” and
+    we can see clearly that foreign has not been the main bid.
+  </p>
+  <p>
+    So: was the issue that started this “not an issue”? No. It is a scenario on
+    the long-end row of the scoreboard — if BoJ hikes and 10s still richen
+    versus a simple peer, his Japan call paid. It is not the constraint on
+    whether the House can stay small. That constraint is the magenta "leftover"
+    bars — which quite possibly means <em>you</em>, the reader. Japan can
+    explain partially why Bessent wanted the insurance, but the private
+    sector buyers will decide whether he has to scale it.
   </p>
 
   <h2>Sources</h2>
