@@ -59,9 +59,14 @@ function layout(title, opts) {
   };
   if (o.legendTop) {
     L.margin = Object.assign({}, L.margin, {
-      t: mobile ? 72 : 64,
+      t: title ? (mobile ? 100 : 92) : (mobile ? 72 : 64),
       b: mobile ? 56 : 48,
     });
+    if (title) {
+      L.title.y = 1.28;
+      L.title.yanchor = "bottom";
+      L.title.pad = { t: 0, b: 2 };
+    }
   }
   return L;
 }
@@ -504,8 +509,8 @@ function fillRhoMath(last, bBn) {
 
 function rhoLayout(bBn, vis) {
   const L = layout(
-    "rho (left) and extra coupon dI for this B (right)",
-    { ytitle: "rho, bp / year of D" }
+    "Price of the pair — ρ (left) and extra first-year coupon at this B (right)",
+    { ytitle: "rho, bp / year of D", legendTop: true }
   );
   L.yaxis2 = {
     overlaying: "y",
