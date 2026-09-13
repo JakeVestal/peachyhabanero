@@ -292,66 +292,141 @@ async function drawWho(tables) {
 
 async function drawWinTrack(tables) {
   const el = document.getElementById("plot-win");
-  if (!el) return;
+  const card = document.getElementById("win-card");
+  if (!el && !card) return;
   const { rows } = buyerRows(tables);
   const seq = rows.filter((r) => r.resid != null && r.dPub != null);
   const vis = [];
   for (let i = 3; i < seq.length; i++) {
     const w = seq.slice(i - 3, i + 1);
     const pub = w.reduce((s, r) => s + r.dPub, 0);
-    const soma = w.reduce((s, r) => s + (r.dSoma || 0), 0);
-    const fo = w.reduce((s, r) => s + (r.dFor || 0), 0);
     const resid = w.reduce((s, r) => s + r.resid, 0);
     if (!Number.isFinite(pub) || Math.abs(pub) < 80) continue;
-    vis.push({
-      date: seq[i].date,
-      left: 100 * resid / pub,
-      off: 100 * (soma + fo) / pub,
-    });
+    vis.push({ date: seq[i].date, left: 100 * resid / pub });
   }
   const show = vis.filter((r) => r.date >= "2016-01-01");
-  if (!show.length) {
-    el.innerHTML = `<p class="err">Need four quarters of FYGFDPUN / WSHOTSL / FDHBFIN — run the nightly refresh.</p>`;
+  const bills = toBn(points(tables.fred_official_holdings, "WSHOBL"));
+  const nom = toBn(points(tables.fred_official_holdings, "WSHONBNL"));
+  const tips = toBn(points(tables.fred_official_holdings, "WSHONBIIL"));
+  const tipM = new Map();
+  (tips.xs || []).forEach((d, i) => tipM.set(d, tips.ys[i]));
+  const coupXs = [], coupYs = [];
+  (nom.xs || []).forEach((d, i) => {
+    coupXs.push(d);
+    coupYs.push((nom.ys[i] || 0) + (tipM.get(d) || 0));
+  });
+  const tn = (bn) => bn / 1000;
+  const billsShow = { xs: [], ys: [] };
+  (bills.xs || []).forEach((d, i) => {
+    if (d >= "2016-01-01") { billsShow.xs.push(d); billsShow.ys.push(tn(bills.ys[i])); }
+  });
+  const coupShow = { xs: [], ys: [] };
+  coupXs.forEach((d, i) => {
+    if (d >= "2016-01-01") { coupShow.xs.push(d); coupShow.ys.push(tn(coupYs[i])); }
+  });
+  if (!show.length || !coupShow.xs.length) {
+    const msg = "Need leftover identity plus SOMA bills (WSHOBL) and notes/bonds (WSHONBNL). Run the nightly refresh.";
+    if (el) el.innerHTML = `<p class="err">${msg}</p>`;
+    if (card) card.innerHTML = `<p class="err">${msg}</p>`;
     return;
   }
-  await Plotly.newPlot("plot-win", [
-    {
-      type: "scatter", mode: "lines",
-      x: show.map((r) => r.date), y: show.map((r) => r.left),
-      name: "leftover (private + TIC lag)",
-      line: { color: "#ff2bd6", width: 2.5 },
-    },
-    {
-      type: "scatter", mode: "lines",
-      x: show.map((r) => r.date), y: show.map((r) => r.off),
-      name: "Fed + foreign",
-      line: { color: "#00f0ff", width: 2.5 },
-    },
-  ], Object.assign(layout("", { legendTop: true, ytitle: "% of extra public debt" }), {
-    shapes: [
+  const HOUSE = "2026-08-01";
+  function atOrBefore(xs, ys, cut) {
+    let v = null, d = null;
+    xs.forEach((dt, i) => { if (dt <= cut) { v = ys[i]; d = dt; } });
+    return { v, d };
+  }
+  const pre = atOrBefore(coupShow.xs, coupShow.ys, "2026-07-31");
+  const nowC = { v: coupShow.ys[coupShow.ys.length - 1], d: coupShow.xs[coupShow.xs.length - 1] };
+  const nowB = billsShow.xs.length
+    ? { v: billsShow.ys[billsShow.ys.length - 1], d: billsShow.xs[billsShow.xs.length - 1] }
+    : { v: null, d: null };
+  const leftNow = show.length ? show[show.length - 1] : null;
+  const dCoupBn = (nowC.v != null && pre.v != null) ? (nowC.v - pre.v) * 1000 : null;
+  let verdict = "too early";
+  let why = "Need a print after the August 2026 House ops.";
+  if (dCoupBn != null && nowC.d >= HOUSE) {
+    if (dCoupBn > 40) {
+      verdict = "deluded, so far";
+      why = "Fed notes and bonds are up since the ops. Duration is back on SOMA.";
+    } else if (leftNow && leftNow.left < 40) {
+      verdict = "watch";
+      why = "Fed duration is not rising, but leftover’s share of extra public debt is thin.";
+    } else {
+      verdict = "canny, so far";
+      why = "Leftover is still clearing extra public debt, and Fed coupon Treasuries are not rising.";
+    }
+  }
+  if (el) {
+    const L = layout("Canny or deluded", { legendTop: true, ytitle: "leftover, % of extra public debt" });
+    L.margin = Object.assign({}, L.margin, { r: isNarrow() ? 48 : 64 });
+    L.yaxis2 = {
+      overlaying: "y",
+      side: "right",
+      title: "Fed SOMA, $tn",
+      automargin: true,
+      gridcolor: "rgba(196,163,90,0.06)",
+      zerolinecolor: "rgba(255,43,214,0.15)",
+    };
+    L.shapes = [
       {
-        type: "line", xref: "paper", x0: 0, x1: 1, y0: 50, y1: 50,
+        type: "line", x0: HOUSE, x1: HOUSE, y0: 0, y1: 1, yref: "paper",
         line: { color: "rgba(196,163,90,0.85)", width: 1.5, dash: "dot" },
       },
+    ];
+    L.annotations = [
       {
-        type: "line", x0: "2026-08-01", x1: "2026-08-01", y0: 0, y1: 1, yref: "paper",
-        line: { color: "rgba(196,163,90,0.85)", width: 1.5, dash: "dot" },
-      },
-    ],
-    annotations: [
-      {
-        x: "2026-08-01", y: 1, yref: "paper",
+        x: HOUSE, y: 1, yref: "paper",
         text: "House ops", showarrow: false,
         xanchor: "left", yanchor: "bottom",
         font: { color: "#c4a35a", size: 11 },
         bgcolor: "rgba(7,8,12,0.75)",
       },
-    ],
-    yaxis: Object.assign({}, layout("", {}).yaxis, {
-      title: "% of extra public debt",
-      range: [-20, 140],
-    }),
-  }), { responsive: true, displaylogo: false });
+    ];
+    await Plotly.newPlot("plot-win", [
+      {
+        type: "scatter", mode: "lines",
+        x: show.map((r) => r.date), y: show.map((r) => r.left),
+        name: "leftover share of extra public debt",
+        line: { color: "#ff2bd6", width: 2.5 },
+        hovertemplate: "%{x|%Y-%m-%d}<br>leftover %{y:.0f}% of extra public debt<extra></extra>",
+      },
+      {
+        type: "scatter", mode: "lines",
+        x: coupShow.xs, y: coupShow.ys,
+        name: "Fed notes + bonds (duration)",
+        yaxis: "y2",
+        line: { color: "#c4a35a", width: 2.5 },
+        hovertemplate: "%{x|%Y-%m-%d}<br>Fed coupons $%{y:.2f} tn<extra></extra>",
+      },
+      {
+        type: "scatter", mode: "lines",
+        x: billsShow.xs, y: billsShow.ys,
+        name: "Fed bills (runoff OK)",
+        yaxis: "y2",
+        line: { color: "#00f0ff", width: 1.8, dash: "dot" },
+        hovertemplate: "%{x|%Y-%m-%d}<br>Fed bills $%{y:.2f} tn<extra></extra>",
+      },
+    ], L, { responsive: true, displaylogo: false });
+  }
+  if (card) {
+    const dStr = dCoupBn == null ? "—" : ((dCoupBn >= 0 ? "+" : "") + fmt(dCoupBn, 0) + " bn");
+    card.innerHTML = `
+      <h3>Verdict — ${verdict}</h3>
+      <p>${why}</p>
+      <p class="stat">
+        leftover 4q share ${leftNow ? fmt(leftNow.left, 0) : "—"}%
+        · Fed notes+bonds $${nowC.v != null ? fmt(nowC.v, 2) : "—"} tn
+        (${dStr} since House ops)
+        · Fed bills $${nowB.v != null ? fmt(nowB.v, 2) : "—"} tn
+      </p>
+      <p>
+        Canny: leftover still funds the extra roll, and SOMA notes and bonds
+        do not rise. Deluded: he paid ρ to shorten the book and the Fed took
+        the longs anyway. Bills at the Fed that mature are plumbing, not that
+        test. Foreign showing up is not a loss.
+      </p>`;
+  }
 }
 
 async function drawBills(tables) {

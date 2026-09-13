@@ -190,6 +190,9 @@ FRED_GROUPS = {
     ],
     "fred_official_holdings": [
         "WSHOTSL",          # Fed SOMA Treasuries, $mn, Wednesday
+        "WSHOBL",           # SOMA Treasury bills, $mn, Wednesday
+        "WSHONBNL",         # SOMA Treasury notes and bonds, nominal, $mn
+        "WSHONBIIL",        # SOMA TIPS notes/bonds, $mn
         "WALCL",            # Fed total assets, $mn, Wednesday (H.4.1)
         "FDHBFIN",          # federal debt held by foreign/international, $bn
     ],
@@ -848,9 +851,9 @@ def update_raw(
                 force_full = True
                 force_why = "TOTLL missing — full financial-conditions rebuild"
         if name == "fred_official_holdings" and old is not None and len(old):
-            if "WALCL" not in cols or "WSHOTSL" not in cols:
+            if "WALCL" not in cols or "WSHOTSL" not in cols or "WSHOBL" not in cols or "WSHONBNL" not in cols:
                 force_full = True
-                force_why = "WALCL/WSHOTSL missing — full official-holdings rebuild"
+                force_why = "SOMA bills/coupons missing — full official-holdings rebuild"
         if force_full:
             start = DEFAULT_START
             old = pd.DataFrame()
