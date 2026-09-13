@@ -891,15 +891,24 @@ a.analysis-card:hover { border-color: var(--cyan); }
 }
 .page-article .byline-name {
   display: block;
-  color: #e8f6ff;
+  margin-bottom: 0.45em;
+  font-size: 1.18rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  color: #c8ecf2;
 }
 .page-article .byline-role {
   display: block;
   margin: 0.15em 0 0.35em;
   font-size: 0.86rem;
   color: #8b9eac;
+}
+.page-article .byline-links {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: #7f93a6;
+  letter-spacing: 0.01em;
 }
 .page-article .byline-links a { color: #c4a35a; }
 .page-article .byline a {

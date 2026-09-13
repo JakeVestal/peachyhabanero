@@ -18,3 +18,4 @@ peachyhabanero-044-dual-domain.patch
 peachyhabanero-045-wall-winloss.patch
 peachyhabanero-046-byline-copy.patch
 peachyhabanero-047-byline-links.patch
+peachyhabanero-048-byline-size.patch
