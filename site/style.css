@@ -880,3 +880,25 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-weight: 600;
 }
 .page-article .plot-head { max-width: none; }
+.page-article .byline {
+  max-width: 42rem;
+  margin: 0.35rem auto 1.4rem;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #9fb3c8;
+  letter-spacing: 0.02em;
+}
+.page-article .byline-name {
+  display: block;
+  color: #e8f6ff;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.page-article .byline-role {
+  display: block;
+  margin: 0.15em 0 0.35em;
+  font-size: 0.86rem;
+  color: #8b9eac;
+}
+.page-article .byline-links a { color: #c4a35a; }
