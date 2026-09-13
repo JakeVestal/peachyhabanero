@@ -27,3 +27,4 @@ peachyhabanero-053-rho-legend.patch
 peachyhabanero-055-leftovers.patch
 peachyhabanero-056-bond-people.patch
 peachyhabanero-058-mobile-tables.patch
+peachyhabanero-059-lse-rrp.patch
