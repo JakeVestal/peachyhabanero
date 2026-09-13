@@ -902,3 +902,18 @@ a.analysis-card:hover { border-color: var(--cyan); }
   color: #8b9eac;
 }
 .page-article .byline-links a { color: #c4a35a; }
+.page-article .byline a {
+  color: var(--gold);
+  background: rgba(196, 163, 90, 0.14);
+  border-bottom: 1px solid var(--gold);
+  padding: 0 0.28em;
+  margin: 0 0.06em;
+  border-radius: 3px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.page-article .byline a:hover {
+  color: #07080c;
+  background: var(--gold);
+  border-bottom-color: var(--gold);
+}
