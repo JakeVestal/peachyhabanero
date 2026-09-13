@@ -219,7 +219,7 @@ async function drawWho(tables) {
   const el = document.getElementById("plot-who");
   if (!card && !el) return;
   const { rows } = buyerRows(tables);
-  const vis = rows.filter((r) => r.date >= "2010-01-01" && r.dPub != null);
+  const vis = rows.filter((r) => r.date >= "2010-01-01" && r.resid != null);
   if (!vis.length) {
     if (card) card.innerHTML = `<p class="err">Need debt held by the public and Fed Treasury holdings in the published data. Run the nightly refresh.</p>`;
     if (el) el.innerHTML = `<p class="err">FYGFDPUN / WSHOTSL missing</p>`;
@@ -258,7 +258,7 @@ async function drawWho(tables) {
         sNow,
         `Reverse repo changed by ${fmtSigned(sNow.rrp)}.`
       )}
-      <p class="who-foot">Leftover is U.S. private holders plus foreign buying that has not printed yet. It is a bucket, not a person. Figures in $ billion.</p>`;
+      <p class="who-foot">Leftover is U.S. private holders plus foreign buying that has not printed yet. It is a bucket, not a person. Figures in $ billion. A quarter is omitted until public debt, Fed SOMA, and TIC foreign have all printed — leftover is the residual of those three, so a stub Fed bar with no magenta is a lag, not a missing buyer.</p>`;
   }
   if (tb) {
     const show = vis.filter((r) => r.date >= "2021-01-01");
