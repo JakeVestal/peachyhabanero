@@ -43,8 +43,9 @@
   <p class="sub">
     This article treats that plan as a trade: buy back longer-term Treasuries,
     fund the government in T-bills, and measure what that swap costs. It
-    names who still has to show up at auction, and what to watch to see
-    whether the trade is paying.
+    names who still has to show up at auction — and what Japan, including
+    the yen carry unwind, has to do with the long end — and what to watch
+    to see whether the trade is paying.
   </p>
 </header>
 
@@ -165,6 +166,19 @@
     alternative.
   </p>
   <p>
+    There is a second Japan channel, and it is faster: the yen carry.
+    For years, money borrowed yen at a near-zero policy rate and bought
+    higher-yielding dollar assets — including Treasuries. A BoJ hike,
+    or a yen that rips the other way, raises the cost of that funding
+    and marks the dollar book down in yen terms. Positions that were
+    levered have to be cut. That is not the same as a life insurer
+    rotating from a 10-year Treasury into a JGB. It is a forced sale,
+    and it can show up in a week (August 2024 was the last loud one;
+    August 2026 was the intervention). It is still a long-end story:
+    the bid that disappears is duration, not bills. Money-market funds
+    do not fund themselves in yen.
+  </p>
+  <p>
     Bessent said he has insight into what the Bank of Japan and Japanese
     policymakers will do. That is the “House” claim: he is not guessing
     the next Japanese meeting from a terminal. He is sitting in the
@@ -211,7 +225,9 @@
     it is, is a rounding error. Overnight cash parked at the Fed (the ON
     RRP facility) has gone to about zero — that print is in
     <a href="https://fred.stlouisfed.org/series/RRPONTSYD">RRPONTSYD</a>.
-    The usual channel, which the New York Fed has described, is money
+    The usual channel, which the
+    <a href="https://www.newyorkfed.org/markets/desk-operations/reverse-repo">New York Fed</a>
+    has described, is money
     funds swapping that overnight facility for Treasury bills once bills
     paid more. Those bills sit in private hands, so they still count as
     leftover, not as the central bank.
@@ -251,7 +267,8 @@
     <dt><span class="eq">g</span>, the refi gap</dt>
     <dd>
       The rate on new borrowing minus the coupon already on the books.
-      This object is calculated and documented on this site as the
+      The data series is in percentage points; the product below uses it
+      as a decimal. Same object as the
       <a href="sustainability.html#axis-refi">Sustainability Cube’s refinancing axis</a>.
     </dd>
     <dt><span class="eq">ΔA<sub>0–1y</sub></span></dt>
@@ -270,6 +287,11 @@
     switch, if the gap stays where it is.
   </p>
   <p class="stat">ΔI<sub>1y</sub> ≈ g × ΔA<sub>0–1y</sub></p>
+  <p class="sub">
+    Here <span class="eq">g</span> is a decimal (the cube’s refi gap
+    divided by 100). The card under the plot uses the same
+    <span class="eq">(g/100) × B</span>.
+  </p>
 
   <h3>Benefit Side</h3>
   <p>
@@ -599,11 +621,14 @@
   <h3>So what about Japan?</h3>
   <p>
     Japan is still a reason to buy the insurance: a historically large
-    holder of longer-dated Treasuries, the Bank of Japan can lift domestic
-    yields, making it a real channel for the 10-year. It is not why
+    holder of longer-dated Treasuries, a Bank of Japan that can lift
+    domestic yields and squeeze the yen carry, and a long end that
+    feels both. It is a real channel for the 10-year. It is not why
     the 10-year yawned at $6 billion, and it is not why leftover is
     two-thirds of extra public debt. Tokyo sits inside “foreign,” and
-    <b>"foreign" is not the main bid</b>.
+    <b>"foreign" is not the main bid</b>. The carry book is not in the
+    magenta bars either. Carry is the overlay that can dump duration
+    in a week. Leftover is the stock that has to roll bills every year.
   </p>
   <p>
     So: Was the issue that started this “not an issue”? No. It is a row on
