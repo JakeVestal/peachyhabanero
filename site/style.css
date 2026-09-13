@@ -891,11 +891,13 @@ a.analysis-card:hover { border-color: var(--cyan); }
 }
 .page-article .byline-name {
   display: block;
-  margin-bottom: 0.45em;
-  font-size: 1.18rem;
+  margin: 0 0 0.2em;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: #c8ecf2;
+  color: #e8f6ff;
+  -webkit-font-smoothing: antialiased;
 }
 .page-article .byline-role {
   display: block;
@@ -905,8 +907,9 @@ a.analysis-card:hover { border-color: var(--cyan); }
 }
 .page-article .byline-links {
   display: block;
+  margin: 0;
   font-size: 0.8rem;
-  line-height: 1.7;
+  line-height: 1.55;
   color: #7f93a6;
   letter-spacing: 0.01em;
 }
