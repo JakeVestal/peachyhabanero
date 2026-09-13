@@ -631,8 +631,21 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-size: 13px;
   margin: 0 0 1.3em;
 }
-.page-article .eq-key td:first-child {
+.page-article .join-table th,
+.page-article .join-table td {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.page-article .eq-key td:first-child,
+.page-article .eq-key th:first-child {
   color: var(--cyan);
+  white-space: nowrap;
+  width: 30%;
+  vertical-align: top;
+}
+.join-scroll .join-table th,
+.join-scroll .join-table td {
   white-space: nowrap;
 }
 .page-article .stat {
