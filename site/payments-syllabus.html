@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Duke Payments — Syllabus V 2026.09.18</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Payments // Syllabus &nbsp;&nbsp;|&nbsp;&nbsp; SPRING</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">Opportunities in Modern Payment Systems Innovation <span style="color: #e8a317;">FINTECH 5XX</span></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.09.18 DRAFT</span> &nbsp;&nbsp;|&nbsp;&nbsp; PROF <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a></div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Description</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">A payment is a state change plus a legal claim. This course follows that claim across rails &mdash; cards, ACH, wire, FedNow/RTP, SWIFT, ISO 20022 &mdash; and then the overlay: wallets, processors, banking-as-a-service, open banking / data rights, and stablecoins used as settlement rather than as a trade. Not a crypto elective and not 520&rsquo;s product tour.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The prize is not the first lightning-fast front end. It is identity, the software layer above the rail, and the orchestration that hides five decades of plumbing behind one click. Students model authorization, clearing, settlement, and failure: returns, chargebacks, correspondent liquidity, ledger behavior under load, and what breaks when an agent initiates a real-time payment instead of a person.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Every project produces numbers and a system: unit economics of a rail, a settlement-risk ledger, a returns/exceptions engine, a fraud-score vs. false-positive curve. Work lives on GitHub Pages so a payments person can use the plot. The firms worth joining or starting sit in the seams the legacy stack does not already own: embedded pay-in/pay-out, commercial and cross-border, recon and exceptions, agent-initiated checkout, settlement that still has to land at a bank. AI writes code; you own interchange math, liquidity, and the failure case.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // Optional Textbook</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">No required textbook. Primary documents: network fee schedules, NACHA operating rules excerpts, FedNow / RTP product sheets, a card-scheme chargeback reason-code table, an ISO 20022 message sample.</p>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">Useful desk reading (not cover-to-cover): a current payments-industry primer; BIS / Fed papers on instant payments and wholesale settlement. Scheme PDFs beat a textbook for this course.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // AI Policy</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">AI use is highly encouraged. You may use any model to write orchestration code, parse a scheme PDF, or draft a memo. You remain solely responsible for everything you turn in: the simulator runs, the unit economics are correct, a reader can follow the state machine without asking the tool what you meant. If settlement risk is mis-sized or the chargeback tree is wrong, that is your grade.</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Grading</div>
+        <table style="width: 100%; border-collapse: collapse; margin: 0 0 8px 0;">
+            <tbody>
+                <tr>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">45%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Projects (homework average)</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">15%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Midterm quiz</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">25%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Final project (team)</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">15%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Individual defense</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 0 0; color: #8aa0c4; font-size: 13.5px;">Projects are simulators + Pages: take-rate waterfall, settlement-risk ledger, returns engine, fraud PR curve. Midterm is closed-book (auth vs clear vs settle, a fee stack, a liquidity number). Team final is a seam product. Individual defense: you walk the state machine and the P&amp;L.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Learning Objectives</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">01</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Draw the state machine of a payment on any major rail: who is principal at authorization, clearing, and settlement; when the legal claim moves; what a return or chargeback undoes.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">02</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Compute unit economics: interchange + scheme + acquirer + processor + fraud + rewards + cost of float + cost of capital on delayed settlement. Show contribution margin at the transaction and at the portfolio.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">03</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Size settlement and correspondent liquidity: net vs gross, pre-funding, in-flight exposure, what a delayed ACH batch does to cash. Plot exposure through a day.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">04</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Build failure systems: returns, chargebacks, R-codes, exception queues. Measure false-positive cost of a fraud rule, not only AUC.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">05</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Place a firm on the stack. Name who already owns identity, the rail, and the orchestration. Specify the adjacent seam (embedded, cross-border, recon, agent-checkout, bank-landing stablecoin settlement) and build a thin version.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px;">06</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc;">Publish on GitHub Pages. Defend the ledger and the P&amp;L without a teammate as proxy.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">06 // Tentative Course Schedule</div>
+
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 1 &mdash; State change + legal claim</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Authorization, clearing, settlement as three clocks</li>
+                <li style="margin: 4px 0;">Who is principal: issuer, acquirer, network, correspondent, TCH, the Fed</li>
+                <li style="margin: 4px 0;">ISO 20022 as a message, not a religion</li>
+                <li style="margin: 4px 0;">Lab: draw one card payment and one ACH credit as state machines; list every ledger that moves</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Project 1 &mdash; Unit economics of a rail</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Interchange + scheme + acquirer + processor + fraud + rewards + float</li>
+                <li style="margin: 4px 0;">Same $100 sale on card vs ACH vs FedNow; contribution at txn and at 10k txn/day</li>
+                <li style="margin: 4px 0;">Sensitivity: mix shift, interchange regulation, a 40 bp fraud spike</li>
+                <li style="margin: 4px 0;">Deliverable: workbook + Pages waterfall plot an operator would recognize</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 2 &mdash; Rails</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Cards: dual-message vs single-message, chargeback windows</li>
+                <li style="margin: 4px 0;">ACH: batch, returns (R01&ndash;R29 that actually matter), same-day ACH</li>
+                <li style="margin: 4px 0;">Wire / SWIFT / correspondent: nostro, cover payments, liquidity at the correspondent</li>
+                <li style="margin: 4px 0;">FedNow / RTP: instant, irrevocable-ish, what &ldquo;request for payment&rdquo; changes</li>
+                <li style="margin: 4px 0;">Lab: latency and finality table; plot in-flight exposure by rail through a business day</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Project 2 &mdash; Settlement-risk ledger</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Simulate a processor&rsquo;s day: captures, batch ACH, instant payouts, incoming returns</li>
+                <li style="margin: 4px 0;">Cash, payables to merchants, receivables from networks, pre-funded RTP balance</li>
+                <li style="margin: 4px 0;">Break the day: a delayed ACH window, a scheme outage, a 2% return spike</li>
+                <li style="margin: 4px 0;">Deliverable: time-series ledger + max intra-day hole you would have to fund</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #14110a; color: #d4a017; border: 1px solid #8a6a1c;">Midterm quiz &mdash; closed book. State machines, fee stack, a liquidity number. Study guide one week prior.</div>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #0a1220; color: #8aa0c4; border: 1px dashed #4a5d7a;">Spring Break</div>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 3 &mdash; Failure, fraud, identity</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Chargebacks and R-codes as a P&amp;L, not a support ticket</li>
+                <li style="margin: 4px 0;">ATO and APP fraud vs AML clocks (milliseconds vs SARs) &mdash; do not mix them</li>
+                <li style="margin: 4px 0;">Identity: who owns KYC when the front end is a BaaS partner</li>
+                <li style="margin: 4px 0;">Lab: score a txn stream; plot precision-recall and $ cost of false positives</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Project 3 &mdash; Exceptions engine</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Queue: returns, chargebacks, mismatches, agent-initiated payments that bounce</li>
+                <li style="margin: 4px 0;">SLA vs capital: how long can an exception sit before it is a hole</li>
+                <li style="margin: 4px 0;">Deliverable: Pages ops console + the expected-loss number of leaving the queue unworked</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 4 &mdash; Overlay and the seam</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Wallets, processors, BaaS, open banking / data rights</li>
+                <li style="margin: 4px 0;">Stablecoins as a settlement rail that still has to land at a bank</li>
+                <li style="margin: 4px 0;">Agent-initiated checkout: who authorized, who is liable</li>
+                <li style="margin: 4px 0;">Embedded pay-in/pay-out, commercial, cross-border &mdash; who already owns the layer</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Final project (team) + individual defense</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Pick one seam. Build the thin product: economics, state machine, failure book, liquidity plot</li>
+                <li style="margin: 4px 0;">GitHub Pages an operator can use. Name the firm that owns the adjacent layer.</li>
+                <li style="margin: 4px 0;">Individual defense: fee stack, intra-day hole, exception P&amp;L, your code. No teammate as proxy.</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #071a14; color: #7cff55; border: 1px solid #2f8a4a;">Final &mdash; team artifact + individual defense</div>
+        <p style="color: #8aa0c4; font-size: 13.5px; margin: 12px 0 0 0;">Tentative. Rails change; authorization / clearing / settlement and the P&amp;L do not.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">07 // Labs / Office Hours</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">No official lab. Office hours by appointment. Duke Teams or Zoom. Bring the ledger.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">08 // Your Computer</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">Python 3.12, Excel or equivalent for fee waterfalls, GitHub Pages. PyCharm recommended. Unsupported stacks are your IT problem.</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">09 // Team Policies</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">Same as 533: names = contributors. Fire / quit in writing, cc instructor. Peer ratings on Sakai. Skip a peer eval, lose 0.1 on that deliverable&rsquo;s peer factor.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">10 // GitHub</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">Repos start public. Instructor, TA, and classmates must be able to clone the default branch. Graded artifact = Pages + repo.</p>
+
+        <div style="margin-top: 28px; text-align: center; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #8aa0c4; font-size: 11px;">&mdash; END &mdash;</div>
+    </div>
+</div>
+</body>
+</html>
