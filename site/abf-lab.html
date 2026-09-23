@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ABF Lab — FinTech originator + Jovian warehouse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0; margin: 0 auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Private Credit // Lab &nbsp;&nbsp;|&nbsp;&nbsp; DRAFT FOR JOVIAN</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">FinTech originator + Jovian warehouse</div>
+        <div style="margin-top: 8px; color: #8aa0c4; font-size: 14px;">Asset-based finance module &nbsp;&middot;&nbsp; first-pass eligibility cuts &nbsp;&middot;&nbsp; <a style="color:#3ecbff; text-decoration:none;" href="private-credit-syllabus.html">&larr; syllabus</a></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.09.23</span> &nbsp;&nbsp;|&nbsp;&nbsp; inspired by the Exponent facility &nbsp;&nbsp;|&nbsp;&nbsp; haircuts are a first pass</div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Who is who</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;"><strong style="color:#7cff55;">Apex Franchise Capital</strong> (stand-in for an originator like Exponent) makes fixed-rate loans and business cards to multi-unit franchisees. They want to grow the book faster than equity allows.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;"><strong style="color:#7cff55;">Jovian</strong> provides a $20mm senior secured warehouse. Jovian does not underwrite each franchisee. Jovian underwrites the <em>pool</em> and the originator&rsquo;s ability to make and service it.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The student is the Jovian analyst <em>and</em> the engineer who has to make the borrowing base run.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // The vehicle</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Receivables sit in a bankruptcy-remote SPV. Collections hit a lockbox. The warehouse advances against a borrowing base. Later takeout can be ABS or a larger private book. The warehouse is the on-ramp.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // The tape (ugly on purpose)</div>
+        <p style="margin: 0 0 12px 0; color: #8aa0c4; font-size: 14px;">Loan ID, origination date, product (card vs term), franchise brand, units, outstanding, days past due, state, remaining term, charge-off flag, unearned discount, last payment.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">If Jovian can share a header layout or scrambled balances, we use that instead of a synthetic tape.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // What they compute</div>
+        <p style="margin: 0 0 8px 0; color: #8aa0c4; font-size: 13px;">FIRST PASS &mdash; replace with whatever eligibility and reserves Jovian would actually run.</p>
+        <ol style="margin: 0 0 12px 0; padding: 0 0 0 22px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin: 8px 0;"><strong style="color:#7cff55;">Eligibility.</strong> Drop: &gt;30 DPD, charge-off, concentration over 15% in one brand, remaining term &lt; 3 months, related-party, incomplete fields.</li>
+            <li style="margin: 8px 0;"><strong style="color:#7cff55;">Borrowing base.</strong><br>
+                BB = &Sigma; eligible outstanding &times; advance rate &minus; dilution reserve &minus; loss reserve<br>
+                e.g. term 80%, card 70%; extra 5% reserve if the 30+ DPD bucket &gt; 4%.</li>
+            <li style="margin: 8px 0;"><strong style="color:#7cff55;">Availability.</strong> min(commitment, BB) &minus; already drawn.</li>
+            <li style="margin: 8px 0;"><strong style="color:#7cff55;">Shock.</strong> 3% extra dilution (franchisee credits); one brand is 22% of the pool. How much does availability fall? Do they breach?</li>
+            <li style="margin: 8px 0;"><strong style="color:#7cff55;">Plot.</strong> BB vs drawn vs commitment over 12 monthly tapes.</li>
+        </ol>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // The hole is the product</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Whenever drawn &gt; borrowing base, or the base collapses while drawn stays put, they are over-advanced. Cash has to come back, collateral has to get eligible again, or Jovian has a problem.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">A human finds that hole by fighting a CSV. A system finds it every morning: eligibility flags, a dilution spike, one brand blew the cap, availability just dropped $1.4mm. The dashboard that shows the hole <em>before</em> the borrowing-base certificate is a lie is a product students can build.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Teaching analog: corporate direct lending goes red when a covenant test fails. ABF goes red when the base fails against the draw.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">06 // Defense question</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">You are not underwriting the franchisee&rsquo;s EBITDA. You are underwriting (a) the originator&rsquo;s ability to make and service the loans and (b) the pool&rsquo;s liquidation math if they blow up. Where in the structure does Jovian get paid if Apex fails?</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">07 // Deliverable</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">GitHub Pages: eligibility table, BB / availability / drawn, shock case, the 12-month plot. Numbers reconcile. Individual defense of the hole.</p>
+
+        <p style="margin: 28px 0 0 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12px; color: #8aa0c4;"><a style="color:#3ecbff; text-decoration:none;" href="private-credit-syllabus.html">&larr; back to syllabus</a></p>
+        <div style="margin-top: 16px; text-align: center; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #8aa0c4; font-size: 11px;">&mdash; END &mdash;</div>
+    </div>
+</div>
+</body>
+</html>

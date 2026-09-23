@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Duke Private Credit — Syllabus V 2026.09.23</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Private Credit // Syllabus &nbsp;&nbsp;|&nbsp;&nbsp; FALL</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">Private Credit and Private Markets Infrastructure <span style="color: #e8a317;">FINTECH 5XX</span></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.09.23 DRAFT</span> &nbsp;&nbsp;|&nbsp;&nbsp; PROF <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="abf-lab.html">ABF lab &rarr;</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a></div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Description</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Public credit has TRACE, a dealer screen, and a mark everyone can fight about. Private credit has a credit agreement, a servicing file, and a NAV that updates when someone says it does. Direct lending is now in the same weight class as the broadly syndicated leveraged-loan market &mdash; on the order of $1.4 trillion each &mdash; and FinTech programs still teach it as a slide in alternatives. This course starts at the loan.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Students model coverage, structure, and what &ldquo;fair value&rdquo; means when nothing prints: origination, covenants, intercreditor, delayed-draw, amendments, defaults. Then the leverage stacked on the leverage &mdash; fund finance, NAV facilities, subscription lines &mdash; and the machine that makes an illiquid book look like a product: data rooms, covenant monitoring, servicing, secondaries, continuation vehicles, and the software lenders actually run on. Distinct from 530/531/543. Those touch PE/VC and alternatives. They do not teach this system.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Direct lending is the corporate half. Asset-based finance is the other ocean: credit secured by <em>pools</em> &mdash; receivables, equipment, autos, cards, RBF &mdash; and by the specialty lenders who originate them. Banks stepped back from operationally heavy ABL; private capital and purpose-built vehicles (SPV + lockbox + warehouse) stepped in. Students underwrite both religions: coverage tests on a single name, and borrowing-base / advance-rate / eligibility math on a tape. Developed with practitioners at Jovian Capital Management. See the <a style="color: #3ecbff;" href="abf-lab.html">ABF warehouse lab</a>.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The work is calculation plus a system you can ship. Every project produces numbers that have to reconcile (coverage tests, waterfalls, marks, facility headroom, borrowing base vs draw) and a GitHub Pages artifact that shows the file, the model, and the plot. The seams worth joining or starting are automated covenant gates, eligibility engines, and multi-tier leverage someone can actually reconcile &mdash; not another pitch-book generator. AI is encouraged for code and document extraction; the student owns the arithmetic and the judgment.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // Optional Textbook</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">No required textbook. Primary documents are the course text: a sample credit agreement, an intercreditor, a servicing report, a BDC 10-Q, a subscription-line term sheet. Readings assigned as needed (LSTA forms, BDC filings, Fed / BIS notes on private credit vs leveraged loans).</p>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">Desk references, not cover-to-cover: a leveraged-finance structuring handbook of your choice; any current private-credit primer (BlackRock / Cliffwater / Preqin style) for market size only. AI is fine as a reader of the credit agreement. It is not a substitute for building the coverage model by hand once.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // AI Policy</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">AI use is highly encouraged. You may use any model to parse a credit agreement, draft code, or explore a structure. You remain solely responsible for everything you turn in: the workbook or repo runs, the coverage math is correct, a reader can follow the mark without asking the tool what you meant. If the waterfall is wrong, the covenant test is misread, or the site is opaque, that is your grade &mdash; not the tool&rsquo;s.</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Grading</div>
+        <table style="width: 100%; border-collapse: collapse; margin: 0 0 8px 0;">
+            <tbody>
+                <tr>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">45%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Projects (homework average)</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">15%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Midterm quiz</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">25%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Final project (team)</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">15%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Individual defense</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 0 0; color: #8aa0c4; font-size: 13.5px;">Projects are models + a page: coverage workbook, waterfall, mark engine, facility monitor, or covenant graph &mdash; with plots that a credit officer could actually use. Midterm is closed-book calculation and structure (study guide one week prior). Team final is a loan file + ops stack on GitHub Pages. Individual defense: you walk the cube, the tests, the mark, and what you built. A teammate&rsquo;s model does not substitute.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Learning Objectives</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">01</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Read a credit agreement well enough to extract the tests that matter: first-lien / unitranche / HoldCo-OpCo, baskets, incurrence vs maintenance, delayed-draw, intercreditor waterfalls. Compute FCCR, leverage, excess cash flow, and prepayment waterfalls from a raw P&amp;L and balance sheet.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">02</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Mark an illiquid loan. Build a yield-to-worst / yield-to-call / spread-to-worst engine when there is no TRACE print. State the assumptions. Show what the mark does under a rate shock and an EBITDA miss.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">03</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Model fund-level leverage: subscription lines, NAV facilities, look-through LTV, advance rates, and what happens to LP NAV when the facility is drawn and the portfolio mark lags.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">04</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Turn a servicing file into a monitoring system: covenant calendar, amendment log, watchlist scores, plots of coverage vs. basket capacity over time.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">05</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Name the seam: what a direct lender, a fund-finance bank, or a vendor still does in Excel &mdash; and specify a product that would replace that step. Build a thin version of it.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px;">06</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Publish the work on GitHub Pages so a credit person can use the page without a slide deck. Defend the numbers without a teammate as proxy.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px;">07</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc;">Run an ABF warehouse: eligibility tape, advance rates, dilution reserves, availability vs commitment. Name when the base goes red against the draw &mdash; the analog of a covenant test going red.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">06 // Tentative Course Schedule</div>
+
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 1 &mdash; The loan and the cube</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Why private credit exists: bank capital, PE hold periods, the $1.4T vs $1.4T fact</li>
+                <li style="margin: 4px 0;">Capital structure as a cube: first lien, unitranche, HoldCo / OpCo, second lien, holdco PIK</li>
+                <li style="margin: 4px 0;">Reading the credit agreement: definitions that change the math</li>
+                <li style="margin: 4px 0;">Lab: reconstruct a capital structure from a CIM excerpt and compute opening leverage</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Project 1 &mdash; Coverage and the waterfall</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Build FCCR, senior / total leverage, interest coverage from raw statements</li>
+                <li style="margin: 4px 0;">Incurrence vs maintenance; baskets; delayed-draw unfunded commitment as a liability</li>
+                <li style="margin: 4px 0;">Excess cash flow sweep and prepayment waterfall &mdash; every dollar has an order</li>
+                <li style="margin: 4px 0;">Deliverable: workbook + Pages plot of tests vs. actuals under three operating cases</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 2 &mdash; The mark when nothing prints</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Yield, spread, YTW, duration of a floating-rate loan with floors and call protection</li>
+                <li style="margin: 4px 0;">Level 3 marks, NAV lag, why a private-credit Sharpe can lie</li>
+                <li style="margin: 4px 0;">Comparables: BSL / BDC marks vs. your private loan</li>
+                <li style="margin: 4px 0;">Lab: mark a loan through a +200 bp SOFR path and a &minus;15% EBITDA path; show both</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Project 2 &mdash; Intercreditor and default</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Payment waterfalls and remedy standstills</li>
+                <li style="margin: 4px 0;">Amendment math: who has to consent, what a 101% call costs</li>
+                <li style="margin: 4px 0;">Default &rarr; DIP / take-back paper &mdash; recoveries by tranche</li>
+                <li style="margin: 4px 0;">Deliverable: recovery model + a one-page &ldquo;who gets paid&rdquo; diagram that matches the numbers</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #14110a; color: #d4a017; border: 1px solid #8a6a1c;">Midterm quiz &mdash; closed book. Structure, tests, a waterfall, a mark. Study guide one week prior.</div>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #0a1220; color: #8aa0c4; border: 1px dashed #4a5d7a;">Fall Break</div>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #d4a017;" open>
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 3 &mdash; Asset-based finance (w/ Jovian)</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Two religions: one name + EBITDA vs a pool + a tape</li>
+                <li style="margin: 4px 0;">ABL / ABF / warehouse / forward-flow / ABS &mdash; what each word actually means</li>
+                <li style="margin: 4px 0;">Why banks stepped back; why private capital and SPVs stepped in</li>
+                <li style="margin: 4px 0;"><a style="color: #3ecbff;" href="abf-lab.html">Lab &mdash; FinTech originator + Jovian warehouse</a>: eligibility, borrowing base, availability, shock, the hole</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 4 &mdash; Leverage on the leverage</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Subscription lines: borrowing base = uncalled capital; unfunded overcall risk</li>
+                <li style="margin: 4px 0;">NAV facilities: advance rates, eligibility, look-through LTV, margin calls on a lagged mark</li>
+                <li style="margin: 4px 0;">BDC leverage caps, RIC distribution math, interval-fund gates</li>
+                <li style="margin: 4px 0;">Lab: facility headroom plot as marks move and unfunded commitments get drawn</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Project 3 &mdash; The monitoring machine</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Ingest a messy servicing export; normalize covenants and dates</li>
+                <li style="margin: 4px 0;">Watchlist score; amendment log; plot coverage vs. basket capacity</li>
+                <li style="margin: 4px 0;">This is the Excel pile. Your product is the thing that replaces it.</li>
+                <li style="margin: 4px 0;">Deliverable: Pages app a credit analyst can use on Monday</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Block 5 &mdash; Secondaries, continuations, the firm</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">LP-led and GP-led secondaries; continuation vehicles; what the buyer is underwriting</li>
+                <li style="margin: 4px 0;">Where software sits: data rooms, transfer agency, recon between fund admin and lender</li>
+                <li style="margin: 4px 0;">Cases: direct lenders, fund-finance banks, BDC platforms, the vendors underneath</li>
+                <li style="margin: 4px 0;">Name the firm that already owns a layer and the gap next to it</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Final project (team) + individual defense</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">A single name: full cube, coverage model, mark engine, and one ops product (monitor, facility dashboard, or secondary pricing tape)</li>
+                <li style="margin: 4px 0;">GitHub Pages: the file, the numbers, the plots, the seam you would join or start</li>
+                <li style="margin: 4px 0;">Individual defense: walk the tests, the mark, the facility, your code. No teammate as proxy.</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #071a14; color: #7cff55; border: 1px solid #2f8a4a;">Final &mdash; team artifact + individual defense of the book</div>
+        <p style="color: #8aa0c4; font-size: 13.5px; margin: 12px 0 0 0;">Tentative. The loan file is the syllabus; the market will move the names, not the math.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">07 // Labs / Office Hours</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">No official lab. Office hours by appointment. Duke Teams or Zoom. Bring the workbook, not a question you have not tried to compute.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">08 // Your Computer</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">Python 3.12 + a working spreadsheet (Excel preferred for waterfalls). GitHub repo that can host Pages. PyCharm recommended. If you choose a stack the instructor does not run, IT issues are yours.</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">09 // Team Policies</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">Same as 533: names on a deliverable are people who contributed. Fire / quit in writing, cc instructor. Peer ratings on Sakai. Skipping a peer eval deducts 0.1 from that deliverable&rsquo;s peer weighting factor.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">10 // GitHub</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">Repos start public. Restrict viewing only if instructor, TA, and classmates can still clone the default branch. Graded artifact = Pages site + the repo that hosts it.</p>
+
+        <div style="margin-top: 28px; text-align: center; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #8aa0c4; font-size: 11px;">&mdash; END &mdash;</div>
+    </div>
+</div>
+</body>
+</html>
