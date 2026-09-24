@@ -148,7 +148,8 @@ FRED_GROUPS = {
         "DFF",       # daily effective funds
         "IORB",      # interest on reserve balances (may be shorter history)
         "RRPONTSYD",  # ON RRP uptake, $bn (optional; skip if missing)
-        "TB3MS",     # 3-month T-bill
+        "TB3MS",     # 3-month T-bill (monthly; cube 0–1y stand-in)
+        "DGS3MO",    # 3-month CMT, daily (daily-refi 0–1y stand-in)
         "DGS2",
         "DGS5",
         "DGS10",
@@ -935,6 +936,158 @@ def _frame(*series: pd.Series) -> pd.DataFrame:
         return pd.DataFrame()
     out = pd.concat(parts, axis=1, sort=True)
     out.index = pd.to_datetime(out.index)
+    out.index.name = "date"
+    return out.sort_index()
+
+
+def _to_month_end(s: pd.Series) -> pd.Series:
+    if s is None or s.empty:
+        return pd.Series(dtype="float64", name=getattr(s, "name", None))
+    out = pd.to_numeric(s, errors="coerce").dropna()
+    out.index = pd.to_datetime(out.index).tz_localize(None)
+    out = out.groupby(out.index.to_period("M")).last()
+    out.index = out.index.to_timestamp(how="end").normalize()
+    return out
+
+
+def _daily_level(s: pd.Series) -> pd.Series:
+    if s is None or s.empty:
+        return pd.Series(dtype="float64", name=getattr(s, "name", None))
+    out = pd.to_numeric(s, errors="coerce").dropna()
+    out.index = pd.to_datetime(out.index).tz_localize(None).normalize()
+    return out[~out.index.duplicated(keep="last")].sort_index()
+
+
+# Daily tape: last Table-3 remaining-maturity mix × that day's CMT, minus
+# last Fiscal Data Total Marketable coupon. TIPS dropped, rest renormalized
+# — same published rule as the cube. 0–1y uses DGS3MO (daily); the cube's
+# monthly print uses TB3MS. FRN uses DFF (daily funds). A day is blank if a
+# published bucket has weight and no CMT that day. Mix and coupon are held
+# until the next monthly print. This is not the cube.
+DAILY_YMAP = {
+    "0_1Y": "DGS3MO",
+    "1_3Y": "DGS2",
+    "3_7Y": "DGS5",
+    "7_10Y": "DGS10",
+    "10YPLUS": "DGS30",
+    "FRN": "DFF",
+}
+DAILY_CORE = ("0_1Y", "1_3Y", "3_7Y", "7_10Y", "10YPLUS")
+DAILY_OPTIONAL = frozenset({"FRN"})
+DAILY_PUBLISH = DAILY_CORE + ("FRN",)
+
+
+def build_daily_refi(
+        frames: list[pd.DataFrame],
+        start: str = "2000-01-01",
+) -> pd.DataFrame:
+    src = _by_name(frames)
+    policy = src.get("fred_policy_rates", pd.DataFrame())
+    resid = src.get("fiscal_mspd_residual", pd.DataFrame())
+    coupon = src.get("fiscal_avg_coupon", pd.DataFrame())
+    if resid is None or resid.empty or "RESID_W_0_1Y" not in resid.columns:
+        raise RuntimeError("fiscal_mspd_residual missing — cannot build daily refi")
+    mkt_coupon_cols = [
+        c
+        for c in (coupon.columns if not coupon.empty else [])
+        if "Total_Marketable" in c or c.endswith("Total_Marketable")
+    ]
+    if not mkt_coupon_cols:
+        raise RuntimeError("fiscal_avg_coupon has no Total_Marketable column — cannot build daily refi")
+    coupon_m = _to_month_end(
+        pd.to_numeric(coupon[mkt_coupon_cols[0]], errors="coerce").rename("coupon")
+    )
+    if int(coupon_m.dropna().shape[0]) < 8:
+        raise RuntimeError("treasury_avg_marketable_coupon_pct too short for daily refi")
+
+    def _ensure(sid: str) -> pd.Series:
+        have = _col(policy, sid)
+        n = int(have.dropna().shape[0])
+        if n >= 200:
+            return have
+        print(f"  cache {sid} only {n} obs — fetching full series for daily refi")
+        got = fetch_fred_series(_session(), sid, start="1990-01-01")
+        if int(got.dropna().shape[0]) < 200:
+            raise RuntimeError(
+                f"{sid} too short after fetch ({int(got.dropna().shape[0])} obs) — "
+                f"https://fred.stlouisfed.org/series/{sid}"
+            )
+        return got
+
+    ylds = {b: _daily_level(_ensure(sid)) for b, sid in DAILY_YMAP.items()}
+    idx = None
+    for b in DAILY_CORE:
+        ix = ylds[b].dropna().index
+        idx = ix if idx is None else idx.intersection(ix)
+    idx = pd.DatetimeIndex(idx)
+    idx = idx[idx >= pd.Timestamp(start)]
+    if len(idx) < 20:
+        raise RuntimeError("daily CMT overlap too short — not filling")
+
+    weights_m = {b: _to_month_end(_col(resid, f"RESID_W_{b}")) for b in DAILY_PUBLISH}
+    for b in DAILY_CORE:
+        if int(weights_m[b].dropna().shape[0]) < 8:
+            raise RuntimeError(f"RESID_W_{b} too short — cannot build daily refi")
+    w_d = {b: weights_m[b].reindex(idx, method="ffill") for b in DAILY_PUBLISH}
+    w_d["FRN"] = w_d["FRN"].fillna(0.0)
+    coup_d = coupon_m.reindex(idx, method="ffill")
+    w_asof = pd.Series(weights_m["0_1Y"].index, index=weights_m["0_1Y"].index).reindex(idx, method="ffill")
+    c_asof = pd.Series(coupon_m.index, index=coupon_m.index).reindex(idx, method="ffill")
+
+    keep = coup_d.notna()
+    for b in DAILY_CORE:
+        keep &= w_d[b].notna()
+        y = ylds[b].reindex(idx)
+        keep &= ~((w_d[b] > 1e-12) & y.isna())
+    yfrn = ylds["FRN"].reindex(idx)
+    keep &= ~((w_d["FRN"] > 1e-12) & yfrn.isna())
+    idx = idx[keep.reindex(idx).fillna(False)]
+    if len(idx) < 20:
+        raise RuntimeError("daily Table 3 × CMT overlap too short after filters — not filling")
+
+    wsum = None
+    for b in DAILY_PUBLISH:
+        ww = w_d[b].reindex(idx)
+        if b in DAILY_OPTIONAL:
+            ww = ww.fillna(0.0)
+        wsum = ww if wsum is None else wsum.add(ww)
+    idx = idx[wsum.reindex(idx) > 0]
+    wsum = wsum.reindex(idx)
+
+    marg = None
+    for b in DAILY_PUBLISH:
+        w0 = w_d[b].reindex(idx)
+        if b in DAILY_OPTIONAL:
+            w0 = w0.fillna(0.0)
+        y = ylds[b].reindex(idx)
+        if int(((w0 > 1e-12) & y.isna()).sum()) > 0:
+            raise RuntimeError(f"daily Table 3 × CMT hole in {b} — not filling")
+        term = (w0 / wsum) * y
+        term = term.where(w0 > 1e-12, 0.0)
+        marg = term if marg is None else marg.add(term)
+    if marg is None or int(marg.dropna().shape[0]) < 20:
+        raise RuntimeError("daily marginal too short — Table 3 × daily CMT failed")
+
+    coupon_out = coup_d.reindex(idx)
+    out = pd.DataFrame({
+        "refi_gap": (marg - coupon_out).rename("refi_gap"),
+        "marginal": marg.rename("marginal"),
+        "coupon": coupon_out.rename("coupon"),
+        "dgs3mo": ylds["0_1Y"].reindex(idx),
+        "dgs2": ylds["1_3Y"].reindex(idx),
+        "dgs5": ylds["3_7Y"].reindex(idx),
+        "dgs10": ylds["7_10Y"].reindex(idx),
+        "dgs30": ylds["10YPLUS"].reindex(idx),
+        "dff": ylds["FRN"].reindex(idx),
+        "resid_w_0_1y": w_d["0_1Y"].reindex(idx),
+        "resid_w_1_3y": w_d["1_3Y"].reindex(idx),
+        "resid_w_3_7y": w_d["3_7Y"].reindex(idx),
+        "resid_w_7_10y": w_d["7_10Y"].reindex(idx),
+        "resid_w_10yplus": w_d["10YPLUS"].reindex(idx),
+        "resid_w_frn": w_d["FRN"].reindex(idx),
+        "weights_asof": w_asof.reindex(idx),
+        "coupon_asof": c_asof.reindex(idx),
+    })
     out.index.name = "date"
     return out.sort_index()
 

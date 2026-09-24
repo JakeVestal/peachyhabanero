@@ -35,6 +35,7 @@ from cube_data import (  # noqa: E402
     FOMC_POINT_END,
     FRAME_NAMES,
     build_all,
+    build_daily_refi,
     calculate_metrics,
     ensure_fomc_point_seed,
     fetch_fred_series,
@@ -73,8 +74,8 @@ COLMAP = {
 # Columns a human needs to replay the six formulas. Full auction tables stay in cache.
 RAW_KEEP = {
     "fred_policy_rates": [
-        "FEDFUNDS", "TB3MS", "DGS10", "DGS2", "DGS5", "DGS30", "DFII10",
-        "DFEDTAR", "DFEDTARU", "DFEDTARL", "RRPONTSYD",
+        "FEDFUNDS", "TB3MS", "DGS3MO", "DGS10", "DGS2", "DGS5", "DGS30", "DFII10",
+        "DFF", "DFEDTAR", "DFEDTARU", "DFEDTARL", "RRPONTSYD",
     ],
     "fred_fiscal_nipa": ["A091RC1Q027SBEA", "FGRECPT", "W006RC1Q027SBEA", "W780RC1Q027SBEA", "FGEXPND"],
     "fred_debt_stocks": ["GFDEBTN", "FYGFDPUN", "GFDEGDQ188S", "FYGFGDQ188S"],
@@ -608,6 +609,64 @@ def process_and_publish() -> None:
 
     publish_cubes(metrics, y, frames=load_frames(RAW_JSON), generated_at=generated_at)
 
+    log_step("Building daily refi tape (last mix × live CMT)...")
+    daily = build_daily_refi(load_frames(RAW_JSON))
+    last_d = daily.iloc[-1]
+    def _iso(v):
+        if v is None:
+            return None
+        try:
+            if pd.isna(v):
+                return None
+        except (TypeError, ValueError):
+            pass
+        try:
+            return pd.Timestamp(v).strftime("%Y-%m-%d")
+        except (TypeError, ValueError):
+            return _json_safe(v)
+    write_json(PUB / "daily_refi.json", {
+        "generated_at": generated_at,
+        "note": (
+            "Not the cube. The cube is quarterly. This tape holds last-known "
+            "Table 3 remaining-maturity weights (TIPS dropped, rest renormalized) "
+            "against that day's CMT, minus last Fiscal Data Total Marketable coupon. "
+            "0–1y uses DGS3MO (daily); the cube's monthly print uses TB3MS. FRN uses DFF. "
+            "A day is blank if a published bucket has weight and no CMT that day. Mix and coupon "
+            "do not move until the next monthly print."
+        ),
+        "rule": (
+            "m_t = Σ_b w_b,last × y_b,t  (b ∈ 0–1y, 1–3y, 3–7y, 7–10y, 10y+, FRN); "
+            "refi_t = m_t − coupon_last. No fill."
+        ),
+        "warn": ZONE["refi_gap_warn"],
+        "restruct": ZONE["refi_gap_restruct"],
+        "last": {
+            "date": last_d.name.strftime("%Y-%m-%d"),
+            "refi_gap": _json_safe(last_d["refi_gap"]),
+            "marginal": _json_safe(last_d["marginal"]),
+            "coupon": _json_safe(last_d["coupon"]),
+            "weights_asof": _iso(last_d["weights_asof"]),
+            "coupon_asof": _iso(last_d["coupon_asof"]),
+        },
+        "points": [
+            {
+                "date": i.strftime("%Y-%m-%d"),
+                "refi_gap": _json_safe(r["refi_gap"]),
+                "marginal": _json_safe(r["marginal"]),
+                "coupon": _json_safe(r["coupon"]),
+                "dgs3mo": _json_safe(r["dgs3mo"]),
+                "dgs10": _json_safe(r["dgs10"]),
+                "weights_asof": _iso(r["weights_asof"]),
+                "coupon_asof": _iso(r["coupon_asof"]),
+            }
+            for i, r in daily.iterrows()
+        ],
+    })
+    log_step(
+        f"daily refi {daily.index.min().date()} → {daily.index.max().date()}  "
+        f"last={float(last_d['refi_gap']):.3f} on {last_d.name.date()}"
+    )
+
     log_step("Generating catalog and raw input published tables...")
     frames = load_frames(RAW_JSON)
     i = FRAME_NAMES.index("fiscal_mspd_composition")
@@ -664,6 +723,7 @@ def process_and_publish() -> None:
             "raw_inputs.json",
             "thresholds.json",
             "cubes.json",
+            "daily_refi.json",
         ],
     })
     write_json(PUB / "thresholds.json", thresh.to_dict(orient="records"))

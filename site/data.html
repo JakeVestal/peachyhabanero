@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Data</title>
   <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
   <header>
@@ -28,6 +29,7 @@
     <button class="neon-btn" data-tab="raw">04 raw inputs</button>
     <button class="neon-btn" data-tab="catalog">05 raw catalog</button>
     <button class="neon-btn" data-tab="nowcast">06 nowcast</button>
+    <button class="neon-btn" data-tab="daily">07 daily refi</button>
   </nav>
 
   <section id="panel-story" class="panel">
@@ -104,6 +106,29 @@
       Gemini listed in its JSON that night.
     </p>
     <div id="nowcast-view"><p class="sub">loading nowcast.json…</p></div>
+  </section>
+
+  <section id="panel-daily" class="panel hidden">
+    <h2 id="daily-refi">07  /  daily refi tape</h2>
+    <p class="sub">
+      Not the cube. The cube is quarterly. This is last-known
+      <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/detail-of-marketable-treasury-securities-outstanding">Table 3</a>
+      remaining-maturity weights (TIPS dropped, rest renormalized) times
+      <em>that day's</em> CMT, minus last
+      <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data Total Marketable coupon</a>.
+      Mix and coupon sit still until the next monthly print. A hike shows
+      up the next morning because the yields moved, not because the book did.
+    </p>
+    <p class="sub">
+      0–1 year uses <a href="https://fred.stlouisfed.org/series/DGS3MO">DGS3MO</a>
+      (daily). The cube’s monthly print uses
+      <a href="https://fred.stlouisfed.org/series/TB3MS">TB3MS</a>. FRN uses
+      <a href="https://fred.stlouisfed.org/series/DFF">DFF</a>. A day is blank
+      if a published bucket has weight and no CMT that day — no fill.
+      Gold dots are the cube’s quarterly print, for comparison.
+    </p>
+    <p class="stat" id="daily-stamp">loading daily_refi.json…</p>
+    <div class="daily-refi-plot" id="plot-daily-refi"></div>
   </section>
 
   <footer>

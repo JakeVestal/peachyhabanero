@@ -1,6 +1,6 @@
 const DATA = "./data/published";
 
-const TABS = ["story", "thresholds", "quarterly", "metrics", "raw", "catalog", "nowcast"];
+const TABS = ["story", "thresholds", "quarterly", "metrics", "raw", "catalog", "nowcast", "daily"];
 
 const PENNY_COLS = new Set([
   "DEBT_HELD_PUBLIC",
@@ -77,7 +77,7 @@ function showTab(name) {
   });
   if (history.replaceState) {
     const base = location.pathname.split("/").pop() || "data.html";
-    history.replaceState(null, "", name === "nowcast" ? `${base}#nowcast` : base);
+    history.replaceState(null, "", name === "nowcast" ? `${base}#nowcast` : name === "daily" ? `${base}#daily-refi` : base);
   }
 }
 
@@ -445,6 +445,147 @@ function renderNowcast(mount, nc) {
   }
 }
 
+function fmtSigned(v, d = 2) {
+  if (v === null || v === undefined || !Number.isFinite(Number(v))) return "—";
+  const n = Number(v);
+  const s = n > 0 ? "+" : "";
+  return s + n.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d });
+}
+
+function drawDailyRefi(pack, cubes) {
+  const mount = document.getElementById("plot-daily-refi");
+  const stamp = document.getElementById("daily-stamp");
+  if (!mount) return;
+  if (!pack || !pack.points || !pack.points.length) {
+    if (stamp) stamp.innerHTML = `<span class="err">daily_refi.json missing — rerun process.</span>`;
+    mount.innerHTML = "";
+    return;
+  }
+  if (typeof Plotly === "undefined") {
+    if (stamp) stamp.innerHTML = `<span class="err">Plotly failed to load.</span>`;
+    return;
+  }
+  const last = pack.last || pack.points[pack.points.length - 1];
+  const warn = Number(pack.warn);
+  const restruct = Number(pack.restruct);
+  if (stamp) {
+    stamp.textContent =
+      `last ${last.date}  refi ${fmtSigned(last.refi_gap, 3)} pp  ·  ` +
+      `marginal ${fmtSigned(last.marginal, 3)}  coupon ${Number(last.coupon).toFixed(3)}  ·  ` +
+      `mix as of ${last.weights_asof || "—"}  coupon as of ${last.coupon_asof || "—"}`;
+  }
+  const xs = pack.points.map((p) => p.date);
+  const ys = pack.points.map((p) => p.refi_gap);
+  const text = pack.points.map((p) => {
+    const g = fmtSigned(p.refi_gap, 3);
+    const m = fmtSigned(p.marginal, 3);
+    const c = p.coupon == null ? "—" : Number(p.coupon).toFixed(3);
+    return `${p.date}<br>daily refi ${g} pp<br>marginal ${m}  coupon ${c}<br>mix ${p.weights_asof || "—"}  coupon print ${p.coupon_asof || "—"}`;
+  });
+  const traces = [
+    {
+      type: "scatter",
+      mode: "lines",
+      name: "daily refi (frozen mix × live CMT)",
+      x: xs,
+      y: ys,
+      text,
+      hoverinfo: "text",
+      line: { color: "#00f0ff", width: 1.6 },
+    },
+  ];
+  const sus = (cubes && cubes.sustain) || [];
+  const qx = [];
+  const qy = [];
+  const qt = [];
+  sus.forEach((r) => {
+    if (r.refi_gap == null || !Number.isFinite(Number(r.refi_gap))) return;
+    qx.push(r.date || r.quarter_end);
+    qy.push(Number(r.refi_gap));
+    qt.push(`${r.date || r.quarter_end}<br>cube quarterly ${fmtSigned(r.refi_gap, 3)} pp`);
+  });
+  if (qx.length) {
+    traces.push({
+      type: "scatter",
+      mode: "markers",
+      name: "cube quarterly",
+      x: qx,
+      y: qy,
+      text: qt,
+      hoverinfo: "text",
+      marker: { color: "#c4a35a", size: 7, symbol: "diamond", line: { color: "#07080c", width: 0.6 } },
+    });
+  }
+  const shapes = [];
+  const annotations = [];
+  if (Number.isFinite(warn)) {
+    shapes.push({
+      type: "line", xref: "paper", x0: 0, x1: 1, y0: warn, y1: warn,
+      line: { color: "#c4a35a", width: 1, dash: "dot" },
+    });
+    annotations.push({
+      xref: "paper", x: 1, y: warn, xanchor: "right", yanchor: "bottom",
+      text: `danger ${warn}`, showarrow: false,
+      font: { color: "#c4a35a", size: 10, family: "IBM Plex Mono, ui-monospace, monospace" },
+    });
+  }
+  if (Number.isFinite(restruct)) {
+    shapes.push({
+      type: "line", xref: "paper", x0: 0, x1: 1, y0: restruct, y1: restruct,
+      line: { color: "#ff2bd6", width: 1, dash: "dot" },
+    });
+    annotations.push({
+      xref: "paper", x: 1, y: restruct, xanchor: "right", yanchor: "bottom",
+      text: `restruct ${restruct}`, showarrow: false,
+      font: { color: "#ff2bd6", size: 10, family: "IBM Plex Mono, ui-monospace, monospace" },
+    });
+  }
+  const lastX = xs[xs.length - 1];
+  const x0 = (() => {
+    if (!lastX) return undefined;
+    const d = new Date(lastX + "T00:00:00Z");
+    d.setUTCFullYear(d.getUTCFullYear() - 2);
+    return d.toISOString().slice(0, 10);
+  })();
+  const layout = {
+    title: { text: "daily refi gap (pp) — not the cube", font: { color: "#00f0ff", size: 14 } },
+    paper_bgcolor: "#07080c",
+    plot_bgcolor: "#0b0f16",
+    font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
+    margin: { l: 52, r: 18, t: 48, b: 72 },
+    height: 420,
+    hovermode: "closest",
+    xaxis: {
+      title: { text: "", font: { size: 11 } },
+      gridcolor: "rgba(196,163,90,0.18)",
+      linecolor: "rgba(196,163,90,0.45)",
+      tickfont: { size: 10, color: "#9fb3c8" },
+      rangeslider: { visible: true, bgcolor: "#07080c", thickness: 0.12 },
+      range: x0 && lastX ? [x0, lastX] : undefined,
+    },
+    yaxis: {
+      title: { text: "pp", font: { size: 11, color: "#9fb3c8" } },
+      gridcolor: "rgba(196,163,90,0.18)",
+      linecolor: "rgba(196,163,90,0.45)",
+      zeroline: true,
+      zerolinecolor: "rgba(196,163,90,0.35)",
+      tickfont: { size: 10, color: "#9fb3c8" },
+    },
+    legend: {
+      orientation: "h",
+      x: 0,
+      xanchor: "left",
+      y: 1.12,
+      yanchor: "bottom",
+      font: { size: 10, color: "#9fb3c8" },
+      bgcolor: "rgba(7,8,12,0.72)",
+    },
+    shapes,
+    annotations,
+  };
+  Plotly.react(mount, traces, layout, { displayModeBar: false, responsive: true });
+}
+
 function picker(mount, names, onPick) {
   mount.innerHTML = names
     .map((n, i) => `<button class="neon-btn${i === 0 ? " active" : ""}" data-name="${n}">${n}</button>`)
@@ -462,7 +603,7 @@ function picker(mount, names, onPick) {
 async function load() {
   const stamp = document.getElementById("stamp");
   try {
-    const [quarterly, metrics, raw, thresholds, nowcast] = await Promise.all([
+    const [quarterly, metrics, raw, thresholds, nowcast, daily, cubes] = await Promise.all([
       fetch(`${DATA}/quarterly.json`).then((r) => {
         if (!r.ok) throw new Error(`${r.status} quarterly.json`);
         return r.json();
@@ -471,11 +612,16 @@ async function load() {
       fetch(`${DATA}/raw_inputs.json`).then((r) => r.json()),
       fetch(`${DATA}/thresholds.json`).then((r) => r.json()),
       fetch(`${DATA}/nowcast.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${DATA}/daily_refi.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${DATA}/cubes.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]);
 
     stamp.textContent = `generated ${quarterly.generated_at || metrics.generated_at || "?"} · ${
       quarterly.quarters?.length ?? 0
     } quarters`;
+    if (daily && daily.last && daily.last.date) {
+      stamp.textContent += ` · daily refi ${fmtSigned(daily.last.refi_gap, 2)} (${daily.last.date})`;
+    }
 
     renderTable(
       document.getElementById("tbl-thresholds"),
@@ -539,6 +685,7 @@ async function load() {
 
     document.getElementById("raw-note").textContent = raw.note || "";
     renderNowcast(document.getElementById("nowcast-view"), nowcast);
+    drawDailyRefi(daily, cubes);
     const catRows = raw.catalog || [];
     renderTable(
       document.getElementById("tbl-catalog"),
@@ -562,5 +709,6 @@ document.getElementById("tabs").addEventListener("click", (e) => {
 });
 
 if (location.hash === "#nowcast") showTab("nowcast");
+if (location.hash === "#daily-refi") showTab("daily");
 
 load();

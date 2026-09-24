@@ -17,7 +17,25 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/TB3MS",
     official:
       "Averages of business days, discount basis. H.15 Selected Interest Rates.",
-    why: "Short risk-free bill rate sitting next to funds. Sanity check that F1 is not an artifact of the effective-funds print alone.",
+    why: "Short risk-free bill rate sitting next to funds. Cube 0–1y stand-in on the monthly residual marginal. The daily refi tape uses DGS3MO instead — TB3MS has no daily print.",
+  },
+  DGS3MO: {
+    title: "Market Yield on U.S. Treasury Securities at 3-Month Constant Maturity, Quoted on an Investment Basis",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily, NSA",
+    url: "https://fred.stlouisfed.org/series/DGS3MO",
+    official:
+      "Treasury constant-maturity 3-month yield from the H.15 / Treasury yield curve methodology.",
+    why: "Daily 0–1y stand-in on the daily refi tape. Same remaining-life bucket the cube prices off TB3MS once a month. Not a cube axis.",
+  },
+  DFF: {
+    title: "Effective Federal Funds Rate",
+    source: "Board of Governors of the Federal Reserve System (US)",
+    units: "Percent, daily, NSA",
+    url: "https://fred.stlouisfed.org/series/DFF",
+    official:
+      "Volume-weighted median of overnight federal funds transactions. Daily. FEDFUNDS is the monthly average of this.",
+    why: "Daily FRN stand-in on the daily refi tape. The cube’s monthly print uses FEDFUNDS. Not a cube axis.",
   },
   DGS10: {
     title: "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis",

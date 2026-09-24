@@ -413,6 +413,20 @@ td:first-child, th:first-child { text-align: left; color: #39ff14; }
   width: var(--axis-plot-w) !important;
   height: var(--axis-plot-h) !important;
 }
+.daily-refi-plot {
+  width: 100%;
+  height: 420px;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 12px 0 8px;
+}
+.daily-refi-plot .js-plotly-plot,
+.daily-refi-plot .plot-container {
+  width: 100% !important;
+  height: 420px !important;
+}
 .axis-copy {
   flex: 1 1 0;
   min-width: 0;
