@@ -515,6 +515,128 @@ def rebuild_primary(metrics: dict, frames: list) -> dict:
     return metrics
 
 
+BUYBACK_CLASSES = (
+    "long_10y_plus",
+    "cash_management",
+    "liquidity_under_10y",
+    "tips",
+    "small_value",
+)
+HOUSE_SPEECH = "2026-09-08"  # SMU: "I am the house now." Clock starts this day, inclusive.
+BUYBACK_RESTART = "2024-04-01"
+
+
+def _buyback_totals(df: pd.DataFrame, start: str, end: str | None = None) -> dict:
+    """Settled par from start inclusive to end exclusive. end=None means through the last row."""
+    sub = df[df.index >= pd.Timestamp(start)]
+    if end:
+        sub = sub[sub.index < pd.Timestamp(end)]
+    settled = sub[pd.to_numeric(sub["total_par_amt_accepted"], errors="coerce").notna()]
+    out = {}
+    for cls in BUYBACK_CLASSES:
+        piece = settled[settled["buyback_class"] == cls]
+        acc = float(pd.to_numeric(piece["total_par_amt_accepted"], errors="coerce").sum())
+        cap = float(pd.to_numeric(piece["max_par_amt_redeemed"], errors="coerce").fillna(0).sum())
+        out[cls] = {
+            "n": int(len(piece)),
+            "accepted_bn": acc / 1e9,
+            "cap_bn": cap / 1e9,
+        }
+    out["pending_unsettled"] = int(pd.to_numeric(sub["total_par_amt_accepted"], errors="coerce").isna().sum())
+    return out
+
+
+def publish_buybacks(frames: list, generated_at: str) -> None:
+    """Operation-level Treasury buybacks. Not a month-end resample."""
+    if "fiscal_buybacks" not in FRAME_NAMES:
+        raise SystemExit("FRAME_NAMES missing fiscal_buybacks")
+    i = FRAME_NAMES.index("fiscal_buybacks")
+    if i >= len(frames) or frames[i] is None or frames[i].empty:
+        raise SystemExit(
+            "fiscal_buybacks missing from the cache — run fetch. "
+            "https://fiscaldata.treasury.gov/datasets/treasury-securities-buybacks/"
+        )
+    df = frames[i].copy()
+    df.index = pd.to_datetime(df.index)
+    need = {"buyback_class", "total_par_amt_accepted", "max_par_amt_redeemed", "maturity_bucket", "operation_type"}
+    missing = sorted(need - set(df.columns))
+    if missing:
+        raise SystemExit(f"fiscal_buybacks missing columns {missing} — refetch")
+    if int(pd.to_numeric(df["total_par_amt_accepted"], errors="coerce").notna().sum()) < 8:
+        raise SystemExit("fiscal_buybacks has almost no settled operations — not publishing an empty tape")
+
+    ops = []
+    for idx, row in df.sort_index().iterrows():
+        acc = _json_safe(row["total_par_amt_accepted"])
+        cap = _json_safe(row["max_par_amt_redeemed"])
+        offered = _json_safe(row["total_par_amt_offered"]) if "total_par_amt_offered" in df.columns else None
+        ops.append({
+            "date": idx.strftime("%Y-%m-%d"),
+            "operation_type": None if pd.isna(row["operation_type"]) else str(row["operation_type"]),
+            "security_type": None if "security_type" not in df.columns or pd.isna(row["security_type"]) else str(row["security_type"]),
+            "maturity_bucket": None if pd.isna(row["maturity_bucket"]) else str(row["maturity_bucket"]),
+            "buyback_class": str(row["buyback_class"]),
+            "accepted_bn": None if acc is None else acc / 1e9,
+            "cap_bn": None if cap is None else cap / 1e9,
+            "offered_bn": None if offered is None else offered / 1e9,
+            "settled": acc is not None,
+        })
+
+    settled_ops = [o for o in ops if o["settled"] and o["date"] >= BUYBACK_RESTART]
+    # monthly sums of settled par, restart onward
+    monthly = {}
+    for o in settled_ops:
+        key = o["date"][:7]
+        slot = monthly.setdefault(key, {c: 0.0 for c in BUYBACK_CLASSES})
+        slot[o["buyback_class"]] = slot.get(o["buyback_class"], 0.0) + (o["accepted_bn"] or 0.0)
+    months = []
+    running = {c: 0.0 for c in BUYBACK_CLASSES}
+    for key in sorted(monthly):
+        row = {"month": key}
+        for c in BUYBACK_CLASSES:
+            row[c] = monthly[key][c]
+            running[c] += monthly[key][c]
+            row[f"cum_{c}"] = running[c]
+        months.append(row)
+
+    payload = {
+        "generated_at": generated_at,
+        "source": "https://fiscaldata.treasury.gov/datasets/treasury-securities-buybacks/",
+        "endpoint": "v1/accounting/od/buybacks_operations",
+        "restart": BUYBACK_RESTART,
+        "house_speech": HOUSE_SPEECH,
+        "note": (
+            "Par accepted at Treasury buyback operations. Not the cube, and not a stance. "
+            "The clock for the House claim starts 2026-09-08, the SMU speech "
+            "(\"I am the house now\"), and includes that day. Taking office is not the start. "
+            "long_10y_plus is nominal coupons whose bucket starts at 10Y or 20Y — the long-end "
+            "piece the House article is about. cash_management is a different operation: "
+            "short coupons (1 month to 2 years), and before the speech it was most of the dollars. "
+            "An operation with no accepted par is announced, not done, and is left out of the sums."
+        ),
+        "classes": {
+            "long_10y_plus": "Liquidity-support buybacks of nominal coupons, remaining-maturity bucket starting at 10Y or 20Y.",
+            "cash_management": "Cash-management buybacks. In this sample, 1 month to 2 year nominal coupons. Not the long-end trade.",
+            "liquidity_under_10y": "Liquidity-support nominal coupons whose bucket starts below 10Y.",
+            "tips": "TIPS buybacks, any bucket.",
+            "small_value": "Small-value test operations.",
+        },
+        "since_restart": _buyback_totals(df, BUYBACK_RESTART),
+        "before_speech": _buyback_totals(df, BUYBACK_RESTART, HOUSE_SPEECH),
+        "since_speech": _buyback_totals(df, HOUSE_SPEECH),
+        "operations": ops,
+        "monthly_since_restart": months,
+    }
+    write_json(PUB / "buybacks.json", payload)
+    s = payload["since_speech"]
+    log_step(
+        "buybacks since House speech  "
+        f"long {s['long_10y_plus']['accepted_bn']:.1f}bn  "
+        f"cash {s['cash_management']['accepted_bn']:.1f}bn  "
+        f"under10 {s['liquidity_under_10y']['accepted_bn']:.1f}bn"
+    )
+
+
 def process_and_publish() -> None:
     log_step("Starting data processing and publication step...")
     if not RAW_JSON.exists():
@@ -685,6 +807,7 @@ def process_and_publish() -> None:
         frames[i] = m
         save_frames(frames, RAW_JSON)
         log_step("Rewrote MSPD class shares from dollar columns")
+    publish_buybacks(frames, generated_at)
     raw_tables = {}
     catalog = []
     for name, df in zip(FRAME_NAMES, frames):
@@ -724,6 +847,7 @@ def process_and_publish() -> None:
             "thresholds.json",
             "cubes.json",
             "daily_refi.json",
+            "buybacks.json",
         ],
     })
     write_json(PUB / "thresholds.json", thresh.to_dict(orient="records"))

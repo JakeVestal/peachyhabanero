@@ -140,6 +140,7 @@ FRAME_NAMES = [
     "fiscal_auctions",
     "fiscal_interest_expense",
     "fiscal_debt_to_penny",
+    "fiscal_buybacks",
 ]
 
 FRED_GROUPS = {
@@ -562,6 +563,86 @@ def fetch_mspd_residual(sess: requests.Session, start: str) -> pd.DataFrame:
     return out
 
 
+def fetch_buybacks(sess: requests.Session, start: str) -> pd.DataFrame:
+    """One row per Treasury buyback operation. Fiscal Data buybacks_operations.
+
+    Accepted par is null until results print. The string \"null\" from the API
+    is missing, not zero. Class is ours, from operation type and maturity bucket:
+    cash_management, long_10y_plus (nominal, bucket starts at 10Y or 20Y),
+    tips, liquidity_under_10y, small_value.
+    """
+    raw = fiscal_paginate(
+        sess,
+        "v1/accounting/od/buybacks_operations",
+        fields=(
+            "operation_date,settlement_date,operation_type,security_type,"
+            "maturity_bucket,max_par_amt_redeemed,total_par_amt_offered,"
+            "total_par_amt_accepted,nbr_issues_accepted,nbr_issues_eligible"
+        ),
+        start=start,
+        date_field="operation_date",
+        sort="operation_date",
+        page_size=500,
+    )
+    if raw.empty:
+        return raw
+
+    def _money(x):
+        if x is None or (isinstance(x, str) and x.strip().lower() in {"", "null", "none"}):
+            return float("nan")
+        return pd.to_numeric(x, errors="coerce")
+
+    for c in (
+        "max_par_amt_redeemed",
+        "total_par_amt_offered",
+        "total_par_amt_accepted",
+        "nbr_issues_accepted",
+        "nbr_issues_eligible",
+    ):
+        if c in raw.columns:
+            raw[c] = raw[c].map(_money)
+
+    def _class(row) -> str:
+        op = str(row.get("operation_type") or "").lower()
+        sec = str(row.get("security_type") or "").lower()
+        bucket = str(row.get("maturity_bucket") or "")
+        if "cash" in op:
+            return "cash_management"
+        if "tips" in sec:
+            return "tips"
+        if "small" in op:
+            return "small_value"
+        if bucket.startswith("10Y") or bucket.startswith("20Y"):
+            return "long_10y_plus"
+        return "liquidity_under_10y"
+
+    raw["buyback_class"] = raw.apply(_class, axis=1)
+    raw["operation_date"] = pd.to_datetime(raw["operation_date"])
+    # Fiscal Data sometimes republishes the announcement beside the result
+    # (same date, type, and bucket; one row has accepted par, the twin is null).
+    # Keep the settled row. Two settled rows on the same key is a real collision.
+    keys = ["operation_date", "operation_type", "security_type", "maturity_bucket"]
+    kept = []
+    for _, g in raw.groupby(keys, dropna=False):
+        settled = g[g["total_par_amt_accepted"].notna()]
+        if len(settled) > 1:
+            day = g["operation_date"].iloc[0].date()
+            raise RuntimeError(
+                f"two settled buybacks share {day} {g['maturity_bucket'].iloc[0]} — not dropping one"
+            )
+        kept.append(settled.iloc[[0]] if len(settled) else g.iloc[[0]])
+    raw = pd.concat(kept, axis=0)
+    raw = raw.sort_values(["operation_date", "buyback_class", "maturity_bucket"])
+    raw = raw.set_index("operation_date")
+    raw.index.name = "date"
+    if raw.index.duplicated().any():
+        raise RuntimeError(
+            "two buyback operations share an operation_date after collapsing announcement twins — "
+            "not dropping one. https://fiscaldata.treasury.gov/datasets/treasury-securities-buybacks/"
+        )
+    return raw
+
+
 def fetch_auctions(sess: requests.Session, start: str) -> pd.DataFrame:
     """Auction results indexed by auction_date. One row per CUSIP/auction."""
     raw = fiscal_paginate(
@@ -683,6 +764,7 @@ FETCHERS = {
     "fiscal_mspd_composition": fetch_mspd_composition,
     "fiscal_mspd_residual": fetch_mspd_residual,
     "fiscal_auctions": fetch_auctions,
+    "fiscal_buybacks": fetch_buybacks,
     "fiscal_interest_expense": fetch_interest_expense,
     "fiscal_debt_to_penny": fetch_debt_to_penny,
 }
@@ -855,6 +937,9 @@ def update_raw(
             if "WALCL" not in cols or "WSHOTSL" not in cols or "WSHOBL" not in cols or "WSHONBNL" not in cols:
                 force_full = True
                 force_why = "SOMA bills/coupons missing — full official-holdings rebuild"
+        if name == "fiscal_buybacks":
+            force_full = True
+            force_why = "buybacks are one row per operation — full replace, not a date append"
         if force_full:
             start = DEFAULT_START
             old = pd.DataFrame()

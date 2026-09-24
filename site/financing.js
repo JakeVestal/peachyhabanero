@@ -218,6 +218,102 @@ function whoWindow(label, range, block, rrpNote) {
     </div>`;
 }
 
+const BUYBACKS = "data/published/buybacks.json";
+const BUYBACK_ORDER = [
+  ["long_10y_plus", "long end, 10y and longer", "#ff2bd6"],
+  ["cash_management", "cash management, short coupons", "#c4a35a"],
+  ["liquidity_under_10y", "liquidity support, under 10y", "#00f0ff"],
+  ["tips", "TIPS", "#9fb3c8"],
+  ["small_value", "small-value tests", "#5c6b7a"],
+];
+
+function bn(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "—";
+  return n.toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+}
+
+function buybackCard(pack) {
+  const s = pack.since_speech || {};
+  const pre = pack.before_speech || {};
+  const line = (label, block) => {
+    const L = block.long_10y_plus || {};
+    const C = block.cash_management || {};
+    const U = block.liquidity_under_10y || {};
+    const T = block.tips || {};
+    const fill = (x) => (x.cap_bn ? `${Math.round(100 * x.accepted_bn / x.cap_bn)}% of cap` : "—");
+    return `<p><b>${label}</b> — long end $${bn(L.accepted_bn)}bn across ${L.n || 0} operations (${fill(L)}). `
+      + `Cash management $${bn(C.accepted_bn)}bn (${C.n || 0} ops, ${fill(C)}). `
+      + `Shorter liquidity support $${bn(U.accepted_bn)}bn (${fill(U)}). `
+      + `TIPS $${bn(T.accepted_bn)}bn.</p>`;
+  };
+  return `
+    <h3>settled par, not the announcement</h3>
+    ${line("On or after the House speech (2026-09-08)", s)}
+    ${line("Before that — April 2024 restart through 2026-09-07. Not the claim.", pre)}
+    <p class="sub">Taking office is not the start. The claim starts at the speech.</p>
+    <p class="sub">${pack.note || ""}</p>
+    ${s.pending_unsettled ? `<p class="sub">${s.pending_unsettled} operation(s) on or after the speech are announced and not yet settled. Not in the sums.</p>` : ""}
+  `;
+}
+
+async function drawBuybacks() {
+  const card = document.getElementById("buyback-card");
+  const bars = document.getElementById("plot-buybacks");
+  const cum = document.getElementById("plot-buybacks-cum");
+  if (!card && !bars && !cum) return;
+  let pack;
+  try {
+    const res = await fetch(BUYBACKS, { cache: "no-store" });
+    if (!res.ok) throw new Error("buybacks.json missing — run the nightly refresh");
+    pack = await res.json();
+  } catch (e) {
+    if (card) card.innerHTML = `<p class="err">${e.message}</p>`;
+    return;
+  }
+  if (!pack.monthly_since_restart || !pack.monthly_since_restart.length) {
+    if (card) card.innerHTML = `<p class="err">buybacks.json has no settled months since the restart.</p>`;
+    return;
+  }
+  if (card) card.innerHTML = buybackCard(pack);
+  const months = pack.monthly_since_restart;
+  const xs = months.map((m) => m.month);
+  const sworn = pack.house_speech || "2026-09-08";
+  const vline = {
+    type: "line", x0: sworn.slice(0, 7), x1: sworn.slice(0, 7), y0: 0, y1: 1, yref: "paper",
+    line: { color: "rgba(255,255,255,0.55)", width: 1, dash: "dot" },
+  };
+  if (bars && typeof Plotly !== "undefined") {
+    const traces = BUYBACK_ORDER.map(([key, name, color]) => ({
+      type: "bar",
+      name,
+      x: xs,
+      y: months.map((m) => m[key] || 0),
+      marker: { color },
+      hovertemplate: "%{x}<br>" + name + " $%{y:.1f}bn<extra></extra>",
+    }));
+    const lay = layout("Par accepted, $bn", { ytitle: "$bn", legendTop: true, height: isNarrow() ? 520 : 460 });
+    lay.barmode = "stack";
+    lay.shapes = [vline];
+    lay.xaxis = Object.assign({}, lay.xaxis, { type: "category", tickangle: -40 });
+    Plotly.react(bars, traces, lay, { displayModeBar: false, responsive: true });
+  }
+  if (cum && typeof Plotly !== "undefined") {
+    const traces = BUYBACK_ORDER.map(([key, name, color]) => ({
+      type: "scatter",
+      mode: "lines",
+      name,
+      x: xs,
+      y: months.map((m) => m[`cum_${key}`] || 0),
+      line: { color, width: key === "long_10y_plus" || key === "cash_management" ? 2.4 : 1.4 },
+      hovertemplate: "%{x}<br>" + name + " cumulative $%{y:.1f}bn<extra></extra>",
+    }));
+    const lay = layout("Cumulative par accepted since April 2024, $bn", { ytitle: "$bn", legendTop: true, height: isNarrow() ? 520 : 440 });
+    lay.shapes = [vline];
+    Plotly.react(cum, traces, lay, { displayModeBar: false, responsive: true });
+  }
+}
+
 async function drawWho(tables) {
   const card = document.getElementById("who-card");
   const tb = document.querySelector("#who-table tbody");
@@ -688,6 +784,7 @@ async function main() {
     stamp.textContent = `published ${raw.generated_at || raw.as_of || "—"}`;
   }
   await drawWho(tables);
+  await drawBuybacks();
   await drawWinTrack(tables);
   await drawBills(tables);
   await drawLongs(tables);
@@ -701,7 +798,7 @@ async function main() {
 
 main();
 window.addEventListener("resize", () => {
-  ["plot-who", "plot-win", "plot-bills", "plot-longs", "plot-rho"].forEach((id) => {
+  ["plot-who", "plot-win", "plot-bills", "plot-longs", "plot-rho", "plot-buybacks", "plot-buybacks-cum"].forEach((id) => {
     const el = document.getElementById(id);
     if (el && el.data) Plotly.Plots.resize(el);
   });

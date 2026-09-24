@@ -10,9 +10,14 @@
 #   [x] Open console
 #
 # Pick order: highest peachyhabanero-NNN- prefix not yet recorded.
-# On success: delete THAT Downloads file only, append its name to
-# patch-record.txt at the repo root. On failure: leave Downloads alone.
+# On success: append the applied name to patch-record.txt, then delete
+# every Downloads peachyhabanero patch whose number is <= that one
+# (the applied file, " (1)" duplicates, and older leftovers).
+# On failure: leave Downloads alone.
 #
+# A later run also deletes already-recorded numbers still sitting in
+# Downloads, so a previous run that only removed the one file it applied
+# does not leave duplicates behind.
 # Hunks for gitignored local files (scratch, notes/) are skipped so a
 # mixed patch still applies to tracked files. A patch that is *only*
 # those files is recorded as skipped and removed so it cannot block.
@@ -46,14 +51,55 @@ recorded() {
   [[ -f "$RECORD" ]] && grep -Fxq "$base" "$RECORD"
 }
 
+max_recorded_n() {
+  local max=-1 line n
+  [[ -f "$RECORD" ]] || { echo -1; return; }
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ peachyhabanero-([0-9]+) ]]; then
+      n=$((10#${BASH_REMATCH[1]}))
+      if (( n > max )); then max=$n; fi
+    fi
+  done < "$RECORD"
+  echo "$max"
+}
+
+# Delete numbered Downloads patches at or under max_n. Leaves a higher
+# unapplied number alone. Unnumbered files are not touched here.
+delete_patches_upto() {
+  local max_n="$1"
+  local f base n
+  (( max_n >= 0 )) || return 0
+  shopt -s nullglob
+  local all=(
+    "$DOWNLOADS"/peachyhabanero*.patch
+    "$DOWNLOADS"/peachyhabanero*.pach
+  )
+  for f in "${all[@]}"; do
+    [[ -e "$f" ]] || continue
+    base=$(basename "$f")
+    n=-1
+    if [[ "$base" =~ peachyhabanero-([0-9]+) ]]; then
+      n=$((10#${BASH_REMATCH[1]}))
+    fi
+    if (( n >= 0 && n <= max_n )); then
+      rm -f "$f"
+      echo "deleted: $f"
+    fi
+  done
+}
+
 shopt -s nullglob
+# Drop leftovers from a patch already recorded (including " (1)" copies
+# whose basename does not match the recorded line).
+delete_patches_upto "$(max_recorded_n)"
+
 patches=(
   "$DOWNLOADS"/peachyhabanero*.patch
   "$DOWNLOADS"/peachyhabanero*.pach
 )
 if ((${#patches[@]} == 0)); then
-  echo "no peachyhabanero*.patch in $DOWNLOADS" >&2
-  exit 1
+  echo "no peachyhabanero*.patch left in $DOWNLOADS"
+  exit 0
 fi
 
 latest=""
@@ -106,8 +152,8 @@ if (( check_st != 0 )); then
   if echo "$check_err" | grep -qi 'no valid patches'; then
     echo "skip: patch is only gitignored files (scratch / notes). not applying."
     echo "$(basename "$latest")" >> "$RECORD"
-    rm -f "$latest"
-    echo "recorded skip and deleted: $latest"
+    delete_patches_upto "$latest_n"
+    echo "recorded skip: $RECORD"
     exit 0
   fi
   backed=0
@@ -138,5 +184,4 @@ echo "applied."
 
 echo "$(basename "$latest")" >> "$RECORD"
 echo "recorded: $RECORD"
-rm -f "$latest"
-echo "deleted: $latest"
+delete_patches_upto "$latest_n"
