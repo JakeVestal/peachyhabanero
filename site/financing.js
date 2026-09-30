@@ -1,4 +1,4 @@
-/* Who is financing the extra public debt. Used by financing.html and article-house.html. */
+/* Who is financing the extra public debt. Used by financing.html. */
 const RAW = "data/published/raw_inputs.json";
 const CUBES = "data/published/cubes.json";
 const D_BILL = 0.25;
