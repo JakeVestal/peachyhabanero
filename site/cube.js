@@ -1178,19 +1178,6 @@ async function main() {
   const pageRows = onFd ? fail : sus;
   const latest = pageRows.length ? pageRows[pageRows.length - 1] : ls;
   const nMissAdj = pageRows.filter((r) => rateKind(r) === "missing").length;
-  if (stamp && latest) {
-    stamp.innerHTML =
-        `<b>Latest plotted point: ${latest.date}</b><br>` +
-        (onFd
-          ? `Quarter-end label. This is the last quarter where funds, the book coupon, and the NIPA inputs for F2 and F3 all exist. It is not the sustainability cube’s last point, and it is not the morning of a BEA release.`
-          : `Quarter-end label. This is the last quarter where debt/GDP, interest/receipts, and the refi gap all exist. A GDP release by itself does not add a point.`) +
-        (nMissAdj
-          ? `<br><span class="err">FOMC Δ missing for ${nMissAdj} quarters (DFEDTAR not stitched). Grey × is not a hold.</span>`
-          : "") +
-        (nowcast && nowcast.quarter_end
-          ? `<br><b>Gemini guess</b> for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}): diamond, labeled. Not a BEA print. Often wrong. <a href="data.html#nowcast">what it said that night</a>.`
-          : "");
-  }
   const nxt = pack.next && (onFd ? pack.next.fail : pack.next.sustain);
   renderNextPoint(nxt);
   renderCubeLog(
