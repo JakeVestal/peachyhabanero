@@ -701,6 +701,26 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .fd-indicator h3 {
   color: #ff2bd6;
 }
+.cube-log-scroll {
+  overflow-x: auto;
+  margin: 8px 0 28px;
+}
+.cube-log {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.cube-log th,
+.cube-log td {
+  border-bottom: 1px solid #c4a35a;
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 10px;
+}
+.cube-log th { color: #c4a35a; font-weight: 600; }
+#next-point { margin: 8px 0 18px; }
+#next-point ul { margin: 6px 0 12px; padding-left: 18px; }
+#cube-log { margin-top: 28px; }
 .fd-indicator .punch {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 18px;

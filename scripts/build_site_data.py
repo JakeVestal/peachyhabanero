@@ -15,7 +15,8 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+import urllib.request
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -200,6 +201,226 @@ def _signed_dist(scores: np.ndarray, threshold: float) -> np.ndarray:
     d_out = np.linalg.norm(shortfall, axis=1)
     d_in = delta.min(axis=1)
     return np.where(outside, d_out, -d_in)
+
+
+# Cron is 08:20 UTC = 4:20 AM Eastern, before the 8:30 AM release.
+# The job dated the release day cannot see the print. The next job is
+# the following morning. GitHub sometimes starts that cron late; if it
+# starts after FRED has the series, the point can show up the same day.
+def _pickup_morning(release_iso: str) -> str:
+    day = datetime.strptime(release_iso, "%Y-%m-%d").date() + timedelta(days=1)
+    return day.isoformat()
+
+
+# Quarter-end label -> (release date, why that release and not an earlier one).
+# Sustainability waits on FYGFGDQ188S. The Q2 advance (2026-07-30) and the
+# second estimate (2026-08-26) were on the FRED calendar and did not add a
+# quarter. Fiscal dominance waits on the advance GDP / NIPA print.
+_SUS_RELEASE = {
+    "2026-06-30": (
+        "2026-09-30",
+        "Debt held by the public / GDP (FYGFGDQ188S). FRED schedules it "
+        "with Debt to GDP Ratios. The July 30 advance and the August 26 "
+        "second estimate did not add this quarter.",
+    ),
+    "2026-09-30": (
+        "2026-12-23",
+        "Debt held by the public / GDP (FYGFGDQ188S) for the third quarter. "
+        "October 29 and November 25 are also on that calendar, but the last "
+        "new quarter of this series arrived only on the third estimate. "
+        "If it prints earlier, the next nightly draws it and this box moves.",
+    ),
+}
+_FD_RELEASE = {
+    "2026-09-30": (
+        "2026-10-29",
+        "BEA advance estimate of third-quarter GDP. FRED updates GDP, "
+        "FGEXPND, FGRECPT, and A091 with that release. This cube does not "
+        "wait on the debt/GDP ratio.",
+    ),
+}
+
+_PREVIOUS_CUBES = os.environ.get(
+    "CUBE_PREVIOUS_CUBES",
+    "https://peachyhabanero.com/data/published/cubes.json",
+)
+
+# Economic values. A sigma rebuild moves F1/F2/F3 with no new print.
+# That is not logged as a revision of the history.
+_SUS_AXES = (
+    ("debt_gdp_pct", "Debt held by the public / GDP", "%", "FYGFGDQ188S", 0.005),
+    ("int_rec_pct", "Interest / receipts", "%", "A091RC1Q027SBEA / FGRECPT", 0.005),
+    ("refi_gap", "Refi gap", "pp", "Table 3 weights × CMT − Total Marketable coupon", 0.0005),
+)
+_FD_AXES = (
+    ("funds_minus_stock", "F1  funds − book coupon", "pp", "FEDFUNDS − Fiscal Data Total Marketable", 0.0005, "F1"),
+    ("int_gf_pct", "F2  interest / general-fund receipts", "%", "A091 / (FGRECPT − W780)", 0.005, "F2"),
+    ("primary_deficit_pct_gdp", "F3  primary / GDP", "%", "(FGEXPND − A091 − FGRECPT) / GDP", 0.005, "F3"),
+)
+
+
+def _changed(old, new, tol: float) -> bool:
+    if old is None and new is None:
+        return False
+    if old is None or new is None:
+        return True
+    try:
+        return abs(float(old) - float(new)) > tol
+    except (TypeError, ValueError):
+        return old != new
+
+
+def _row_map(rows) -> dict:
+    out = {}
+    for row in rows or []:
+        if isinstance(row, dict) and row.get("date"):
+            out[str(row["date"])[:10]] = row
+    return out
+
+
+def _load_previous_cubes() -> dict | None:
+    local = PUB / "cubes.json"
+    if local.exists():
+        try:
+            return json.loads(local.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            log_step(f"local cubes.json unreadable ({exc})")
+    try:
+        with urllib.request.urlopen(_PREVIOUS_CUBES, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:
+        log_step(f"no previous cubes.json ({exc}); changelog will not backfill")
+        return None
+
+
+def _axis_event(name, units, series, old, new, coordinate_old=None, coordinate_new=None):
+    rec = {
+        "axis": name,
+        "units": units,
+        "series": series,
+        "old": None if old is None else _json_safe(old),
+        "new": None if new is None else _json_safe(new),
+    }
+    if coordinate_old is not None or coordinate_new is not None:
+        rec["coordinate_old"] = None if coordinate_old is None else _json_safe(coordinate_old)
+        rec["coordinate_new"] = None if coordinate_new is None else _json_safe(coordinate_new)
+    return rec
+
+
+def _diff_cube(cube_name: str, old_rows, new_df: pd.DataFrame, axes, generated_at: str) -> list:
+    old = _row_map(old_rows)
+    events = []
+    if new_df is None or new_df.empty:
+        return events
+    for ts, row in new_df.sort_index().iterrows():
+        q = pd.Timestamp(ts).strftime("%Y-%m-%d")
+        prev = old.get(q)
+        changed = []
+        for spec in axes:
+            col, label, units, series, tol = spec[:5]
+            coord = spec[5] if len(spec) > 5 else None
+            new_v = row.get(col)
+            new_v = None if pd.isna(new_v) else new_v
+            old_v = None if prev is None else prev.get(col)
+            if not _changed(old_v, new_v, tol):
+                continue
+            coord_old = None if prev is None or not coord else prev.get(coord)
+            coord_new = None
+            if coord:
+                cv = row.get(coord)
+                coord_new = None if pd.isna(cv) else cv
+            changed.append(_axis_event(label, units, series, old_v, new_v, coord_old, coord_new))
+        if not changed:
+            continue
+        events.append({
+            "logged_at": generated_at,
+            "cube": cube_name,
+            "kind": "new release" if prev is None else "revision",
+            "quarter": q,
+            "axes": changed,
+        })
+    return events
+
+
+def _value_at(df: pd.DataFrame, ts, col):
+    if df is None or df.empty or col not in df.columns or ts not in df.index:
+        return None
+    v = df.at[ts, col]
+    if isinstance(v, pd.Series):
+        v = v.iloc[-1]
+    if pd.isna(v):
+        return None
+    return _json_safe(v)
+
+
+def _inside_quarter(series: pd.Series, q_end: pd.Timestamp):
+    s = pd.to_numeric(series, errors="coerce").dropna()
+    if s.empty:
+        return None
+    s = s.copy()
+    s.index = pd.to_datetime(s.index)
+    s = s.groupby(s.index).last().sort_index()
+    start = pd.Timestamp(q_end).to_period("Q").start_time
+    window = s[(s.index >= start) & (s.index <= pd.Timestamp(q_end))]
+    if window.empty:
+        return None
+    return {"asof": window.index.max().strftime("%Y-%m-%d"), "value": _json_safe(window.iloc[-1])}
+
+
+def _next_block(last_ts, panel: pd.DataFrame, release_table: dict, fields: tuple) -> dict:
+    if last_ts is None:
+        return {
+            "label": None,
+            "release": None,
+            "pickup": None,
+            "note": "No plotted quarter yet, so the next label is not known.",
+            "have": [],
+            "waiting": [],
+            "partial": [],
+        }
+    nxt = pd.Timestamp(last_ts) + pd.offsets.QuarterEnd(1)
+    label = nxt.strftime("%Y-%m-%d")
+    gate = release_table.get(label)
+    if gate:
+        release, why = gate
+        pickup = _pickup_morning(release)
+        note = (
+            f"Scheduled pickup is {pickup}, the 4:20 AM Eastern nightly. "
+            f"That job is the first one after the {release} release. "
+            f"The nightly on {release} is set for 4:20 AM, before the "
+            f"8:30 AM release, so it cannot see it. GitHub sometimes starts "
+            f"the cron late; if that run starts after FRED has posted, the "
+            f"point can appear on {release} instead. {why}"
+        )
+    else:
+        release = None
+        pickup = None
+        note = (
+            "No release date is listed for this quarter. The nightly draws "
+            "the point the morning after FRED has every series it needs. "
+            "The job is scheduled for 4:20 AM Eastern, before the 8:30 AM "
+            "print, so the point does not appear the morning of the release."
+        )
+    have, waiting = [], []
+    for col, name, units, series in fields:
+        val = _value_at(panel, nxt, col)
+        rec = {
+            "name": name,
+            "units": units,
+            "series": series,
+            "value": val,
+            "asof": label if val is not None else None,
+        }
+        (have if val is not None else waiting).append(rec)
+    return {
+        "label": label,
+        "release": release,
+        "pickup": pickup,
+        "note": note,
+        "have": have,
+        "waiting": waiting,
+        "partial": [],
+    }
 
 
 def _col_or(df: pd.DataFrame, *names) -> pd.Series:
@@ -390,6 +611,75 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
 
     sustain = panel.dropna(subset=["debt_gdp_pct", "int_rec_pct", "int_tax_pct", "refi_gap"])
     fail = panel.dropna(subset=["F1", "F2", "F3"])
+    # NROU and GDPPOT are CBO projections out to the 2030s. They must not
+    # be reported as the last date on the cube.
+    observed = pd.concat([
+        sustain.index.to_series() if len(sustain) else pd.Series(dtype="datetime64[ns]"),
+        fail.index.to_series() if len(fail) else pd.Series(dtype="datetime64[ns]"),
+    ])
+    obs_ts = pd.to_datetime(observed, errors="coerce").dropna()
+    observed_end = str(obs_ts.max().date()) if len(obs_ts) else None
+    observed_start = str(obs_ts.min().date()) if len(obs_ts) else SIGMA_WINDOW_START
+
+    sus_fields = tuple((a[0], a[1], a[2], a[3]) for a in _SUS_AXES)
+    fd_fields = tuple((a[0], a[1], a[2], a[3]) for a in _FD_AXES)
+    sus_next = _next_block(sustain.index.max() if len(sustain) else None, panel, _SUS_RELEASE, sus_fields)
+    fd_next = _next_block(fail.index.max() if len(fail) else None, panel, _FD_RELEASE, fd_fields)
+
+    def _attach_partial(block, specs):
+        if not block.get("label"):
+            return
+        q = pd.Timestamp(block["label"])
+        have_names = {h["name"] for h in block["have"]}
+        partial = []
+        for series, name, units, sid in specs:
+            if name in have_names:
+                continue
+            hit = _inside_quarter(series, q)
+            if not hit:
+                continue
+            partial.append({
+                "name": name,
+                "units": units,
+                "series": sid,
+                "value": hit["value"],
+                "asof": hit["asof"],
+                "note": "Inside the quarter. Not the quarter print.",
+            })
+        block["partial"] = partial
+
+    _attach_partial(fd_next, (
+        (_col_or(policy, "FEDFUNDS"), "Federal funds", "%", "FEDFUNDS"),
+        (_col_or(m01, "treasury_avg_marketable_coupon_pct"), "Book coupon", "%", "Fiscal Data Total Marketable"),
+        (_col_or(m01, "refi_gap"), "Refi gap", "pp", "Table 3 × CMT − coupon"),
+    ))
+    _attach_partial(sus_next, (
+        (debt_pub_gdp, "Debt held by the public / GDP", "%", "FYGFGDQ188S"),
+        (_col_or(m01, "refi_gap"), "Refi gap", "pp", "Table 3 × CMT − coupon"),
+        (int_rec, "Interest / receipts", "%", "A091RC1Q027SBEA / FGRECPT"),
+    ))
+
+    previous = _load_previous_cubes()
+    if previous is None:
+        changelog = []
+        changelog_note = (
+            "No previous cubes.json could be read, so this run recorded "
+            "nothing. History is not backfilled. Gemini guesses are never logged."
+        )
+    else:
+        changelog = list(previous.get("changelog") or [])
+        changelog.extend(_diff_cube(
+            "sustainability", previous.get("sustain"), sustain, _SUS_AXES, generated_at,
+        ))
+        changelog.extend(_diff_cube(
+            "fiscal dominance", previous.get("fail"), fail, _FD_AXES, generated_at,
+        ))
+        changelog_note = (
+            "Adds and revisions of plotted quarters only. The log starts the "
+            "first nightly that could read the previous cubes.json. Earlier "
+            "history is not backfilled. Gemini guesses are not entries."
+        )
+    log_step(f"changelog events {len(changelog)}")
 
     payload = {
         "generated_at": generated_at,
@@ -399,11 +689,15 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "nonbill_split": NONBILL_SPLIT,
         "sigma_window": {
             "requested_start": SIGMA_WINDOW_START,
-            "start": str(panel.index.min().date()) if len(panel) else SIGMA_WINDOW_START,
-            "end": str(panel.index.max().date()) if len(panel) else None,
-            "n": int(len(panel)),
+            "start": observed_start,
+            "end": observed_end,
+            "n": int(len(sustain)),
+            "note": "End is the last plotted quarter on either cube, not the CBO projection on NROU or GDPPOT.",
         },
         "sigma": {"int_gf": sig_gf, "int_rec": sig_rec, "int_tax": sig_tax},
+        "next": {"sustain": sus_next, "fail": fd_next},
+        "changelog_note": changelog_note,
+        "changelog": changelog,
         "sustain": df_to_table(sustain)["rows"][::-1],
         "fail": df_to_table(fail)["rows"][::-1],
     }

@@ -904,6 +904,15 @@ def update_raw(
         old = frames[i] if i < len(frames) else pd.DataFrame()
         force_full = False
         force_why = None
+        # NIPA, debt/GDP, and GDP are quarterly. A 14-day lookback from the
+        # newest date refreshes that one quarter and leaves a BEA benchmark
+        # (this one rewrote history back to 2021) sitting in the cache.
+        if name in ("fred_fiscal_nipa", "fred_debt_stocks", "fred_labor_output"):
+            force_full = True
+            force_why = (
+                "quarterly cube inputs — full FRED pull so a revision "
+                "is not stuck behind the 14-day lookback"
+            )
         if name == "fiscal_mspd_composition" and old is not None and len(old):
             notes = pd.to_numeric(old.get("MSPD_NOTES_PUBLIC_MN"), errors="coerce") if "MSPD_NOTES_PUBLIC_MN" in old.columns else pd.Series(dtype=float)
             if notes.empty or notes.notna().mean() < 0.8:

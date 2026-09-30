@@ -1074,6 +1074,64 @@ function fetchFresh(url) {
   return fetch(u, { cache: "no-store" });
 }
 
+function fmtNum(v, digits) {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  return Number(v).toLocaleString("en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+}
+
+function renderNextPoint(block) {
+  const el = document.getElementById("next-point-card");
+  if (!el) return;
+  if (!block || !block.label) {
+    el.innerHTML = `<p>${block && block.note ? block.note : "Next quarter is not known yet."}</p>`;
+    return;
+  }
+  const line = (r) => {
+    const digits = r.units === "pp" ? 3 : 2;
+    const val = r.value == null ? "not in yet" : `${fmtNum(r.value, digits)} ${r.units || ""}`;
+    const asof = r.asof ? ` <span class="why">as of ${r.asof}</span>` : "";
+    const note = r.note ? ` <span class="why">${r.note}</span>` : "";
+    return `<li><b>${r.name}</b> — ${val}${asof}${note}<br><span class="why">${r.series || ""}</span></li>`;
+  };
+  const have = (block.have || []).map(line).join("") || "<li>Nothing for that quarter yet.</li>";
+  const partial = (block.partial || []).map(line).join("");
+  const wait = (block.waiting || []).map(line).join("") || "<li>Nothing. The quarter can be plotted.</li>";
+  el.innerHTML =
+    `<p><b>Label:</b> ${block.label}</p>` +
+    `<p><b>On the plot:</b> ${block.pickup || "the morning after FRED has every series"}</p>` +
+    `<p>${block.note || ""}</p>` +
+    `<h3>Already measured for this quarter</h3><ul>${have}</ul>` +
+    (partial ? `<h3>Inside the quarter, not the quarter print</h3><ul>${partial}</ul>` : "") +
+    `<h3>Still waiting</h3><ul>${wait}</ul>`;
+}
+
+function renderCubeLog(events, cubeName, note) {
+  const host = document.getElementById("cube-log-table");
+  const noteEl = document.getElementById("cube-log-note");
+  if (noteEl) noteEl.textContent = note || "";
+  if (!host) return;
+  const rows = (events || []).filter((e) => e.cube === cubeName).slice().reverse();
+  if (!rows.length) {
+    host.innerHTML = "<p>No adds or revisions logged yet.</p>";
+    return;
+  }
+  const body = rows.map((e) => {
+    const axes = (e.axes || []).map((a) => {
+      const digits = a.units === "pp" ? 3 : 2;
+      const coord = (a.coordinate_old != null || a.coordinate_new != null)
+        ? ` <span class="why">coordinate ${fmtNum(a.coordinate_old, 3)} → ${fmtNum(a.coordinate_new, 3)}</span>`
+        : "";
+      return `<div><b>${a.axis}</b> ${fmtNum(a.old, digits)} → ${fmtNum(a.new, digits)} ${a.units || ""}${coord}<br><span class="why">${a.series || ""}</span></div>`;
+    }).join("");
+    return `<tr><td>${(e.logged_at || "").slice(0, 10)}</td><td>${e.kind}</td><td>${e.quarter}</td><td>${axes}</td></tr>`;
+  }).join("");
+  host.innerHTML =
+    `<table class="cube-log"><thead><tr><th>Logged</th><th>Kind</th><th>Quarter</th><th>Axis</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
 async function main() {
   const stamp = $("stamp");
   const wantSus = Boolean($("cube-sustain"));
@@ -1116,11 +1174,16 @@ async function main() {
     flagMissing($("cube-fail"), msg);
     return;
   }
-  const nMissAdj = (wantFail ? fail : sus).filter((r) => rateKind(r) === "missing").length;
-  if (stamp) {
+  const onFd = wantFail && !wantSus;
+  const pageRows = onFd ? fail : sus;
+  const latest = pageRows.length ? pageRows[pageRows.length - 1] : ls;
+  const nMissAdj = pageRows.filter((r) => rateKind(r) === "missing").length;
+  if (stamp && latest) {
     stamp.innerHTML =
-        `<b>Latest data point: ${ls.date}</b><br>` +
-        `New points become available when BEA prints quarterly GDP.` +
+        `<b>Latest plotted point: ${latest.date}</b><br>` +
+        (onFd
+          ? `Quarter-end label. This is the last quarter where funds, the book coupon, and the NIPA inputs for F2 and F3 all exist. It is not the sustainability cube’s last point, and it is not the morning of a BEA release.`
+          : `Quarter-end label. This is the last quarter where debt/GDP, interest/receipts, and the refi gap all exist. A GDP release by itself does not add a point.`) +
         (nMissAdj
           ? `<br><span class="err">FOMC Δ missing for ${nMissAdj} quarters (DFEDTAR not stitched). Grey × is not a hold.</span>`
           : "") +
@@ -1128,6 +1191,13 @@ async function main() {
           ? `<br><b>Gemini guess</b> for ${nowcast.quarter_end} (${nowcast.nipa_source || nowcast.model || "rates-only"}): diamond, labeled. Not a BEA print. Often wrong. <a href="data.html#nowcast">what it said that night</a>.`
           : "");
   }
+  const nxt = pack.next && (onFd ? pack.next.fail : pack.next.sustain);
+  renderNextPoint(nxt);
+  renderCubeLog(
+    pack.changelog,
+    onFd ? "fiscal dominance" : "sustainability",
+    pack.changelog_note || ""
+  );
 
   const opts = { responsive: true, displaylogo: false, displayModeBar: !isNarrow() };
   let tax = Boolean($("btn-tax") && $("btn-tax").classList.contains("active"));

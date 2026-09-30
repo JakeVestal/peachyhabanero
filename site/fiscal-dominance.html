@@ -47,8 +47,10 @@
   <p class="stat" id="stamp">loading cubes.json…</p>
   <p class="sub">
     Last observation in the quarter. NIPA with NIPA, funds from FRED,
-    book coupon from Fiscal Data. σ and the plotted path are complete
-    quarters from 2000-Q1 through the last BEA GDP print.
+    book coupon from Fiscal Data. The plotted path runs from 2000-Q1
+    through the last quarter where those inputs all exist. That
+    quarter-end label is not the date BEA released the print, and it
+    is not the sustainability cube's last point.
     The gold <b>diamond</b> is a <b>Gemini guess</b> for the next
     quarter-end — not a BEA print, not a forecast you should trade.
     It is often wrong, and sometimes amusing. F1 uses live funds minus
@@ -56,6 +58,11 @@
     night. <a href="data.html#nowcast">See the guess and its sources</a>.
   </p>
 </header>
+
+<section id="next-point">
+  <h2>Next data point</h2>
+  <div class="col-card" id="next-point-card"><p>loading…</p></div>
+</section>
 
 <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">
   <div style="order: 1; display: flex; gap: 10px; flex-shrink: 0; align-items: center; flex-wrap: wrap;">
@@ -179,6 +186,12 @@
       </div>
     </div>
   </article>
+</section>
+
+<section id="cube-log">
+  <h2>Updates</h2>
+  <p class="sub" id="cube-log-note"></p>
+  <div class="cube-log-scroll" id="cube-log-table"></div>
 </section>
 
 <footer>
