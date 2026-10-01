@@ -187,9 +187,23 @@ function fdDist(r, zone) {
   );
 }
 
-function nowcastGhost1d(nc, x, y, extra, color) {
+function deepestHike(rows, zone) {
+  let best = null;
+  (rows || []).forEach((r) => {
+    if (rateKind(r) !== "hike") return;
+    const d = fdDist(r, zone);
+    if (!Number.isFinite(d)) return;
+    if (!best || d < best.d) best = { row: r, d, date: String(r.date).slice(0, 10) };
+  });
+  return best;
+}
+
+function nowcastGhost1d(nc, x, y, extra, color, opt) {
   if (!nc || x == null || x === "" || !Number.isFinite(Number(y))) return [];
+  opt = opt || {};
   const fill = color || "#c4a35a";
+  const vis = opt.visible == null ? true : opt.visible;
+  const group = opt.legendgroup || undefined;
   const hover = nowcastHover(nc) + (extra ? `<br>${extra}` : "");
   return [
     {
@@ -199,18 +213,23 @@ function nowcastGhost1d(nc, x, y, extra, color) {
       name: `Gemini guess ${nc.quarter_end} glow`,
       hoverinfo: "skip",
       showlegend: false,
+      legendgroup: group,
+      visible: vis,
       marker: { size: 22, color: fill, symbol: "diamond", opacity: 0.22, line: { width: 0 } },
     },
     {
       type: "scatter",
       mode: "markers+text",
       x: [x], y: [y],
-      name: `Gemini guess ${nc.quarter_end}`,
+      name: opt.legendName || `Gemini guess ${nc.quarter_end}`,
       text: ["Gemini guess"],
       textposition: "top center",
       textfont: { color: "#c4a35a", size: 10, family: "IBM Plex Mono, ui-monospace, monospace" },
       hovertext: [hover],
       hoverinfo: "text",
+      showlegend: opt.showLegend !== false,
+      legendgroup: group,
+      visible: vis,
       marker: { size: 9, color: fill, symbol: "diamond", line: { color: "#ffbf00", width: 3 } },
     },
   ];
@@ -480,7 +499,7 @@ function sustainTraces(rows, zone, burden, nc) {
   };
 }
 
-function failTraces(rows, tax, showRates, nc) {
+function failTraces(rows, tax, showRates, nc, zone) {
   const f2key = "F2";
   const f2 = rows.map((r) => r[f2key]);
   const nAdj = rows.filter((r) => rateAdj(r) != null).length;
@@ -523,13 +542,14 @@ function failTraces(rows, tax, showRates, nc) {
   const traces = [
     wire(0, hi, 0, hi, 0, hi, "#ff2bd6", "Fiscal Dominance Zone", 4),
   ];
-  const rec = rows.find((r) => String(r.date).slice(0, 10) === "2018-03-31");
+  const recHit = deepestHike(rows, zone);
+  const rec = recHit ? recHit.row : null;
   const recF1 = rec ? num(rec, "F1") : null;
   const recF2 = rec ? num(rec, f2key) : null;
   const recF3 = rec ? num(rec, "F3") : null;
   if (recF1 != null && recF2 != null && recF3 != null) {
-    // Inner octant: 2018-Q1 is the near corner; far vertex is the same as the magenta box.
-    traces.push(wire(recF3, hi, recF2, hi, recF1, hi, "#ff9ad8", "2018-Q1 hike record", 5, true));
+    const recLabel = `${recHit.date} hike record`;
+    traces.push(wire(recF3, hi, recF2, hi, recF1, hi, "#ff9ad8", recLabel, 5, true));
     traces.push({
       type: "scatter3d",
       x: [recF3], y: [recF2], z: [recF1],
@@ -541,12 +561,13 @@ function failTraces(rows, tax, showRates, nc) {
         line: { color: "#ff2bd6", width: 2 },
       },
       hovertext: [
-        `${String(rec.date).slice(0, 10)} — hike-record corner<br>` +
+        `${recHit.date} — hike-record corner<br>` +
+        `raw distance ${recHit.d.toFixed(2)}<br>` +
         `F1=${recF1.toFixed(2)}  F2=${recF2.toFixed(2)}  F3=${recF3.toFixed(2)}<br>` +
-        `Deepest hike inside the box in this sample.`
+        `Lowest hike on the raw-distance line. Not a wire.`
       ],
       hovertemplate: "%{hovertext}<extra></extra>",
-      name: "2018-Q1 corner",
+      name: recLabel,
       showlegend: false,
     });
   }
@@ -617,7 +638,7 @@ function failTraces(rows, tax, showRates, nc) {
     const xs = [Number(nc.F1), Number(nc.F2), Number(nc.F3)].filter(Number.isFinite);
     xs.forEach((v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); });
   }
-  return { traces, lo, hi, nAdj };
+  return { traces, lo, hi, nAdj, record: recHit };
 }
 
 function insideCensus(rows, tax) {
@@ -685,25 +706,34 @@ function renderFdIndicator(rows, tax) {
 function drawDist(el, rows, tax, nc, zone) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
+  // Inactive till is hidden. Restructuring starts off; the legend turns it on.
+  function seriesVis(active, on) {
+    if (!active) return false;
+    return on ? true : "legendonly";
+  }
   const traces = [
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "warn")), name: "Danger (tax)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "restruct")), name: "Restructuring (tax)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "warn")), name: "Danger (receipts)", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "restruct")), name: "Restructuring (receipts)", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: !tax },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "warn")), name: "Danger (tax)", legendgroup: "danger-tax", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(tax, true) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "restruct")), name: "Restructuring (tax)", legendgroup: "restruct-tax", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(tax, false) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "warn")), name: "Danger (receipts)", legendgroup: "danger-rec", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(!tax, true) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "restruct")), name: "Restructuring (receipts)", legendgroup: "restruct-rec", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(!tax, false) },
   ];
   const burden = tax ? "tax" : "rec";
   const d = nc && zone ? { warn: susDist(nc, zone, burden, "warn"), restruct: susDist(nc, zone, burden, "restruct") } : null;
   const qe = nc && nc.quarter_end;
   if (d && qe) {
+    const dangerGroup = tax ? "danger-tax" : "danger-rec";
+    const restructGroup = tax ? "restruct-tax" : "restruct-rec";
     traces.push.apply(traces, nowcastGhost1d(
       nc, qe, d.warn,
       `AI forecast · distance ${Number.isFinite(d.warn) ? d.warn.toFixed(2) : "n/a"}`,
-      gold
+      gold,
+      { legendgroup: dangerGroup, visible: true, legendName: `Gemini · danger ${qe}` }
     ));
     traces.push.apply(traces, nowcastGhost1d(
       nc, qe, d.restruct,
       `AI forecast · distance ${Number.isFinite(d.restruct) ? d.restruct.toFixed(2) : "n/a"}`,
-      mag
+      mag,
+      { legendgroup: restructGroup, visible: "legendonly", legendName: `Gemini · restructuring ${qe}` }
     ));
   }
   const node = document.getElementById(el);
@@ -800,9 +830,9 @@ function drawFdDist(el, rows, tax, nc, zone) {
     marks("cut", "#ff4d4d", "triangle-down", 8),
     marks("missing", "#7f93a6", "x", 7),
   ];
-  const recIdx = rows.findIndex((r) => String(r.date).slice(0, 10) === "2018-03-31");
-  const recD = recIdx >= 0 ? ys[recIdx] : null;
-  const recDate = recIdx >= 0 ? rows[recIdx].date : null;
+  const recHit = deepestHike(rows, zone);
+  const recDate = recHit ? recHit.date : null;
+  const recD = recHit ? recHit.d : null;
   const recPink = "#ff9ad8";
   const shapes = [
     { type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: mag, width: 1, dash: "dot" } },
@@ -813,15 +843,15 @@ function drawFdDist(el, rows, tax, nc, zone) {
       type: "scatter",
       mode: "markers",
       x: [recDate], y: [recD],
-      name: "2018-Q1 hike record",
-      text: [`2018-Q1 is the deepest hike on the σ cube, not the low of this raw line.<br>${String(recDate).slice(0, 10)}<br>raw distance ${recD.toFixed(2)}`],
+      name: `${recDate} hike record`,
+      text: [`${recDate} — lowest hike on this line<br>raw distance ${recD.toFixed(2)}<br>Furthest into the zone the Fed has hiked in this sample. Not a wire.`],
       hoverinfo: "text",
       marker: { color: recPink, size: 11, symbol: "diamond", line: { color: mag, width: 1.5 } },
     });
     annotations.push({
       x: recDate,
       y: recD,
-      text: "2018-Q1 σ-cube record",
+      text: `${recDate} hike record`,
       showarrow: true,
       arrowhead: 3,
       arrowsize: 1,
@@ -1256,21 +1286,23 @@ async function main() {
       flagMissing($("cube-fail"), "cubes.json has no F2 (A091 / (FGRECPT − W780)). Fetch W780RC1Q027SBEA and rerun --process.");
       return;
     }
-    const ft = failTraces(fail, tax, showRates, nowcast);
+    const ft = failTraces(fail, tax, showRates, nowcast, zone);
     const note = $("rate-note");
-    const recQ = fail.find((r) => String(r.date).slice(0, 10) === "2018-03-31");
-    const recOk = recQ && num(recQ, "F1") != null && num(recQ, "F2") != null && num(recQ, "F3") != null;
+    const rec = ft.record;
+    const recOk = rec && num(rec.row, "F1") != null && num(rec.row, "F2") != null && num(rec.row, "F3") != null;
     if (note) {
       if (showRates && !ft.nAdj) {
         note.innerHTML = `<span class="err">rate decisions on, but cubes.json has no rate_adjust — the published JSON is stale. Push src/cube_data.py + scripts/build_site_data.py and rerun nightly (fetch + process).</span>`;
-      } else if (showRates) {
-        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Light dashed magenta = 2018-Q1 hike record (inner corner).`;
+      } else if (showRates && recOk) {
+        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Light dashed magenta = ${rec.date} hike record (lowest hike on the raw distance line).`;
+      } else if (recOk) {
+        note.textContent = `Light dashed magenta cube: ${rec.date}, lowest hike on the raw distance line.`;
       } else {
-        note.textContent = recOk ? "Light dashed magenta cube: 2018-Q1, deepest hike inside the box in this sample." : "";
+        note.textContent = "";
       }
       if (!recOk) {
         note.innerHTML = (note.innerHTML || note.textContent || "") +
-          ` <span class="err">2018-03-31 not in cubes.json — no record cube.</span>`;
+          ` <span class="err">No hike quarter with a finite raw distance — no record cube.</span>`;
       }
     }
     const f2title = "F2  y(interest / general-fund receipts − 20%)";
