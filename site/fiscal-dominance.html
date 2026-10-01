@@ -60,7 +60,19 @@
 
 <section id="next-point">
   <h2>Next data point</h2>
-  <div class="col-card" id="next-point-card"><p>loading…</p></div>
+  <!-- Same slots as sustainability.html. Edit the labels here; cube.js only fills data-next. -->
+  <div class="col-card" id="next-point-card">
+    <p><b>Quarter on the cube:</b> <span data-next="label">…</span></p>
+    <p><b>Release date:</b> <span data-next="release">…</span></p>
+    <p><b>On the plot:</b> <span data-next="pickup">…</span></p>
+    <p class="sub" data-next="note"></p>
+    <h3>Already measured for this quarter</h3>
+    <ul data-next="have"></ul>
+    <h3 data-next="partial-head">Inside the quarter, not the quarter print</h3>
+    <ul data-next="partial"></ul>
+    <h3>Still waiting</h3>
+    <ul data-next="waiting"></ul>
+  </div>
 </section>
 
 <div class="toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; background-color: #0b0f16; border-radius: 6px;">

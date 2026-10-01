@@ -55,7 +55,26 @@
 
 <section id="next-point">
   <h2>Next data point</h2>
-  <div class="col-card" id="next-point-card"><p>loading…</p></div>
+  <!--
+    Edit the wording here. cube.js fills only the data-next slots.
+    label    quarter-end date drawn on the cube
+    release  calendar date of the release this quarter waits on
+    pickup   first scheduled nightly after that release (not a promise the series is in)
+    note     paragraph built by scripts/build_site_data.py — delete this <p> if you don't want it
+    have, partial, waiting   the three lists
+  -->
+  <div class="col-card" id="next-point-card">
+    <p><b>Quarter on the cube:</b> <span data-next="label">…</span></p>
+    <p><b>Release date:</b> <span data-next="release">…</span></p>
+    <p><b>On the plot:</b> <span data-next="pickup">…</span></p>
+    <p class="sub" data-next="note"></p>
+    <h3>Already measured for this quarter</h3>
+    <ul data-next="have"></ul>
+    <h3 data-next="partial-head">Inside the quarter, not the quarter print</h3>
+    <ul data-next="partial"></ul>
+    <h3>Still waiting</h3>
+    <ul data-next="waiting"></ul>
+  </div>
   <p class="sub">
     The gold <b>diamond</b> is the f <b>Gemini guess</b> for the next
     quarter-end — not a BEA print. It is often wrong, and sometimes amusing.

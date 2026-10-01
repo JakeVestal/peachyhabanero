@@ -1085,27 +1085,56 @@ function fmtNum(v, digits) {
 function renderNextPoint(block) {
   const el = document.getElementById("next-point-card");
   if (!el) return;
-  if (!block || !block.label) {
-    el.innerHTML = `<p>${block && block.note ? block.note : "Next quarter is not known yet."}</p>`;
+  const slot = (key) => el.querySelector(`[data-next="${key}"]`);
+  // Labels and headings live in the page HTML. This only fills slots.
+  if (!slot("label")) {
+    el.innerHTML = "<p>Next-point card is missing its data-next slots.</p>";
     return;
   }
-  const line = (r) => {
+  const set = (key, text, blank) => {
+    const n = slot(key);
+    if (!n) return;
+    const empty = text == null || text === "";
+    n.textContent = empty ? (blank == null ? "—" : blank) : String(text);
+  };
+  const row = (r) => {
     const digits = r.units === "pp" ? 3 : 2;
     const val = r.value == null ? "not in yet" : `${fmtNum(r.value, digits)} ${r.units || ""}`;
     const asof = r.asof ? ` <span class="why">as of ${r.asof}</span>` : "";
     const note = r.note ? ` <span class="why">${r.note}</span>` : "";
     return `<li><b>${r.name}</b> — ${val}${asof}${note}<br><span class="why">${r.series || ""}</span></li>`;
   };
-  const have = (block.have || []).map(line).join("") || "<li>Nothing for that quarter yet.</li>";
-  const partial = (block.partial || []).map(line).join("");
-  const wait = (block.waiting || []).map(line).join("") || "<li>Nothing. The quarter can be plotted.</li>";
-  el.innerHTML =
-    `<p><b>Label:</b> ${block.label}</p>` +
-    `<p><b>On the plot:</b> ${block.pickup || "the morning after FRED has every series"}</p>` +
-    `<p>${block.note || ""}</p>` +
-    `<h3>Already measured for this quarter</h3><ul>${have}</ul>` +
-    (partial ? `<h3>Inside the quarter, not the quarter print</h3><ul>${partial}</ul>` : "") +
-    `<h3>Still waiting</h3><ul>${wait}</ul>`;
+  const fill = (key, rows, empty) => {
+    const ul = slot(key);
+    if (!ul) return;
+    const head = slot(key + "-head");
+    if (!rows || !rows.length) {
+      ul.innerHTML = empty || "";
+      ul.hidden = !empty;
+      if (head) head.hidden = true;
+      return;
+    }
+    ul.hidden = false;
+    if (head) head.hidden = false;
+    ul.innerHTML = rows.map(row).join("");
+  };
+  if (!block || !block.label) {
+    set("label", null);
+    set("release", null);
+    set("pickup", null);
+    set("note", (block && block.note) || "Next quarter is not known yet.", "");
+    fill("have", [], "");
+    fill("partial", [], "");
+    fill("waiting", [], "");
+    return;
+  }
+  set("label", block.label);
+  set("release", block.release);
+  set("pickup", block.pickup || "the morning after FRED has every series");
+  set("note", block.note || "", "");
+  fill("have", block.have, "<li>Nothing for that quarter yet.</li>");
+  fill("partial", block.partial, "");
+  fill("waiting", block.waiting, "<li>Nothing. The quarter can be plotted.</li>");
 }
 
 function renderCubeLog(events, cubeName, note) {

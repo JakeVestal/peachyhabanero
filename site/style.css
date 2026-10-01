@@ -720,6 +720,7 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .cube-log th { color: #c4a35a; font-weight: 600; }
 #next-point { margin: 8px 0 18px; }
 #next-point ul { margin: 6px 0 12px; padding-left: 18px; }
+#next-point [data-next="note"]:empty { display: none; }
 #cube-log { margin-top: 28px; }
 .fd-indicator .punch {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
