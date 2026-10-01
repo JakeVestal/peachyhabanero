@@ -159,20 +159,66 @@ function octantDist(values, wires) {
   return -Math.min(delta[0], delta[1], delta[2]);
 }
 
-function susDist(r, zone, burden, face) {
-  if (!r || !zone) return null;
+function boxDistScene(point, boxLo, boxHi, scene) {
+  const u = point.map((v, i) => (Number(v) - scene.origin[i]) / scene.span[i]);
+  const lo = boxLo.map((v, i) => (Number(v) - scene.origin[i]) / scene.span[i]);
+  const hi = boxHi.map((v, i) => (Number(v) - scene.origin[i]) / scene.span[i]);
+  if (u.some((v) => !Number.isFinite(v)) || lo.some((v) => !Number.isFinite(v)) || hi.some((v) => !Number.isFinite(v))) {
+    return null;
+  }
+  const clamped = u.map((v, i) => Math.min(hi[i], Math.max(lo[i], v)));
+  const outside = u.some((v, i) => v < lo[i] || v > hi[i]);
+  if (outside) return Math.hypot(u[0] - clamped[0], u[1] - clamped[1], u[2] - clamped[2]);
+  let face = Infinity;
+  for (let i = 0; i < 3; i++) face = Math.min(face, u[i] - lo[i], hi[i] - u[i]);
+  return -face;
+}
+
+// Same axis limits the sustainability cube draws. aspectmode "cube" stretches
+// those three spans to one length, so distance has to be measured there.
+function susScene(rows, zone, burden, nc) {
+  const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
+  const ydeath = znum(zone, burden === "tax" ? "int_tax_restruct" : "int_rec_restruct");
+  const xdeath = znum(zone, "debt_gdp_restruct");
+  const zdeath = znum(zone, "refi_gap_restruct");
+  const xs = rows.map((r) => Number(r.debt_gdp_pct)).filter(Number.isFinite);
+  const ys = rows.map((r) => Number(r[ycol])).filter(Number.isFinite);
+  const zs = rows.map((r) => Number(r.refi_gap)).filter(Number.isFinite);
+  let xmin = Math.min(0, ...xs);
+  let xmax = Math.max(200, xdeath || 0, ...xs, 0) + 8;
+  let ymin = Math.min(10, ...ys);
+  let ymax = Math.max((ydeath || 0) + 8, ...ys, 0) + 3;
+  let zmax = Math.max(5, zdeath || 0, ...zs, 0) + 0.4;
+  let zmin = Math.min(-2, ...zs, 0) - 0.3;
+  if (nc) {
+    const nx = Number(nc.debt_gdp_pct);
+    const ny = Number(burden === "tax" ? nc.int_tax_pct : nc.int_rec_pct);
+    const nz = Number(nc.refi_gap);
+    if (Number.isFinite(nx)) { xmin = Math.min(xmin, nx); xmax = Math.max(xmax, nx); }
+    if (Number.isFinite(ny)) { ymin = Math.min(ymin, ny); ymax = Math.max(ymax, ny); }
+    if (Number.isFinite(nz)) { zmin = Math.min(zmin, nz); zmax = Math.max(zmax, nz); }
+  }
+  const span = [xmax - xmin, ymax - ymin, zmax - zmin];
+  if (span.some((s) => !Number.isFinite(s) || s <= 0)) return null;
+  return { origin: [xmin, ymin, zmin], span, max: [xmax, ymax, zmax], ycol };
+}
+
+function susDist(r, zone, burden, face, scene) {
+  if (!r || !zone || !scene) return null;
   const till = Number(burden === "tax" ? r.int_tax_pct : r.int_rec_pct);
   const re = face === "restruct";
   const wTill = burden === "tax"
     ? (re ? zone.int_tax_restruct : zone.int_tax_warn)
     : (re ? zone.int_rec_restruct : zone.int_rec_warn);
-  return octantDist(
+  return boxDistScene(
     [r.debt_gdp_pct, till, r.refi_gap],
     [
       re ? zone.debt_gdp_restruct : zone.debt_gdp_warn,
       wTill,
       re ? zone.refi_gap_restruct : zone.refi_gap_warn,
-    ]
+    ],
+    scene.max,
+    scene
   );
 }
 
@@ -419,7 +465,8 @@ function winAll(vals) {
 }
 
 function sustainTraces(rows, zone, burden, nc) {
-  const ycol = burden === "tax" ? "int_tax_pct" : "int_rec_pct";
+  const scene = susScene(rows, zone, burden, nc);
+  const ycol = scene.ycol;
   const ywarn = znum(zone, burden === "tax" ? "int_tax_warn" : "int_rec_warn");
   const ydeath = znum(zone, burden === "tax" ? "int_tax_restruct" : "int_rec_restruct");
   const xwarn = znum(zone, "debt_gdp_warn");
@@ -427,26 +474,22 @@ function sustainTraces(rows, zone, burden, nc) {
   const zwarn = znum(zone, "refi_gap_warn");
   const zdeath = znum(zone, "refi_gap_restruct");
   const stressCol = burden === "tax" ? "stress_tax" : "stress_rec";
+  const [xmin, ymin, zmin] = scene.origin;
+  const [xmax, ymax, zmax] = scene.max;
   const hover = rows.map((r) => {
-    const dw = susDist(r, zone, burden, "warn");
-    const dd = susDist(r, zone, burden, "restruct");
+    const dw = susDist(r, zone, burden, "warn", scene);
+    const dd = susDist(r, zone, burden, "restruct", scene);
+    const fmt = (v) => (v == null ? "n/a" : (v >= 0 ? "+" : "") + v.toFixed(2));
     return (
       `${r.date}<br>` +
       `debt/GDP ${Number(r.debt_gdp_pct).toFixed(1)}%<br>` +
       `int/rec ${Number(r.int_rec_pct).toFixed(1)}%  int/tax ${Number(r.int_tax_pct).toFixed(1)}%<br>` +
       `refi gap ${Number(r.refi_gap) >= 0 ? "+" : ""}${Number(r.refi_gap).toFixed(2)} pp<br>` +
-      `dist_warn ${dw == null ? "n/a" : ((dw >= 0 ? "+" : "") + dw.toFixed(2))}  ` +
-      `dist_restruct ${dd == null ? "n/a" : ((dd >= 0 ? "+" : "") + dd.toFixed(2))}<br>` +
+      `dist_warn ${fmt(dw)}  dist_restruct ${fmt(dd)}<br>` +
       `stress ${Number(r[stressCol]).toFixed(2)} (color only; int/GDP sleeve is not an axis)`
     );
   });
   const last = rows[rows.length - 1];
-  const xmin = Math.min(0, ...rows.map((r) => Number(r.debt_gdp_pct)).filter(Number.isFinite));
-  let xmax = Math.max(200, xdeath, ...rows.map((r) => r.debt_gdp_pct), 0) + 8;
-  const ymin = Math.min(10, ...rows.map((r) => Number(r[ycol])).filter(Number.isFinite));
-  let ymax = Math.max(ydeath + 8, ...rows.map((r) => r[ycol]), 0) + 3;
-  let zmax = Math.max(5, zdeath, ...rows.map((r) => r.refi_gap), 0) + 0.4;
-  let zmin = Math.min(-2, ...rows.map((r) => r.refi_gap), 0) - 0.3;
   const traces = [
     wire(xwarn, xmax, ywarn, ymax, zwarn, zmax, "#c4a35a", "Danger Zone", 5),
     wire(xdeath, xmax, ydeath, ymax, zdeath, zmax, "#ff2bd6", "Restructuring Zone", 5),
@@ -483,12 +526,6 @@ function sustainTraces(rows, zone, burden, nc) {
     name: `latest ${last.date}`,
   }));
   traces.push.apply(traces, nowcastSusTrace(nc, burden === "tax"));
-  if (nc && Number.isFinite(Number(nc.debt_gdp_pct))) {
-    xmax = Math.max(xmax, Number(nc.debt_gdp_pct) || 0);
-    ymax = Math.max(ymax, Number(burden === "tax" ? nc.int_tax_pct : nc.int_rec_pct) || 0);
-    zmax = Math.max(zmax, Number(nc.refi_gap) || 0);
-    zmin = Math.min(zmin, Number(nc.refi_gap) || 0);
-  }
   return {
     traces,
     ranges: {
@@ -706,19 +743,22 @@ function renderFdIndicator(rows, tax) {
 function drawDist(el, rows, tax, nc, zone) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
+  const sceneRec = susScene(rows, zone, "rec", nc);
+  const sceneTax = susScene(rows, zone, "tax", nc);
   // Inactive till is hidden. Restructuring starts off; the legend turns it on.
   function seriesVis(active, on) {
     if (!active) return false;
     return on ? true : "legendonly";
   }
   const traces = [
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "warn")), name: "Danger (tax)", legendgroup: "danger-tax", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(tax, true) },
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "restruct")), name: "Restructuring (tax)", legendgroup: "restruct-tax", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(tax, false) },
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "warn")), name: "Danger (receipts)", legendgroup: "danger-rec", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(!tax, true) },
-    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "restruct")), name: "Restructuring (receipts)", legendgroup: "restruct-rec", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(!tax, false) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "warn", sceneTax)), name: "Danger (tax)", legendgroup: "danger-tax", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(tax, true) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "tax", "restruct", sceneTax)), name: "Restructuring (tax)", legendgroup: "restruct-tax", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(tax, false) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "warn", sceneRec)), name: "Danger (receipts)", legendgroup: "danger-rec", line: { color: gold, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(!tax, true) },
+    { x: rows.map((r) => r.date), y: rows.map((r) => susDist(r, zone, "rec", "restruct", sceneRec)), name: "Restructuring (receipts)", legendgroup: "restruct-rec", line: { color: mag, width: 2.5 }, type: "scatter", mode: "lines", visible: seriesVis(!tax, false) },
   ];
   const burden = tax ? "tax" : "rec";
-  const d = nc && zone ? { warn: susDist(nc, zone, burden, "warn"), restruct: susDist(nc, zone, burden, "restruct") } : null;
+  const scene = tax ? sceneTax : sceneRec;
+  const d = nc && zone && scene ? { warn: susDist(nc, zone, burden, "warn", scene), restruct: susDist(nc, zone, burden, "restruct", scene) } : null;
   const qe = nc && nc.quarter_end;
   if (d && qe) {
     const dangerGroup = tax ? "danger-tax" : "danger-rec";
@@ -739,7 +779,7 @@ function drawDist(el, rows, tax, nc, zone) {
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
   return Plotly.newPlot(el, traces, {
-    title: { text: "Distance to the surface, cube units. Up = farther. 0 = on it. Below 0 = inside.", font: { size: 14, color: "#00f0ff" } },
+    title: { text: "Distance to the cube, as drawn. Up = farther. 0 = on it. Below 0 = inside.", font: { size: 14, color: "#00f0ff" } },
     paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
     margin: { l: 48, r: 16, t: 44, b: 36 },
