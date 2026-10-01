@@ -222,22 +222,46 @@ function susDist(r, zone, burden, face, scene) {
   );
 }
 
-function fdDist(r, zone) {
-  if (!r || !zone) return null;
-  const w = Number(zone.int_gf_warn);
-  // Margins are positive inside: funds−stock <= 0, int/gf >= warn, primary >= 0.
-  // Passed as value−wire so octantDist stays "inside when value >= wire."
-  return octantDist(
-    [-Number(r.funds_minus_stock), Number(r.int_gf_pct) - w, Number(r.primary_deficit_pct_gdp)],
-    [0, 0, 0]
-  );
+function fdScene(rows, nc) {
+  const w1 = winAll((rows || []).map((r) => Number(r.F1)));
+  const w2 = winAll((rows || []).map((r) => Number(r.F2)));
+  const w3 = winAll((rows || []).map((r) => Number(r.F3)));
+  let lo = Math.min(w1[0], w2[0], w3[0]);
+  let hi = Math.max(w1[1], w2[1], w3[1]);
+  if (nc) {
+    [nc.F1, nc.F2, nc.F3].forEach((v) => {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return;
+      lo = Math.min(lo, n);
+      hi = Math.max(hi, n);
+    });
+  }
+  const span = hi - lo;
+  if (!Number.isFinite(span) || span <= 0) return null;
+  // Plot axes are x = F3, y = F2, z = F1, and all three share [lo, hi].
+  return {
+    origin: [lo, lo, lo],
+    span: [span, span, span],
+    max: [hi, hi, hi],
+    lo,
+    hi,
+  };
 }
 
-function deepestHike(rows, zone) {
+function fdDist(r, scene) {
+  if (!r || !scene) return null;
+  const f1 = num(r, "F1");
+  const f2 = num(r, "F2");
+  const f3 = num(r, "F3");
+  if (f1 == null || f2 == null || f3 == null) return null;
+  return boxDistScene([f3, f2, f1], [0, 0, 0], scene.max, scene);
+}
+
+function deepestHike(rows, scene) {
   let best = null;
   (rows || []).forEach((r) => {
     if (rateKind(r) !== "hike") return;
-    const d = fdDist(r, zone);
+    const d = fdDist(r, scene);
     if (!Number.isFinite(d)) return;
     if (!best || d < best.d) best = { row: r, d, date: String(r.date).slice(0, 10) };
   });
@@ -540,11 +564,16 @@ function failTraces(rows, tax, showRates, nc, zone) {
   const f2key = "F2";
   const f2 = rows.map((r) => r[f2key]);
   const nAdj = rows.filter((r) => rateAdj(r) != null).length;
+  const scene = fdScene(rows, nc);
+  const lo = scene ? scene.lo : -0.2;
+  const hi = scene ? scene.hi : 1;
   const hover = rows.map((r) => {
     const f2v = num(r, f2key);
     const inside = isInside(r, f2key);
     const adj = rateAdj(r);
     const tgt = Number(r.target_end);
+    const d = fdDist(r, scene);
+    const dBit = Number.isFinite(d) ? ((d >= 0 ? "+" : "") + d.toFixed(2)) : "n/a";
     let rateLine;
     if (adj == null) {
       rateLine = "FOMC Δ this quarter: missing — no print, not a hold";
@@ -557,6 +586,7 @@ function failTraces(rows, tax, showRates, nc, zone) {
     return (
       `${inside ? "<b>INSIDE</b> " : ""}${r.date}<br>` +
       `F1=${num(r, "F1") == null ? "n/a" : num(r, "F1").toFixed(2)}  F2=${f2v == null ? "n/a" : f2v.toFixed(2)}  F3=${num(r, "F3") == null ? "n/a" : num(r, "F3").toFixed(2)}<br>` +
+      `distance ${dBit}<br>` +
       `funds−stock ${Number(r.funds_minus_stock).toFixed(3)} pp  (F1>0 ⇒ funds ≤ book)<br>` +
       `int/gf ${Number(r.int_gf_pct).toFixed(2)}%  int/rec ${Number(r.int_rec_pct).toFixed(2)}%  int/tax ${Number(r.int_tax_pct).toFixed(2)}%<br>` +
       `primary/GDP ${Number(r.primary_deficit_pct_gdp).toFixed(2)}%<br>` +
@@ -564,11 +594,6 @@ function failTraces(rows, tax, showRates, nc, zone) {
     );
   });
   const last = rows[rows.length - 1];
-  const w1 = winAll(rows.map((r) => r.F1));
-  const w2 = winAll(f2);
-  const w3 = winAll(rows.map((r) => r.F3));
-  let lo = Math.min(w1[0], w2[0], w3[0]);
-  let hi = Math.max(w1[1], w2[1], w3[1]);
 
   function kind(r) {
     // Rates off: every finite F-space point is a location, not an FOMC claim.
@@ -579,7 +604,7 @@ function failTraces(rows, tax, showRates, nc, zone) {
   const traces = [
     wire(0, hi, 0, hi, 0, hi, "#ff2bd6", "Fiscal Dominance Zone", 4),
   ];
-  const recHit = deepestHike(rows, zone);
+  const recHit = deepestHike(rows, scene);
   const rec = recHit ? recHit.row : null;
   const recF1 = rec ? num(rec, "F1") : null;
   const recF2 = rec ? num(rec, f2key) : null;
@@ -599,9 +624,9 @@ function failTraces(rows, tax, showRates, nc, zone) {
       },
       hovertext: [
         `${recHit.date} — hike-record corner<br>` +
-        `raw distance ${recHit.d.toFixed(2)}<br>` +
+        `distance ${recHit.d.toFixed(2)}<br>` +
         `F1=${recF1.toFixed(2)}  F2=${recF2.toFixed(2)}  F3=${recF3.toFixed(2)}<br>` +
-        `Lowest hike on the raw-distance line. Not a wire.`
+        `Lowest hike on the distance line. Not a wire.`
       ],
       hovertemplate: "%{hovertext}<extra></extra>",
       name: recLabel,
@@ -671,11 +696,7 @@ function failTraces(rows, tax, showRates, nc, zone) {
     name: `latest ${last.date}`,
   }));
   traces.push.apply(traces, nowcastFailTrace(nc));
-  if (nc) {
-    const xs = [Number(nc.F1), Number(nc.F2), Number(nc.F3)].filter(Number.isFinite);
-    xs.forEach((v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); });
-  }
-  return { traces, lo, hi, nAdj, record: recHit };
+  return { traces, lo, hi, nAdj, record: recHit, scene };
 }
 
 function insideCensus(rows, tax) {
@@ -803,7 +824,8 @@ function drawDist(el, rows, tax, nc, zone) {
 
 function drawFdDist(el, rows, tax, nc, zone) {
   const mag = "#ff2bd6";
-  const ys = rows.map((r) => fdDist(r, zone));
+  const scene = fdScene(rows, nc);
+  const ys = rows.map((r) => fdDist(r, scene));
   const xs = rows.map((r) => r.date);
   const lineTips = rows.map((r, i) => {
     const d = ys[i];
@@ -870,7 +892,7 @@ function drawFdDist(el, rows, tax, nc, zone) {
     marks("cut", "#ff4d4d", "triangle-down", 8),
     marks("missing", "#7f93a6", "x", 7),
   ];
-  const recHit = deepestHike(rows, zone);
+  const recHit = deepestHike(rows, scene);
   const recDate = recHit ? recHit.date : null;
   const recD = recHit ? recHit.d : null;
   const recPink = "#ff9ad8";
@@ -884,7 +906,7 @@ function drawFdDist(el, rows, tax, nc, zone) {
       mode: "markers",
       x: [recDate], y: [recD],
       name: `${recDate} hike record`,
-      text: [`${recDate} — lowest hike on this line<br>raw distance ${recD.toFixed(2)}<br>Furthest into the zone the Fed has hiked in this sample. Not a wire.`],
+      text: [`${recDate} — lowest hike on this line<br>distance ${recD.toFixed(2)}<br>Furthest into the zone the Fed has hiked in this sample. Not a wire.`],
       hoverinfo: "text",
       marker: { color: recPink, size: 11, symbol: "diamond", line: { color: mag, width: 1.5 } },
     });
@@ -907,7 +929,7 @@ function drawFdDist(el, rows, tax, nc, zone) {
     });
   }
   if (nc && nc.quarter_end) {
-    const nd = fdDist(nc, zone);
+    const nd = fdDist(nc, scene);
     traces.push.apply(traces, nowcastGhost1d(
       nc,
       nc.quarter_end,
@@ -920,7 +942,7 @@ function drawFdDist(el, rows, tax, nc, zone) {
   const node = document.getElementById(el);
   const w = node ? Math.round(node.getBoundingClientRect().width) : 0;
   return Plotly.newPlot(el, traces, {
-    title: { text: "Distance to the surface, raw units. Up = farther. 0 = on it. Below 0 = inside.", font: { size: 14, color: "#00f0ff" } },
+    title: { text: "Distance to the cube, as drawn. Up = farther. 0 = on it. Below 0 = inside.", font: { size: 14, color: "#00f0ff" } },
     paper_bgcolor: "#07080c", plot_bgcolor: "#0b0f16",
     font: { color: "#c8d6e5", family: "IBM Plex Mono, ui-monospace, monospace", size: 11 },
     margin: { l: 48, r: 16, t: 44, b: 36 },
@@ -943,8 +965,9 @@ function drawFdDist(el, rows, tax, nc, zone) {
   }, { responsive: true, displaylogo: false });
 }
 
-function drawFdDeltaVsDist(el, rows, zone) {
+function drawFdDeltaVsDist(el, rows, zone, nc) {
   const mag = "#ff2bd6";
+  const scene = fdScene(rows, nc);
   const f2key = "F2";
   const groups = [
     { k: "hold", color: "#00f0ff", symbol: "circle", size: 8, name: "hold" },
@@ -957,7 +980,7 @@ function drawFdDeltaVsDist(el, rows, zone) {
     const tips = [];
     rows.forEach((r) => {
       if (rateKind(r) !== g.k) return;
-      const d = fdDist(r, zone);
+      const d = fdDist(r, scene);
       const adj = rateAdj(r);
       if (!Number.isFinite(d) || adj == null) return;
       xs.push(d);
@@ -985,7 +1008,7 @@ function drawFdDeltaVsDist(el, rows, zone) {
   rows.forEach((r) => {
     if (rateKind(r) === "missing") return;
     if (!isInside(r, f2key)) return;
-    const d = fdDist(r, zone);
+    const d = fdDist(r, scene);
     const adj = rateAdj(r);
     if (!Number.isFinite(d) || adj == null) return;
     ix.push(d);
@@ -1019,7 +1042,7 @@ function drawFdDeltaVsDist(el, rows, zone) {
     height: 420,
     width: w || undefined,
     xaxis: {
-      title: { text: "signed distance (σ), same as 01.  0 = face", font: { size: 11, color: "#9fb3c8" } },
+      title: { text: "distance to the cube, as drawn. Same as 01.  0 = face", font: { size: 11, color: "#9fb3c8" } },
       gridcolor: "rgba(196,163,90,0.12)",
       zeroline: false,
     },
@@ -1382,15 +1405,15 @@ async function main() {
       if (showRates && !ft.nAdj) {
         note.innerHTML = `<span class="err">rate decisions on, but cubes.json has no rate_adjust — the published JSON is stale. Push src/cube_data.py + scripts/build_site_data.py and rerun nightly (fetch + process).</span>`;
       } else if (showRates && recOk) {
-        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Light dashed magenta = ${rec.date} hike record (lowest hike on the raw distance line).`;
+        note.textContent = `FOMC net Δ by quarter (${ft.nAdj} quarters with a print). Green ▲ hike, red ▼ cut, cyan hold. Magenta outline = inside the box. Light dashed magenta = ${rec.date} hike record (lowest hike on the distance line).`;
       } else if (recOk) {
-        note.textContent = `Light dashed magenta cube: ${rec.date}, lowest hike on the raw distance line.`;
+        note.textContent = `Light dashed magenta cube: ${rec.date}, lowest hike on the distance line.`;
       } else {
         note.textContent = "";
       }
       if (!recOk) {
         note.innerHTML = (note.innerHTML || note.textContent || "") +
-          ` <span class="err">No hike quarter with a finite raw distance — no record cube.</span>`;
+          ` <span class="err">No hike quarter with a finite distance — no record cube.</span>`;
       }
     }
     const f2title = "F2  y(interest / general-fund receipts − 20%)";
@@ -1412,7 +1435,7 @@ async function main() {
   await drawSustain();
   if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax, nowcast, zone);
   if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax, nowcast, zone);
-  if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail, zone);
+  if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail, zone, nowcast);
   drawSixAxes(sus, fail, zone, tax, nowcast, partials);
 
   function setBurden(next) {
@@ -1426,7 +1449,7 @@ async function main() {
     drawSixAxes(sus, fail, zone, tax, nowcast, partials);
     if ($("dist-plot") && sus.length) drawDist("dist-plot", sus, tax, nowcast, zone);
     if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax, nowcast, zone);
-    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, zone);
+    if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, zone, nowcast);
   }
   if ($("btn-tax")) $("btn-tax").onclick = () => setBurden(true);
   if ($("btn-rec")) $("btn-rec").onclick = () => setBurden(false);
