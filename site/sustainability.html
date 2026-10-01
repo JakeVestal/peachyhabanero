@@ -408,6 +408,21 @@
           (<a href="https://fred.stlouisfed.org/series/GFDEGDQ188S">
           GFDEGDQ188S</a>), which includes intra-governmental IOUs that the
           government writes to itself and do not roll into the market.
+        </p>
+        <p>
+          If FRED has not posted that ratio for a quarter, but
+          <a href="https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/debt-to-the-penny">Debt to the Penny</a>
+          has debt held by the public on the quarter-end date and GDP for
+          that quarter is already in, the nightly computes the ratio itself:
+          that Treasury stock divided by GDP. Same arithmetic FRED uses
+          (<a href="https://fred.stlouisfed.org/series/FYGFDPUN">FYGFDPUN</a>
+          / GDP). Different numerator. The updates log marks that row
+          <b>new print</b>. When FRED later posts
+          <a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>,
+          the log adds <b>FRED Update</b> and shows whether the two numbers differ.
+        </p>
+        <p class="sub" id="debt-bridge-note" hidden></p>
+        <p>
           This is the stock. The matching flow — are operations still
           borrowing — is primary / GDP on the
           <a href="fiscal-dominance.html">Fiscal Dominance Cube</a>.
@@ -438,8 +453,11 @@
 
 <section id="cube-log">
   <h2>Updates</h2>
-  <p class="sub" id="cube-log-note"></p>
-  <div class="cube-log-scroll" id="cube-log-table"></div>
+  <details class="cube-log-details">
+    <summary>Show the log</summary>
+    <p class="sub" id="cube-log-note"></p>
+    <div class="cube-log-scroll" id="cube-log-table"></div>
+  </details>
 </section>
 
 <footer>

@@ -701,9 +701,16 @@ a.analysis-card:hover { border-color: var(--cyan); }
 .fd-indicator h3 {
   color: #ff2bd6;
 }
+.cube-log-details { margin: 8px 0 28px; }
+.cube-log-details summary {
+  cursor: pointer;
+  color: #c4a35a;
+  font-size: 15px;
+}
 .cube-log-scroll {
-  overflow-x: auto;
-  margin: 8px 0 28px;
+  max-height: 280px;
+  overflow: auto;
+  margin: 8px 0 12px;
 }
 .cube-log {
   width: 100%;

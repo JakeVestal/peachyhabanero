@@ -143,7 +143,7 @@ window.COLUMN_NOTES = {
     url: "https://fred.stlouisfed.org/series/FYGFGDQ188S",
     official:
       "Debt held by the public divided by GDP, percent. Excludes intragovernmental holdings.",
-    why: "Sustainability cube stock axis. This is the public float versus the economy, not total debt including trust-fund IOUs.",
+    why: "Sustainability cube stock axis when FRED has posted the quarter. If FRED is late and GDP is already in, the nightly fills that quarter from Debt to the Penny (debt held by the public on the quarter-end date) divided by GDP, and the updates log says new print. Not total debt.",
   },
   UNRATE: {
     title: "Unemployment Rate",

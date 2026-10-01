@@ -1137,6 +1137,25 @@ function renderNextPoint(block) {
   fill("waiting", block.waiting, "<li>Nothing. The quarter can be plotted.</li>");
 }
 
+function renderDebtBridge(rows) {
+  const el = document.getElementById("debt-bridge-note");
+  if (!el) return;
+  const last = rows && rows.length ? rows[rows.length - 1] : null;
+  if (!last || last.debt_gdp_source !== "treasury") {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  const asof = last.debt_gdp_debt_asof || last.date;
+  const bn = Number(last.debt_gdp_debt_bn);
+  const stock = Number.isFinite(bn) ? ` Stock ${fmtNum(bn / 1000, 3)} trillion.` : "";
+  el.hidden = false;
+  el.innerHTML =
+    `This quarter on the plot (${last.date}) is a <b>Treasury print</b>, not FRED: ` +
+    `Debt to the Penny on ${asof}, divided by GDP. ` +
+    `${fmtNum(last.debt_gdp_pct, 2)}%.${stock}`;
+}
+
 function renderCubeLog(events, cubeName, note) {
   const host = document.getElementById("cube-log-table");
   const noteEl = document.getElementById("cube-log-note");
@@ -1209,6 +1228,7 @@ async function main() {
   const nMissAdj = pageRows.filter((r) => rateKind(r) === "missing").length;
   const nxt = pack.next && (onFd ? pack.next.fail : pack.next.sustain);
   renderNextPoint(nxt);
+  if (!onFd) renderDebtBridge(sus);
   renderCubeLog(
     pack.changelog,
     onFd ? "fiscal dominance" : "sustainability",

@@ -342,6 +342,188 @@ def _diff_cube(cube_name: str, old_rows, new_df: pd.DataFrame, axes, generated_a
     return events
 
 
+def _penny_on_quarter_end(penny: pd.Series, q_end: pd.Timestamp):
+    """Debt to the Penny on the quarter-end date, or the last print within 5 days before it."""
+    s = pd.to_numeric(penny, errors="coerce").dropna()
+    if s.empty:
+        return None
+    s = s.copy()
+    s.index = pd.to_datetime(s.index)
+    s = s.groupby(s.index).last().sort_index()
+    q_end = pd.Timestamp(q_end)
+    if q_end in s.index and pd.notna(s.loc[q_end]):
+        v = s.loc[q_end]
+        if isinstance(v, pd.Series):
+            v = v.iloc[-1]
+        return q_end, float(v)
+    window = s[(s.index <= q_end) & (s.index >= q_end - pd.Timedelta(days=5))]
+    if window.empty:
+        return None
+    return window.index.max(), float(window.iloc[-1])
+
+
+def _bridge_debt_gdp(fred_ratio: pd.Series, gdp: pd.Series, penny: pd.Series):
+    """Quarters FRED's FYGFGDQ188S has not posted yet.
+
+    Same arithmetic St. Louis uses — stock / GDP × 100 — with Debt to the
+    Penny's quarter-end debt held by the public instead of FYGFDPUN.
+    Does not rewrite any quarter FRED has already published.
+    """
+    out = fred_ratio.copy() if fred_ratio is not None else pd.Series(dtype="float64")
+    prov = {}
+    if gdp is None or penny is None:
+        return out, prov
+    gdp = pd.to_numeric(gdp, errors="coerce").dropna()
+    if gdp.empty or penny.dropna().empty:
+        return out, prov
+    fred_ok = pd.to_numeric(out, errors="coerce").dropna()
+    last_fred = fred_ok.index.max() if len(fred_ok) else None
+    for ts, g in gdp.sort_index().items():
+        ts = pd.Timestamp(ts)
+        if last_fred is not None and ts <= last_fred:
+            continue
+        if ts in out.index and pd.notna(out.loc[ts] if not isinstance(out.loc[ts], pd.Series) else out.loc[ts].iloc[-1]):
+            continue
+        g = float(g)
+        if not np.isfinite(g) or g == 0:
+            continue
+        hit = _penny_on_quarter_end(penny, ts)
+        if not hit:
+            continue
+        asof, amt = hit
+        ratio = amt / (g * 1e9) * 100.0
+        if not np.isfinite(ratio):
+            continue
+        out.loc[ts] = ratio
+        prov[ts.strftime("%Y-%m-%d")] = {
+            "debt_asof": pd.Timestamp(asof).strftime("%Y-%m-%d"),
+            "debt_dollars": float(amt),
+            "gdp_bn": g,
+            "ratio": float(ratio),
+        }
+    return out.sort_index(), prov
+
+
+def _debt_src(row) -> str | None:
+    if row is None:
+        return None
+    src = row.get("debt_gdp_source") if isinstance(row, dict) else None
+    if src in ("fred", "treasury"):
+        return src
+    if row.get("debt_gdp_pct") is not None:
+        return "fred"
+    return None
+
+
+def _fred_update_event(q, old_v, new_v, generated_at) -> dict:
+    diff = None
+    try:
+        if old_v is not None and new_v is not None:
+            diff = float(new_v) - float(old_v)
+    except (TypeError, ValueError):
+        diff = None
+    if diff is None:
+        how = "comparison unavailable"
+    elif abs(diff) <= 0.005:
+        how = "same as the Treasury print within 0.005 pp"
+    else:
+        how = f"differs from the Treasury print by {diff:+.3f} pp"
+    return {
+        "logged_at": generated_at,
+        "cube": "sustainability",
+        "kind": "FRED Update",
+        "quarter": q,
+        "axes": [_axis_event(
+            "Debt held by the public / GDP",
+            "%",
+            f"FYGFGDQ188S replaced the Treasury print. {how}.",
+            old_v,
+            new_v,
+        )],
+    }
+
+
+def _split_debt_events(events, old_map, new_df: pd.DataFrame, prov: dict, generated_at: str) -> list:
+    """Treasury-filled debt/GDP is 'new print'. FRED catching up is 'FRED Update'."""
+    out = []
+    swapped = set()
+    for ev in events:
+        q = ev["quarter"]
+        debt_axes = [a for a in ev["axes"] if a.get("axis") == "Debt held by the public / GDP"]
+        other = [a for a in ev["axes"] if a.get("axis") != "Debt held by the public / GDP"]
+        prev = old_map.get(q)
+        ts = pd.Timestamp(q)
+        new_src = None
+        new_v = None
+        if ts in new_df.index and "debt_gdp_source" in new_df.columns:
+            new_src = new_df.at[ts, "debt_gdp_source"]
+            if isinstance(new_src, pd.Series):
+                new_src = new_src.iloc[-1]
+            raw_v = new_df.at[ts, "debt_gdp_pct"]
+            if isinstance(raw_v, pd.Series):
+                raw_v = raw_v.iloc[-1]
+            new_v = None if pd.isna(raw_v) else _json_safe(raw_v)
+        old_src = _debt_src(prev)
+        if new_src == "treasury" and prev is None:
+            if other:
+                kept = dict(ev)
+                kept["axes"] = other
+                kept["kind"] = "new release"
+                out.append(kept)
+            info = prov.get(q) or {}
+            dollars = info.get("debt_dollars")
+            stock = f"${dollars / 1e12:.3f}T" if dollars else "Debt to the Penny"
+            asof = info.get("debt_asof") or q
+            gdp_bn = info.get("gdp_bn")
+            gdp_txt = f"{gdp_bn:.3f} bn" if isinstance(gdp_bn, float) else "GDP"
+            ratio = info.get("ratio", new_v)
+            out.append({
+                "logged_at": generated_at,
+                "cube": "sustainability",
+                "kind": "new print",
+                "quarter": q,
+                "axes": [_axis_event(
+                    "Debt held by the public / GDP",
+                    "%",
+                    f"Treasury Debt to the Penny {asof} ({stock}) / FRED GDP {gdp_txt}. "
+                    "Same arithmetic as FYGFGDQ188S, different numerator. Not the FRED ratio.",
+                    None,
+                    ratio,
+                )],
+            })
+            continue
+        if old_src == "treasury" and new_src == "fred":
+            if other:
+                kept = dict(ev)
+                kept["axes"] = other
+                out.append(kept)
+            old_v = None if prev is None else prev.get("debt_gdp_pct")
+            if new_v is None and debt_axes:
+                new_v = debt_axes[0].get("new")
+            out.append(_fred_update_event(q, old_v, new_v, generated_at))
+            swapped.add(q)
+            continue
+        if new_src == "treasury" and debt_axes:
+            for axis in debt_axes:
+                axis["series"] = (
+                    "Treasury Debt to the Penny / GDP, restated before FRED posted. Not FYGFGDQ188S."
+                )
+        out.append(ev)
+    if new_df is None or new_df.empty or "debt_gdp_source" not in new_df.columns:
+        return out
+    for ts, row in new_df.sort_index().iterrows():
+        q = pd.Timestamp(ts).strftime("%Y-%m-%d")
+        if q in swapped:
+            continue
+        prev = old_map.get(q)
+        if _debt_src(prev) == "treasury" and row.get("debt_gdp_source") == "fred":
+            raw_v = row.get("debt_gdp_pct")
+            new_v = None if pd.isna(raw_v) else _json_safe(raw_v)
+            old_v = None if prev is None else prev.get("debt_gdp_pct")
+            out.append(_fred_update_event(q, old_v, new_v, generated_at))
+    return out
+
+
 def _value_at(df: pd.DataFrame, ts, col):
     if df is None or df.empty or col not in df.columns or ts not in df.index:
         return None
@@ -467,6 +649,13 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     y10 = _qe(_col_or(policy, "DGS10"))
     gdp = _qe(_col_or(labor, "GDP"))
     debt_pub_gdp = _qe(_col_or(debt, "FYGFGDQ188S"))
+    penny = _col_or(by.get("fiscal_debt_to_penny", pd.DataFrame()), "DEBT_HELD_PUBLIC")
+    debt_pub_gdp, debt_prov = _bridge_debt_gdp(debt_pub_gdp, gdp, penny)
+    if debt_prov:
+        log_step(
+            "treasury debt/GDP bridge (not FYGFGDQ188S): "
+            + ", ".join(f"{q}={info['ratio']:.2f}" for q, info in debt_prov.items())
+        )
     tax_bn = _qe(_col_or(fiscal, "W006RC1Q027SBEA"))
 
     def _yoy_pct(s: pd.Series) -> pd.Series:
@@ -565,6 +754,17 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "nrou": nrou_q,
         "emp_gap": nrou_q - unrate_q,
     }).sort_index()
+    panel["debt_gdp_source"] = None
+    panel["debt_gdp_debt_asof"] = None
+    panel["debt_gdp_debt_bn"] = np.nan
+    panel.loc[panel["debt_gdp_pct"].notna(), "debt_gdp_source"] = "fred"
+    for q, info in debt_prov.items():
+        ts = pd.Timestamp(q)
+        if ts not in panel.index:
+            continue
+        panel.at[ts, "debt_gdp_source"] = "treasury"
+        panel.at[ts, "debt_gdp_debt_asof"] = info["debt_asof"]
+        panel.at[ts, "debt_gdp_debt_bn"] = info["debt_dollars"] / 1e9
     panel = panel.loc[panel.index >= SIGMA_WINDOW_START]
     # Do not dropna a shared "need" that includes refi_gap — that is a
     # sustainability series. Requiring it here deleted every FD quarter
@@ -668,16 +868,26 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         )
     else:
         changelog = list(previous.get("changelog") or [])
-        changelog.extend(_diff_cube(
-            "sustainability", previous.get("sustain"), sustain, _SUS_AXES, generated_at,
-        ))
+        old_sus = _row_map(previous.get("sustain"))
+        sus_events = _split_debt_events(
+            _diff_cube("sustainability", previous.get("sustain"), sustain, _SUS_AXES, generated_at),
+            old_sus,
+            sustain,
+            debt_prov,
+            generated_at,
+        )
+        changelog.extend(sus_events)
         changelog.extend(_diff_cube(
             "fiscal dominance", previous.get("fail"), fail, _FD_AXES, generated_at,
         ))
         changelog_note = (
-            "Adds and revisions of plotted quarters only. The log starts the "
-            "first nightly that could read the previous cubes.json. Earlier "
-            "history is not backfilled. Gemini guesses are not entries."
+            "Adds and revisions of plotted quarters only. A sustainability "
+            "debt/GDP quarter filled from Debt to the Penny, before FRED posts "
+            "FYGFGDQ188S, is kind 'new print'. When FRED later posts that "
+            "quarter, kind 'FRED Update' records the swap and whether the "
+            "number moved. The log starts the first nightly that could read "
+            "the previous cubes.json. Earlier history is not backfilled. "
+            "Gemini guesses are not entries."
         )
     log_step(f"changelog events {len(changelog)}")
 

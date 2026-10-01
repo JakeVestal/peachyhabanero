@@ -35,3 +35,4 @@ peachyhabanero-063-patch-cleanup.patch
 peachyhabanero-064-next-point-log.patch
 peachyhabanero-065-drop-house.patch
 peachyhabanero-066-next-card-template.patch
+peachyhabanero-067-treasury-debt-print.patch

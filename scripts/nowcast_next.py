@@ -218,6 +218,7 @@ def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tu
 
 Today (UTC): {datetime.now(timezone.utc).strftime("%Y-%m-%d")}.
 Target quarter-end: {target}.
+This is the next quarter after the last plotted cube point. Do not re-estimate a quarter already on the cubes, including one filled from a Treasury Debt-to-the-Penny print.
 Last complete cube rows, same units (oldest to newest):
 {json.dumps(slim, indent=2)}
 Live Treasury / Fed market rates (Python owns refi; do not overwrite):
