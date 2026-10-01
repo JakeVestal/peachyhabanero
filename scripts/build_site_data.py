@@ -265,6 +265,21 @@ _FD_AXES = (
     ("int_gf_pct", "F2  interest / general-fund receipts", "%", "A091 / (FGRECPT − W780)", 0.005, "F2"),
     ("primary_deficit_pct_gdp", "F3  primary / GDP", "%", "(FGEXPND − A091 − FGRECPT) / GDP", 0.005, "F3"),
 )
+# Plotted one series at a time, before the cube quarter is complete.
+# FD tuples are (plot column, raw column, label, units, series, tol).
+_SUS_PARTIAL = (
+    ("debt_gdp_pct", "Debt held by the public / GDP", "%", "FYGFGDQ188S", 0.005),
+    ("int_rec_pct", "Interest / receipts", "%", "A091RC1Q027SBEA / FGRECPT", 0.005),
+    ("int_tax_pct", "Interest / tax", "%", "A091RC1Q027SBEA / W006RC1Q027SBEA", 0.005),
+    ("refi_gap", "Refi gap", "pp", "Table 3 weights × CMT − Total Marketable coupon", 0.0005),
+)
+_FD_PARTIAL = (
+    ("F1", "funds_minus_stock", "F1  funds − book coupon", "pp", "FEDFUNDS − Fiscal Data Total Marketable", 0.0005),
+    ("F2", "int_gf_pct", "F2  interest / general-fund receipts", "%", "A091 / (FGRECPT − W780)", 0.005),
+    ("F3", "primary_deficit_pct_gdp", "F3  primary / GDP", "%", "(FGEXPND − A091 − FGRECPT) / GDP", 0.005),
+)
+_AXIS_TOL = {spec[1]: spec[4] for spec in list(_SUS_AXES) + list(_FD_AXES)}
+_AXIS_TOL["Interest / tax"] = 0.005
 
 
 def _changed(old, new, tol: float) -> bool:
@@ -347,6 +362,203 @@ def _diff_cube(cube_name: str, old_rows, new_df: pd.DataFrame, axes, generated_a
             "quarter": q,
             "axes": changed,
         })
+    return events
+
+
+def _last_closed_quarter(now=None) -> pd.Timestamp:
+    """Last quarter-end that is already over. The in-progress quarter is not a print."""
+    now = pd.Timestamp(now or pd.Timestamp.utcnow())
+    if now.tzinfo is not None:
+        now = now.tz_convert("UTC").tz_localize(None)
+    now = now.normalize()
+    return pd.Timestamp(now.to_period("Q").start_time.normalize() - pd.offsets.Day(1))
+
+
+def _scale_from_scores(raw: pd.Series, score: pd.Series, flip: bool) -> float | None:
+    raw = pd.to_numeric(raw, errors="coerce")
+    score = pd.to_numeric(score, errors="coerce")
+    ratio = ((-raw) if flip else raw) / score
+    ratio = ratio.replace([np.inf, -np.inf], np.nan).dropna()
+    ratio = ratio[ratio.abs() > 1e-9]
+    if ratio.empty:
+        return None
+    sig = float(ratio.median())
+    if not np.isfinite(sig) or sig == 0:
+        return None
+    return sig
+
+
+def _fill_partial_scores(panel: pd.DataFrame, closed) -> None:
+    """F1 and F3 for a closed quarter that has its own input but not the other two.
+
+    Same sigma as the plotted line: median of raw/score on the quarters that
+    already have a score. Does not touch those quarters, and does not score
+    the quarter that is still in progress.
+    """
+    closed = pd.Timestamp(closed).normalize()
+    sig_f1 = _scale_from_scores(panel["funds_minus_stock"], panel["F1"], flip=True)
+    sig_f3 = _scale_from_scores(panel["primary_deficit_pct_gdp"], panel["F3"], flip=False)
+    closed_row = pd.DatetimeIndex(pd.to_datetime(panel.index)).normalize() <= closed
+    if sig_f1 is not None:
+        need = panel["F1"].isna() & panel["funds_minus_stock"].notna() & closed_row
+        panel.loc[need, "F1"] = -pd.to_numeric(panel.loc[need, "funds_minus_stock"], errors="coerce") / sig_f1
+    if sig_f3 is not None:
+        need = panel["F3"].isna() & panel["primary_deficit_pct_gdp"].notna() & closed_row
+        panel.loc[need, "F3"] = pd.to_numeric(panel.loc[need, "primary_deficit_pct_gdp"], errors="coerce") / sig_f3
+
+
+def _axis_tol(label: str) -> float:
+    return float(_AXIS_TOL.get(label, 0.005))
+
+
+def _latest_logged(events) -> dict:
+    latest = {}
+    for ev in events or []:
+        for axis in ev.get("axes") or []:
+            latest[(ev.get("cube"), ev.get("quarter"), axis.get("axis"))] = axis.get("new")
+    return latest
+
+
+def _fold_known(events, latest: dict) -> list:
+    """Drop an axis the log already has at this value. A later full-quarter release must not repeat it."""
+    out = []
+    seen = dict(latest)
+    for ev in events:
+        if ev.get("kind") == "FRED Update":
+            out.append(ev)
+            for axis in ev.get("axes") or []:
+                seen[(ev.get("cube"), ev.get("quarter"), axis.get("axis"))] = axis.get("new")
+            continue
+        kept = []
+        for axis in ev.get("axes") or []:
+            key = (ev.get("cube"), ev.get("quarter"), axis.get("axis"))
+            new_v = axis.get("new")
+            if key not in seen:
+                kept.append(axis)
+                seen[key] = new_v
+                continue
+            old = seen[key]
+            if not _changed(old, new_v, _axis_tol(axis.get("axis"))):
+                continue
+            rewritten = dict(axis)
+            rewritten["old"] = old
+            kept.append(rewritten)
+            seen[key] = new_v
+        if not kept:
+            continue
+        folded = dict(ev)
+        folded["axes"] = kept
+        if folded.get("kind") == "new release" and all(a.get("old") is not None for a in kept):
+            folded["kind"] = "revision"
+        out.append(folded)
+    return out
+
+
+def _partial_records(panel, complete_index, closed, cube: str, kind: str) -> list:
+    records = []
+    if panel is None or panel.empty:
+        return records
+    last = None
+    if complete_index is not None and len(complete_index):
+        last = pd.Timestamp(pd.to_datetime(complete_index).max())
+    for ts, row in panel.sort_index().iterrows():
+        ts = pd.Timestamp(ts).normalize()
+        if ts > pd.Timestamp(closed).normalize():
+            continue
+        if last is not None and ts <= last:
+            continue
+        q = ts.strftime("%Y-%m-%d")
+        if kind == "fd":
+            for plot_col, raw_col, label, units, series, _tol in _FD_PARTIAL:
+                raw = row.get(raw_col)
+                plotted = row.get(plot_col)
+                if pd.isna(raw) or pd.isna(plotted):
+                    continue
+                records.append({
+                    "cube": cube,
+                    "quarter": q,
+                    "column": plot_col,
+                    "value": _json_safe(plotted),
+                    "raw": _json_safe(raw),
+                    "coordinate": _json_safe(plotted),
+                    "axis": label,
+                    "units": units,
+                    "series": series,
+                    "source": "measured",
+                })
+            continue
+        for col, label, units, series, _tol in _SUS_PARTIAL:
+            raw = row.get(col)
+            if pd.isna(raw):
+                continue
+            source = "measured"
+            series_txt = series
+            if col == "debt_gdp_pct" and row.get("debt_gdp_source") == "treasury":
+                source = "treasury"
+                asof = row.get("debt_gdp_debt_asof") or q
+                series_txt = (
+                    f"Treasury Debt to the Penny {asof} / GDP. "
+                    "Same arithmetic as FYGFGDQ188S, different numerator. Not the FRED ratio."
+                )
+            elif col == "debt_gdp_pct":
+                source = "fred"
+            records.append({
+                "cube": cube,
+                "quarter": q,
+                "column": col,
+                "value": _json_safe(raw),
+                "raw": _json_safe(raw),
+                "axis": label,
+                "units": units,
+                "series": series_txt,
+                "source": source,
+            })
+    return records
+
+
+def _partial_events(records, previous_records, generated_at: str, latest: dict) -> list:
+    prev = {
+        (p.get("cube"), p.get("quarter"), p.get("column")): p
+        for p in (previous_records or [])
+        if isinstance(p, dict)
+    }
+    events = []
+    for rec in records:
+        key = (rec["cube"], rec["quarter"], rec["column"])
+        old = prev.get(key)
+        new_v = rec.get("raw")
+        log_key = (rec["cube"], rec["quarter"], rec["axis"])
+        tol = _axis_tol(rec["axis"])
+        coord = rec.get("coordinate")
+        if old is not None and old.get("source") == "treasury" and rec.get("source") == "fred":
+            events.append(_fred_update_event(rec["quarter"], old.get("raw"), new_v, generated_at))
+            latest[log_key] = new_v
+            continue
+        if old is None:
+            if log_key in latest and not _changed(latest.get(log_key), new_v, tol):
+                continue
+            old_v = None
+            kind = "new print"
+        else:
+            old_v = old.get("raw")
+            if not _changed(old_v, new_v, tol):
+                continue
+            kind = "revision"
+        axis = _axis_event(
+            rec["axis"], rec["units"],
+            f"{rec['series']} Measured quarter, not a Gemini guess. The cube point still waits on the other axes.",
+            old_v, new_v,
+            None if coord is None else (None if old is None else old.get("coordinate")),
+            coord,
+        )
+        events.append({
+            "logged_at": generated_at,
+            "cube": rec["cube"],
+            "kind": kind,
+            "quarter": rec["quarter"],
+            "axes": [axis],
+        })
+        latest[log_key] = new_v
     return events
 
 
@@ -797,6 +1009,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     panel["F2_rec"] = y["y2"].reindex(panel.index)
     panel["F2_tax"] = (panel["int_tax_pct"] - ZONE["int_tax_warn"]) / sig_tax
     panel["F3"] = y["y3"].reindex(panel.index)
+    _fill_partial_scores(panel, _last_closed_quarter())
     log_step(f"sigma int/gf={sig_gf:.4f}  int/rec={sig_rec:.4f}  int/tax={sig_tax:.4f}")
 
     s_debt = _piecewise(panel["debt_gdp_pct"], ZONE["debt_gdp_warn"], ZONE["debt_gdp_restruct"])
@@ -876,6 +1089,10 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     ))
 
     previous = _load_previous_cubes()
+    closed = _last_closed_quarter()
+    partial_axes = _partial_records(panel, sustain.index, closed, "sustainability", "sus")
+    partial_axes.extend(_partial_records(panel, fail.index, closed, "fiscal dominance", "fd"))
+    log_step(f"partial axis prints {len(partial_axes)} through {closed.date()}")
     if previous is None:
         changelog = []
         changelog_note = (
@@ -884,26 +1101,34 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         )
     else:
         changelog = list(previous.get("changelog") or [])
+        latest = _latest_logged(changelog)
+        partial_events = _partial_events(
+            partial_axes, previous.get("partial_axes"), generated_at, latest,
+        )
         old_sus = _row_map(previous.get("sustain"))
-        sus_events = _split_debt_events(
+        sus_events = _fold_known(_split_debt_events(
             _diff_cube("sustainability", previous.get("sustain"), sustain, _SUS_AXES, generated_at),
             old_sus,
             sustain,
             debt_prov,
             generated_at,
-        )
-        changelog.extend(sus_events)
-        changelog.extend(_diff_cube(
+        ), latest)
+        fd_events = _fold_known(_diff_cube(
             "fiscal dominance", previous.get("fail"), fail, _FD_AXES, generated_at,
-        ))
+        ), latest)
+        changelog.extend(partial_events)
+        changelog.extend(sus_events)
+        changelog.extend(fd_events)
         changelog_note = (
-            "Adds and revisions of plotted quarters only. A sustainability "
-            "debt/GDP quarter filled from Debt to the Penny, before FRED posts "
-            "FYGFGDQ188S, is kind 'new print'. When FRED later posts that "
-            "quarter, kind 'FRED Update' records the swap and whether the "
-            "number moved. The log starts the first nightly that could read "
-            "the previous cubes.json. Earlier history is not backfilled. "
-            "Gemini guesses are not entries."
+            "Adds and revisions of plotted quarters, plus a measured axis that "
+            "arrives before the rest of its quarter. That early print is kind "
+            "'new print' and replaces the Gemini guess on that 1-d axis only. "
+            "A sustainability debt/GDP quarter filled from Debt to the Penny, "
+            "before FRED posts FYGFGDQ188S, is also kind 'new print'. When FRED "
+            "later posts that quarter, kind 'FRED Update' records the swap and "
+            "whether the number moved. The log starts the first nightly that "
+            "could read the previous cubes.json. Earlier history is not "
+            "backfilled. Gemini guesses are not entries."
         )
     log_step(f"changelog events {len(changelog)}")
 
@@ -924,6 +1149,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "next": {"sustain": sus_next, "fail": fd_next},
         "changelog_note": changelog_note,
         "changelog": changelog,
+        "partial_axes": partial_axes,
         "sustain": df_to_table(sustain)["rows"][::-1],
         "fail": df_to_table(fail)["rows"][::-1],
     }

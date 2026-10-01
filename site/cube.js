@@ -1009,7 +1009,7 @@ function hline(y, color) {
   };
 }
 
-function drawRawAxis(el, rows, col, title, color, wires, nc, ncVal) {
+function drawRawAxis(el, rows, col, title, color, wires, nc, ncVal, partials) {
   const xs = [], ys = [];
   rows.forEach((r) => {
     const v = Number(r[col]);
@@ -1017,9 +1017,18 @@ function drawRawAxis(el, rows, col, title, color, wires, nc, ncVal) {
     xs.push(r.date);
     ys.push(v);
   });
+  const have = new Set(xs.map((d) => String(d).slice(0, 10)));
+  const measured = (partials || []).filter((p) => {
+    return p && p.column === col && !have.has(String(p.quarter).slice(0, 10)) && Number.isFinite(Number(p.value));
+  });
+  measured.forEach((p) => {
+    xs.push(p.quarter);
+    ys.push(Number(p.value));
+  });
+  const order = xs.map((x, i) => ({ x, y: ys[i] })).sort((a, b) => String(a.x).localeCompare(String(b.x)));
   const node = document.getElementById(el);
   if (!node) return;
-  if (!xs.length) {
+  if (!order.length) {
     node.innerHTML = `<p class="err">no ${col}</p>`;
     return;
   }
@@ -1027,20 +1036,58 @@ function drawRawAxis(el, rows, col, title, color, wires, nc, ncVal) {
   const cs = window.getComputedStyle(box);
   const w = Math.round(box.clientWidth || parseFloat(cs.width)) || 680;
   const h = Math.round(box.clientHeight || parseFloat(cs.height)) || 340;
+  const lineX = [];
+  const lineY = [];
+  order.forEach((p, i) => {
+    if (i > 0) {
+      const days = (new Date(p.x) - new Date(order[i - 1].x)) / 86400000;
+      if (days > 100) {
+        lineX.push(p.x);
+        lineY.push(null);
+      }
+    }
+    lineX.push(p.x);
+    lineY.push(p.y);
+  });
   const traces = [{
     type: "scatter", mode: "lines",
-    x: xs, y: ys, name: col,
+    x: lineX, y: lineY, name: col,
     line: { color, width: 2 },
     connectgaps: false,
   }];
-  const ncv = Number(ncVal);
-  traces.push.apply(traces, nowcastGhost1d(
-    nc,
-    nc && nc.quarter_end,
-    ncv,
-    `AI forecast · ${col} ${Number.isFinite(ncv) ? ncv.toFixed(2) : "n/a"}`,
-    color
-  ));
+  if (measured.length) {
+    traces.push({
+      type: "scatter",
+      mode: "markers",
+      x: measured.map((p) => p.quarter),
+      y: measured.map((p) => Number(p.value)),
+      name: "measured",
+      hoverinfo: "text",
+      text: measured.map((p) => {
+        const src = p.source === "treasury"
+          ? "Treasury print, not FRED"
+          : "Measured print";
+        return (
+          `${p.quarter}<br>${src} · ${p.axis}<br>` +
+          `${p.series || ""}<br>` +
+          `Not a Gemini guess. This axis is in. The cube point waits on the others.`
+        );
+      }),
+      marker: { color, size: 9, symbol: "circle", line: { color: "#e8f6ff", width: 1.5 } },
+    });
+  }
+  const ghostQ = nc && String(nc.quarter_end).slice(0, 10);
+  const replaced = measured.some((p) => String(p.quarter).slice(0, 10) === ghostQ);
+  if (!replaced) {
+    const ncv = Number(ncVal);
+    traces.push.apply(traces, nowcastGhost1d(
+      nc,
+      nc && nc.quarter_end,
+      ncv,
+      `AI forecast · ${col} ${Number.isFinite(ncv) ? ncv.toFixed(2) : "n/a"}`,
+      color
+    ));
+  }
   return Plotly.newPlot(el, traces, {
     title: { text: title, font: { color: "#00f0ff", size: 12 } },
     paper_bgcolor: "#07080c",
@@ -1057,7 +1104,7 @@ function drawRawAxis(el, rows, col, title, color, wires, nc, ncVal) {
   }, { responsive: true, displaylogo: false, staticPlot: false });
 }
 
-function drawSixAxes(sus, failRows, zone, tax, nc) {
+function drawSixAxes(sus, failRows, zone, tax, nc, partials) {
   const gold = "#c4a35a";
   const mag = "#ff2bd6";
   const fd = failRows && failRows.length ? failRows : sus;
@@ -1067,17 +1114,17 @@ function drawSixAxes(sus, failRows, zone, tax, nc) {
   const tillName = tax ? "int / tax (%)" : "int / receipts (%)";
   const tillVal = tax ? (nc && nc.int_tax_pct) : (nc && nc.int_rec_pct);
   drawRawAxis("ax-1", sus, tillCol, `${tillName}`, "#00f0ff",
-    [hline(tillWarn, gold), hline(tillDeath, mag)], nc, tillVal);
+    [hline(tillWarn, gold), hline(tillDeath, mag)], nc, tillVal, partials);
   drawRawAxis("ax-2", sus, "refi_gap", "refi gap (pp)", "#ffbf00",
-    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)], nc, nc && nc.refi_gap);
+    [hline(zone.refi_gap_warn, gold), hline(zone.refi_gap_restruct, mag)], nc, nc && nc.refi_gap, partials);
   drawRawAxis("ax-3", sus, "debt_gdp_pct", "debt public / GDP (%)", "#7aa2ff",
-    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)], nc, nc && nc.debt_gdp_pct);
+    [hline(zone.debt_gdp_warn, gold), hline(zone.debt_gdp_restruct, mag)], nc, nc && nc.debt_gdp_pct, partials);
   drawRawAxis("ax-4", fd, "F2", "F2  y(int / general-fund − 20%)", "#00f0ff",
-    [hline(0, mag)], nc, nc && nc.F2);
+    [hline(0, mag)], nc, nc && nc.F2, partials);
   drawRawAxis("ax-5", fd, "F1", "F1  y(funds − book)  flipped", "#39ff14",
-    [hline(0, mag)], nc, nc && nc.F1);
+    [hline(0, mag)], nc, nc && nc.F1, partials);
   drawRawAxis("ax-6", fd, "F3", "F3  y(primary / GDP)", "#ff6b4a",
-    [hline(0, mag)], nc, nc && nc.F3);
+    [hline(0, mag)], nc, nc && nc.F3, partials);
 }
 
 function $(id) {
@@ -1205,6 +1252,7 @@ async function main() {
     return;
   }
   const pack = await res.json();
+  const partials = pack.partial_axes || [];
   let nowcast = null;
   try {
     const nr = await fetchFresh(NOWCAST);
@@ -1325,7 +1373,7 @@ async function main() {
   if ($("dist-plot") && sus.length) await drawDist("dist-plot", sus, tax, nowcast, zone);
   if ($("fd-dist-plot") && fail.length) await drawFdDist("fd-dist-plot", fail, tax, nowcast, zone);
   if ($("fd-delta-plot") && fail.length) await drawFdDeltaVsDist("fd-delta-plot", fail, zone);
-  drawSixAxes(sus, fail, zone, tax, nowcast);
+  drawSixAxes(sus, fail, zone, tax, nowcast, partials);
 
   function setBurden(next) {
     tax = next;
@@ -1335,7 +1383,7 @@ async function main() {
     if (btnRec) btnRec.classList.toggle("active", !tax);
     drawSustain();
     drawFail();
-    drawSixAxes(sus, fail, zone, tax, nowcast);
+    drawSixAxes(sus, fail, zone, tax, nowcast, partials);
     if ($("dist-plot") && sus.length) drawDist("dist-plot", sus, tax, nowcast, zone);
     if ($("fd-dist-plot") && fail.length) drawFdDist("fd-dist-plot", fail, tax, nowcast, zone);
     if ($("fd-delta-plot") && fail.length) drawFdDeltaVsDist("fd-delta-plot", fail, zone);
