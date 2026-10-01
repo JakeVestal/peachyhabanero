@@ -107,29 +107,27 @@
 <section>
   <h2>01  /  Distance to the Fiscal Dominance Zone over time</h2>
   <p class="sub">
-    Tracks σ-space distance to the nearest point on the Fiscal Dominance
-    octant (F1 ≥ 0, F2 ≥ 0, F3 ≥ 0). This distance is positive if a
-    quarter falls outside or on a face, and negative if inside.
-    Note that this metric is a calculated distance across all three
-    score-space dimensions, and is not a raw percent or basis point measure.
+    Straight-line distance in the raw units of the three axes: funds − book
+    (percentage points), interest / general-fund receipts (percent), and
+    primary / GDP (percent). No σ scaling. The surface is funds − book = 0,
+    interest / general-fund receipts = 20%, and primary / GDP = 0. The line
+    rises when the quarter moves away, falls when it moves closer, is zero
+    on the surface, and is negative inside.
   </p>
   <div id="fd-dist-plot"></div>
   <p class="sub">
-    Zero is the magenta box. Same units as the cube coordinates, not the
-    underlying percents. The labeled 2018-Q1 point is a <b>record</b>,
-    not a baseline: the deepest into the cube that the Fed has hiked
-    in this sample.
+    Zero is the surface. The diamond is 2018-Q1, the deepest hike on the
+    σ-scaled cube. In these raw units that quarter is not the low of the line.
   </p>
 </section>
 
 <section>
   <h2>02  /  Distance and FOMC Δ</h2>
   <p class="sub">
-    Same signed σ-distance as in 01 (negative = inside, 0 = the magenta
-    face) on x; quarterly net FOMC Δ on y. Distance is the independent
-    variable: did being inside the box change the hike / hold / cut.
-    Missing FOMC prints are omitted, not plotted as a hold. Magenta
-    ring = inside the box.
+    Same raw distance as in 01 (negative = inside, 0 = the surface) on x;
+    quarterly net FOMC Δ on y. Distance is the independent variable: did
+    being inside the box change the hike / hold / cut. Missing FOMC prints
+    are omitted, not plotted as a hold. Magenta ring = inside the box.
   </p>
   <div id="fd-delta-plot"></div>
 </section>

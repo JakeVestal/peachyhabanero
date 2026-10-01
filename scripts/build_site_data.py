@@ -194,13 +194,21 @@ def _piecewise(v: pd.Series, warn: float, restruct: float) -> pd.Series:
     return out
 
 
-def _signed_dist(scores: np.ndarray, threshold: float) -> np.ndarray:
-    delta = scores - threshold
-    shortfall = np.clip(-delta, 0.0, None)
-    outside = shortfall.any(axis=1)
+def _octant_dist(values: np.ndarray, wires: np.ndarray) -> np.ndarray:
+    """Signed straight-line distance to the octant value >= wire on every axis.
+
+    Raw units of the columns passed in. No rescaling. Positive is outside,
+    zero is on the surface, negative is inside (depth to the nearest face).
+    """
+    delta = np.asarray(values, dtype=float) - np.asarray(wires, dtype=float).reshape(1, -1)
+    finite = np.isfinite(delta).all(axis=1)
+    shortfall = np.clip(np.where(np.isfinite(delta), -delta, 0.0), 0.0, None)
+    outside = (shortfall > 0).any(axis=1)
     d_out = np.linalg.norm(shortfall, axis=1)
-    d_in = delta.min(axis=1)
-    return np.where(outside, d_out, -d_in)
+    d_in = np.min(np.where(np.isfinite(delta), delta, np.inf), axis=1)
+    out = np.where(outside, d_out, -d_in).astype(float)
+    out[~finite] = np.nan
+    return out
 
 
 # Cron is 08:20 UTC = 4:20 AM Eastern, before the 8:30 AM release.
@@ -801,9 +809,17 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     ):
         s_bur = _piecewise(panel[col], warn, restruct)
         panel[f"s_{burden}"] = s_bur
-        cube = np.column_stack([s_debt.to_numpy(), s_bur.to_numpy(), s_gap.to_numpy()])
-        panel[f"dist_warn_{burden}"] = _signed_dist(cube, 1.0)
-        panel[f"dist_restruct_{burden}"] = _signed_dist(cube, 2.0)
+        raw = np.column_stack([
+            panel["debt_gdp_pct"].to_numpy(dtype=float),
+            panel[col].to_numpy(dtype=float),
+            panel["refi_gap"].to_numpy(dtype=float),
+        ])
+        panel[f"dist_warn_{burden}"] = _octant_dist(raw, [
+            ZONE["debt_gdp_warn"], warn, ZONE["refi_gap_warn"],
+        ])
+        panel[f"dist_restruct_{burden}"] = _octant_dist(raw, [
+            ZONE["debt_gdp_restruct"], restruct, ZONE["refi_gap_restruct"],
+        ])
         panel[f"stress_{burden}"] = (
                 0.20 * s_debt + 0.35 * s_bur + 0.25 * s_gap
                 + 0.20 * _piecewise(panel["int_gdp_pct"], 3.0, 4.5)

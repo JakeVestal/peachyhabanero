@@ -278,11 +278,11 @@
 <section>
   <h2>02  /  Distance to the Danger Zone / Restructuring Zone over time</h2>
   <p class="sub">
-    Tracks score-space distance to the nearest point on the Danger (s≥1) or
-    Restructuring Zone (s≥2) octant. This distance is positive if a set of
-    quarterly prints falls outside or on a face, and negative if inside.
-    Note that this metric is a calculated distance across all three
-    score-space dimensions, and is not a raw percent or basis point measure.
+    Straight-line distance, in the cube's own units, from each quarter to the
+    nearest point on the Danger surface or the Restructuring surface. No
+    rescaling: a point of debt/GDP counts the same as a point of the refi gap.
+    The line rises when the quarter moves away, falls when it moves closer,
+    is zero on the surface, and is negative inside.
   </p>
   <div id="dist-plot"></div>
 
