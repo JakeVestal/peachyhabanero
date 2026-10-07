@@ -40,6 +40,15 @@
     el.textContent = text;
   }
 
+  function paint(el, data, layout) {
+    if (el.classList.contains("js-plotly-plot")) {
+      Plotly.react(el, data, layout, PLOT);
+      return;
+    }
+    el.replaceChildren();
+    Plotly.newPlot(el, data, layout, PLOT);
+  }
+
   function rangeIdx() {
     const dates = PACK.dates;
     const from = document.getElementById("curve-from").value;
@@ -98,7 +107,6 @@
       note(el, "No Treasury curve published on " + iso + ".");
       return;
     }
-    el.textContent = "";
     const date = PACK.dates[i];
     const x = [];
     const y = [];
@@ -109,7 +117,7 @@
       y.push(v === undefined ? null : v);
       text.push(date + " · " + tenor.label + (v == null ? " · not published" : ""));
     });
-    Plotly.react(el, [{
+    paint(el, [{
       type: "scatter",
       mode: "lines+markers",
       x: x,
@@ -128,7 +136,7 @@
       xaxis: Object.assign({ title: "maturity (years)" }, AXIS),
       yaxis: Object.assign({ title: "yield %", ticksuffix: "%" }, AXIS),
       hoverlabel: { bgcolor: "#0d1117", bordercolor: "#c4a35a", font: { color: "#d5e4f0" } },
-    }, PLOT);
+    });
   }
 
   function drawSurface(i0, i1) {
@@ -144,7 +152,6 @@
       note(el, "Not enough published days between " + from + " and " + to + " to draw a surface.");
       return;
     }
-    el.textContent = "";
     const byKey = {};
     PACK.tenors.forEach(function (t) { byKey[t.key] = t; });
     let zmin = Infinity;
@@ -195,7 +202,7 @@
         showbackground: true,
       }, extra || {});
     };
-    Plotly.react(el, traces, {
+    paint(el, traces, {
       margin: { l: 0, r: 0, t: 8, b: 0 },
       paper_bgcolor: "#07080c",
       font: { color: "#d5e4f0" },
@@ -219,7 +226,7 @@
         yaxis: sceneAxis("maturity (years)"),
         zaxis: sceneAxis("yield %"),
       },
-    }, PLOT);
+    });
   }
 
   function draw() {
