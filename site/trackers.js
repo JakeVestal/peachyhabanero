@@ -18,11 +18,16 @@
   };
 
   let PACK = null;
-  let YEARS = 5;
 
   function utcMs(iso) {
     const p = iso.split("-").map(Number);
     return Date.UTC(p[0], p[1] - 1, p[2]);
+  }
+
+  function isoDate(d) {
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
   }
 
   function stamp(text) {
@@ -30,16 +35,21 @@
     if (el) el.textContent = text;
   }
 
-  function windowIdx() {
+  function note(el, text) {
+    Plotly.purge(el);
+    el.textContent = text;
+  }
+
+  function rangeIdx() {
     const dates = PACK.dates;
-    if (!dates.length) return [0, -1];
-    if (!YEARS) return [0, dates.length - 1];
-    const end = utcMs(dates[dates.length - 1]);
-    const cut = end - YEARS * 365.25 * 86400000;
-    let i = 0;
-    while (i < dates.length && utcMs(dates[i]) < cut) i += 1;
-    if (i >= dates.length) i = Math.max(0, dates.length - 2);
-    return [i, dates.length - 1];
+    const from = document.getElementById("curve-from").value;
+    const to = document.getElementById("curve-to").value;
+    if (from && to && from > to) return null;
+    let i0 = 0;
+    let i1 = dates.length - 1;
+    if (from) while (i0 < dates.length && dates[i0] < from) i0 += 1;
+    if (to) while (i1 >= 0 && dates[i1] > to) i1 -= 1;
+    return [i0, i1];
   }
 
   function segments(i0, i1) {
@@ -80,23 +90,15 @@
     return { vals: vals, text: text };
   }
 
-  function drawLatest(i0, i1) {
+  function drawLatest() {
     const el = document.getElementById("curve-latest");
-    let i = i1;
-    while (i >= i0) {
-      let any = false;
-      for (let t = 0; t < PACK.tenors.length; t++) {
-        const v = PACK.columns[PACK.tenors[t].key][i];
-        if (v !== null && v !== undefined) { any = true; break; }
-      }
-      if (any) break;
-      i -= 1;
-    }
-    if (i < i0) {
-      Plotly.purge(el);
-      el.textContent = "No yield in this window.";
+    const iso = document.getElementById("curve-day").value;
+    const i = PACK.dates.indexOf(iso);
+    if (i < 0) {
+      note(el, "No Treasury curve published on " + iso + ".");
       return;
     }
+    el.textContent = "";
     const date = PACK.dates[i];
     const x = [];
     const y = [];
@@ -131,12 +133,18 @@
 
   function drawSurface(i0, i1) {
     const el = document.getElementById("curve-surface");
-    const groups = segments(i0, i1);
-    if (!groups.length) {
-      Plotly.purge(el);
-      el.textContent = "Not enough published tenors in this window to draw a surface.";
+    const from = document.getElementById("curve-from").value;
+    const to = document.getElementById("curve-to").value;
+    if (i0 === null || i0 > i1) {
+      note(el, "No Treasury curve between " + from + " and " + to + ".");
       return;
     }
+    const groups = segments(i0, i1);
+    if (!groups.length) {
+      note(el, "Not enough published days between " + from + " and " + to + " to draw a surface.");
+      return;
+    }
+    el.textContent = "";
     const byKey = {};
     PACK.tenors.forEach(function (t) { byKey[t.key] = t; });
     let zmin = Infinity;
@@ -216,20 +224,34 @@
 
   function draw() {
     if (!PACK || !PACK.dates || !PACK.dates.length) return;
-    const span = windowIdx();
-    drawLatest(span[0], span[1]);
+    drawLatest();
+    const span = rangeIdx();
+    if (!span) {
+      note(document.getElementById("curve-surface"), "The start date is after the end date.");
+      return;
+    }
     drawSurface(span[0], span[1]);
   }
 
-  document.getElementById("curve-window").addEventListener("click", function (ev) {
-    const btn = ev.target.closest("button");
-    if (!btn) return;
-    YEARS = Number(btn.getAttribute("data-years"));
-    document.querySelectorAll("#curve-window button").forEach(function (b) {
-      b.classList.toggle("active", b === btn);
+  function bindPickers() {
+    const first = PACK.dates[0];
+    const last = PACK.dates[PACK.dates.length - 1];
+    const today = isoDate(new Date());
+    const ago = new Date();
+    ago.setFullYear(ago.getFullYear() - 5);
+    const fromDefault = isoDate(ago);
+    ["curve-day", "curve-from", "curve-to"].forEach(function (id) {
+      const el = document.getElementById(id);
+      el.min = first;
+      el.max = today;
     });
-    draw();
-  });
+    document.getElementById("curve-day").value = last;
+    document.getElementById("curve-from").value = fromDefault < first ? first : fromDefault;
+    document.getElementById("curve-to").value = today;
+    document.getElementById("curve-day").addEventListener("change", drawLatest);
+    document.getElementById("curve-from").addEventListener("change", draw);
+    document.getElementById("curve-to").addEventListener("change", draw);
+  }
 
   fetch("data/published/yield_curve.json", { cache: "no-store" })
     .then(function (r) {
@@ -249,6 +271,7 @@
       if (pack.stale) bits.push("STALE — last good curve kept");
       if (pack.error) bits.push(pack.error);
       stamp(bits.join(" · "));
+      bindPickers();
       draw();
     })
     .catch(function (err) {

@@ -1014,3 +1014,22 @@ a.analysis-card:hover { border-color: var(--cyan); }
   .curve-surface .js-plotly-plot,
   .curve-surface .plot-container { height: 480px !important; }
 }
+.curve-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  margin: 4px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.curve-picker input[type="date"] {
+  color-scheme: dark;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+}

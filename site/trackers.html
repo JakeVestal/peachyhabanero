@@ -22,8 +22,7 @@
   </div>
   <h1>TRACKERS</h1>
   <p class="sub">
-    Reference plots. Not an argument. The yield curve is the Treasury’s
-    daily par curve, fetched from the Treasury, not spliced from FRED.
+    Tracks assorted macroeconomic objects
   </p>
   <p class="stat" id="stamp">loading yield_curve.json…</p>
 </header>
@@ -32,24 +31,23 @@
   <section>
     <h2>Yield curve</h2>
     <p class="sub">
-      Daily constant-maturity par yields. Maturity is in years, so three
-      months is not as far from six months as ten years is from thirty.
-      Where the Treasury did not publish a tenor, that part of the surface
-      is missing. The sheet does not bridge the hole, and nothing is filled in.
-    </p>
-    <p class="sub">
       Source:
       <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve">Treasury daily yield curve</a>.
-      History from 2000. The default window is the last five years.
+      History from 2000. The surface opens on the last five years through today.
     </p>
-    <div class="toolbar" id="curve-window">
-      <button class="neon-btn active" type="button" data-years="5">5 years</button>
-      <button class="neon-btn" type="button" data-years="10">10 years</button>
-      <button class="neon-btn" type="button" data-years="0">since 2000</button>
-    </div>
     <h3 class="axis-head">Latest day</h3>
+    <div class="curve-picker">
+      <label for="curve-day">Date</label>
+      <input type="date" id="curve-day"/>
+    </div>
     <div class="curve-latest" id="curve-latest"></div>
     <h3 class="axis-head">Curve through time</h3>
+    <div class="curve-picker">
+      <label for="curve-from">From</label>
+      <input type="date" id="curve-from"/>
+      <label for="curve-to">To</label>
+      <input type="date" id="curve-to"/>
+    </div>
     <div class="curve-surface" id="curve-surface"></div>
   </section>
 </main>
