@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Trackers</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      trackers ·
+      <a href="data.html">data</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>TRACKERS</h1>
+  <p class="sub">
+    Reference plots. Not an argument. The yield curve is the Treasury’s
+    daily par curve, fetched from the Treasury, not spliced from FRED.
+  </p>
+  <p class="stat" id="stamp">loading yield_curve.json…</p>
+</header>
+
+<main>
+  <section>
+    <h2>Yield curve</h2>
+    <p class="sub">
+      Daily constant-maturity par yields. Maturity is in years, so three
+      months is not as far from six months as ten years is from thirty.
+      Where the Treasury did not publish a tenor, that part of the surface
+      is missing. The sheet does not bridge the hole, and nothing is filled in.
+    </p>
+    <p class="sub">
+      Source:
+      <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve">Treasury daily yield curve</a>.
+      History from 2000. The default window is the last five years.
+    </p>
+    <div class="toolbar" id="curve-window">
+      <button class="neon-btn active" type="button" data-years="5">5 years</button>
+      <button class="neon-btn" type="button" data-years="10">10 years</button>
+      <button class="neon-btn" type="button" data-years="0">since 2000</button>
+    </div>
+    <h3 class="axis-head">Latest day</h3>
+    <div class="curve-latest" id="curve-latest"></div>
+    <h3 class="axis-head">Curve through time</h3>
+    <div class="curve-surface" id="curve-surface"></div>
+  </section>
+</main>
+
+<footer>
+  peachyhabanero · <a href="index.html">home</a> · <a href="sustainability.html">sustainability</a> · <a href="data.html">data</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+<script src="trackers.js"></script>
+<script src="nav-scratch.js"></script>
+</body>
+</html>
