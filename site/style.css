@@ -984,3 +984,33 @@ a.analysis-card:hover { border-color: var(--cyan); }
   background: var(--gold);
   border-bottom-color: var(--gold);
 }
+
+.curve-latest,
+.curve-surface {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px 0 18px;
+}
+.curve-latest { height: 320px; }
+.curve-surface { height: 680px; }
+.curve-latest .js-plotly-plot,
+.curve-latest .plot-container {
+  width: 100% !important;
+  height: 320px !important;
+}
+.curve-surface .js-plotly-plot,
+.curve-surface .plot-container {
+  width: 100% !important;
+  height: 680px !important;
+}
+@media (max-width: 720px) {
+  .curve-latest { height: 260px; }
+  .curve-surface { height: 480px; }
+  .curve-latest .js-plotly-plot,
+  .curve-latest .plot-container { height: 260px !important; }
+  .curve-surface .js-plotly-plot,
+  .curve-surface .plot-container { height: 480px !important; }
+}

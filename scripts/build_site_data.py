@@ -42,6 +42,7 @@ from cube_data import (  # noqa: E402
     fetch_fred_series,
     load_fomc_point_steps,
     load_frames,
+    publish_yield_curve,
     save_frames,
     summarize,
     summarize_metrics,
@@ -1583,6 +1584,16 @@ def process_and_publish() -> None:
         "note": "Auction / coupon / holdings frames stay in .cache; only formula inputs are published.",
     })
 
+    log_step("Publishing Treasury yield curve (cached closed years, refetch this year)...")
+    curve = publish_yield_curve(CACHE, PUB, generated_at)
+    if curve.get("error"):
+        log_step(f"yield curve not fresh: {curve['error']}")
+    else:
+        log_step(
+            f"yield curve {curve.get('start')} → {curve.get('end')}  "
+            f"days={len(curve.get('dates') or [])}"
+        )
+
     write_json(PUB / "manifest.json", {
         "generated_at": generated_at,
         "files": [
@@ -1594,6 +1605,7 @@ def process_and_publish() -> None:
             "cubes.json",
             "daily_refi.json",
             "buybacks.json",
+            "yield_curve.json",
         ],
     })
     write_json(PUB / "thresholds.json", thresh.to_dict(orient="records"))

@@ -1626,6 +1626,216 @@ def summarize(frames: list[pd.DataFrame]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# Daily Treasury par yield curve. Finished years are cached as CSV under
+# .cache/yield_curve and are not downloaded again. The current year is
+# fetched every run. A blank cell stays blank — no fill.
+CURVE_PAGE = (
+    "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/"
+    "TextView?type=daily_treasury_yield_curve"
+)
+CURVE_START_YEAR = 2000
+CURVE_MIN_CLOSED_ROWS = 200
+YIELD_TENORS = (
+    ("m1", "1 Mo", "1 month", 1 / 12),
+    ("m2", "2 Mo", "2 month", 2 / 12),
+    ("m3", "3 Mo", "3 month", 3 / 12),
+    ("m4", "4 Mo", "4 month", 4 / 12),
+    ("m6", "6 Mo", "6 month", 0.5),
+    ("y1", "1 Yr", "1 year", 1.0),
+    ("y2", "2 Yr", "2 year", 2.0),
+    ("y3", "3 Yr", "3 year", 3.0),
+    ("y5", "5 Yr", "5 year", 5.0),
+    ("y7", "7 Yr", "7 year", 7.0),
+    ("y10", "10 Yr", "10 year", 10.0),
+    ("y20", "20 Yr", "20 year", 20.0),
+    ("y30", "30 Yr", "30 year", 30.0),
+)
+
+
+def _curve_year_url(year: int) -> str:
+    return (
+        "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/"
+        f"daily-treasury-rates.csv/{year}/all"
+        f"?type=daily_treasury_yield_curve&field_tdr_date_value={year}"
+    )
+
+
+def _curve_csv_ok(path: Path, closed: bool) -> bool:
+    if not path.exists() or path.stat().st_size < 400:
+        return False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if not lines or not lines[0].startswith("Date"):
+        return False
+    nrows = len(lines) - 1
+    if closed and nrows < CURVE_MIN_CLOSED_ROWS:
+        return False
+    return nrows >= 1
+
+
+def _download_curve_year(sess: requests.Session, year: int, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(".csv.part")
+    r = sess.get(_curve_year_url(year), timeout=90)
+    r.raise_for_status()
+    body = r.content
+    if not body.lstrip().startswith(b"Date"):
+        raise RuntimeError(
+            f"Treasury curve {year} was not a CSV ({body[:140]!r})"
+        )
+    tmp.write_bytes(body)
+    if not _curve_csv_ok(tmp, closed=False):
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(f"Treasury curve {year} CSV failed validation")
+    tmp.replace(dest)
+
+
+def ensure_yield_curve_csvs(cache_dir: Path) -> list[Path]:
+    """Return one CSV path per year from 2000 through this year.
+
+    A closed year already on disk is not fetched again. The current year
+    is fetched every call. A failed download does not delete the previous
+    file for that year.
+    """
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    today = date.today()
+    sess = _session()
+    paths: list[Path] = []
+    for year in range(CURVE_START_YEAR, today.year + 1):
+        dest = cache_dir / f"{year}.csv"
+        closed = year < today.year
+        if closed and _curve_csv_ok(dest, closed=True):
+            print(f"  yield curve {year}: cached")
+            paths.append(dest)
+            continue
+        print(f"  yield curve {year}: fetching")
+        _download_curve_year(sess, year, dest)
+        if not _curve_csv_ok(dest, closed=closed):
+            raise RuntimeError(f"Treasury curve {year} still short after fetch")
+        paths.append(dest)
+        time.sleep(0.2)
+    return paths
+
+
+def assemble_yield_curve(paths: list[Path]) -> pd.DataFrame:
+    frames = []
+    for path in paths:
+        raw = pd.read_csv(path)
+        if "Date" not in raw.columns:
+            raise RuntimeError(f"{path.name} has no Date column")
+        dates = pd.to_datetime(raw["Date"], format="%m/%d/%Y", errors="coerce")
+        if dates.isna().any():
+            raise RuntimeError(f"{path.name} has an unparsed date")
+        piece = pd.DataFrame({"date": dates})
+        for key, header, _label, _years in YIELD_TENORS:
+            if header in raw.columns:
+                piece[key] = pd.to_numeric(raw[header], errors="coerce").astype("float64")
+            else:
+                piece[key] = float("nan")
+        frames.append(piece)
+    out = pd.concat(frames, ignore_index=True)
+    out = out.sort_values("date").drop_duplicates("date", keep="last")
+    out = out[out["date"] >= pd.Timestamp(f"{CURVE_START_YEAR}-01-01")]
+    out = out.set_index("date").sort_index()
+    if len(out) < 5000:
+        raise RuntimeError(f"yield curve assembled only {len(out)} days")
+    if out.index.min() > pd.Timestamp(f"{CURVE_START_YEAR}-01-15"):
+        raise RuntimeError("yield curve does not start in early 2000")
+    return out
+
+
+def yield_curve_payload(
+        df: pd.DataFrame,
+        generated_at: str,
+        stale: bool,
+        error: Optional[str],
+) -> dict:
+    dates = [ts.strftime("%Y-%m-%d") for ts in df.index]
+    columns = {}
+    for key, _header, _label, _years in YIELD_TENORS:
+        col = []
+        for v in df[key].tolist():
+            if pd.isna(v):
+                col.append(None)
+            else:
+                col.append(round(float(v), 2))
+        columns[key] = col
+    return {
+        "generated_at": generated_at,
+        "source": CURVE_PAGE,
+        "note": (
+            "Daily Treasury par yield curve (constant maturity). "
+            "A null is a tenor Treasury did not publish that day. No fill."
+        ),
+        "stale": stale,
+        "error": error,
+        "start": dates[0] if dates else None,
+        "end": dates[-1] if dates else None,
+        "tenors": [
+            {"key": key, "label": label, "years": years}
+            for key, _header, label, years in YIELD_TENORS
+        ],
+        "dates": dates,
+        "columns": columns,
+    }
+
+
+def _curve_error_payload(generated_at: str, error: str) -> dict:
+    return {
+        "generated_at": generated_at,
+        "source": CURVE_PAGE,
+        "note": (
+            "Daily Treasury par yield curve (constant maturity). "
+            "A null is a tenor Treasury did not publish that day. No fill."
+        ),
+        "stale": False,
+        "error": error,
+        "start": None,
+        "end": None,
+        "tenors": [
+            {"key": key, "label": label, "years": years}
+            for key, _header, label, years in YIELD_TENORS
+        ],
+        "dates": [],
+        "columns": {},
+    }
+
+
+def publish_yield_curve(cache_root: Path, published: Path, generated_at: str) -> dict:
+    """Write site/data/published/yield_curve.json.
+
+    On failure, republish the last assembled curve and mark it stale.
+    If there has never been a successful assembly, write the error and
+    an empty curve. Does not raise — a Treasury miss must not stop the cubes.
+    """
+    cache_dir = Path(cache_root) / "yield_curve"
+    assembled_path = cache_dir / "assembled.json"
+    published = Path(published)
+    published.mkdir(parents=True, exist_ok=True)
+    dest = published / "yield_curve.json"
+    try:
+        paths = ensure_yield_curve_csvs(cache_dir)
+        df = assemble_yield_curve(paths)
+        payload = yield_curve_payload(df, generated_at, stale=False, error=None)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        text = json.dumps(payload, separators=(",", ":"))
+        assembled_path.write_text(text, encoding="utf-8")
+        dest.write_text(text, encoding="utf-8")
+        return payload
+    except Exception as exc:
+        message = f"{type(exc).__name__}: {exc}"
+        print(f"  yield curve failed: {message}")
+        if assembled_path.exists():
+            payload = json.loads(assembled_path.read_text(encoding="utf-8"))
+            payload["stale"] = True
+            payload["error"] = message
+            dest.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+            return payload
+        payload = _curve_error_payload(generated_at, message)
+        dest.write_text(json.dumps(payload), encoding="utf-8")
+        return payload
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--update", action="store_true")
