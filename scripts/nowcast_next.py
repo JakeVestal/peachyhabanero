@@ -199,6 +199,7 @@ def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tu
     empty_meta = {"sources": [], "prompt_rows": last_rows[-6:]}
     if not key:
         return None, "no GEMINI_API_KEY", empty_meta
+
     slim = []
     for r in last_rows[-6:]:
         slim.append({
@@ -214,65 +215,62 @@ def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tu
             "debt_gdp_pct": r.get("debt_gdp_pct"),
         })
     empty_meta["prompt_rows"] = slim
-    prompt = f"""You estimate the NEXT US quarterly NIPA/fiscal PRINTS. You do not score cubes.
+
+    # REVISED PROMPT WITH HARD DATA ANCHORS FIRST
+    prompt = f"""You are estimating exact current-dollar point estimates for the NEXT U.S. quarterly NIPA and Treasury fiscal prints.
 
 Today (UTC): {datetime.now(timezone.utc).strftime("%Y-%m-%d")}.
 Target quarter-end: {target}.
-This is the next quarter after the last plotted cube point. Do not re-estimate a quarter already on the cubes, including one filled from a Treasury Debt-to-the-Penny print.
-Last complete cube rows, same units (oldest to newest):
+
+HISTORICAL BASELINE (Last complete cube rows, oldest to newest):
 {json.dumps(slim, indent=2)}
-Live Treasury / Fed market rates (Python owns refi; do not overwrite):
-{json.dumps(yields, indent=2)}
-Last book coupon (Fiscal Data Total Marketable, %): {coupon}
 
-Search the open web. Start by determining the global economic and political 
-situation. Some things to consider: 
-- will the Fed hike/cut rates between now and end of quarter? 
-- have there been any developments in war/defense that might affect bond 
-yields and therefore influence your final number?
-- are there any political, financial, or news events that should be folded in to your forecast?
+LIVE MARKET CONTEXT:
+Yields: {json.dumps(yields, indent=2)} | Weighted Marketable Coupon: {coupon}%
 
-When you search for numbers, you might consider:
-BEA, Atlanta Fed GDPNow, CBO, Treasury Fiscal Data, Monthly Treasury 
-  Statement, FRED,
-  Reuters, Bloomberg, WSJ, Seeking Alpha, Calculated Risk, respectable financial blogs.
-Weigh credibility. Name what you used. 
+STEP-BY-STEP INSTRUCTIONS:
+1. ANCHOR HARD DATA FIRST (Search via Google Search):
+   - Find the latest Treasury "Debt to the Penny" or Monthly Treasury Statement (MTS) for target period ({target}) to pin down actual/projected end-of-quarter Debt Held by the Public in Billions.
+   - Fetch the latest Atlanta Fed GDPNow tracking estimate, NY Fed Nowcast, or BEA Advance/Second estimate for current-dollar Nominal GDP (SAAR, Billions).
+   - Retrieve latest BEA NIPA Table 3.2 data for federal current expenditures, tax receipts, and net interest.
 
-take your numbers, adjust them (if you deem appropriate) according to your view
-of the overall macro situation of the economy, and come up with your rationale
-for why you think your final reported numbers are the best forecast you can 
-make. Put that rationale in the "rationale" part of the JSON object defined 
-below, <= 300 words. If you decided to bump a number up or down, briefly 
-state why.
+2. APPLY MACRO MODIFIERS:
+   - Adjust baseline numbers slightly based on high-frequency data: recent Fed rate path shifts, rolling auction coupon yields, and unexpected fiscal outlays.
 
-Return ONLY JSON, numbers not strings except rationale/sources:
-  gdp_bn                 # NIPA GDP, current $, SAAR, billions (same unit as last rows)
-  interest_bn_saar       # A091RC1Q027SBEA
-  receipts_bn_saar       # FGRECPT
-  tax_bn_saar            # W006RC1Q027SBEA
-  w780_bn_saar           # W780RC1Q027SBEA (contributions for gov social insurance)
-  fgexpnd_bn_saar        # FGEXPND current expenditures, SAAR, billions
-  debt_held_public_bn    # debt held by the public, billions, same unit as GDP
-  rationale              # <= 300 words but try to be concise.
-  sources                # array of {{"title": "...", "uri": "https://..."}} you actually used
+3. CRITICAL UNIT CONVENTIONS:
+   - gdp_bn, interest_bn_saar, receipts_bn_saar, tax_bn_saar, w780_bn_saar, fgexpnd_bn_saar MUST be SAAR in Billions of USD.
+   - debt_held_public_bn MUST be the absolute level (not SAAR) at quarter-end in Billions of USD.
 
-Do NOT return F1, F2, F3, refi, funds, int/receipts, primary/GDP, or debt/GDP. Python computes those from the prints.
-If you cannot beat the last print for a series, copy the last print and say so in rationale.
-sources must be real http(s) URLs. Empty array if you used only the last-print rows we sent.
+OUTPUT FORMAT REQUIREMENTS:
+Return ONLY a JSON object (no markdown, no extra keys):
+{{
+  "gdp_bn": number,              # Current-dollar GDP (SAAR, $B)
+  "interest_bn_saar": number,    # BEA Net Interest Paid (A091RC1Q027SBEA, $B)
+  "receipts_bn_saar": number,    # Federal Current Receipts (FGRECPT, $B)
+  "tax_bn_saar": number,         # Current Tax Receipts (W006RC1Q027SBEA, $B)
+  "w780_bn_saar": number,        # Social Insurance Contributions (W780RC1Q027SBEA, $B)
+  "fgexpnd_bn_saar": number,     # Current Expenditures (FGEXPND, $B)
+  "debt_held_public_bn": number, # Total Debt Held by Public at quarter-end ($B)
+  "rationale": "string <= 250 words explaining exact arithmetic additions/subtractions made relative to hard tracking models",
+  "sources": [{"title": "string", "uri": "string"}]
+}}
+Do NOT compute derived ratios (debt/GDP, int/receipts). Python handles calculations downstream.
 """
+
     headers = {"Content-Type": "application/json"}
     sess = requests.Session()
     models = resolve_gemini_models(sess, key)
     errors = []
+
     for model in models:
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-            f"?key={key}"
-        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+
+        # ENABLE GOOGLE SEARCH GROUNDING TOOL
         body = {
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "tools": [{"google_search": {}}],  # Enables web search grounding
             "generationConfig": {
-                "temperature": 0.2,
+                "temperature": 0.1,  # Lowered temperature for tighter math consistency
                 "responseMimeType": "application/json",
             },
         }
@@ -283,6 +281,7 @@ sources must be real http(s) URLs. Empty array if you used only the last-print r
                 log(last_err)
                 errors.append(last_err)
                 continue
+
             data = r.json()
             text = (
                 data.get("candidates", [{}])[0]
@@ -293,9 +292,23 @@ sources must be real http(s) URLs. Empty array if you used only the last-print r
             text = text.strip()
             if text.startswith("```"):
                 text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)
+
             parsed = json.loads(text)
             parsed["_model"] = model
             sources = parse_sources(parsed.get("sources"))
+
+            # Extract grounding metadata if sources array is empty
+            if not sources:
+                grounding_chunks = (
+                    data.get("candidates", [{}])[0]
+                    .get("groundingMetadata", {})
+                    .get("groundingChunks", [])
+                )
+                for chunk in grounding_chunks:
+                    web = chunk.get("web", {})
+                    if web.get("uri") and web.get("title"):
+                        sources.append({"title": web["title"], "uri": web["uri"]})
+
             meta = {
                 "sources": sources,
                 "prompt_rows": slim,
@@ -303,11 +316,13 @@ sources must be real http(s) URLs. Empty array if you used only the last-print r
             }
             log(f"gemini {model} sources={len(sources)}")
             return parsed, f"{model}", meta
+
         except Exception as e:
             last_err = f"{model} {type(e).__name__}: {e}"
             log(last_err)
             errors.append(last_err)
             continue
+
     return None, " | ".join(errors[-6:]) or "no model", empty_meta
 
 
