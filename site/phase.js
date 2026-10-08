@@ -1,5 +1,6 @@
-/* Phase plane: measured (primary, debt/GDP) path plus a one-year identity.
-   Arrows use the selected quarter's coupon and nominal growth. No fill. */
+/* Path is measured. The identity uses r = interest/GDP ÷ debt/GDP and the
+   exact one-year map. The score chart is printed minus that identity.
+   The grid, sliders, and poles are a model and sit below the score. */
 (function () {
   const DATA = "data/published/cubes.json";
   const PLOT = {
@@ -52,7 +53,7 @@
   }
 
   function paint(el, data, layout) {
-    const h = el.clientHeight || parseInt(getComputedStyle(el).height, 10) || 480;
+    const h = el.clientHeight || parseInt(getComputedStyle(el).height, 10) || 420;
     layout.height = h;
     if (el.classList.contains("js-plotly-plot")) {
       Plotly.react(el, data, layout, PLOT);
@@ -60,6 +61,17 @@
     }
     el.replaceChildren();
     Plotly.newPlot(el, data, layout, PLOT);
+  }
+
+  function legend() {
+    return {
+      orientation: "h",
+      y: 1.02,
+      x: 0,
+      yanchor: "bottom",
+      font: { color: "#d5e4f0", size: 11 },
+      bgcolor: "rgba(0,0,0,0)",
+    };
   }
 
   function growth(row) {
@@ -71,12 +83,37 @@
     return (now / then - 1) * 100;
   }
 
+  function rate(row) {
+    const i = num(row.int_gdp_pct);
+    const b = num(row.debt_gdp_pct);
+    if (i === null || b === null || b === 0) return null;
+    return (100 * i) / b;
+  }
+
+  function carry(r, g) {
+    return (1 + r / 100) / (1 + g / 100) - 1;
+  }
+
+  function identity(row) {
+    const r = rate(row);
+    const g = growth(row);
+    const b = num(row.debt_gdp_pct);
+    const d = num(row.primary_deficit_pct_gdp);
+    if (r === null || g === null || b === null || d === null) return null;
+    return carry(r, g) * b + d;
+  }
+
+  function printed(row) {
+    const b = num(row.debt_gdp_pct);
+    const ahead = BY[shiftYear(row.date, 1)];
+    if (b === null || !ahead) return null;
+    const aheadB = num(ahead.debt_gdp_pct);
+    if (aheadB === null) return null;
+    return aheadB - b;
+  }
+
   function fieldOk(row) {
-    return num(row.primary_deficit_pct_gdp) !== null
-      && num(row.debt_gdp_pct) !== null
-      && num(row.stock_avg_coupon) !== null
-      && row.stock_avg_coupon !== 0
-      && growth(row) !== null;
+    return identity(row) !== null;
   }
 
   function gamma() {
@@ -102,64 +139,50 @@
       if (b !== null) bs.push(b);
       if (d !== null) ds.push(d);
     });
-    const b0 = Math.min.apply(null, bs) - 3;
-    const b1 = Math.max.apply(null, bs) + 3;
-    const d0 = wide ? Math.min.apply(null, ds) - 1 : -6;
-    const d1 = wide ? Math.max.apply(null, ds) + 1 : 10;
-    return { d0: d0, d1: d1, b0: b0, b1: b1 };
+    return {
+      d0: wide ? Math.min.apply(null, ds) - 1 : -6,
+      d1: wide ? Math.max.apply(null, ds) + 1 : 10,
+      b0: Math.min.apply(null, bs) - 3,
+      b1: Math.max.apply(null, bs) + 3,
+    };
   }
 
   function step(d, b, r, g, bq, gam, rh) {
-    const rg = r - g;
-    const db = (rg / 100) * b + d;
-    const dStar = -(rg / 100) * bq - rh * (b - bq);
-    const dd = gam * (dStar - d);
-    return { dd: dd, db: db };
+    const a = carry(r, g);
+    const db = a * b + d;
+    const dStar = -a * bq - rh * (b - bq);
+    return { dd: gam * (dStar - d), db: db, a: a };
   }
 
   function polesOf(r, g, gam, rh) {
-    const rg = r - g;
-    const tr = -gam + rg / 100;
-    const det = gam * (rh - rg / 100);
+    const a = carry(r, g);
+    const tr = -gam + a;
+    const det = gam * (rh - a);
     const half = tr / 2;
     const disc = half * half - det;
     if (disc >= 0) {
       const s = Math.sqrt(disc);
-      return { tr: tr, det: det, disc: disc, poles: [
+      return { tr: tr, det: det, disc: disc, a: a, poles: [
         { re: half + s, im: 0 },
         { re: half - s, im: 0 },
       ] };
     }
     const s = Math.sqrt(-disc);
-    return { tr: tr, det: det, disc: disc, poles: [
+    return { tr: tr, det: det, disc: disc, a: a, poles: [
       { re: half, im: s },
       { re: half, im: -s },
     ] };
   }
 
-  function regime(info, rg) {
-    if (Math.abs(info.poles[0].re) < 1e-12 && Math.abs(info.poles[1].re) < 1e-12
-        && Math.abs(info.poles[0].im) < 1e-12) {
-      return "Both poles are on zero. The linear step does not push.";
-    }
+  function regime(info) {
     if (info.disc < -1e-10) {
       const side = info.tr < 0 ? "spiral sink" : (info.tr > 0 ? "spiral source" : "center");
-      return "Complex poles: a " + side + ". r − g is " + fmt(rg, 2)
-        + " percentage points. The rotation is the policy rule, not a cycle in the data.";
+      return "Complex poles: a " + side + ". That rotation is the policy rule, not a cycle in the data.";
     }
-    if (info.det < -1e-10) {
-      return "Saddle. One direction decays and one grows. r − g is "
-        + fmt(rg, 2) + " percentage points.";
-    }
-    if (info.tr < -1e-10 && info.det > 1e-10) {
-      return "Sink. Both poles are in the left half. r − g is "
-        + fmt(rg, 2) + " percentage points.";
-    }
-    if (info.tr > 1e-10 && info.det > 1e-10) {
-      return "Source. Both poles are in the right half. r − g is "
-        + fmt(rg, 2) + " percentage points.";
-    }
-    return "A pole is on the imaginary axis. r − g is " + fmt(rg, 2) + " percentage points.";
+    if (info.det < -1e-10) return "Saddle. One direction decays and one grows.";
+    if (info.tr < -1e-10 && info.det > 1e-10) return "Sink. Both poles are in the left half.";
+    if (info.tr > 1e-10 && info.det > 1e-10) return "Source. Both poles are in the right half.";
+    return "A pole is on the imaginary axis.";
   }
 
   function segments(box, r, g, bq, gam, rh) {
@@ -197,28 +220,21 @@
   function nullcline(box, r, g) {
     const x = [];
     const y = [];
-    const rg = r - g;
+    const a = carry(r, g);
     for (let k = 0; k <= 60; k++) {
       const b = box.b0 + (box.b1 - box.b0) * k / 60;
-      x.push(-(rg / 100) * b);
+      x.push(-a * b);
       y.push(b);
     }
     return {
       type: "scatter",
       mode: "lines",
-      name: "debt ratio flat",
+      name: "identity flat",
       x: x,
       y: y,
-      hovertemplate: "primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>Δb = 0</extra>",
+      hovertemplate: "primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>identity Δb = 0</extra>",
       line: { color: "#c4a35a", width: 1.5, dash: "dot" },
     };
-  }
-
-  function equilibrium(r, g, bq, gam, rh) {
-    if (gam <= 0) return null;
-    const rg = r - g;
-    if (Math.abs(rh - rg / 100) < 1e-4) return null;
-    return { d: -(rg / 100) * bq, b: bq };
   }
 
   function pathTrace() {
@@ -229,24 +245,20 @@
       const d = num(row.primary_deficit_pct_gdp);
       const b = num(row.debt_gdp_pct);
       if (d === null || b === null) return;
-      const g = growth(row);
-      const r = num(row.stock_avg_coupon);
-      const ahead = BY[shiftYear(row.date, 1)];
-      const aheadB = ahead ? num(ahead.debt_gdp_pct) : null;
-      let pred = null;
-      let actual = null;
-      if (g !== null && r !== null) pred = ((r - g) / 100) * b + d;
-      if (aheadB !== null) actual = aheadB - b;
+      const ident = identity(row);
+      const act = printed(row);
+      const gap = ident !== null && act !== null ? act - ident : null;
       x.push(d);
       y.push(b);
       cd.push([
         row.date,
         fmt(num(row.int_gdp_pct), 2),
-        fmt(r, 2),
-        fmt(g, 2),
-        g !== null && r !== null ? fmt(r - g, 2) : "—",
-        fmt(pred, 2),
-        fmt(actual, 2),
+        fmt(rate(row), 2),
+        fmt(num(row.stock_avg_coupon), 2),
+        fmt(growth(row), 2),
+        fmt(ident, 2),
+        fmt(act, 2),
+        fmt(gap, 2),
       ]);
     });
     return {
@@ -261,27 +273,174 @@
         "primary %{x:.2f}% of GDP<br>" +
         "debt/GDP %{y:.1f}<br>" +
         "interest/GDP %{customdata[1]}<br>" +
-        "book coupon %{customdata[2]}%<br>" +
-        "nominal growth %{customdata[3]}%<br>" +
-        "r − g %{customdata[4]} pp<br>" +
+        "r used %{customdata[2]}%<br>" +
+        "book coupon %{customdata[3]}%<br>" +
+        "nominal growth %{customdata[4]}%<br>" +
         "identity next-year Δdebt/GDP %{customdata[5]}<br>" +
-        "printed next-year Δdebt/GDP %{customdata[6]}" +
-        "<extra>click to set the field</extra>",
+        "printed next-year Δdebt/GDP %{customdata[6]}<br>" +
+        "gap (printed − identity) %{customdata[7]}" +
+        "<extra>click to set the quarter</extra>",
       line: { color: "#00f0ff", width: 1.6 },
-      marker: { color: "#00f0ff", size: 7, line: { color: "#07080c", width: 0 } },
+      marker: { color: "#00f0ff", size: 7 },
     };
   }
 
-  function drawPoles(info) {
-    const el = document.getElementById("phase-poles");
+  function drawPath(row, ident) {
+    const el = document.getElementById("phase-plane");
+    const box = view();
+    const r = rate(row);
+    const g = growth(row);
+    const d = num(row.primary_deficit_pct_gdp);
+    const b = num(row.debt_gdp_pct);
+    const down = ident < 0;
+    paint(el, [nullcline(box, r, g), pathTrace(), {
+      type: "scatter",
+      mode: "markers",
+      name: "selected",
+      x: [d],
+      y: [b],
+      hovertemplate: row.date + "<extra>selected</extra>",
+      marker: { size: 14, color: "#c4a35a", line: { color: "#ff2bd6", width: 2 } },
+    }], {
+      paper_bgcolor: "#07080c",
+      plot_bgcolor: "#07080c",
+      margin: { t: 48, r: 16, b: 52, l: 58 },
+      legend: legend(),
+      xaxis: axis2d({ title: "primary deficit / GDP", range: [box.d0, box.d1] }),
+      yaxis: axis2d({ title: "debt held by the public / GDP", range: [box.b0, box.b1] }),
+      annotations: [{
+        x: d,
+        y: b,
+        text: "identity " + fmt(ident, 2),
+        showarrow: true,
+        arrowhead: 3,
+        ax: 70,
+        ay: down ? 36 : -36,
+        font: { color: down ? "#00f0ff" : "#ff2bd6", size: 12 },
+        arrowcolor: down ? "#00f0ff" : "#ff2bd6",
+        bgcolor: "#07080c",
+      }],
+    });
+    if (!clickBound) {
+      clickBound = true;
+      el.on("plotly_click", function (ev) {
+        const pt = ev.points && ev.points[0];
+        if (!pt || pt.data.name !== "NIPA" || !pt.customdata) return;
+        const iso = pt.customdata[0];
+        if (!BY[iso] || !fieldOk(BY[iso])) return;
+        document.getElementById("phase-quarter").value = iso;
+        draw();
+      });
+    }
+  }
+
+  function drawScore() {
+    const el = document.getElementById("phase-score");
+    const date = [];
+    const ident = [];
+    const act = [];
+    const gap = [];
+    const cd = [];
+    ROWS.forEach(function (row) {
+      const idn = identity(row);
+      if (idn === null) return;
+      const printedChange = printed(row);
+      date.push(row.date);
+      ident.push(idn);
+      act.push(printedChange);
+      gap.push(printedChange === null ? null : printedChange - idn);
+      cd.push([fmt(rate(row), 2), fmt(num(row.stock_avg_coupon), 2), fmt(growth(row), 2)]);
+    });
+    paint(el, [
+      {
+        type: "scatter",
+        mode: "lines",
+        name: "printed",
+        x: date,
+        y: act,
+        customdata: cd,
+        hovertemplate: "%{x}<br>printed %{y:.2f}<br>r %{customdata[0]}%<br>coupon %{customdata[1]}%<br>growth %{customdata[2]}%<extra></extra>",
+        line: { color: "#00f0ff", width: 1.8 },
+        connectgaps: false,
+      },
+      {
+        type: "scatter",
+        mode: "lines",
+        name: "identity",
+        x: date,
+        y: ident,
+        hovertemplate: "%{x}<br>identity %{y:.2f}<extra></extra>",
+        line: { color: "#c4a35a", width: 1.8 },
+      },
+      {
+        type: "scatter",
+        mode: "lines",
+        name: "gap",
+        x: date,
+        y: gap,
+        hovertemplate: "%{x}<br>printed − identity %{y:.2f}<extra></extra>",
+        line: { color: "#ff2bd6", width: 1.4 },
+        connectgaps: false,
+      },
+    ], {
+      paper_bgcolor: "#07080c",
+      plot_bgcolor: "#07080c",
+      margin: { t: 48, r: 16, b: 48, l: 52 },
+      legend: legend(),
+      xaxis: axis2d({ title: "", type: "date" }),
+      yaxis: axis2d({ title: "change in debt/GDP, points, over the next year", zeroline: true }),
+    });
+  }
+
+  function drawModel(row) {
+    const el = document.getElementById("phase-model");
+    const r = rate(row);
+    const g = growth(row);
+    const bq = num(row.debt_gdp_pct);
+    const gam = gamma();
+    const rh = rho();
+    const box = view();
+    const bags = segments(box, r, g, bq, gam, rh);
+    const a = carry(r, g);
+    const eq = gam > 0 && Math.abs(rh - a) >= 1e-4 ? { d: -a * bq, b: bq } : null;
+    const traces = [
+      lineTrace(bags.rising, "debt ratio rising", "#ff2bd6"),
+      lineTrace(bags.falling, "debt ratio falling", "#00f0ff"),
+      lineTrace(bags.flat, "almost still", "#c4a35a"),
+      nullcline(box, r, g),
+      pathTrace(),
+    ];
+    if (eq) {
+      traces.push({
+        type: "scatter",
+        mode: "markers",
+        name: "equilibrium",
+        x: [eq.d],
+        y: [eq.b],
+        hovertemplate: "primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>model equilibrium</extra>",
+        marker: { size: 12, color: "#07080c", symbol: "circle", line: { color: "#c4a35a", width: 2 } },
+      });
+    }
+    paint(el, traces, {
+      paper_bgcolor: "#07080c",
+      plot_bgcolor: "#07080c",
+      margin: { t: 64, r: 16, b: 52, l: 58 },
+      legend: legend(),
+      xaxis: axis2d({ title: "primary deficit / GDP", range: [box.d0, box.d1] }),
+      yaxis: axis2d({ title: "debt held by the public / GDP", range: [box.b0, box.b1] }),
+    });
+
+    const info = polesOf(r, g, gam, rh);
+    const poles = document.getElementById("phase-poles");
     let m = 0.15;
     info.poles.forEach(function (p) {
       m = Math.max(m, Math.abs(p.re) * 1.45, Math.abs(p.im) * 1.45);
     });
-    const trace = {
+    paint(poles, [{
       type: "scatter",
       mode: "markers",
       name: "poles",
+      showlegend: false,
       x: info.poles.map(function (p) { return p.re; }),
       y: info.poles.map(function (p) { return p.im; }),
       marker: {
@@ -292,9 +451,8 @@
           return p.re > 0 ? "#ff2bd6" : "#00f0ff";
         }),
       },
-      hovertemplate: "Re %{x:.4f}<br>Im %{y:.4f}<extra></extra>",
-    };
-    paint(el, [trace], {
+      hovertemplate: "Re %{x:.4f}<br>Im %{y:.4f}<extra>model</extra>",
+    }], {
       paper_bgcolor: "#07080c",
       plot_bgcolor: "#07080c",
       margin: { t: 16, r: 16, b: 48, l: 52 },
@@ -302,126 +460,49 @@
       xaxis: axis2d({ title: "real part, per year", range: [-m, m], zeroline: false }),
       yaxis: axis2d({ title: "imaginary part, per year", range: [-m, m] }),
       shapes: [
-        { type: "rect", xref: "x", yref: "y", x0: -m, x1: 0, y0: -m, y1: m,
-          fillcolor: "rgba(0,240,255,0.05)", line: { width: 0 } },
-        { type: "rect", xref: "x", yref: "y", x0: 0, x1: m, y0: -m, y1: m,
-          fillcolor: "rgba(255,43,214,0.05)", line: { width: 0 } },
-        { type: "line", xref: "x", yref: "y", x0: 0, x1: 0, y0: -m, y1: m,
-          line: { color: "#c4a35a", width: 1, dash: "dot" } },
+        { type: "rect", xref: "x", yref: "y", x0: -m, x1: 0, y0: -m, y1: m, fillcolor: "rgba(0,240,255,0.05)", line: { width: 0 } },
+        { type: "rect", xref: "x", yref: "y", x0: 0, x1: m, y0: -m, y1: m, fillcolor: "rgba(255,43,214,0.05)", line: { width: 0 } },
+        { type: "line", xref: "x", yref: "y", x0: 0, x1: 0, y0: -m, y1: m, line: { color: "#c4a35a", width: 1, dash: "dot" } },
       ],
     });
+
+    let sentence = "Model only. These poles are not the printed debt ratio. ";
+    if (gam === 0) {
+      sentence += "γ is zero, so the primary stays put and ρ is idle. One pole is zero. The other is the one-year carry, (1+r)/(1+g) − 1, equal to "
+        + fmt(info.a, 4) + ". ";
+    } else {
+      sentence += regime(info) + " ";
+    }
+    if (eq === null && gam > 0 && Math.abs(rh - a) < 1e-4) {
+      sentence += "ρ equals the carry, so the policy line and the flat line are the same line. No single equilibrium.";
+    }
+    document.getElementById("phase-status").textContent = sentence;
   }
 
   function draw() {
     const row = selected();
-    const plane = document.getElementById("phase-plane");
     if (!row || !fieldOk(row)) {
-      plane.textContent = "This quarter has no coupon or no four-quarter GDP growth. Pick another.";
+      document.getElementById("phase-plane").textContent = "This quarter has no interest, debt ratio, or four-quarter GDP growth.";
       return;
     }
-    const r = num(row.stock_avg_coupon);
+    const ident = identity(row);
+    const act = printed(row);
+    const gap = act === null ? null : act - ident;
+    const r = rate(row);
     const g = growth(row);
-    const bq = num(row.debt_gdp_pct);
-    const dq = num(row.primary_deficit_pct_gdp);
-    const iq = num(row.int_gdp_pct);
-    const gam = gamma();
-    const rh = rho();
-    const rg = r - g;
-    const box = view();
-    const bags = segments(box, r, g, bq, gam, rh);
-    const eq = equilibrium(r, g, bq, gam, rh);
-    const info = polesOf(r, g, gam, rh);
-    const traces = [
-      lineTrace(bags.rising, "debt ratio rising", "#ff2bd6"),
-      lineTrace(bags.falling, "debt ratio falling", "#00f0ff"),
-      lineTrace(bags.flat, "almost still", "#c4a35a"),
-      nullcline(box, r, g),
-      pathTrace(),
-      {
-        type: "scatter",
-        mode: "markers",
-        name: "field quarter",
-        x: [dq],
-        y: [bq],
-        hovertemplate: row.date + "<br>primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>field</extra>",
-        marker: { size: 14, color: "#c4a35a", line: { color: "#ff2bd6", width: 2 } },
-      },
-    ];
-    if (eq) {
-      traces.push({
-        type: "scatter",
-        mode: "markers",
-        name: "equilibrium",
-        x: [eq.d],
-        y: [eq.b],
-        hovertemplate: "primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>model equilibrium</extra>",
-        marker: { size: 12, color: "#07080c", line: { color: "#c4a35a", width: 2 }, symbol: "circle" },
-      });
-    }
-    paint(plane, traces, {
-      paper_bgcolor: "#07080c",
-      plot_bgcolor: "#07080c",
-      margin: { t: 64, r: 16, b: 52, l: 58 },
-      legend: {
-        orientation: "h",
-        y: 1.02,
-        x: 0,
-        yanchor: "bottom",
-        font: { color: "#d5e4f0", size: 11 },
-        bgcolor: "rgba(0,0,0,0)",
-      },
-      xaxis: axis2d({ title: "primary deficit / GDP", range: [box.d0, box.d1] }),
-      yaxis: axis2d({ title: "debt held by the public / GDP", range: [box.b0, box.b1] }),
-    });
-    if (!clickBound) {
-      clickBound = true;
-      plane.on("plotly_click", function (ev) {
-        const pt = ev.points && ev.points[0];
-        if (!pt || pt.data.name !== "NIPA" || !pt.customdata) return;
-        const iso = pt.customdata[0];
-        if (!fieldOk(BY[iso])) return;
-        document.getElementById("phase-quarter").value = iso;
-        draw();
-      });
-    }
-    drawPoles(info);
-
-    const implied = (r / 100) * bq;
-    const gap = iq === null ? null : iq - implied;
-    const ident = ((rg / 100) * bq) + dq;
-    const ahead = BY[shiftYear(row.date, 1)];
-    const actual = ahead && num(ahead.debt_gdp_pct) !== null ? num(ahead.debt_gdp_pct) - bq : null;
     document.getElementById("phase-read").textContent =
       row.date + "\n" +
-      "primary " + fmt(dq, 2) + "% of GDP\n" +
-      "debt/GDP " + fmt(bq, 1) + "\n" +
-      "interest/GDP " + fmt(iq, 2) + "    coupon × debt/GDP " + fmt(implied, 2) +
-      "    gap " + fmt(gap, 2) + " pp\n" +
-      "book coupon " + fmt(r, 2) + "%    nominal growth " + fmt(g, 2) +
-      "%    r − g " + fmt(rg, 2) + " pp\n" +
-      "identity next-year Δdebt/GDP " + fmt(ident, 2) +
-      "    printed " + fmt(actual, 2) + "\n" +
-      "γ " + fmt(gam, 2) + "    ρ " + fmt(rh, 3) + "\n" +
-      "poles " + (Math.abs(info.poles[0].im) > 1e-8
-        ? fmt(info.poles[0].re, 4) + " ± " + fmt(Math.abs(info.poles[0].im), 4) + "i"
-        : fmt(info.poles[0].re, 4) + " and " + fmt(info.poles[1].re, 4));
-
-    let sentence;
-    if (gam === 0) {
-      sentence = "γ is zero, so the primary stays put and ρ is idle. One pole is zero. The other is (r − g) per year ("
-        + fmt(rg / 100, 4) + "). "
-        + (rg < 0
-          ? "It is negative: growth is above the coupon, so a debt ratio off the gold line is pulled back toward it."
-          : rg > 0
-            ? "It is positive: the coupon is above growth, so a debt ratio off the gold line moves farther away."
-            : "r and g are equal, so the debt ratio only moves with the primary.");
-    } else {
-      sentence = regime(info, rg);
-    }
-    if (eq === null && gam > 0 && Math.abs(rh - rg / 100) < 1e-4) {
-      sentence += " ρ equals (r − g)/100, so the policy line and the flat line are the same line. No single equilibrium.";
-    }
-    document.getElementById("phase-status").textContent = sentence;
+      "primary " + fmt(num(row.primary_deficit_pct_gdp), 2) + "% of GDP\n" +
+      "debt/GDP " + fmt(num(row.debt_gdp_pct), 1) + "\n" +
+      "r used (interest/GDP ÷ debt/GDP) " + fmt(r, 2) + "%\n" +
+      "book coupon " + fmt(num(row.stock_avg_coupon), 2) + "%    not used in the arrow\n" +
+      "nominal growth " + fmt(g, 2) + "%\n" +
+      "identity next-year Δdebt/GDP " + fmt(ident, 2) + "\n" +
+      "printed next-year Δdebt/GDP " + fmt(act, 2) + "\n" +
+      "gap (printed − identity) " + fmt(gap, 2);
+    drawPath(row, ident);
+    drawScore();
+    drawModel(row);
   }
 
   function boot(payload) {
@@ -443,7 +524,7 @@
     ROWS.forEach(function (r) { BY[r.date] = r; });
     const usable = ROWS.filter(fieldOk);
     if (!usable.length) {
-      fail("No quarter has a coupon and a four-quarter GDP growth. Nothing to draw.");
+      fail("No quarter has interest, a debt ratio, and four-quarter GDP growth.");
       return;
     }
     const sel = document.getElementById("phase-quarter");
@@ -454,7 +535,7 @@
       sel.appendChild(opt);
     });
     sel.value = usable[usable.length - 1].date;
-    stamp("cubes.json " + (payload.generated_at || "") + " · " + usable.length + " quarters in the field");
+    stamp("cubes.json " + (payload.generated_at || "") + " · r = interest/GDP ÷ debt/GDP · " + usable.length + " quarters");
     sel.addEventListener("change", draw);
     document.getElementById("phase-gamma").addEventListener("input", function () {
       document.getElementById("gamma-val").textContent = gamma().toFixed(2);

@@ -1099,3 +1099,28 @@ a.analysis-card:hover { border-color: var(--cyan); }
   .phase-poles .js-plotly-plot,
   .phase-poles .plot-container { height: 320px !important; }
 }
+
+.phase-score,
+.phase-model {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px 0 18px;
+}
+.phase-score { height: 420px; }
+.phase-model { height: 520px; }
+.phase-score .js-plotly-plot,
+.phase-score .plot-container { width: 100% !important; height: 420px !important; }
+.phase-model .js-plotly-plot,
+.phase-model .plot-container { width: 100% !important; height: 520px !important; }
+
+@media (max-width: 900px) {
+  .phase-score { height: 320px; }
+  .phase-model { height: 420px; }
+  .phase-score .js-plotly-plot,
+  .phase-score .plot-container { height: 320px !important; }
+  .phase-model .js-plotly-plot,
+  .phase-model .plot-container { height: 420px !important; }
+}

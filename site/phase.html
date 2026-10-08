@@ -23,9 +23,9 @@
   </div>
   <h1>PHASE</h1>
   <p class="sub">
-    First cut. The path is measured. The arrows are a one-year accounting
-    step at one quarter’s coupon and growth. They are not a fit, and they
-    are not a forecast.
+    The path is measured. The identity is one year of accounting at that
+    quarter’s interest and growth. The chart under the path is where the
+    printed debt ratio did not follow it. The grid below that is a model.
   </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
@@ -49,69 +49,52 @@
       The vertical axis is debt held by the public over GDP
       (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>,
       or the Treasury bridge when FRED has not posted the quarter yet).
-      Interest payments over GDP are on the hover. They are not the vertical
-      axis. NIPA interest includes more than the marketable book, and the
-      book coupon is marketable only, so interest is not the coupon times
-      this debt ratio. The readout shows that gap for the quarter in the
-      field. Using it as a state would move a stock these series do not describe.
     </p>
 
-    <h2>What an arrow is</h2>
+    <h2>The one-year identity</h2>
     <p>
-      Hold the selected quarter’s book coupon <span class="eq">r</span> and
-      that quarter’s nominal GDP growth <span class="eq">g</span> fixed.
-      Growth is this quarter’s GDP divided by GDP four quarters earlier,
-      minus one. Not the annualized one-quarter rate. The coupon is
-      <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>,
-      not the
-      <a href="sustainability.html#axis-refi">refi gap</a>.
+      <span class="eq">r</span> is this quarter’s interest payments divided by
+      this quarter’s debt ratio, not the marketable coupon. The coupon is
+      the average rate on the marketable book
+      (<a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>).
+      NIPA interest is wider than that book, so the coupon is the wrong rate
+      for this debt ratio. It stays on the hover. It is not in the arrow.
     </p>
-    <p class="stat">Δb = ((r − g) / 100) · b + d</p>
+    <p class="stat">r = 100 × (interest / GDP) / (debt / GDP)</p>
+    <p class="stat">Δb = [ (1 + r) / (1 + g) − 1 ] · b + d</p>
     <p>
-      <span class="eq">d</span> and <span class="eq">b</span> are percents of GDP.
-      <span class="eq">r</span> and <span class="eq">g</span> are percents.
-      <span class="eq">Δb</span> is the one-year change in the debt ratio
-      if the primary stayed at <span class="eq">d</span>. Arrow length is
-      that change, in the same units as the axes. Nothing is stretched.
+      <span class="eq">r</span> and <span class="eq">g</span> are decimals in that
+      second line, percents on the readout. <span class="eq">g</span> is
+      nominal GDP this quarter divided by GDP four quarters earlier, minus
+      one. <span class="eq">d</span> and <span class="eq">b</span> are percents
+      of GDP. <span class="eq">Δb</span> is the one-year change in the debt
+      ratio if the primary stayed at <span class="eq">d</span>. This is not
+      the approximation <span class="eq">(r − g) b</span>.
     </p>
-    <p>
-      The sliders are a policy rule, off at zero. The target primary is the
-      one that would hold this quarter’s debt ratio still, tightened by
-      <span class="eq">ρ</span> for each extra point of debt/GDP.
-      <span class="eq">γ</span> is the share of the gap to that target the
-      model closes in one year. At zero, the primary does not move and
-      <span class="eq">ρ</span> does nothing.
-    </p>
-    <p class="stat">d* = −((r − g) / 100) · b_q − ρ · (b − b_q)</p>
-    <p class="stat">Δd = γ · (d* − d)</p>
     <table class="join-table eq-key">
       <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
       <tbody>
         <tr><td>d</td><td>Primary deficit / GDP, percent.</td></tr>
         <tr><td>b</td><td>Debt held by the public / GDP, percent.</td></tr>
-        <tr><td>b_q</td><td>That debt ratio in the selected quarter.</td></tr>
-        <tr><td>r</td><td>Book coupon that quarter, percent per year.</td></tr>
+        <tr><td>r</td><td>Interest/GDP divided by debt/GDP, percent per year. The rate the arrow uses.</td></tr>
+        <tr><td>coupon</td><td>Fiscal Data Total Marketable. Shown, not used.</td></tr>
         <tr><td>g</td><td>Nominal GDP growth over the previous four quarters, percent.</td></tr>
-        <tr><td>γ</td><td>Share of the primary gap closed in one year. An assumption.</td></tr>
-        <tr><td>ρ</td><td>Extra primary tightening per point of debt/GDP above b_q. An assumption. Not estimated on this page.</td></tr>
+        <tr><td>gap</td><td>Printed change in the debt ratio over the next year, minus the identity.</td></tr>
       </tbody>
     </table>
     <p>
-      The gold line is where <span class="eq">Δb = 0</span>: the primary that
-      holds the debt ratio still at that stock. Click a point to freeze the
-      field on that quarter. The 2020 primary, about a quarter of GDP, sits
+      The gold line on the path is where that identity is zero: the primary
+      that would hold this quarter’s debt ratio still, at this quarter’s
+      <span class="eq">r</span> and <span class="eq">g</span>. The label on the
+      selected point is the identity for that point. A year is a short step
+      on an axis that runs for decades, so the size of the step is on the
+      time chart, not in the length of a screen arrow. The 2020 primary sits
       off the default window so the rest of the path stays readable.
     </p>
 
     <div class="phase-controls">
-      <label>Field uses this quarter
+      <label>Gold line uses this quarter
         <select id="phase-quarter"></select>
-      </label>
-      <label>γ &nbsp; <span id="gamma-val">0.00</span>
-        <input type="range" id="phase-gamma" min="0" max="1" step="0.05" value="0"/>
-      </label>
-      <label>ρ &nbsp; <span id="rho-val">0.000</span>
-        <input type="range" id="phase-rho" min="0" max="0.15" step="0.005" value="0"/>
       </label>
     </div>
     <label class="phase-check">
@@ -119,24 +102,57 @@
       include the 2020 primary spike
     </label>
     <p class="stat" id="phase-read"></p>
-    <p id="phase-status"></p>
 
+    <h3 class="axis-head">Primary and debt</h3>
+    <div class="phase-plane" id="phase-plane"></div>
+
+    <h3 class="axis-head">Printed change against the identity</h3>
+    <p>
+      Each point is the change in debt held by the public, in percent of
+      GDP, from that quarter to the same quarter a year later. Cyan is the
+      print. Gold is the identity. Magenta is the gap, printed minus
+      identity. A positive gap means the ratio rose by more than the
+      identity said. The last four quarters have a gold point and no cyan
+      point: the year has not finished. The gap is not filled in.
+    </p>
+    <div class="phase-score" id="phase-score"></div>
+
+    <h2>Model, not the print</h2>
+    <p>
+      The grid and the poles freeze the selected quarter’s <span class="eq">r</span>
+      and <span class="eq">g</span> and add a policy rule. Nothing here is
+      estimated. At zero, the primary does not move and <span class="eq">ρ</span>
+      does nothing. The poles describe that rule. They do not describe the
+      printed debt ratio. The chart above is the record.
+    </p>
+    <p class="stat">d* = −[ (1 + r) / (1 + g) − 1 ] · b_q − ρ · (b − b_q)</p>
+    <p class="stat">Δd = γ · (d* − d)</p>
+    <table class="join-table eq-key">
+      <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
+      <tbody>
+        <tr><td>γ</td><td>Share of the gap to d* closed in one year. An assumption.</td></tr>
+        <tr><td>ρ</td><td>Extra primary tightening, in points, per point of debt/GDP above this quarter. An assumption.</td></tr>
+      </tbody>
+    </table>
+    <div class="phase-controls">
+      <label>γ &nbsp; <span id="gamma-val">0.00</span>
+        <input type="range" id="phase-gamma" min="0" max="1" step="0.05" value="0"/>
+      </label>
+      <label>ρ &nbsp; <span id="rho-val">0.000</span>
+        <input type="range" id="phase-rho" min="0" max="0.15" step="0.005" value="0"/>
+      </label>
+    </div>
     <div class="phase-grid">
       <div>
-        <h3 class="axis-head">Primary and debt</h3>
-        <div class="phase-plane" id="phase-plane"></div>
+        <h3 class="axis-head">Frozen rates, plus the rule</h3>
+        <div class="phase-model" id="phase-model"></div>
       </div>
       <div>
-        <h3 class="axis-head">Poles of this model</h3>
+        <h3 class="axis-head">Poles of the rule</h3>
         <div class="phase-poles" id="phase-poles"></div>
       </div>
     </div>
-    <p class="sub">
-      Poles are the eigenvalues of the one-year linear step, per year.
-      Left of the gold line, that direction decays. Right of it, that
-      direction grows. A spiral is what the eigenvalues do when they are
-      complex. It is not assumed.
-    </p>
+    <p id="phase-status"></p>
   </section>
 </main>
 
