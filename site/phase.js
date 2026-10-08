@@ -1,5 +1,5 @@
-/* Path is measured. The identity uses r = interest/GDP ÷ debt/GDP and the
-   exact one-year map. The score chart is printed minus that identity.
+/* Path is measured. r is the coupon plus the refi gap on the share due
+   inside a year. The score chart is printed minus that identity.
    The grid, sliders, and poles are a model and sit below the score. */
 (function () {
   const DATA = "data/published/cubes.json";
@@ -84,10 +84,11 @@
   }
 
   function rate(row) {
-    const i = num(row.int_gdp_pct);
-    const b = num(row.debt_gdp_pct);
-    if (i === null || b === null || b === 0) return null;
-    return (100 * i) / b;
+    const coupon = num(row.stock_avg_coupon);
+    const w = num(row.resid_w_0_1y);
+    const marginal = num(row.marginal_rate);
+    if (coupon === null || w === null || marginal === null) return null;
+    return coupon + w * (marginal - coupon);
   }
 
   function carry(r, g) {
@@ -252,9 +253,10 @@
       y.push(b);
       cd.push([
         row.date,
-        fmt(num(row.int_gdp_pct), 2),
         fmt(rate(row), 2),
         fmt(num(row.stock_avg_coupon), 2),
+        fmt(num(row.resid_w_0_1y) === null ? null : num(row.resid_w_0_1y) * 100, 1),
+        fmt(num(row.marginal_rate), 2),
         fmt(growth(row), 2),
         fmt(ident, 2),
         fmt(act, 2),
@@ -272,13 +274,14 @@
         "%{customdata[0]}<br>" +
         "primary %{x:.2f}% of GDP<br>" +
         "debt/GDP %{y:.1f}<br>" +
-        "interest/GDP %{customdata[1]}<br>" +
-        "r used %{customdata[2]}%<br>" +
-        "book coupon %{customdata[3]}%<br>" +
-        "nominal growth %{customdata[4]}%<br>" +
-        "identity next-year Δdebt/GDP %{customdata[5]}<br>" +
-        "printed next-year Δdebt/GDP %{customdata[6]}<br>" +
-        "gap (printed − identity) %{customdata[7]}" +
+        "r used %{customdata[1]}%<br>" +
+        "coupon %{customdata[2]}%<br>" +
+        "due inside a year %{customdata[3]}% of marketable<br>" +
+        "marginal %{customdata[4]}%<br>" +
+        "nominal growth %{customdata[5]}%<br>" +
+        "identity next-year Δdebt/GDP %{customdata[6]}<br>" +
+        "printed next-year Δdebt/GDP %{customdata[7]}<br>" +
+        "gap (printed − identity) %{customdata[8]}" +
         "<extra>click to set the quarter</extra>",
       line: { color: "#00f0ff", width: 1.6 },
       marker: { color: "#00f0ff", size: 7 },
@@ -482,7 +485,7 @@
   function draw() {
     const row = selected();
     if (!row || !fieldOk(row)) {
-      document.getElementById("phase-plane").textContent = "This quarter has no interest, debt ratio, or four-quarter GDP growth.";
+      document.getElementById("phase-plane").textContent = "This quarter has no coupon, one-year share, marginal rate, or four-quarter GDP growth.";
       return;
     }
     const ident = identity(row);
@@ -494,8 +497,10 @@
       row.date + "\n" +
       "primary " + fmt(num(row.primary_deficit_pct_gdp), 2) + "% of GDP\n" +
       "debt/GDP " + fmt(num(row.debt_gdp_pct), 1) + "\n" +
-      "r used (interest/GDP ÷ debt/GDP) " + fmt(r, 2) + "%\n" +
-      "book coupon " + fmt(num(row.stock_avg_coupon), 2) + "%    not used in the arrow\n" +
+      "coupon " + fmt(num(row.stock_avg_coupon), 2) + "%\n" +
+      "share due inside a year " + fmt(num(row.resid_w_0_1y) === null ? null : num(row.resid_w_0_1y) * 100, 1) + "% of marketable\n" +
+      "marginal " + fmt(num(row.marginal_rate), 2) + "%\n" +
+      "r used " + fmt(r, 2) + "%\n" +
       "nominal growth " + fmt(g, 2) + "%\n" +
       "identity next-year Δdebt/GDP " + fmt(ident, 2) + "\n" +
       "printed next-year Δdebt/GDP " + fmt(act, 2) + "\n" +
@@ -511,7 +516,7 @@
       return;
     }
     const sample = payload.sustain[0];
-    const need = ["primary_deficit_pct_gdp", "debt_gdp_pct", "stock_avg_coupon", "gdp_bn", "int_gdp_pct", "date"];
+    const need = ["primary_deficit_pct_gdp", "debt_gdp_pct", "stock_avg_coupon", "resid_w_0_1y", "marginal_rate", "gdp_bn", "date"];
     const missing = need.filter(function (k) { return !(k in sample); });
     if (missing.length) {
       fail("cubes.json sustain row is missing " + missing.join(", ") + " — rerun --process.");
@@ -524,7 +529,7 @@
     ROWS.forEach(function (r) { BY[r.date] = r; });
     const usable = ROWS.filter(fieldOk);
     if (!usable.length) {
-      fail("No quarter has interest, a debt ratio, and four-quarter GDP growth.");
+      fail("No quarter has a coupon, a one-year share, a marginal rate, and four-quarter GDP growth.");
       return;
     }
     const sel = document.getElementById("phase-quarter");
@@ -535,7 +540,7 @@
       sel.appendChild(opt);
     });
     sel.value = usable[usable.length - 1].date;
-    stamp("cubes.json " + (payload.generated_at || "") + " · r = interest/GDP ÷ debt/GDP · " + usable.length + " quarters");
+    stamp("cubes.json " + (payload.generated_at || "") + " · r = coupon + share due inside a year × refi gap · " + usable.length + " quarters");
     sel.addEventListener("change", draw);
     document.getElementById("phase-gamma").addEventListener("input", function () {
       document.getElementById("gamma-val").textContent = gamma().toFixed(2);

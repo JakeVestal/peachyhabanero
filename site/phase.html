@@ -53,14 +53,16 @@
 
     <h2>The one-year identity</h2>
     <p>
-      <span class="eq">r</span> is this quarter’s interest payments divided by
-      this quarter’s debt ratio, not the marketable coupon. The coupon is
-      the average rate on the marketable book
-      (<a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>).
-      NIPA interest is wider than that book, so the coupon is the wrong rate
-      for this debt ratio. It stays on the hover. It is not in the arrow.
+      <span class="eq">r</span> is not the marketable coupon, and it is not the marginal
+      rate on the whole stock. Debt that does not come due keeps its coupon.
+      The share that comes due inside a year is charged the marginal rate.
+      That share is Table 3 remaining maturity under one year,
+      <span class="eq">resid_w_0_1y</span>, as a fraction of total marketable.
+      TIPS and floating-rate notes are their own buckets, so they are not
+      inside that share. The marginal rate is the published one: Table 3
+      weights times CMT yields, TIPS dropped, the other buckets renormalized.
     </p>
-    <p class="stat">r = 100 × (interest / GDP) / (debt / GDP)</p>
+    <p class="stat">r = coupon + (share due inside a year) × (marginal − coupon)</p>
     <p class="stat">Δb = [ (1 + r) / (1 + g) − 1 ] · b + d</p>
     <p>
       <span class="eq">r</span> and <span class="eq">g</span> are decimals in that
@@ -76,8 +78,10 @@
       <tbody>
         <tr><td>d</td><td>Primary deficit / GDP, percent.</td></tr>
         <tr><td>b</td><td>Debt held by the public / GDP, percent.</td></tr>
-        <tr><td>r</td><td>Interest/GDP divided by debt/GDP, percent per year. The rate the arrow uses.</td></tr>
-        <tr><td>coupon</td><td>Fiscal Data Total Marketable. Shown, not used.</td></tr>
+        <tr><td>r</td><td>Coupon, plus the refi gap on the share due inside a year. The rate the arrow uses.</td></tr>
+        <tr><td>coupon</td><td><a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>.</td></tr>
+        <tr><td>marginal</td><td>Table 3 remaining-maturity weights times CMT yields. TIPS dropped.</td></tr>
+        <tr><td>share</td><td><a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/marketable-securities-outstanding-by-remaining-maturity">Table 3</a> share of marketable debt with under one year left. Not TIPS. Not FRNs.</td></tr>
         <tr><td>g</td><td>Nominal GDP growth over the previous four quarters, percent.</td></tr>
         <tr><td>gap</td><td>Printed change in the debt ratio over the next year, minus the identity.</td></tr>
       </tbody>
