@@ -1033,3 +1033,69 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 13px;
 }
+
+.phase-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 22px;
+  margin: 8px 0 12px;
+  align-items: end;
+}
+.phase-controls label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+.phase-controls input[type="range"] { width: 100%; accent-color: var(--gold); }
+.phase-controls select,
+.phase-controls input[type="date"] {
+  color-scheme: dark;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.phase-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+.phase-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.7fr);
+  gap: 14px;
+  align-items: start;
+}
+.phase-plane,
+.phase-poles {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px 0 18px;
+}
+.phase-plane { height: 640px; }
+.phase-poles { height: 420px; }
+.phase-plane .js-plotly-plot,
+.phase-plane .plot-container { width: 100% !important; height: 640px !important; }
+.phase-poles .js-plotly-plot,
+.phase-poles .plot-container { width: 100% !important; height: 420px !important; }
+#phase-read { white-space: pre-wrap; line-height: 1.45; }
+@media (max-width: 900px) {
+  .phase-controls { grid-template-columns: 1fr; }
+  .phase-grid { grid-template-columns: 1fr; }
+  .phase-plane { height: 480px; }
+  .phase-poles { height: 320px; }
+  .phase-plane .js-plotly-plot,
+  .phase-plane .plot-container { height: 480px !important; }
+  .phase-poles .js-plotly-plot,
+  .phase-poles .plot-container { height: 320px !important; }
+}

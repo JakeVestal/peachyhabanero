@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Phase</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      phase ·
+      <a href="trackers.html">trackers</a> ·
+      <a href="data.html">data</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>PHASE</h1>
+  <p class="sub">
+    First cut. The path is measured. The arrows are a one-year accounting
+    step at one quarter’s coupon and growth. They are not a fit, and they
+    are not a forecast.
+  </p>
+  <p class="stat" id="stamp">loading cubes.json…</p>
+</header>
+
+<main>
+  <section>
+    <h2>Primary deficit and the debt ratio</h2>
+    <p>
+      The horizontal axis is the primary deficit, as a percent of GDP:
+      current expenditures minus interest payments minus current receipts.
+      The series are
+      <a href="https://fred.stlouisfed.org/series/FGEXPND">FGEXPND</a>,
+      <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">A091RC1Q027SBEA</a>,
+      and
+      <a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>,
+      divided by
+      <a href="https://fred.stlouisfed.org/series/GDP">GDP</a>.
+      Same primary as the fiscal-dominance cube.
+    </p>
+    <p>
+      The vertical axis is debt held by the public over GDP
+      (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>,
+      or the Treasury bridge when FRED has not posted the quarter yet).
+      Interest payments over GDP are on the hover. They are not the vertical
+      axis. NIPA interest includes more than the marketable book, and the
+      book coupon is marketable only, so interest is not the coupon times
+      this debt ratio. The readout shows that gap for the quarter in the
+      field. Using it as a state would move a stock these series do not describe.
+    </p>
+
+    <h2>What an arrow is</h2>
+    <p>
+      Hold the selected quarter’s book coupon <span class="eq">r</span> and
+      that quarter’s nominal GDP growth <span class="eq">g</span> fixed.
+      Growth is this quarter’s GDP divided by GDP four quarters earlier,
+      minus one. Not the annualized one-quarter rate. The coupon is
+      <a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>,
+      not the
+      <a href="sustainability.html#axis-refi">refi gap</a>.
+    </p>
+    <p class="stat">Δb = ((r − g) / 100) · b + d</p>
+    <p>
+      <span class="eq">d</span> and <span class="eq">b</span> are percents of GDP.
+      <span class="eq">r</span> and <span class="eq">g</span> are percents.
+      <span class="eq">Δb</span> is the one-year change in the debt ratio
+      if the primary stayed at <span class="eq">d</span>. Arrow length is
+      that change, in the same units as the axes. Nothing is stretched.
+    </p>
+    <p>
+      The sliders are a policy rule, off at zero. The target primary is the
+      one that would hold this quarter’s debt ratio still, tightened by
+      <span class="eq">ρ</span> for each extra point of debt/GDP.
+      <span class="eq">γ</span> is the share of the gap to that target the
+      model closes in one year. At zero, the primary does not move and
+      <span class="eq">ρ</span> does nothing.
+    </p>
+    <p class="stat">d* = −((r − g) / 100) · b_q − ρ · (b − b_q)</p>
+    <p class="stat">Δd = γ · (d* − d)</p>
+    <table class="join-table eq-key">
+      <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
+      <tbody>
+        <tr><td>d</td><td>Primary deficit / GDP, percent.</td></tr>
+        <tr><td>b</td><td>Debt held by the public / GDP, percent.</td></tr>
+        <tr><td>b_q</td><td>That debt ratio in the selected quarter.</td></tr>
+        <tr><td>r</td><td>Book coupon that quarter, percent per year.</td></tr>
+        <tr><td>g</td><td>Nominal GDP growth over the previous four quarters, percent.</td></tr>
+        <tr><td>γ</td><td>Share of the primary gap closed in one year. An assumption.</td></tr>
+        <tr><td>ρ</td><td>Extra primary tightening per point of debt/GDP above b_q. An assumption. Not estimated on this page.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The gold line is where <span class="eq">Δb = 0</span>: the primary that
+      holds the debt ratio still at that stock. Click a point to freeze the
+      field on that quarter. The 2020 primary, about a quarter of GDP, sits
+      off the default window so the rest of the path stays readable.
+    </p>
+
+    <div class="phase-controls">
+      <label>Field uses this quarter
+        <select id="phase-quarter"></select>
+      </label>
+      <label>γ &nbsp; <span id="gamma-val">0.00</span>
+        <input type="range" id="phase-gamma" min="0" max="1" step="0.05" value="0"/>
+      </label>
+      <label>ρ &nbsp; <span id="rho-val">0.000</span>
+        <input type="range" id="phase-rho" min="0" max="0.15" step="0.005" value="0"/>
+      </label>
+    </div>
+    <label class="phase-check">
+      <input type="checkbox" id="phase-wide"/>
+      include the 2020 primary spike
+    </label>
+    <p class="stat" id="phase-read"></p>
+    <p id="phase-status"></p>
+
+    <div class="phase-grid">
+      <div>
+        <h3 class="axis-head">Primary and debt</h3>
+        <div class="phase-plane" id="phase-plane"></div>
+      </div>
+      <div>
+        <h3 class="axis-head">Poles of this model</h3>
+        <div class="phase-poles" id="phase-poles"></div>
+      </div>
+    </div>
+    <p class="sub">
+      Poles are the eigenvalues of the one-year linear step, per year.
+      Left of the gold line, that direction decays. Right of it, that
+      direction grows. A spiral is what the eigenvalues do when they are
+      complex. It is not assumed.
+    </p>
+  </section>
+</main>
+
+<footer>
+  peachyhabanero · <a href="index.html">home</a> · <a href="sustainability.html">sustainability</a> · <a href="data.html">data</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+<script src="phase.js"></script>
+<script src="nav-scratch.js"></script>
+</body>
+</html>
