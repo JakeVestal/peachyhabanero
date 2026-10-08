@@ -44,3 +44,4 @@ peachyhabanero-074-fd-scene-distance.patch
 peachyhabanero-075-yield-curve.patch
 peachyhabanero-076-curve-dates.patch
 peachyhabanero-077-curve-redraw.patch
+peachyhabanero-079-curve-points.patch

@@ -1,6 +1,5 @@
-/* Treasury daily par curve. Null tenor-days stay null.
-   The surface is one sheet per run of days that share the same
-   set of published tenors, so a missing tenor is a gap, not a bridge. */
+/* Treasury daily par curve. A missing tenor is a missing point.
+   Nothing is filled in. */
 (function () {
   const AXIS = {
     titlefont: { color: "#c4a35a", size: 12 },
@@ -59,31 +58,6 @@
     if (from) while (i0 < dates.length && dates[i0] < from) i0 += 1;
     if (to) while (i1 >= 0 && dates[i1] > to) i1 -= 1;
     return [i0, i1];
-  }
-
-  function segments(i0, i1) {
-    const tenors = PACK.tenors;
-    const cols = PACK.columns;
-    const dates = PACK.dates;
-    const out = [];
-    let cur = null;
-    for (let i = i0; i <= i1; i++) {
-      const keys = [];
-      for (let t = 0; t < tenors.length; t++) {
-        const v = cols[tenors[t].key][i];
-        if (v !== null && v !== undefined) keys.push(tenors[t].key);
-      }
-      const sig = keys.join("|");
-      if (!cur || cur.sig !== sig) {
-        cur = { sig: sig, keys: keys, start: i, end: i };
-        out.push(cur);
-      } else {
-        cur.end = i;
-      }
-    }
-    return out.filter(function (g) {
-      return g.keys.length >= 2 && g.end > g.start;
-    });
   }
 
   function yearTicks(ms0, ms1) {
@@ -147,50 +121,30 @@
       note(el, "No Treasury curve between " + from + " and " + to + ".");
       return;
     }
-    const groups = segments(i0, i1);
-    if (!groups.length) {
-      note(el, "Not enough published days between " + from + " and " + to + " to draw a surface.");
-      return;
-    }
-    const byKey = {};
-    PACK.tenors.forEach(function (t) { byKey[t.key] = t; });
+    const x = [];
+    const y = [];
+    const z = [];
+    const custom = [];
     let zmin = Infinity;
     let zmax = -Infinity;
-    const traces = groups.map(function (g, n) {
-      const y = g.keys.map(function (k) { return byKey[k].years; });
-      const x = [];
-      const z = g.keys.map(function () { return []; });
-      const text = g.keys.map(function () { return []; });
-      for (let i = g.start; i <= g.end; i++) {
-        x.push(utcMs(PACK.dates[i]));
-        g.keys.forEach(function (k, r) {
-          const v = PACK.columns[k][i];
-          z[r].push(v);
-          if (v !== null && v !== undefined) {
-            if (v < zmin) zmin = v;
-            if (v > zmax) zmax = v;
-          }
-          text[r].push(PACK.dates[i] + " · " + byKey[k].label + " · " + (v == null ? "not published" : v.toFixed(2) + "%"));
-        });
-      }
-      return {
-        type: "surface",
-        name: g.sig,
-        x: x,
-        y: y,
-        z: z,
-        text: text,
-        hovertemplate: "%{text}<extra></extra>",
-        showscale: n === 0,
-        coloraxis: "coloraxis",
-        lighting: { ambient: 0.9, diffuse: 0.45, specular: 0.04, roughness: 0.95 },
-        contours: {
-          x: { highlight: false },
-          y: { highlight: false },
-          z: { highlight: false },
-        },
-      };
-    });
+    for (let i = i0; i <= i1; i++) {
+      const date = PACK.dates[i];
+      const ms = utcMs(date);
+      PACK.tenors.forEach(function (tenor) {
+        const v = PACK.columns[tenor.key][i];
+        if (v === null || v === undefined) return;
+        x.push(ms);
+        y.push(tenor.years);
+        z.push(v);
+        custom.push([date, tenor.label]);
+        if (v < zmin) zmin = v;
+        if (v > zmax) zmax = v;
+      });
+    }
+    if (!z.length) {
+      note(el, "No published yields between " + from + " and " + to + ".");
+      return;
+    }
     const ticks = yearTicks(utcMs(PACK.dates[i0]), utcMs(PACK.dates[i1]));
     const sceneAxis = function (title, extra) {
       return Object.assign({
@@ -202,21 +156,34 @@
         showbackground: true,
       }, extra || {});
     };
-    paint(el, traces, {
-      margin: { l: 0, r: 0, t: 8, b: 0 },
-      paper_bgcolor: "#07080c",
-      font: { color: "#d5e4f0" },
-      showlegend: false,
-      coloraxis: {
+    paint(el, [{
+      type: "scatter3d",
+      mode: "markers",
+      x: x,
+      y: y,
+      z: z,
+      customdata: custom,
+      hovertemplate: "date %{customdata[0]}<br>maturity %{customdata[1]}<br>rate %{z:.2f}%<extra></extra>",
+      marker: {
+        size: 3,
+        color: z,
         colorscale: COLORS,
         cmin: zmin,
         cmax: zmax,
+        opacity: 0.9,
+        line: { width: 0 },
         colorbar: {
           title: { text: "yield %", font: { color: "#c4a35a" } },
           tickfont: { color: "#d5e4f0" },
           thickness: 14,
         },
       },
+    }], {
+      margin: { l: 0, r: 0, t: 8, b: 0 },
+      paper_bgcolor: "#07080c",
+      font: { color: "#d5e4f0" },
+      showlegend: false,
+      hoverlabel: { bgcolor: "#0d1117", bordercolor: "#c4a35a", font: { color: "#d5e4f0" } },
       scene: {
         bgcolor: "#07080c",
         aspectmode: "manual",
