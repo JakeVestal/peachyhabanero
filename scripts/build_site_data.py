@@ -868,6 +868,8 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
     tb3 = _qe(_col_or(policy, "TB3MS"))
     y2 = _qe(_col_or(policy, "DGS2"))
     y10 = _qe(_col_or(policy, "DGS10"))
+    term = by.get("fred_term_premium", pd.DataFrame())
+    tp10 = _qe(_col_or(term, "THREEFYTP10"))
     gdp = _qe(_col_or(labor, "GDP"))
     debt_pub_gdp = _qe(_col_or(debt, "FYGFGDQ188S"))
     penny = _col_or(by.get("fiscal_debt_to_penny", pd.DataFrame()), "DEBT_HELD_PUBLIC")
@@ -937,6 +939,7 @@ def publish_cubes(metrics: dict, y: pd.DataFrame, frames: list, generated_at: st
         "tb3m": tb3,
         "y2": y2,
         "y10": y10,
+        "THREEFYTP10": tp10,
         "w_bills": w_bills,
         "w_2y": w_2y,
         "w_10y": w_10y,

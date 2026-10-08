@@ -23,81 +23,69 @@
   </div>
   <h1>PHASE</h1>
   <p class="sub">
-    The path is measured. The identity is one year of accounting at that
-    quarter’s interest and growth. The chart under the path is where the
-    printed debt ratio did not follow it. The grid below that is a model.
+    One quarter at a time: whether the accounting says the debt ratio is
+    rising, how far that accounting is from flat, and whether the cushion
+    is shrinking. The printed ratio is on the chart under the path. It has
+    not been the identity.
   </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
 
 <main>
   <section>
-    <h2>Primary deficit and the debt ratio</h2>
+    <h2>The one-year identity</h2>
     <p>
       The horizontal axis is the primary deficit, as a percent of GDP:
-      current expenditures minus interest payments minus current receipts.
-      The series are
-      <a href="https://fred.stlouisfed.org/series/FGEXPND">FGEXPND</a>,
+      current expenditures minus interest payments minus current receipts
+      (<a href="https://fred.stlouisfed.org/series/FGEXPND">FGEXPND</a>,
       <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">A091RC1Q027SBEA</a>,
-      and
       <a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>,
-      divided by
-      <a href="https://fred.stlouisfed.org/series/GDP">GDP</a>.
-      Same primary as the fiscal-dominance cube.
-    </p>
-    <p>
+      over <a href="https://fred.stlouisfed.org/series/GDP">GDP</a>).
       The vertical axis is debt held by the public over GDP
       (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>,
       or the Treasury bridge when FRED has not posted the quarter yet).
     </p>
-
-    <h2>The one-year identity</h2>
     <p>
-      <span class="eq">r</span> is not the marketable coupon, and it is not the marginal
-      rate on the whole stock. Debt that does not come due keeps its coupon.
-      The share that comes due inside a year is charged the marginal rate.
-      That share is Table 3 remaining maturity under one year,
-      <span class="eq">resid_w_0_1y</span>, as a fraction of total marketable.
-      TIPS and floating-rate notes are their own buckets, so they are not
-      inside that share. The marginal rate is the published one: Table 3
-      weights times CMT yields, TIPS dropped, the other buckets renormalized.
+      <span class="eq">r</span> is not the coupon on the whole stock, and it
+      is not the marginal rate on the whole stock. Debt that does not come
+      due keeps its coupon. The share due inside a year is charged the
+      marginal rate. That share is
+      <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/marketable-securities-outstanding-by-remaining-maturity">Table 3</a>
+      remaining maturity under one year. TIPS and floating-rate notes are
+      their own buckets, so they are not inside it. The marginal rate is
+      Table 3 weights times CMT yields, TIPS dropped, the other buckets
+      renormalized.
     </p>
     <p class="stat">r = coupon + (share due inside a year) × (marginal − coupon)</p>
     <p class="stat">Δb = [ (1 + r) / (1 + g) − 1 ] · b + d</p>
     <p>
-      <span class="eq">r</span> and <span class="eq">g</span> are decimals in that
-      second line, percents on the readout. <span class="eq">g</span> is
-      nominal GDP this quarter divided by GDP four quarters earlier, minus
-      one. <span class="eq">d</span> and <span class="eq">b</span> are percents
-      of GDP. <span class="eq">Δb</span> is the one-year change in the debt
-      ratio if the primary stayed at <span class="eq">d</span>. This is not
-      the approximation <span class="eq">(r − g) b</span>.
+      <span class="eq">r</span> and <span class="eq">g</span> are decimals in
+      that line and percents on the readout. <span class="eq">g</span> is
+      nominal GDP this quarter over GDP four quarters earlier, minus one.
+      <span class="eq">Δb</span> is the one-year change in the debt ratio if
+      the primary stayed at <span class="eq">d</span>.
     </p>
     <table class="join-table eq-key">
       <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
       <tbody>
         <tr><td>d</td><td>Primary deficit / GDP, percent.</td></tr>
         <tr><td>b</td><td>Debt held by the public / GDP, percent.</td></tr>
-        <tr><td>r</td><td>Coupon, plus the refi gap on the share due inside a year. The rate the arrow uses.</td></tr>
+        <tr><td>r</td><td>Coupon, plus the refi gap on the share due inside a year.</td></tr>
         <tr><td>coupon</td><td><a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>.</td></tr>
-        <tr><td>marginal</td><td>Table 3 remaining-maturity weights times CMT yields. TIPS dropped.</td></tr>
-        <tr><td>share</td><td><a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/marketable-securities-outstanding-by-remaining-maturity">Table 3</a> share of marketable debt with under one year left. Not TIPS. Not FRNs.</td></tr>
         <tr><td>g</td><td>Nominal GDP growth over the previous four quarters, percent.</td></tr>
+        <tr><td>snowball</td><td>The interest piece minus the growth piece. The identity without the primary.</td></tr>
         <tr><td>gap</td><td>Printed change in the debt ratio over the next year, minus the identity.</td></tr>
       </tbody>
     </table>
     <p>
-      The gold line on the path is where that identity is zero: the primary
-      that would hold this quarter’s debt ratio still, at this quarter’s
-      <span class="eq">r</span> and <span class="eq">g</span>. The label on the
-      selected point is the identity for that point. A year is a short step
-      on an axis that runs for decades, so the size of the step is on the
-      time chart, not in the length of a screen arrow. The 2020 primary sits
-      off the default window so the rest of the path stays readable.
+      The gold line is where the identity is zero. The label on the selected
+      point is that quarter’s identity, not a scaled arrow. A year is a
+      short step on a decades-long axis. The size is in the readout and on
+      the time charts.
     </p>
 
     <div class="phase-controls">
-      <label>Gold line uses this quarter
+      <label>Quarter
         <select id="phase-quarter"></select>
       </label>
     </div>
@@ -112,47 +100,86 @@
 
     <h3 class="axis-head">Printed change against the identity</h3>
     <p>
-      Each point is the change in debt held by the public, in percent of
-      GDP, from that quarter to the same quarter a year later. Cyan is the
-      print. Gold is the identity. Magenta is the gap, printed minus
-      identity. A positive gap means the ratio rose by more than the
-      identity said. The last four quarters have a gold point and no cyan
-      point: the year has not finished. The gap is not filled in.
+      Cyan is the printed change in debt held by the public, in percent of
+      GDP, from that quarter to the same quarter a year later. Gold is the
+      identity. Magenta is printed minus identity. A positive gap means the
+      ratio rose by more than the identity. The last four quarters have gold
+      and no cyan: the year has not finished. The diamond is the latest
+      identity plus the median gap of the last eight scored quarters. It is
+      not a fitted path.
     </p>
     <div class="phase-score" id="phase-score"></div>
 
-    <h2>Model, not the print</h2>
+    <h3 class="axis-head">Snowball, primary, residual</h3>
     <p>
-      The grid and the poles freeze the selected quarter’s <span class="eq">r</span>
-      and <span class="eq">g</span> and add a policy rule. Nothing here is
-      estimated. At zero, the primary does not move and <span class="eq">ρ</span>
-      does nothing. The poles describe that rule. They do not describe the
-      printed debt ratio. The chart above is the record.
+      The same year, split. Cyan is the snowball: interest on this
+      <span class="eq">r</span>, minus what nominal growth does to the
+      ratio. Gold is the primary. Magenta is the residual, and it exists
+      only once the year has printed. The three add to the printed change
+      when the residual exists. They add to the identity when it does not.
     </p>
-    <p class="stat">d* = −[ (1 + r) / (1 + g) − 1 ] · b_q − ρ · (b − b_q)</p>
-    <p class="stat">Δd = γ · (d* − d)</p>
-    <table class="join-table eq-key">
-      <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
-      <tbody>
-        <tr><td>γ</td><td>Share of the gap to d* closed in one year. An assumption.</td></tr>
-        <tr><td>ρ</td><td>Extra primary tightening, in points, per point of debt/GDP above this quarter. An assumption.</td></tr>
-      </tbody>
-    </table>
+    <div class="phase-score" id="phase-split"></div>
+
+    <h2>The premium, beside the price</h2>
+    <p>
+      The second state is the 10-year term premium,
+      <a href="https://fred.stlouisfed.org/series/THREEFYTP10">THREEFYTP10</a>,
+      the Adrian–Crump–Moench estimate. The 10-year yield,
+      <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>,
+      is the price next to it. A move in the premium that is not in the
+      10-year is the model, not the market. The premium is not in
+      <span class="eq">r</span>. It enters only through the speeds below,
+      which start at zero.
+    </p>
+    <p class="sub" id="yield-note"></p>
+    <div class="phase-score" id="phase-yields"></div>
+
+    <h2>Where the feedback would run away</h2>
+    <p>
+      Two speeds, both assumptions, both off at zero.
+      <span class="eq">φ</span> is how many points of term premium appear
+      in one year for each extra point of debt/GDP.
+      <span class="eq">ψ</span> is how many points of the marginal rate
+      appear for each point of term premium. Only the share due inside a
+      year pays that marginal rate, which is already in the identity.
+      <span class="eq">λ</span> is the share of a premium gap that fades in
+      one year if the debt ratio does not move. It is also an assumption.
+    </p>
+    <p>
+      This loop does not have a Hopf boundary. Debt raises the premium, the
+      premium raises the rate, the rate raises the debt. The poles of that
+      loop are real. One of them turns positive, and the ratio and the
+      premium run away together, when the product of the two speeds beats
+      the snowball’s pull. That requires the premium to fade on its own.
+      If it does not fade, any positive pair of speeds is already over the
+      line, because the premium ratchets. A growing cycle would need the
+      premium to overshoot. There is no series for that lag on this page,
+      and none is invented.
+    </p>
+    <p>
+      The dotted curve is a ruler: where the boundary would sit if the
+      whole premium gap faded in one year (<span class="eq">λ = 1</span>).
+      It is not a claim that it does. The solid curve is the boundary at
+      the fade on the slider. Above it, one pole is positive.
+    </p>
     <div class="phase-controls">
-      <label>γ &nbsp; <span id="gamma-val">0.00</span>
-        <input type="range" id="phase-gamma" min="0" max="1" step="0.05" value="0"/>
+      <label>φ &nbsp; <span id="phi-val">0.000</span>
+        <input type="range" id="phase-phi" min="0" max="0.2" step="0.005" value="0"/>
       </label>
-      <label>ρ &nbsp; <span id="rho-val">0.000</span>
-        <input type="range" id="phase-rho" min="0" max="0.15" step="0.005" value="0"/>
+      <label>ψ &nbsp; <span id="psi-val">0.00</span>
+        <input type="range" id="phase-psi" min="0" max="1" step="0.02" value="0"/>
+      </label>
+      <label>λ &nbsp; <span id="lambda-val">0.00</span>
+        <input type="range" id="phase-lambda" min="0" max="1" step="0.05" value="0"/>
       </label>
     </div>
     <div class="phase-grid">
       <div>
-        <h3 class="axis-head">Frozen rates, plus the rule</h3>
-        <div class="phase-model" id="phase-model"></div>
+        <h3 class="axis-head">The product of the two speeds</h3>
+        <div class="phase-model" id="phase-boundary"></div>
       </div>
       <div>
-        <h3 class="axis-head">Poles of the rule</h3>
+        <h3 class="axis-head">Poles of this loop</h3>
         <div class="phase-poles" id="phase-poles"></div>
       </div>
     </div>
