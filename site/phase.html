@@ -78,15 +78,30 @@
       </tbody>
     </table>
     <p>
-      The gold line is where the identity is zero. The label on the selected
-      point is that quarter’s identity, not a scaled arrow. A year is a
-      short step on a decades-long axis. The size is in the readout and on
-      the time charts.
+      The gold line is where the identity is zero at the what-if below. It
+      starts on this quarter’s printed growth and roll. The label is that
+      identity. History does not move.
     </p>
 
     <div class="phase-controls">
       <label>Quarter
         <select id="phase-quarter"></select>
+      </label>
+    </div>
+    <p class="sub">
+      What-if. Each slider starts at the selected quarter. The coupon, the
+      share due inside a year, and the debt ratio stay at the print. The
+      time charts do not use these.
+    </p>
+    <div class="phase-controls">
+      <label>nominal growth, % &nbsp; <span id="g-val">—</span>
+        <input type="range" id="phase-g" min="-8" max="18" step="0.01" value="0"/>
+      </label>
+      <label>primary / GDP &nbsp; <span id="d-val">—</span>
+        <input type="range" id="phase-d" min="-6" max="26" step="0.01" value="0"/>
+      </label>
+      <label>refi gap, percentage points &nbsp; <span id="refi-val">—</span>
+        <input type="range" id="phase-refi" min="-3" max="8" step="0.01" value="0"/>
       </label>
     </div>
     <label class="phase-check">

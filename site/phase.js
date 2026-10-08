@@ -171,6 +171,46 @@
     return parts(row) !== null;
   }
 
+  function whatIf(base) {
+    const g = slider("phase-g");
+    const d = slider("phase-d");
+    const refi = slider("phase-refi");
+    const r = base.coupon + base.w * refi;
+    const den = 1 + g / 100;
+    const snowInterest = (r / 100) * base.b / den;
+    const snowGrowth = -(g / 100) * base.b / den;
+    const snowball = snowInterest + snowGrowth;
+    return {
+      r: r,
+      g: g,
+      b: base.b,
+      d: d,
+      w: base.w,
+      coupon: base.coupon,
+      marginal: base.marginal,
+      refi: refi,
+      snowInterest: snowInterest,
+      snowGrowth: snowGrowth,
+      snowball: snowball,
+      ident: snowball + d,
+    };
+  }
+
+  function syncSliders(row) {
+    const p = parts(row);
+    if (!p) return;
+    const sets = [
+      ["phase-g", "g-val", p.g, 2],
+      ["phase-d", "d-val", p.d, 2],
+      ["phase-refi", "refi-val", p.marginal - p.coupon, 2],
+    ];
+    sets.forEach(function (s) {
+      const el = document.getElementById(s[0]);
+      el.value = String(s[2]);
+      document.getElementById(s[1]).textContent = Number(el.value).toFixed(s[3]);
+    });
+  }
+
   function selected() {
     return BY[document.getElementById("phase-quarter").value] || null;
   }
@@ -263,19 +303,34 @@
     };
   }
 
-  function drawPath(row, p) {
+  function drawPath(row, printed, alt) {
     const el = document.getElementById("phase-plane");
     const box = view();
-    const down = p.ident < 0;
-    paint(el, [nullcline(box, p.r, p.g), pathTrace(), {
+    const moved = Math.abs(alt.d - printed.d) > 0.015
+      || Math.abs(alt.g - printed.g) > 0.015
+      || Math.abs(alt.refi - (printed.marginal - printed.coupon)) > 0.015;
+    const down = alt.ident < 0;
+    const traces = [nullcline(box, alt.r, alt.g), pathTrace(), {
       type: "scatter",
       mode: "markers",
-      name: "selected",
-      x: [p.d],
-      y: [p.b],
-      hovertemplate: row.date + "<extra>selected</extra>",
+      name: "printed quarter",
+      x: [printed.d],
+      y: [printed.b],
+      hovertemplate: row.date + "<br>printed primary %{x:.2f}<extra></extra>",
       marker: { size: 14, color: "#c4a35a", line: { color: "#ff2bd6", width: 2 } },
-    }], {
+    }];
+    if (moved) {
+      traces.push({
+        type: "scatter",
+        mode: "markers",
+        name: "what-if",
+        x: [alt.d],
+        y: [alt.b],
+        hovertemplate: "what-if primary %{x:.2f}<br>identity " + fmt(alt.ident, 2) + "<extra></extra>",
+        marker: { size: 12, color: "#07080c", symbol: "diamond", line: { color: "#00f0ff", width: 2 } },
+      });
+    }
+    paint(el, traces, {
       paper_bgcolor: "#07080c",
       plot_bgcolor: "#07080c",
       margin: { t: 48, r: 16, b: 52, l: 58 },
@@ -283,9 +338,9 @@
       xaxis: axis2d({ title: "primary deficit / GDP", range: [box.d0, box.d1] }),
       yaxis: axis2d({ title: "debt held by the public / GDP", range: [box.b0, box.b1] }),
       annotations: [{
-        x: p.d,
-        y: p.b,
-        text: "identity " + fmt(p.ident, 2),
+        x: moved ? alt.d : printed.d,
+        y: printed.b,
+        text: (moved ? "what-if " : "identity ") + fmt(alt.ident, 2),
         showarrow: true,
         arrowhead: 3,
         ax: 70,
@@ -303,6 +358,7 @@
         const iso = pt.customdata[0];
         if (!BY[iso] || !fieldOk(BY[iso])) return;
         document.getElementById("phase-quarter").value = iso;
+        syncSliders(BY[iso]);
         draw();
       });
     }
@@ -440,7 +496,7 @@
     return { tr: tr, det: det, disc: disc, poles: [{ re: half, im: s }, { re: half, im: -s }] };
   }
 
-  function drawBoundary(p) {
+  function drawBoundary(p, moved) {
     const el = document.getElementById("phase-boundary");
     const phi = slider("phase-phi");
     const psi = slider("phase-psi");
@@ -526,7 +582,9 @@
 
     const product = phi * psi;
     const critical = (alpha < 0 && beta > 0 && lambda > 0) ? (-alpha * lambda / beta) : null;
-    let sentence = "Model only. These poles are not the printed debt ratio. ";
+    let sentence = moved
+      ? "Poles use the what-if growth and refi gap. They are not the print. "
+      : "Model only. These poles are not the printed debt ratio. ";
     if (phi === 0 && psi === 0) {
       sentence += "Both speeds are off. The premium does not answer the debt. The debt pole is the snowball, " + fmt(alpha, 4) + " per year. ";
     } else if (lambda === 0 && product > 0) {
@@ -546,12 +604,12 @@
     document.getElementById("phase-status").textContent = sentence;
   }
 
-  function readout(row, p, dist, gaps, forecast) {
+  function readout(row, printed, alt, distPrinted, gaps, forecast) {
     const recent = gaps.slice(-RECENT);
     const med = median(recent.map(function (g) { return g.gap; }));
     const prev = BY[shiftYear(row.date, -1)];
     const prevParts = prev ? parts(prev) : null;
-    const cushion = -p.ident;
+    const cushion = -printed.ident;
     const prevCushion = prevParts ? -prevParts.ident : null;
     let drift = "no prior year to compare.";
     if (prevCushion !== null) {
@@ -560,14 +618,22 @@
         + fmt(Math.abs(delta), 2) + " points of GDP versus " + prev.date + ".";
     }
     const act = printed(row);
-    const gap = act === null ? null : act - p.ident;
+    const gap = act === null ? null : act - printed.ident;
     const tp = num(row.THREEFYTP10);
     const y10 = num(row.y10);
-    const spiral = p.ident > 0.05
-      ? "Accounting spiral: yes. The identity says the debt ratio rises " + fmt(p.ident, 2) + " points of GDP over the next year."
-      : p.ident < -0.05
-        ? "Accounting spiral: no. The identity says the debt ratio falls " + fmt(Math.abs(p.ident), 2) + " points of GDP over the next year."
+    const spiral = printed.ident > 0.05
+      ? "Accounting spiral: yes. The identity says the debt ratio rises " + fmt(printed.ident, 2) + " points of GDP over the next year."
+      : printed.ident < -0.05
+        ? "Accounting spiral: no. The identity says the debt ratio falls " + fmt(Math.abs(printed.ident), 2) + " points of GDP over the next year."
         : "Accounting spiral: on the line. The identity is about zero.";
+    const p = printed;
+    const dist = distPrinted;
+    const moved = Math.abs(alt.ident - printed.ident) > 0.02;
+    const altLine = alt.ident > 0.05
+      ? "the what-if identity rises " + fmt(alt.ident, 2)
+      : alt.ident < -0.05
+        ? "the what-if identity falls " + fmt(Math.abs(alt.ident), 2)
+        : "the what-if identity is about zero";
     const lines = [
       row.date,
       "",
@@ -592,6 +658,11 @@
       forecast ? "That last number is the identity plus the recent miss. It is not a fit." : "",
       "",
       "10-year " + fmt(y10, 2) + "%    term premium " + (tp === null ? "not on this file yet" : fmt(tp, 2)),
+      "",
+      moved
+        ? "What-if, not a print. " + altLine + " points of GDP over the next year."
+        : "What-if is sitting on the printed values.",
+      "  growth " + fmt(alt.g, 2) + "%    primary " + fmt(alt.d, 2) + "    refi gap " + fmt(alt.refi, 2) + " pp    r " + fmt(alt.r, 2) + "%",
     ];
     document.getElementById("phase-read").textContent = lines.join("\n");
   }
@@ -602,21 +673,23 @@
       document.getElementById("phase-plane").textContent = "This quarter has no coupon, one-year share, marginal rate, or four-quarter GDP growth.";
       return;
     }
-    const p = parts(row);
-    const dist = distances(p);
+    const printed = parts(row);
+    const alt = whatIf(printed);
+    const moved = Math.abs(alt.ident - printed.ident) > 0.02;
+    const dist = distances(printed);
     const gaps = scoredGaps();
     const recent = gaps.slice(-RECENT);
     const med = median(recent.map(function (g) { return g.gap; }));
     const latest = ROWS.filter(fieldOk).slice(-1)[0];
     const forecast = med !== null && latest && row.date === latest.date
-      ? { date: row.date, value: p.ident + med }
+      ? { date: row.date, value: printed.ident + med }
       : null;
-    readout(row, p, dist, gaps, forecast);
-    drawPath(row, p);
+    readout(row, printed, alt, dist, gaps, forecast);
+    drawPath(row, printed, alt);
     drawScore(forecast);
     drawSplit();
     drawYields();
-    drawBoundary(p);
+    drawBoundary(alt, moved);
   }
 
   function boot(payload) {
@@ -647,13 +720,24 @@
       sel.appendChild(opt);
     });
     sel.value = usable[usable.length - 1].date;
+    syncSliders(BY[sel.value]);
     stamp("cubes.json " + (payload.generated_at || "") + " · r = coupon + share due inside a year × refi gap · " + usable.length + " quarters");
-    sel.addEventListener("change", draw);
+    sel.addEventListener("change", function () {
+      const row = selected();
+      if (row) syncSliders(row);
+      draw();
+    });
     document.getElementById("phase-wide").addEventListener("change", draw);
-    ["phase-phi", "phase-psi", "phase-lambda"].forEach(function (id) {
-      document.getElementById(id).addEventListener("input", function () {
-        const map = { "phase-phi": ["phi-val", 3], "phase-psi": ["psi-val", 2], "phase-lambda": ["lambda-val", 2] };
-        document.getElementById(map[id][0]).textContent = slider(id).toFixed(map[id][1]);
+    [
+      ["phase-g", "g-val", 2],
+      ["phase-d", "d-val", 2],
+      ["phase-refi", "refi-val", 2],
+      ["phase-phi", "phi-val", 3],
+      ["phase-psi", "psi-val", 2],
+      ["phase-lambda", "lambda-val", 2],
+    ].forEach(function (spec) {
+      document.getElementById(spec[0]).addEventListener("input", function () {
+        document.getElementById(spec[1]).textContent = slider(spec[0]).toFixed(spec[2]);
         draw();
       });
     });
