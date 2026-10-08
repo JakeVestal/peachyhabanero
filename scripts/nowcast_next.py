@@ -194,6 +194,28 @@ def resolve_gemini_models(sess: requests.Session, key: str) -> list[str]:
     return out
 
 
+def extract_json_object(text: str) -> dict:
+    """Model text → one object. Search grounding cannot use JSON mime type,
+    so the reply may wear a fence or a sentence."""
+    raw = (text or "").strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw).strip()
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        blob = re.sub(r",\s*([}\]])", r"\1", raw[start:end + 1])
+        parsed = json.loads(blob)
+    if isinstance(parsed, list):
+        parsed = next((x for x in parsed if isinstance(x, dict)), None)
+    if not isinstance(parsed, dict):
+        raise ValueError("Gemini reply was not a JSON object")
+    return parsed
+
+
 def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tuple[dict | None, str, dict]:
     key = (os.environ.get("GEMINI_API_KEY") or "").strip()
     empty_meta = {"sources": [], "prompt_rows": last_rows[-6:]}
@@ -216,7 +238,19 @@ def gemini_nipa(target: str, last_rows: list, yields: dict, coupon: float) -> tu
         })
     empty_meta["prompt_rows"] = slim
 
-    # REVISED PROMPT WITH HARD DATA ANCHORS FIRST
+    # Schema is a plain string. An f-string eats {"title": ...} and the
+    # nightly dies before Gemini is called, so no nowcast.json is written.
+    schema = """{
+  "gdp_bn": 0,
+  "interest_bn_saar": 0,
+  "receipts_bn_saar": 0,
+  "tax_bn_saar": 0,
+  "w780_bn_saar": 0,
+  "fgexpnd_bn_saar": 0,
+  "debt_held_public_bn": 0,
+  "rationale": "",
+  "sources": [{"title": "", "uri": "https://"}]
+}"""
     prompt = f"""You are estimating exact current-dollar point estimates for the NEXT U.S. quarterly NIPA and Treasury fiscal prints.
 
 Today (UTC): {datetime.now(timezone.utc).strftime("%Y-%m-%d")}.
@@ -242,18 +276,9 @@ STEP-BY-STEP INSTRUCTIONS:
    - debt_held_public_bn MUST be the absolute level (not SAAR) at quarter-end in Billions of USD.
 
 OUTPUT FORMAT REQUIREMENTS:
-Return ONLY a JSON object (no markdown, no extra keys):
-{{
-  "gdp_bn": number,              # Current-dollar GDP (SAAR, $B)
-  "interest_bn_saar": number,    # BEA Net Interest Paid (A091RC1Q027SBEA, $B)
-  "receipts_bn_saar": number,    # Federal Current Receipts (FGRECPT, $B)
-  "tax_bn_saar": number,         # Current Tax Receipts (W006RC1Q027SBEA, $B)
-  "w780_bn_saar": number,        # Social Insurance Contributions (W780RC1Q027SBEA, $B)
-  "fgexpnd_bn_saar": number,     # Current Expenditures (FGEXPND, $B)
-  "debt_held_public_bn": number, # Total Debt Held by Public at quarter-end ($B)
-  "rationale": "string <= 250 words explaining exact arithmetic additions/subtractions made relative to hard tracking models",
-  "sources": [{"title": "string", "uri": "string"}]
-}}
+Return ONLY a JSON object. No markdown, no comments, no extra keys.
+Numbers are numbers, not strings. rationale and sources are the only strings.
+{schema}
 Do NOT compute derived ratios (debt/GDP, int/receipts). Python handles calculations downstream.
 """
 
@@ -265,17 +290,17 @@ Do NOT compute derived ratios (debt/GDP, int/receipts). Python handles calculati
     for model in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
 
-        # ENABLE GOOGLE SEARCH GROUNDING TOOL
+        # Google Search cannot be combined with responseMimeType application/json.
+        # The API answers 400 and no guess is written. Ask for JSON in the prompt.
         body = {
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "tools": [{"google_search": {}}],  # Enables web search grounding
+            "tools": [{"google_search": {}}],
             "generationConfig": {
-                "temperature": 0.1,  # Lowered temperature for tighter math consistency
-                "responseMimeType": "application/json",
+                "temperature": 0.1,
             },
         }
         try:
-            r = sess.post(url, headers=headers, json=body, timeout=90)
+            r = sess.post(url, headers=headers, json=body, timeout=120)
             if r.status_code >= 400:
                 last_err = f"{model} {r.status_code} {r.text[:240]}"
                 log(last_err)
@@ -283,17 +308,16 @@ Do NOT compute derived ratios (debt/GDP, int/receipts). Python handles calculati
                 continue
 
             data = r.json()
-            text = (
+            parts = (
                 data.get("candidates", [{}])[0]
                 .get("content", {})
-                .get("parts", [{}])[0]
-                .get("text", "")
+                .get("parts")
+                or []
             )
-            text = text.strip()
-            if text.startswith("```"):
-                text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)
-
-            parsed = json.loads(text)
+            text = "\n".join(
+                p.get("text", "") for p in parts if isinstance(p, dict) and p.get("text")
+            ).strip()
+            parsed = extract_json_object(text)
             parsed["_model"] = model
             sources = parse_sources(parsed.get("sources"))
 
