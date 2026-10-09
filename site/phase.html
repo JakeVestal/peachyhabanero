@@ -23,17 +23,17 @@
   </div>
   <h1>PHASE</h1>
   <p class="sub">
-    One quarter at a time: whether the accounting says the debt ratio is
-    rising, how far that accounting is from flat, and whether the cushion
-    is shrinking. The printed ratio is on the chart under the path. It has
-    not been the identity.
+    One quarter at a time: whether the intrinsic delta says the debt ratio is
+    rising, how far that change is from flat, and whether the cushion is
+    shrinking. The printed ratio is on the chart under the path. It has
+    not been the intrinsic delta.
   </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
 
 <main>
   <section>
-    <h2>The one-year identity</h2>
+    <h2>The intrinsic delta</h2>
     <p>
       The horizontal axis is the primary deficit, as a percent of GDP:
       current expenditures minus interest payments minus current receipts
@@ -62,8 +62,11 @@
       <span class="eq">r</span> and <span class="eq">g</span> are decimals in
       that line and percents on the readout. <span class="eq">g</span> is
       nominal GDP this quarter over GDP four quarters earlier, minus one.
-      <span class="eq">Δb</span> is the one-year change in the debt ratio if
-      the primary stayed at <span class="eq">d</span>.
+      <span class="eq">Δb</span> is the intrinsic delta: the one-year change
+      in the debt ratio implied by carrying today's roll rate, today's
+      primary ratio, and trailing growth forward. It is not a number locked
+      in the bonds. Only the coupon on debt that does not come due is
+      already set.
     </p>
     <table class="join-table eq-key">
       <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
@@ -73,14 +76,16 @@
         <tr><td>r</td><td>Coupon, plus the refi gap on the share due inside a year.</td></tr>
         <tr><td>coupon</td><td><a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>.</td></tr>
         <tr><td>g</td><td>Nominal GDP growth over the previous four quarters, percent.</td></tr>
-        <tr><td>snowball</td><td>The interest piece minus the growth piece. The identity without the primary.</td></tr>
-        <tr><td>gap</td><td>Printed change in the debt ratio over the next year, minus the identity.</td></tr>
+        <tr><td>snowball</td><td>The interest piece minus the growth piece. The intrinsic delta without the primary.</td></tr>
+        <tr><td>extrinsic delta</td><td>Printed change in the debt ratio over the next year, minus the intrinsic delta. It includes those inputs not repeating, and the gap between this account and the cash debt stock. The name does not say which.</td></tr>
       </tbody>
     </table>
     <p>
-      The gold line is where the identity is zero at the what-if below. It
-      starts on this quarter’s printed growth and roll. The label is that
-      identity. History does not move.
+      The gold line is where the intrinsic delta is zero at the what-if
+      below. It starts on this quarter’s printed growth and roll. The
+      label is that intrinsic delta. The arrow points the same way. Its
+      length is scaled so the direction is visible. It is not the size of
+      the move on the axis. History does not move.
     </p>
 
     <div class="phase-controls">
@@ -113,25 +118,27 @@
     <h3 class="axis-head">Primary and debt</h3>
     <div class="phase-plane" id="phase-plane"></div>
 
-    <h3 class="axis-head">Printed change against the identity</h3>
+    <h3 class="axis-head">Printed change against the intrinsic delta</h3>
     <p>
       Cyan is the printed change in debt held by the public, in percent of
       GDP, from that quarter to the same quarter a year later. Gold is the
-      identity. Magenta is printed minus identity. A positive gap means the
-      ratio rose by more than the identity. The last four quarters have gold
+      intrinsic delta. Magenta is the extrinsic delta, printed minus
+      intrinsic. A positive extrinsic delta means the ratio rose by more
+      than the intrinsic delta allowed. The last four quarters have gold
       and no cyan: the year has not finished. The diamond is the latest
-      identity plus the median gap of the last eight scored quarters. It is
-      not a fitted path.
+      intrinsic delta plus the median extrinsic delta of the last eight
+      scored quarters. It is not a fitted path.
     </p>
     <div class="phase-score" id="phase-score"></div>
 
-    <h3 class="axis-head">Snowball, primary, residual</h3>
+    <h3 class="axis-head">Snowball, primary, extrinsic delta</h3>
     <p>
       The same year, split. Cyan is the snowball: interest on this
       <span class="eq">r</span>, minus what nominal growth does to the
-      ratio. Gold is the primary. Magenta is the residual, and it exists
-      only once the year has printed. The three add to the printed change
-      when the residual exists. They add to the identity when it does not.
+      ratio. Gold is the primary. Magenta is the extrinsic delta, and it
+      exists only once the year has printed. The three add to the printed
+      change when the extrinsic delta exists. They add to the intrinsic
+      delta when it does not.
     </p>
     <div class="phase-score" id="phase-split"></div>
 
@@ -156,7 +163,7 @@
       in one year for each extra point of debt/GDP.
       <span class="eq">ψ</span> is how many points of the marginal rate
       appear for each point of term premium. Only the share due inside a
-      year pays that marginal rate, which is already in the identity.
+      year pays that marginal rate, which is already in the intrinsic delta.
       <span class="eq">λ</span> is the share of a premium gap that fades in
       one year if the debt ratio does not move. It is also an assumption.
     </p>
@@ -176,6 +183,17 @@
       whole premium gap faded in one year (<span class="eq">λ = 1</span>).
       It is not a claim that it does. The solid curve is the boundary at
       the fade on the slider. Above it, one pole is positive.
+      The gold diamond is measured, and the sliders do not move to it.
+      <span class="eq">φ</span> is the slope of the one-year change in the
+      ACM 10-year premium on the one-year change in debt held by the public
+      over GDP, over every quarter in the file that has both. The slope is
+      not forced through zero. A negative value sits left of the axis, off
+      the runaway side.
+      <span class="eq">ψ</span> is this quarter’s 7-to-10-year Table 3
+      weight inside the book the marginal rate uses: TIPS dropped, the rest
+      scaled to one. That bucket is the one priced off the 10-year. The
+      longer bucket is priced off the 30-year, and this premium is not the
+      30-year’s, so it stays out.
     </p>
     <div class="phase-controls">
       <label>φ &nbsp; <span id="phi-val">0.000</span>

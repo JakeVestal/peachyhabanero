@@ -1,5 +1,5 @@
-/* Roll-rate identity, the printed gap, and a labeled debt-to-premium loop.
-   The loop's boundary is a saddle. It is not a Hopf. */
+/* Intrinsic delta from the roll rate, trailing growth, and the primary.
+   Extrinsic delta is the printed change minus that. */
 (function () {
   const DATA = "data/published/cubes.json";
   const PLOT = {
@@ -245,10 +245,10 @@
     return {
       type: "scatter",
       mode: "lines",
-      name: "identity flat",
+      name: "intrinsic delta = 0",
       x: x,
       y: y,
-      hovertemplate: "primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>identity Δb = 0</extra>",
+      hovertemplate: "primary %{x:.2f}<br>debt/GDP %{y:.1f}<extra>intrinsic delta = 0</extra>",
       line: { color: "#c4a35a", width: 1.5, dash: "dot" },
     };
   }
@@ -294,9 +294,9 @@
         "due inside a year %{customdata[3]}% of marketable<br>" +
         "marginal %{customdata[4]}%<br>" +
         "nominal growth %{customdata[5]}%<br>" +
-        "identity next-year Δdebt/GDP %{customdata[6]}<br>" +
+        "intrinsic delta, next-year Δdebt/GDP %{customdata[6]}<br>" +
         "printed next-year Δdebt/GDP %{customdata[7]}<br>" +
-        "gap (printed − identity) %{customdata[8]}" +
+        "extrinsic delta (printed − intrinsic) %{customdata[8]}" +
         "<extra>click to set the quarter</extra>",
       line: { color: "#00f0ff", width: 1.6 },
       marker: { color: "#00f0ff", size: 7 },
@@ -326,10 +326,32 @@
         name: "what-if",
         x: [alt.d],
         y: [alt.b],
-        hovertemplate: "what-if primary %{x:.2f}<br>identity " + fmt(alt.ident, 2) + "<extra></extra>",
+        hovertemplate: "what-if primary %{x:.2f}<br>intrinsic delta " + fmt(alt.ident, 2) + "<extra></extra>",
         marker: { size: 12, color: "#07080c", symbol: "diamond", line: { color: "#00f0ff", width: 2 } },
       });
     }
+    const x0 = moved ? alt.d : printed.d;
+    const span = box.b1 - box.b0;
+    const frac = Math.max(0.05, Math.min(0.18, Math.abs(alt.ident) * 0.07));
+    const dy = (alt.ident >= 0 ? 1 : -1) * span * frac;
+    const y1 = Math.max(box.b0 + 0.5, Math.min(box.b1 - 0.5, printed.b + dy));
+    const color = down ? "#00f0ff" : "#ff2bd6";
+    traces.push({
+      type: "scatter",
+      mode: "lines+markers",
+      name: "direction, not to scale",
+      x: [x0, x0],
+      y: [printed.b, y1],
+      hovertemplate:
+        "direction only<br>intrinsic delta " + fmt(alt.ident, 2) +
+        " points of GDP<br>the shaft is scaled, not the size of the move<extra></extra>",
+      line: { color: color, width: 2 },
+      marker: {
+        size: [0, 14],
+        symbol: down ? "triangle-down" : "triangle-up",
+        color: color,
+      },
+    });
     paint(el, traces, {
       paper_bgcolor: "#07080c",
       plot_bgcolor: "#07080c",
@@ -338,15 +360,13 @@
       xaxis: axis2d({ title: "primary deficit / GDP", range: [box.d0, box.d1] }),
       yaxis: axis2d({ title: "debt held by the public / GDP", range: [box.b0, box.b1] }),
       annotations: [{
-        x: moved ? alt.d : printed.d,
-        y: printed.b,
-        text: (moved ? "what-if " : "identity ") + fmt(alt.ident, 2),
-        showarrow: true,
-        arrowhead: 3,
-        ax: 70,
-        ay: down ? 36 : -36,
-        font: { color: down ? "#00f0ff" : "#ff2bd6", size: 12 },
-        arrowcolor: down ? "#00f0ff" : "#ff2bd6",
+        x: x0,
+        y: y1,
+        text: (moved ? "what-if " : "intrinsic ") + fmt(alt.ident, 2),
+        showarrow: false,
+        xanchor: "left",
+        xshift: 10,
+        font: { color: color, size: 12 },
         bgcolor: "#07080c",
       }],
     });
@@ -387,23 +407,23 @@
         line: { color: "#00f0ff", width: 1.8 },
       },
       {
-        type: "scatter", mode: "lines", name: "identity",
+        type: "scatter", mode: "lines", name: "intrinsic delta",
         x: date, y: ident,
-        hovertemplate: "%{x}<br>identity %{y:.2f}<extra></extra>",
+        hovertemplate: "%{x}<br>intrinsic delta %{y:.2f}<extra></extra>",
         line: { color: "#c4a35a", width: 1.8 },
       },
       {
-        type: "scatter", mode: "lines", name: "gap",
+        type: "scatter", mode: "lines", name: "extrinsic delta",
         x: date, y: gap, connectgaps: false,
-        hovertemplate: "%{x}<br>printed − identity %{y:.2f}<extra></extra>",
+        hovertemplate: "%{x}<br>printed − intrinsic %{y:.2f}<extra></extra>",
         line: { color: "#ff2bd6", width: 1.4 },
       },
     ];
     if (forecast) {
       traces.push({
-        type: "scatter", mode: "markers", name: "identity + recent gap",
+        type: "scatter", mode: "markers", name: "intrinsic + median extrinsic",
         x: [forecast.date], y: [forecast.value],
-        hovertemplate: "%{x}<br>identity + median gap of the last " + RECENT + " scored quarters<br>%{y:.2f}<extra>not a fit</extra>",
+        hovertemplate: "%{x}<br>intrinsic delta + median extrinsic delta of the last " + RECENT + " scored quarters<br>%{y:.2f}<extra>not a fit</extra>",
         marker: { size: 14, color: "#c4a35a", symbol: "diamond", line: { color: "#ff2bd6", width: 2 } },
       });
     }
@@ -435,7 +455,7 @@
     paint(el, [
       { type: "scatter", mode: "lines", name: "snowball", x: date, y: snow, hovertemplate: "%{x}<br>snowball %{y:.2f}<extra></extra>", line: { color: "#00f0ff", width: 1.6 } },
       { type: "scatter", mode: "lines", name: "primary", x: date, y: primary, hovertemplate: "%{x}<br>primary %{y:.2f}<extra></extra>", line: { color: "#c4a35a", width: 1.6 } },
-      { type: "scatter", mode: "lines", name: "residual", x: date, y: resid, connectgaps: false, hovertemplate: "%{x}<br>printed − identity %{y:.2f}<extra></extra>", line: { color: "#ff2bd6", width: 1.4 } },
+      { type: "scatter", mode: "lines", name: "extrinsic delta", x: date, y: resid, connectgaps: false, hovertemplate: "%{x}<br>printed − intrinsic %{y:.2f}<extra></extra>", line: { color: "#ff2bd6", width: 1.4 } },
     ], {
       paper_bgcolor: "#07080c",
       plot_bgcolor: "#07080c",
@@ -496,6 +516,45 @@
     return { tr: tr, det: det, disc: disc, poles: [{ re: half, im: s }, { re: half, im: -s }] };
   }
 
+  function measuredPhi() {
+    const xs = [];
+    const ys = [];
+    ROWS.forEach(function (row) {
+      const prev = BY[shiftYear(row.date, -1)];
+      if (!prev) return;
+      const b0 = num(prev.debt_gdp_pct);
+      const b1 = num(row.debt_gdp_pct);
+      const t0 = num(prev.THREEFYTP10);
+      const t1 = num(row.THREEFYTP10);
+      if (b0 === null || b1 === null || t0 === null || t1 === null) return;
+      xs.push(b1 - b0);
+      ys.push(t1 - t0);
+    });
+    if (xs.length < 8) return null;
+    const n = xs.length;
+    let mx = 0;
+    let my = 0;
+    xs.forEach(function (x) { mx += x; });
+    ys.forEach(function (y) { my += y; });
+    mx /= n;
+    my /= n;
+    let varx = 0;
+    let cov = 0;
+    for (let i = 0; i < n; i++) {
+      varx += (xs[i] - mx) * (xs[i] - mx);
+      cov += (xs[i] - mx) * (ys[i] - my);
+    }
+    if (varx === 0) return null;
+    return { phi: cov / varx, n: n };
+  }
+
+  function measuredPsi(row) {
+    const w = num(row.resid_w_7_10y);
+    const tips = num(row.resid_w_tips);
+    if (w === null || tips === null || !(tips < 1)) return null;
+    return w / (1 - tips);
+  }
+
   function drawBoundary(p, moved) {
     const el = document.getElementById("phase-boundary");
     const phi = slider("phase-phi");
@@ -520,7 +579,11 @@
     }
     const ruler = curve(1);
     const live = curve(lambda);
-    paint(el, [
+    const fit = measuredPhi();
+    const psiHat = measuredPsi(selected() || {});
+    const marked = fit && psiHat !== null;
+    const phiLo = marked && fit.phi < 0 ? Math.min(-0.04, fit.phi * 1.8) : 0;
+    const traces = [
       {
         type: "scatter", mode: "lines", name: "if the premium faded in one year",
         x: ruler.x, y: ruler.y,
@@ -539,13 +602,29 @@
         hovertemplate: "φ %{x:.3f}<br>ψ %{y:.2f}<extra>sliders</extra>",
         marker: { size: 12, color: "#07080c", line: { color: "#00f0ff", width: 2 } },
       },
-    ], {
+    ];
+    if (marked) {
+      traces.push({
+        type: "scatter", mode: "markers", name: "measured",
+        x: [fit.phi], y: [psiHat],
+        hovertemplate:
+          "φ " + fmt(fit.phi, 3) + " over " + fit.n + " quarters<br>" +
+          "ψ " + fmt(psiHat, 3) + " this quarter<br>" +
+          "7–10 year weight in the marginal-rate book<extra>measured, not a slider</extra>",
+        marker: { size: 12, symbol: "diamond", color: "#c4a35a", line: { color: "#ff2bd6", width: 1 } },
+      });
+    }
+    paint(el, traces, {
       paper_bgcolor: "#07080c",
       plot_bgcolor: "#07080c",
       margin: { t: 48, r: 16, b: 52, l: 58 },
       legend: legend(),
-      xaxis: axis2d({ title: "φ  premium points per year, per point of debt/GDP", range: [0, phiMax] }),
+      xaxis: axis2d({ title: "φ  premium points per year, per point of debt/GDP", range: [phiLo, phiMax] }),
       yaxis: axis2d({ title: "ψ  points of the marginal rate, per point of premium", range: [0, psiMax] }),
+      shapes: [{
+        type: "line", xref: "x", yref: "y", x0: 0, x1: 0, y0: 0, y1: psiMax,
+        line: { color: "#c4a35a", width: 1, dash: "dot" },
+      }],
     });
 
     const info = polesOf(alpha, beta, phi, psi, lambda);
@@ -601,6 +680,16 @@
     } else {
       sentence += "Poles " + fmt(info.poles[0].re, 4) + " and " + fmt(info.poles[1].re, 4) + ". Real, not a cycle.";
     }
+    if (!fit) {
+      sentence += " No measured φ. Need a year of debt/GDP and the 10-year term premium on both ends.";
+    } else if (psiHat === null) {
+      sentence += " Measured φ is " + fmt(fit.phi, 3) + " over " + fit.n + " quarters. No measured ψ. This quarter has no 7–10 year weight.";
+    } else {
+      sentence += " Measured φ is " + fmt(fit.phi, 3) + " over " + fit.n + " quarters: the slope of the one-year change in the 10-year premium on the one-year change in the debt ratio. Measured ψ is " + fmt(psiHat, 3) + ", the 7–10 year weight in the book the marginal rate uses. The longer bucket is not in it.";
+      sentence += fit.phi < 0
+        ? " The pair is left of zero, off the runaway side."
+        : " The pair is the gold diamond. The sliders do not move to it.";
+    }
     document.getElementById("phase-status").textContent = sentence;
   }
 
@@ -614,7 +703,7 @@
     let drift = "no prior year to compare.";
     if (prevCushion !== null) {
       const delta = cushion - prevCushion;
-      drift = (delta < -0.05 ? "The accounting cushion shrank " : delta > 0.05 ? "The accounting cushion widened " : "The accounting cushion is about unchanged, ")
+      drift = (delta < -0.05 ? "The cushion in the intrinsic delta shrank " : delta > 0.05 ? "The cushion in the intrinsic delta widened " : "The cushion in the intrinsic delta is about unchanged, ")
         + fmt(Math.abs(delta), 2) + " points of GDP versus " + prev.date + ".";
     }
     const act = printed(row);
@@ -622,18 +711,18 @@
     const tp = num(row.THREEFYTP10);
     const y10 = num(row.y10);
     const spiral = printed.ident > 0.05
-      ? "Accounting spiral: yes. The identity says the debt ratio rises " + fmt(printed.ident, 2) + " points of GDP over the next year."
+      ? "Intrinsic delta: positive. The debt ratio rises " + fmt(printed.ident, 2) + " points of GDP over the next year."
       : printed.ident < -0.05
-        ? "Accounting spiral: no. The identity says the debt ratio falls " + fmt(Math.abs(printed.ident), 2) + " points of GDP over the next year."
-        : "Accounting spiral: on the line. The identity is about zero.";
+        ? "Intrinsic delta: negative. The debt ratio falls " + fmt(Math.abs(printed.ident), 2) + " points of GDP over the next year."
+        : "Intrinsic delta: about zero.";
     const p = printed;
     const dist = distPrinted;
     const moved = Math.abs(alt.ident - printed.ident) > 0.02;
     const altLine = alt.ident > 0.05
-      ? "the what-if identity rises " + fmt(alt.ident, 2)
+      ? "the what-if intrinsic delta rises " + fmt(alt.ident, 2)
       : alt.ident < -0.05
-        ? "the what-if identity falls " + fmt(Math.abs(alt.ident), 2)
-        : "the what-if identity is about zero";
+        ? "the what-if intrinsic delta falls " + fmt(Math.abs(alt.ident), 2)
+        : "the what-if intrinsic delta is about zero";
     const lines = [
       row.date,
       "",
@@ -643,19 +732,19 @@
       "r " + fmt(p.r, 2) + "%    coupon " + fmt(p.coupon, 2) + "%    marginal " + fmt(p.marginal, 2) + "%    share due inside a year " + fmt(p.w * 100, 1) + "%",
       "nominal growth " + fmt(p.g, 2) + "%    " + (p.r < p.g ? "r is below g" : p.r > p.g ? "r is above g" : "r equals g"),
       "",
-      "Distance to a flat identity, holding the other inputs:",
+      "Distance to a flat intrinsic delta, holding the other inputs:",
       "  primary is " + (dist.primaryCushion >= 0 ? fmt(dist.primaryCushion, 2) + " pp tighter than the line (the line is " + fmt(dist.dStar, 2) + "% of GDP)" : fmt(-dist.primaryCushion, 2) + " pp past the line (the line is " + fmt(dist.dStar, 2) + "% of GDP)"),
       "  nominal growth " + (dist.gStar === null ? "—" : "can " + (p.g >= dist.gStar ? "fall " + fmt(p.g - dist.gStar, 2) + " pp, to " + fmt(dist.gStar, 2) + "%" : "would need to rise " + fmt(dist.gStar - p.g, 2) + " pp, to " + fmt(dist.gStar, 2) + "%")),
       "  refi gap " + (dist.gapRoom === null ? "—" : "can " + (dist.gapRoom >= 0 ? "widen " + fmt(dist.gapRoom, 2) + " pp" : "would need to tighten " + fmt(-dist.gapRoom, 2) + " pp") + " before the line"),
       drift,
       "",
       "Printed change, this quarter to one year later: " + fmt(act, 2),
-      "Gap, printed minus identity: " + fmt(gap, 2),
+      "Extrinsic delta, printed minus intrinsic: " + fmt(gap, 2),
       forecast
-        ? "Median gap, last " + recent.length + " scored quarters: " + fmt(med, 2)
-        : "Median gap is a forecast for the latest quarter only. This quarter already has a print, or the sample has no scored gap.",
-      forecast ? "Identity plus that median: " + fmt(forecast.value, 2) : "Identity plus the recent median: —",
-      forecast ? "That last number is the identity plus the recent miss. It is not a fit." : "",
+        ? "Median extrinsic delta, last " + recent.length + " scored quarters: " + fmt(med, 2)
+        : "The median extrinsic delta is a what-if for the latest quarter only. This quarter already has a print, or the sample has no scored year.",
+      forecast ? "Intrinsic delta plus that median: " + fmt(forecast.value, 2) : "Intrinsic delta plus the recent median: —",
+      forecast ? "That last number is the intrinsic delta plus the recent extrinsic delta. It is not a fit." : "",
       "",
       "10-year " + fmt(y10, 2) + "%    term premium " + (tp === null ? "not on this file yet" : fmt(tp, 2)),
       "",

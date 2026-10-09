@@ -51,3 +51,6 @@ peachyhabanero-082-phase-score.patch
 peachyhabanero-083-roll-rate.patch
 peachyhabanero-084-phase-answers.patch
 peachyhabanero-085-what-if.patch
+peachyhabanero-086-deltas.patch
+peachyhabanero-087-arrow.patch
+peachyhabanero-088-marks.patch
