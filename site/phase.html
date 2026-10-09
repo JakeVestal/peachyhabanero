@@ -42,14 +42,20 @@
           </marker>
         </defs>
 
-        <!-- inputs: dashed. plant: solid -->
+        <!--
+          Placement is this picture. Origin is the top-left. y grows downward.
+          A box is a rect: x, y, width, height. Its label is a text at the
+          box center. A stream is a path: M starts, H moves horizontally,
+          V moves vertically. The arrowhead is at the end and points the
+          way the path was drawn. The two circles are the summers.
+        -->
         <g fill="#0d1117" stroke="#c4a35a" stroke-width="1.4">
           <rect x="20" y="48" width="140" height="40" rx="6" stroke-dasharray="5 3"/>
           <rect x="245" y="48" width="150" height="40" rx="6"/>
           <rect x="470" y="48" width="120" height="40" rx="6"/>
           <rect x="470" y="108" width="120" height="32" rx="6" stroke-dasharray="5 3"/>
-          <rect x="50" y="156" width="120" height="40" rx="6" stroke-dasharray="5 3"/>
           <rect x="245" y="156" width="150" height="40" rx="6"/>
+          <rect x="445" y="156" width="125" height="40" rx="6" stroke-dasharray="5 3"/>
           <rect x="450" y="230" width="155" height="40" rx="6"/>
           <rect x="450" y="300" width="100" height="32" rx="6" stroke-dasharray="5 3"/>
           <rect x="560" y="300" width="100" height="32" rx="6" stroke-dasharray="5 3"/>
@@ -71,8 +77,8 @@
           <text x="320" y="73">debt stock ∫</text>
           <text x="530" y="73">÷ income</text>
           <text x="530" y="129">income Y</text>
-          <text x="110" y="181">share due w</text>
           <text x="320" y="181">maturing w·D</text>
+          <text x="507" y="181">share due w</text>
           <text x="527" y="255">market</text>
           <text x="500" y="321">private bid</text>
           <text x="610" y="321">Fed buying</text>
@@ -88,21 +94,17 @@
           <path d="M 590 68 H 630"/>
           <path d="M 530 108 V 88"/>
           <path d="M 320 88 V 156"/>
-          <path d="M 170 176 H 245"/>
+          <path d="M 445 176 H 395"/>
           <path d="M 226 68 V 132 H 16 V 248 H 325"/>
-          <path d="M 320 196 V 198" marker-end="none"/>
-          <path d="M 320 210 V 220 H 340 V 233"/>
+          <path d="M 320 196 V 220 H 340 V 233"/>
           <path d="M 355 248 H 450"/>
           <path d="M 500 300 V 270"/>
           <path d="M 610 300 V 270"/>
           <path d="M 605 248 H 660"/>
-          <path d="M 110 196 V 204 H 745 V 230"/>
+          <path d="M 570 176 H 745 V 230"/>
           <path d="M 745 270 V 360"/>
           <path d="M 420 68 V 24 H 940 V 380 H 830"/>
         </g>
-        <path d="M 320 198 Q 338 204 320 210" fill="none" stroke="#07080c" stroke-width="5"/>
-        <path d="M 320 198 Q 338 204 320 210" fill="none" stroke="#00f0ff" stroke-width="1.5"/>
-
         <path d="M 660 380 H 36 V 112 H 200 V 83" fill="none" stroke="#ff2bd6" stroke-width="1.6" marker-end="url(#ret)"/>
 
         <g fill="#7f93a6" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="11">
@@ -112,7 +114,7 @@
           <text x="612" y="242">r</text>
           <text x="752" y="348">c</text>
           <text x="90" y="104">interest</text>
-          <text x="150" y="214">same w</text>
+          <text x="640" y="168">same w</text>
         </g>
       </svg>
     </div>
@@ -139,10 +141,6 @@
       Income. The share due. The private bid. Fed buying. The plant does not
       move them. The debt ratio <em>d</em> is the stock divided by income. It
       is a reading, not a third tank.
-    </p>
-    <p>
-      A crossing is not a connection. The hop in the maturing wire passes
-      over the <em>w</em> wire and does not join it.
     </p>
   </section>
 </main>
