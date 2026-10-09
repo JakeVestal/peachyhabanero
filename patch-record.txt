@@ -57,3 +57,4 @@ peachyhabanero-088-marks.patch
 peachyhabanero-089-blank-plots.patch
 peachyhabanero-090-phase-draft.patch
 peachyhabanero-091-phase-field.patch
+peachyhabanero-092-block-diagram.patch

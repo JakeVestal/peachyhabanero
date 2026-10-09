@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Phase (draft)</title>
   <link rel="stylesheet" href="style.css"/>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
 <body>
 <header>
@@ -23,87 +22,134 @@
   </div>
   <h1>PHASE</h1>
   <p class="draft-banner">
-    Draft. The figure is the two equations below, and the path of the data.
-    The three numbers on the rate are knobs. They are not estimates.
+    Draft. Block diagram only. This is the plant. Dashed boxes are inputs.
+    Nothing inside a solid box is a knob.
   </p>
-  <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
 
 <main>
   <section>
-    <p>
-      Two things move. The debt ratio, and the nominal rate accruing on the
-      debt already outstanding. Income growth and the primary deficit are
-      taken from the quarter you select and held still across the grid.
-      Giving them their own laws is later.
-    </p>
-    <p class="stat">ḋ = (r − γ) / 100 · d + p</p>
-    <p class="stat">ṙ = α (d − d<sub>crit</sub>) − σ r</p>
-    <table class="join-table eq-key">
-      <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>d</td>
-          <td>Debt held by the public / GDP, percent. <a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>, or the Treasury print when FRED has not posted the quarter.</td>
-        </tr>
-        <tr>
-          <td>r</td>
-          <td>Nominal rate accruing on that debt, percent. The average coupon on marketable Treasury debt. Not the rate on a new bond.</td>
-        </tr>
-        <tr>
-          <td>γ</td>
-          <td>Nominal GDP growth over the previous four quarters, percent. This quarter’s, held still on the grid.</td>
-        </tr>
-        <tr>
-          <td>p</td>
-          <td>Primary deficit / GDP, percent. Spending other than interest, minus receipts. This quarter’s, held still on the grid. A surplus is negative.</td>
-        </tr>
-        <tr>
-          <td>α</td>
-          <td>Points of yield per year added for each point of debt ratio above the threshold. A knob.</td>
-        </tr>
-        <tr>
-          <td>d<sub>crit</sub></td>
-          <td>Debt ratio at which the rate is not being pushed up. A knob.</td>
-        </tr>
-        <tr>
-          <td>σ</td>
-          <td>How hard the rate is pulled back down, per year. A knob.</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The gold curve is where the debt ratio is not changing. The magenta
-      line is where the rate is not changing. Each arrow is the step those
-      two equations give in one year. The shafts share one scale, so a
-      longer one is a larger step. The hover is the step itself, in
-      percentage points per year.
-    </p>
+    <div class="plant-scroll">
+      <svg viewBox="0 0 980 430" role="img" aria-labelledby="plant-title plant-desc">
+        <title id="plant-title">Debt plant</title>
+        <desc id="plant-desc">Primary deficit and interest sum into the deficit, which integrates to the debt stock. The stock divided by income is the debt ratio. The share due times the stock is maturing principal. Deficit plus maturing principal is gross supply. The market sets a yield from that supply, the private bid, and Fed buying. The book coupon lags that yield. Interest is the coupon times the stock, and it returns to the deficit.</desc>
+        <defs>
+          <marker id="fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#00f0ff"/>
+          </marker>
+          <marker id="ret" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff2bd6"/>
+          </marker>
+        </defs>
 
-    <div class="phase-controls">
-      <label>quarter
-        <select id="phase-quarter"></select>
-      </label>
-      <p class="stat" id="phase-frozen">γ — &nbsp; p —</p>
-      <label>α &nbsp; <span id="alpha-val">0.020</span>
-        <input type="range" id="phase-alpha" min="0" max="0.15" step="0.005" value="0.02"/>
-      </label>
-      <label>d<sub>crit</sub> &nbsp; <span id="crit-val">80</span>
-        <input type="range" id="phase-crit" min="20" max="160" step="1" value="80"/>
-      </label>
-      <label>σ &nbsp; <span id="sigma-val">0.25</span>
-        <input type="range" id="phase-sigma" min="0" max="1.5" step="0.01" value="0.25"/>
-      </label>
+        <!-- inputs: dashed. plant: solid -->
+        <g fill="#0d1117" stroke="#c4a35a" stroke-width="1.4">
+          <rect x="20" y="48" width="140" height="40" rx="6" stroke-dasharray="5 3"/>
+          <rect x="245" y="48" width="150" height="40" rx="6"/>
+          <rect x="470" y="48" width="120" height="40" rx="6"/>
+          <rect x="470" y="108" width="120" height="32" rx="6" stroke-dasharray="5 3"/>
+          <rect x="50" y="156" width="120" height="40" rx="6" stroke-dasharray="5 3"/>
+          <rect x="245" y="156" width="150" height="40" rx="6"/>
+          <rect x="450" y="230" width="155" height="40" rx="6"/>
+          <rect x="450" y="300" width="100" height="32" rx="6" stroke-dasharray="5 3"/>
+          <rect x="560" y="300" width="100" height="32" rx="6" stroke-dasharray="5 3"/>
+          <rect x="660" y="230" width="170" height="40" rx="6"/>
+          <rect x="660" y="360" width="170" height="40" rx="6"/>
+        </g>
+
+        <g fill="none" stroke="#c4a35a" stroke-width="1.4">
+          <circle cx="200" cy="68" r="15"/>
+          <circle cx="340" cy="248" r="15"/>
+        </g>
+        <g fill="#c4a35a" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="16" text-anchor="middle">
+          <text x="200" y="73">+</text>
+          <text x="340" y="253">+</text>
+        </g>
+
+        <g fill="#d5e4f0" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="13" text-anchor="middle">
+          <text x="90" y="73">primary deficit</text>
+          <text x="320" y="73">debt stock ∫</text>
+          <text x="530" y="73">÷ income</text>
+          <text x="530" y="129">income Y</text>
+          <text x="110" y="181">share due w</text>
+          <text x="320" y="181">maturing w·D</text>
+          <text x="527" y="255">market</text>
+          <text x="500" y="321">private bid</text>
+          <text x="610" y="321">Fed buying</text>
+          <text x="745" y="255">book coupon lag</text>
+          <text x="745" y="385">interest c·D</text>
+          <text x="655" y="73" font-size="15">d</text>
+        </g>
+
+        <g fill="none" stroke="#00f0ff" stroke-width="1.5" marker-end="url(#fwd)">
+          <path d="M 160 68 H 185"/>
+          <path d="M 215 68 H 245"/>
+          <path d="M 395 68 H 470"/>
+          <path d="M 590 68 H 630"/>
+          <path d="M 530 108 V 88"/>
+          <path d="M 320 88 V 156"/>
+          <path d="M 170 176 H 245"/>
+          <path d="M 226 68 V 132 H 16 V 248 H 325"/>
+          <path d="M 320 196 V 198" marker-end="none"/>
+          <path d="M 320 210 V 220 H 340 V 233"/>
+          <path d="M 355 248 H 450"/>
+          <path d="M 500 300 V 270"/>
+          <path d="M 610 300 V 270"/>
+          <path d="M 605 248 H 660"/>
+          <path d="M 110 196 V 204 H 745 V 230"/>
+          <path d="M 745 270 V 360"/>
+          <path d="M 420 68 V 24 H 940 V 380 H 830"/>
+        </g>
+        <path d="M 320 198 Q 338 204 320 210" fill="none" stroke="#07080c" stroke-width="5"/>
+        <path d="M 320 198 Q 338 204 320 210" fill="none" stroke="#00f0ff" stroke-width="1.5"/>
+
+        <path d="M 660 380 H 36 V 112 H 200 V 83" fill="none" stroke="#ff2bd6" stroke-width="1.6" marker-end="url(#ret)"/>
+
+        <g fill="#7f93a6" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="11">
+          <text x="232" y="124">deficit</text>
+          <text x="400" y="62">D</text>
+          <text x="360" y="242">supply</text>
+          <text x="612" y="242">r</text>
+          <text x="752" y="348">c</text>
+          <text x="90" y="104">interest</text>
+          <text x="150" y="214">same w</text>
+        </g>
+      </svg>
     </div>
-    <p class="stat" id="phase-read">…</p>
-    <div class="phase-plane" id="phase-plane"></div>
+
+    <p>
+      Two tanks. The debt stock integrates the deficit. Refinancing does not
+      fill it: principal that matures and is issued again is not new debt.
+      The book coupon lags the market yield, and it only moves as debt comes
+      due. The share that comes due is <em>w</em>. That same <em>w</em> is the
+      maturing principal and the speed of the lag. It is one wire, drawn twice.
+    </p>
+    <p>
+      The market is not a tank. It sets the yield <em>r</em> at which this
+      year’s gross supply is taken. Gross supply is the deficit plus the
+      maturing principal. The private bid and Fed buying are the two other
+      inputs to that block. What they do not take, the yield has to clear.
+    </p>
+    <p>
+      Interest is the book coupon times the stock. The magenta wire brings it
+      back to the deficit. That is the loop.
+    </p>
+    <p>
+      Five things enter from outside, drawn dashed. The primary deficit.
+      Income. The share due. The private bid. Fed buying. The plant does not
+      move them. The debt ratio <em>d</em> is the stock divided by income. It
+      is a reading, not a third tank.
+    </p>
+    <p>
+      A crossing is not a connection. The hop in the maturing wire passes
+      over the <em>w</em> wire and does not join it.
+    </p>
   </section>
 </main>
 
 <footer>
   peachyhabanero · <a href="index.html">home</a> · <a href="data.html">data</a>
 </footer>
-<script src="phase.js"></script>
 <script src="nav-scratch.js"></script>
 </body>
 </html>
