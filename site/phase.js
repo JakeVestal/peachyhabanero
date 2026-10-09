@@ -693,12 +693,12 @@
     document.getElementById("phase-status").textContent = sentence;
   }
 
-  function readout(row, printed, alt, distPrinted, gaps, forecast) {
+  function readout(row, base, alt, distPrinted, gaps, forecast) {
     const recent = gaps.slice(-RECENT);
     const med = median(recent.map(function (g) { return g.gap; }));
     const prev = BY[shiftYear(row.date, -1)];
     const prevParts = prev ? parts(prev) : null;
-    const cushion = -printed.ident;
+    const cushion = -base.ident;
     const prevCushion = prevParts ? -prevParts.ident : null;
     let drift = "no prior year to compare.";
     if (prevCushion !== null) {
@@ -707,17 +707,17 @@
         + fmt(Math.abs(delta), 2) + " points of GDP versus " + prev.date + ".";
     }
     const act = printed(row);
-    const gap = act === null ? null : act - printed.ident;
+    const gap = act === null ? null : act - base.ident;
     const tp = num(row.THREEFYTP10);
     const y10 = num(row.y10);
-    const spiral = printed.ident > 0.05
-      ? "Intrinsic delta: positive. The debt ratio rises " + fmt(printed.ident, 2) + " points of GDP over the next year."
-      : printed.ident < -0.05
-        ? "Intrinsic delta: negative. The debt ratio falls " + fmt(Math.abs(printed.ident), 2) + " points of GDP over the next year."
+    const spiral = base.ident > 0.05
+      ? "Intrinsic delta: positive. The debt ratio rises " + fmt(base.ident, 2) + " points of GDP over the next year."
+      : base.ident < -0.05
+        ? "Intrinsic delta: negative. The debt ratio falls " + fmt(Math.abs(base.ident), 2) + " points of GDP over the next year."
         : "Intrinsic delta: about zero.";
-    const p = printed;
+    const p = base;
     const dist = distPrinted;
-    const moved = Math.abs(alt.ident - printed.ident) > 0.02;
+    const moved = Math.abs(alt.ident - base.ident) > 0.02;
     const altLine = alt.ident > 0.05
       ? "the what-if intrinsic delta rises " + fmt(alt.ident, 2)
       : alt.ident < -0.05
