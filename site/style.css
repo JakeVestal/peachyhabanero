@@ -1047,8 +1047,7 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-size: 13px;
 }
 .phase-controls input[type="range"] { width: 100%; accent-color: var(--gold); }
-.phase-controls select,
-.phase-controls input[type="date"] {
+.phase-controls select {
   color-scheme: dark;
   background: var(--panel);
   color: var(--ink);
@@ -1059,68 +1058,22 @@ a.analysis-card:hover { border-color: var(--cyan); }
   font-size: 13px;
   margin-top: 4px;
 }
-.phase-check {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--muted);
-  font-size: 13px;
-  margin: 0 0 12px;
-}
-.phase-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.7fr);
-  gap: 14px;
-  align-items: start;
-}
-.phase-plane,
-.phase-poles {
+.phase-plane {
   width: 100%;
+  height: 680px;
   background: var(--panel);
   border: 1px solid var(--gold-dim);
   border-radius: 10px;
   overflow: hidden;
   margin: 8px 0 18px;
 }
-.phase-plane { height: 640px; }
-.phase-poles { height: 420px; }
 .phase-plane .js-plotly-plot,
-.phase-plane .plot-container { width: 100% !important; height: 640px !important; }
-.phase-poles .js-plotly-plot,
-.phase-poles .plot-container { width: 100% !important; height: 420px !important; }
-#phase-read { white-space: pre-wrap; line-height: 1.45; }
+.phase-plane .plot-container { width: 100% !important; height: 680px !important; }
+#phase-read,
+#phase-frozen { white-space: pre-wrap; line-height: 1.45; }
 @media (max-width: 900px) {
   .phase-controls { grid-template-columns: 1fr; }
-  .phase-grid { grid-template-columns: 1fr; }
-  .phase-plane { height: 480px; }
-  .phase-poles { height: 320px; }
+  .phase-plane { height: 520px; }
   .phase-plane .js-plotly-plot,
-  .phase-plane .plot-container { height: 480px !important; }
-  .phase-poles .js-plotly-plot,
-  .phase-poles .plot-container { height: 320px !important; }
-}
-
-.phase-score,
-.phase-model {
-  width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--gold-dim);
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 8px 0 18px;
-}
-.phase-score { height: 420px; }
-.phase-model { height: 520px; }
-.phase-score .js-plotly-plot,
-.phase-score .plot-container { width: 100% !important; height: 420px !important; }
-.phase-model .js-plotly-plot,
-.phase-model .plot-container { width: 100% !important; height: 520px !important; }
-
-@media (max-width: 900px) {
-  .phase-score { height: 320px; }
-  .phase-model { height: 420px; }
-  .phase-score .js-plotly-plot,
-  .phase-score .plot-container { height: 320px !important; }
-  .phase-model .js-plotly-plot,
-  .phase-model .plot-container { height: 420px !important; }
+  .phase-plane .plot-container { height: 520px !important; }
 }

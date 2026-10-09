@@ -23,211 +23,85 @@
   </div>
   <h1>PHASE</h1>
   <p class="draft-banner">
-    Draft. The charts on this page are a working sketch of a one-year
-    debt-ratio account. They are not the finished argument about whether
-    the debt is in a spiral.
-  </p>
-  <p class="sub">
-    One quarter at a time: whether the intrinsic delta says the debt ratio is
-    rising, how far that change is from flat, and whether the cushion is
-    shrinking. The printed ratio is on the chart under the path. It has
-    not been the intrinsic delta.
+    Draft. The figure is the two equations below, and the path of the data.
+    The three numbers on the rate are knobs. They are not estimates.
   </p>
   <p class="stat" id="stamp">loading cubes.json…</p>
 </header>
 
 <main>
   <section>
-    <h2>The intrinsic delta</h2>
     <p>
-      The horizontal axis is the primary deficit, as a percent of GDP:
-      current expenditures minus interest payments minus current receipts
-      (<a href="https://fred.stlouisfed.org/series/FGEXPND">FGEXPND</a>,
-      <a href="https://fred.stlouisfed.org/series/A091RC1Q027SBEA">A091RC1Q027SBEA</a>,
-      <a href="https://fred.stlouisfed.org/series/FGRECPT">FGRECPT</a>,
-      over <a href="https://fred.stlouisfed.org/series/GDP">GDP</a>).
-      The vertical axis is debt held by the public over GDP
-      (<a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>,
-      or the Treasury bridge when FRED has not posted the quarter yet).
+      Two things move. The debt ratio, and the nominal rate accruing on the
+      debt already outstanding. Income growth and the primary deficit are
+      taken from the quarter you select and held still across the grid.
+      Giving them their own laws is later.
     </p>
-    <p>
-      <span class="eq">r</span> is not the coupon on the whole stock, and it
-      is not the marginal rate on the whole stock. Debt that does not come
-      due keeps its coupon. The share due inside a year is charged the
-      marginal rate. That share is
-      <a href="https://fiscaldata.treasury.gov/datasets/monthly-statement-public-debt/marketable-securities-outstanding-by-remaining-maturity">Table 3</a>
-      remaining maturity under one year. TIPS and floating-rate notes are
-      their own buckets, so they are not inside it. The marginal rate is
-      Table 3 weights times CMT yields, TIPS dropped, the other buckets
-      renormalized.
-    </p>
-    <p class="stat">r = coupon + (share due inside a year) × (marginal − coupon)</p>
-    <p class="stat">Δb = [ (1 + r) / (1 + g) − 1 ] · b + d</p>
-    <p>
-      <span class="eq">r</span> and <span class="eq">g</span> are decimals in
-      that line and percents on the readout. <span class="eq">g</span> is
-      nominal GDP this quarter over GDP four quarters earlier, minus one.
-      <span class="eq">Δb</span> is the intrinsic delta: the one-year change
-      in the debt ratio implied by carrying today's roll rate, today's
-      primary ratio, and trailing growth forward. It is not a number locked
-      in the bonds. Only the coupon on debt that does not come due is
-      already set.
-    </p>
+    <p class="stat">ḋ = (r − γ) / 100 · d + p</p>
+    <p class="stat">ṙ = α (d − d<sub>crit</sub>) − σ r</p>
     <table class="join-table eq-key">
       <thead><tr><th>symbol</th><th>meaning</th></tr></thead>
       <tbody>
-        <tr><td>d</td><td>Primary deficit / GDP, percent.</td></tr>
-        <tr><td>b</td><td>Debt held by the public / GDP, percent.</td></tr>
-        <tr><td>r</td><td>Coupon, plus the refi gap on the share due inside a year.</td></tr>
-        <tr><td>coupon</td><td><a href="https://fiscaldata.treasury.gov/datasets/average-interest-rates-treasury-securities/average-interest-rates-on-u-s-treasury-securities">Fiscal Data, Total Marketable</a>.</td></tr>
-        <tr><td>g</td><td>Nominal GDP growth over the previous four quarters, percent.</td></tr>
-        <tr><td>snowball</td><td>The interest piece minus the growth piece. The intrinsic delta without the primary.</td></tr>
-        <tr><td>extrinsic delta</td><td>Printed change in the debt ratio over the next year, minus the intrinsic delta. It includes those inputs not repeating, and the gap between this account and the cash debt stock. The name does not say which.</td></tr>
+        <tr>
+          <td>d</td>
+          <td>Debt held by the public / GDP, percent. <a href="https://fred.stlouisfed.org/series/FYGFGDQ188S">FYGFGDQ188S</a>, or the Treasury print when FRED has not posted the quarter.</td>
+        </tr>
+        <tr>
+          <td>r</td>
+          <td>Nominal rate accruing on that debt, percent. The average coupon on marketable Treasury debt. Not the rate on a new bond.</td>
+        </tr>
+        <tr>
+          <td>γ</td>
+          <td>Nominal GDP growth over the previous four quarters, percent. This quarter’s, held still on the grid.</td>
+        </tr>
+        <tr>
+          <td>p</td>
+          <td>Primary deficit / GDP, percent. Spending other than interest, minus receipts. This quarter’s, held still on the grid. A surplus is negative.</td>
+        </tr>
+        <tr>
+          <td>α</td>
+          <td>Points of yield per year added for each point of debt ratio above the threshold. A knob.</td>
+        </tr>
+        <tr>
+          <td>d<sub>crit</sub></td>
+          <td>Debt ratio at which the rate is not being pushed up. A knob.</td>
+        </tr>
+        <tr>
+          <td>σ</td>
+          <td>How hard the rate is pulled back down, per year. A knob.</td>
+        </tr>
       </tbody>
     </table>
     <p>
-      The gold line is where the intrinsic delta is zero at the what-if
-      below. It starts on this quarter’s printed growth and roll. The
-      label is that intrinsic delta. The arrow points the same way. Its
-      length is scaled so the direction is visible. It is not the size of
-      the move on the axis. History does not move.
+      The gold curve is where the debt ratio is not changing. The magenta
+      line is where the rate is not changing. Each arrow is the step those
+      two equations give in one year. The shafts share one scale, so a
+      longer one is a larger step. The hover is the step itself, in
+      percentage points per year.
     </p>
 
     <div class="phase-controls">
-      <label>Quarter
+      <label>quarter
         <select id="phase-quarter"></select>
       </label>
-    </div>
-    <p class="sub">
-      What-if. Each slider starts at the selected quarter. The coupon, the
-      share due inside a year, and the debt ratio stay at the print. The
-      time charts do not use these.
-    </p>
-    <div class="phase-controls">
-      <label>nominal growth, % &nbsp; <span id="g-val">—</span>
-        <input type="range" id="phase-g" min="-8" max="18" step="0.01" value="0"/>
+      <p class="stat" id="phase-frozen">γ — &nbsp; p —</p>
+      <label>α &nbsp; <span id="alpha-val">0.020</span>
+        <input type="range" id="phase-alpha" min="0" max="0.15" step="0.005" value="0.02"/>
       </label>
-      <label>primary / GDP &nbsp; <span id="d-val">—</span>
-        <input type="range" id="phase-d" min="-6" max="26" step="0.01" value="0"/>
+      <label>d<sub>crit</sub> &nbsp; <span id="crit-val">80</span>
+        <input type="range" id="phase-crit" min="20" max="160" step="1" value="80"/>
       </label>
-      <label>refi gap, percentage points &nbsp; <span id="refi-val">—</span>
-        <input type="range" id="phase-refi" min="-3" max="8" step="0.01" value="0"/>
+      <label>σ &nbsp; <span id="sigma-val">0.25</span>
+        <input type="range" id="phase-sigma" min="0" max="1.5" step="0.01" value="0.25"/>
       </label>
     </div>
-    <label class="phase-check">
-      <input type="checkbox" id="phase-wide"/>
-      include the 2020 primary spike
-    </label>
-    <p class="stat" id="phase-read"></p>
-
-    <h3 class="axis-head">Primary and debt</h3>
+    <p class="stat" id="phase-read">…</p>
     <div class="phase-plane" id="phase-plane"></div>
-
-    <h3 class="axis-head">Printed change against the intrinsic delta</h3>
-    <p>
-      Cyan is the printed change in debt held by the public, in percent of
-      GDP, from that quarter to the same quarter a year later. Gold is the
-      intrinsic delta. Magenta is the extrinsic delta, printed minus
-      intrinsic. A positive extrinsic delta means the ratio rose by more
-      than the intrinsic delta allowed. The last four quarters have gold
-      and no cyan: the year has not finished. The diamond is the latest
-      intrinsic delta plus the median extrinsic delta of the last eight
-      scored quarters. It is not a fitted path.
-    </p>
-    <div class="phase-score" id="phase-score"></div>
-
-    <h3 class="axis-head">Snowball, primary, extrinsic delta</h3>
-    <p>
-      The same year, split. Cyan is the snowball: interest on this
-      <span class="eq">r</span>, minus what nominal growth does to the
-      ratio. Gold is the primary. Magenta is the extrinsic delta, and it
-      exists only once the year has printed. The three add to the printed
-      change when the extrinsic delta exists. They add to the intrinsic
-      delta when it does not.
-    </p>
-    <div class="phase-score" id="phase-split"></div>
-
-    <h2>The premium, beside the price</h2>
-    <p>
-      The second state is the 10-year term premium,
-      <a href="https://fred.stlouisfed.org/series/THREEFYTP10">THREEFYTP10</a>,
-      the Adrian–Crump–Moench estimate. The 10-year yield,
-      <a href="https://fred.stlouisfed.org/series/DGS10">DGS10</a>,
-      is the price next to it. A move in the premium that is not in the
-      10-year is the model, not the market. The premium is not in
-      <span class="eq">r</span>. It enters only through the speeds below,
-      which start at zero.
-    </p>
-    <p class="sub" id="yield-note"></p>
-    <div class="phase-score" id="phase-yields"></div>
-
-    <h2>Where the feedback would run away</h2>
-    <p>
-      Two speeds, both assumptions, both off at zero.
-      <span class="eq">φ</span> is how many points of term premium appear
-      in one year for each extra point of debt/GDP.
-      <span class="eq">ψ</span> is how many points of the marginal rate
-      appear for each point of term premium. Only the share due inside a
-      year pays that marginal rate, which is already in the intrinsic delta.
-      <span class="eq">λ</span> is the share of a premium gap that fades in
-      one year if the debt ratio does not move. It is also an assumption.
-    </p>
-    <p>
-      This loop does not have a Hopf boundary. Debt raises the premium, the
-      premium raises the rate, the rate raises the debt. The poles of that
-      loop are real. One of them turns positive, and the ratio and the
-      premium run away together, when the product of the two speeds beats
-      the snowball’s pull. That requires the premium to fade on its own.
-      If it does not fade, any positive pair of speeds is already over the
-      line, because the premium ratchets. A growing cycle would need the
-      premium to overshoot. There is no series for that lag on this page,
-      and none is invented.
-    </p>
-    <p>
-      The dotted curve is a ruler: where the boundary would sit if the
-      whole premium gap faded in one year (<span class="eq">λ = 1</span>).
-      It is not a claim that it does. The solid curve is the boundary at
-      the fade on the slider. Above it, one pole is positive.
-      The gold diamond is measured, and the sliders do not move to it.
-      <span class="eq">φ</span> is the slope of the one-year change in the
-      ACM 10-year premium on the one-year change in debt held by the public
-      over GDP, over every quarter in the file that has both. The slope is
-      not forced through zero. A negative value sits left of the axis, off
-      the runaway side.
-      <span class="eq">ψ</span> is this quarter’s 7-to-10-year Table 3
-      weight inside the book the marginal rate uses: TIPS dropped, the rest
-      scaled to one. That bucket is the one priced off the 10-year. The
-      longer bucket is priced off the 30-year, and this premium is not the
-      30-year’s, so it stays out.
-    </p>
-    <div class="phase-controls">
-      <label>φ &nbsp; <span id="phi-val">0.000</span>
-        <input type="range" id="phase-phi" min="0" max="0.2" step="0.005" value="0"/>
-      </label>
-      <label>ψ &nbsp; <span id="psi-val">0.00</span>
-        <input type="range" id="phase-psi" min="0" max="1" step="0.02" value="0"/>
-      </label>
-      <label>λ &nbsp; <span id="lambda-val">0.00</span>
-        <input type="range" id="phase-lambda" min="0" max="1" step="0.05" value="0"/>
-      </label>
-    </div>
-    <div class="phase-grid">
-      <div>
-        <h3 class="axis-head">The product of the two speeds</h3>
-        <div class="phase-model" id="phase-boundary"></div>
-      </div>
-      <div>
-        <h3 class="axis-head">Poles of this loop</h3>
-        <div class="phase-poles" id="phase-poles"></div>
-      </div>
-    </div>
-    <p id="phase-status"></p>
   </section>
 </main>
 
 <footer>
-  peachyhabanero · <a href="index.html">home</a> · <a href="sustainability.html">sustainability</a> · <a href="data.html">data</a>
-  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+  peachyhabanero · <a href="index.html">home</a> · <a href="data.html">data</a>
 </footer>
 <script src="phase.js"></script>
 <script src="nav-scratch.js"></script>
