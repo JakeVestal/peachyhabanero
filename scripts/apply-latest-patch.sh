@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
-# Apply the highest-numbered peachyhabanero*.patch in ~/Downloads that
+# Apply the highest-numbered ${prefix}-*.patch in ~/Downloads that
 # is not already in patch-record.txt.
 #
+# Change `prefix` below to reuse this script in another repo.
+# Patches are named ${prefix}-NNN-something.patch
+#
 # WebStorm → Settings → Tools → External Tools → +
-#   Name:              Apply latest peachyhabanero patch
+#   Name:              Apply latest patch
 #   Program:           /bin/bash
 #   Arguments:         "$ProjectFileDir$/scripts/apply-latest-patch.sh"
 #   Working directory: $ProjectFileDir$
 #   [x] Open console
 #
-# Pick order: highest peachyhabanero-NNN- prefix not yet recorded.
+# Pick order: highest ${prefix}-NNN- number not yet recorded.
 # On success: append the applied name to patch-record.txt, then delete
-# every Downloads peachyhabanero patch whose number is <= that one
+# every Downloads ${prefix} patch whose number is <= that one
 # (the applied file, " (1)" duplicates, and older leftovers).
 # On failure: leave Downloads alone.
 #
@@ -27,6 +30,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DOWNLOADS="${DOWNLOADS:-$HOME/Downloads}"
 RECORD="$ROOT/patch-record.txt"
+# Stem of the patch filenames in Downloads. Change this per repo.
+prefix="${prefix:-peachyhabanero}"
 cd "$ROOT"
 
 EXCLUDE=(
@@ -55,7 +60,7 @@ max_recorded_n() {
   local max=-1 line n
   [[ -f "$RECORD" ]] || { echo -1; return; }
   while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "$line" =~ peachyhabanero-([0-9]+) ]]; then
+    if [[ "$line" =~ ${prefix}-([0-9]+) ]]; then
       n=$((10#${BASH_REMATCH[1]}))
       if (( n > max )); then max=$n; fi
     fi
@@ -71,14 +76,14 @@ delete_patches_upto() {
   (( max_n >= 0 )) || return 0
   shopt -s nullglob
   local all=(
-    "$DOWNLOADS"/peachyhabanero*.patch
-    "$DOWNLOADS"/peachyhabanero*.pach
+    "$DOWNLOADS"/${prefix}*.patch
+    "$DOWNLOADS"/${prefix}*.pach
   )
   for f in "${all[@]}"; do
     [[ -e "$f" ]] || continue
     base=$(basename "$f")
     n=-1
-    if [[ "$base" =~ peachyhabanero-([0-9]+) ]]; then
+    if [[ "$base" =~ ${prefix}-([0-9]+) ]]; then
       n=$((10#${BASH_REMATCH[1]}))
     fi
     if (( n >= 0 && n <= max_n )); then
@@ -94,11 +99,11 @@ shopt -s nullglob
 delete_patches_upto "$(max_recorded_n)"
 
 patches=(
-  "$DOWNLOADS"/peachyhabanero*.patch
-  "$DOWNLOADS"/peachyhabanero*.pach
+  "$DOWNLOADS"/${prefix}*.patch
+  "$DOWNLOADS"/${prefix}*.pach
 )
 if ((${#patches[@]} == 0)); then
-  echo "no peachyhabanero*.patch left in $DOWNLOADS"
+  echo "no ${prefix}*.patch left in $DOWNLOADS"
   exit 0
 fi
 
@@ -112,7 +117,7 @@ for f in "${patches[@]}"; do
   m=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f")
   base=$(basename "$f")
   n=-1
-  if [[ "$base" =~ peachyhabanero-([0-9]+) ]]; then
+  if [[ "$base" =~ ${prefix}-([0-9]+) ]]; then
     n=$((10#${BASH_REMATCH[1]}))
   fi
   if recorded "$base"; then
@@ -162,7 +167,7 @@ if (( check_st != 0 )); then
       *"already exists in working directory")
         f="${line#error: }"
         f="${f%: already exists in working directory}"
-        bakdir="${TMPDIR:-/tmp}/peachyhabanero-baks"
+        bakdir="${TMPDIR:-/tmp}/${prefix}-baks"
         mkdir -p "$bakdir"
         bak="$bakdir/$(basename "$f").bak-before-patch"
         echo "exists, moving aside: $f -> $bak"
