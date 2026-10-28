@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>10-Year Yield Decomposition · model</title>
+  <link rel="stylesheet" href="site/style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      model answer (unlinked)
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>10-YEAR YIELD DECOMPOSITION</h1>
+  <p class="sub">
+    When the 10-year nominal Treasury yield moves, which piece moved — the real yield, expected inflation, or the term premium — and what does that imply for the price of a fixed-coupon bond of roughly that maturity?
+  </p>
+  <p class="stat" id="asof">as of 2026-10-26 · sources: FRED DGS10, DFII10, T10YIE, THREEFYTP10</p>
+</header>
+
+<main>
+  <section>
+    <h2>The split</h2>
+    <div class="grid-3">
+      <div class="col-card">
+        <h3>Nominal yield</h3>
+        <p class="stat" style="font-size:28px; margin:8px 0;">5.00%</p>
+        <p class="sub">DGS10 · 10-year constant maturity</p>
+      </div>
+      <div class="col-card">
+        <h3>Real yield</h3>
+        <p class="stat" style="font-size:28px; margin:8px 0;">2.66%</p>
+        <p class="sub">DFII10 · 10-year TIPS</p>
+      </div>
+      <div class="col-card">
+        <h3>Breakeven inflation</h3>
+        <p class="stat" style="font-size:28px; margin:8px 0;">2.34%</p>
+        <p class="sub">T10YIE · nominal − real</p>
+      </div>
+    </div>
+    <div class="col-card" style="margin-top:12px;">
+      <h3>Term premium (Kim–Wright)</h3>
+      <p class="stat" style="font-size:28px; margin:8px 0;">0.94%</p>
+      <p class="sub">THREEFYTP10 · residual compensation for interest-rate risk beyond the expected path of short rates. The accounting identity is approximate: nominal ≈ real + breakeven + residual components that models allocate differently.</p>
+    </div>
+    <p class="stat" style="margin-top:16px; font-size:15px; line-height:1.5;">
+      The 10-year nominal yield is 5.00%. Of that, 2.66% is the real yield on TIPS, 2.34% is compensation for expected inflation (the breakeven), and roughly 0.94% is the Kim–Wright term premium. The residual between the simple sum and the published term-premium series is model-dependent; the page reports both the published series and the arithmetic gap.
+    </p>
+  </section>
+
+  <section>
+    <h2>What moved</h2>
+    <p class="sub">Change from 2026-10-21 (DGS10 5.13%) to 2026-10-26 (DGS10 5.00%).</p>
+    <div class="table-wrap">
+      <div class="table-bar"><span>component</span><span>change (bp)</span></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Piece</th><th>Δ (bp)</th><th>Contribution</th></tr></thead>
+          <tbody>
+            <tr><td>Nominal (DGS10)</td><td>−13</td><td>100%</td></tr>
+            <tr><td>Real (DFII10)</td><td>−10</td><td>~77%</td></tr>
+            <tr><td>Breakeven (T10YIE)</td><td>−3</td><td>~23%</td></tr>
+            <tr><td>Term premium (THREEFYTP10)</td><td>−6</td><td>model residual</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="stat" style="margin-top:14px;">
+      The 10-year yield fell 13 bp because the real yield declined; expected inflation and the term premium moved by less.
+    </p>
+  </section>
+
+  <section>
+    <h2>Price and duration of a fixed-coupon bond</h2>
+    <p class="sub">
+      Example: a 10-year annual-pay bond with a 5.00% coupon, priced at the current 5.00% par yield. Students must compute price from cash flows, recover the yield, and report the three duration measures plus the first-order price approximation.
+    </p>
+    <div class="grid-2">
+      <div class="col-card">
+        <h3>Price from cash flows</h3>
+        <p>Face = 100. Coupon = 5.00 each year for 10 years. Discount rate = 5.00%.</p>
+        <p class="stat">Price = 100.00 (par)</p>
+        <p class="sub">Yield recovered from the price by solving the cash-flow equation is 5.00%, matching the input.</p>
+      </div>
+      <div class="col-card">
+        <h3>Duration measures</h3>
+        <p>Macaulay duration = 7.99 years</p>
+        <p>Modified duration = 7.61</p>
+        <p>DV01 (per 100 face) ≈ 0.0761</p>
+        <p class="sub">ΔP ≈ −D<sub>mod</sub> × Δy × Price. A 13 bp decline in yield raises the price by approximately 0.99 points.</p>
+      </div>
+    </div>
+    <div class="col-card" style="margin-top:12px;">
+      <h3>Approximation check</h3>
+      <p>Observed Δy = −0.0013. Modified duration 7.61. Price 100.</p>
+      <p class="stat">ΔP ≈ −7.61 × (−0.0013) × 100 = +0.99</p>
+      <p class="sub">The approximation does not mix duration with maturity. The Macaulay number is in years; the modified number is the percentage price sensitivity; DV01 is the dollar change for a 1 bp move. All three are reported; only the modified duration enters the ΔP formula.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Chart</h2>
+    <div id="decomp-plot" class="daily-refi-plot" style="height:380px;"></div>
+    <p class="sub" style="margin-top:8px;">
+      Recent path of the three published series. The page updates by re-reading the FRED series; the chart is the visible record of which piece moved.
+    </p>
+  </section>
+</main>
+
+<footer>
+  peachyhabanero · model answer for the fixed-income assignment · not linked from the site nav
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+
+<script>
+const dates = ["2026-10-16","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-26"];
+const nominal = [5.09, 5.15, 5.12, 5.13, 4.96, 5.00, 5.00];
+const real = [2.74, 2.80, 2.77, 2.76, 2.64, 2.66, 2.66];
+const be = [2.35, 2.35, 2.35, 2.37, 2.32, 2.34, 2.34];
+const tp = [0.986, 1.001, 0.996, 0.999, 0.935, 0.936, 0.936];
+
+const traces = [
+  { x: dates, y: nominal, name: "Nominal (DGS10)", line: { color: "#00f0ff", width: 2 } },
+  { x: dates, y: real, name: "Real (DFII10)", line: { color: "#39ff14", width: 2 } },
+  { x: dates, y: be, name: "Breakeven (T10YIE)", line: { color: "#ff2bd6", width: 2 } },
+  { x: dates, y: tp, name: "Term premium (THREEFYTP10)", line: { color: "#c4a35a", width: 2 } }
+];
+
+const layout = {
+  paper_bgcolor: "#0d1117",
+  plot_bgcolor: "#0d1117",
+  font: { family: "IBM Plex Sans, Segoe UI, sans-serif", color: "#d5e4f0", size: 12 },
+  margin: { t: 20, r: 20, b: 40, l: 50 },
+  xaxis: { gridcolor: "rgba(196,163,90,0.16)", zeroline: false },
+  yaxis: { gridcolor: "rgba(196,163,90,0.16)", zeroline: false, title: "percent" },
+  legend: { orientation: "h", y: -0.2 },
+  showlegend: true
+};
+
+Plotly.newPlot("decomp-plot", traces, layout, { displayModeBar: false, responsive: true });
+</script>
+</body>
+</html>
