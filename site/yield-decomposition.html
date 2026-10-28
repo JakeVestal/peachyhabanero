@@ -123,6 +123,33 @@
       <p class="sub">Describe what you see in terms of changes over time. What does the configuration after the crossing imply for the path of short rates, real yields, or inflation compensation going forward?</p>
     </div>
   </section>
+
+  <section>
+    <h2>Duration-weighted path risk</h2>
+    <p class="sub">
+      The implied expected short-rate path and the term premium are the two residual pieces of the 10-year yield once the current overnight rate is set aside. Apply the modified duration already computed for the 5% coupon bond to each piece separately. The larger price impact is the piece that did more of the work.
+    </p>
+    <div class="table-wrap">
+      <div class="table-bar"><span>window</span><span>price impact (points)</span></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Window</th><th>Δ implied path (bp)</th><th>Path impact</th><th>Δ term premium (bp)</th><th>TP impact</th><th>Which larger</th></tr></thead>
+          <tbody>
+            <tr><td>2022-03-06 → 2022-05-29</td><td>+61</td><td>−4.67</td><td>+39</td><td>−2.94</td><td>Path</td></tr>
+            <tr><td>2026-10-18 → 2026-10-25</td><td>−4</td><td>+0.30</td><td>−5</td><td>+0.38</td><td>Term premium</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="stat" style="margin-top:14px;">
+      In the spring 2022 window the rise in the implied expected short-rate path accounted for roughly 60% of the duration-driven price decline on the 5% coupon bond; the term-premium expansion accounted for the rest. In the most recent week the two pieces were of similar size, with the term premium slightly larger. The ranking is not stable.
+    </p>
+    <div class="col-card" style="margin-top:12px;">
+      <h3>What the ranking implies</h3>
+      <p>When the path impact is larger, the price move is mostly a repricing of the expected future path of short rates. When the term-premium impact is larger, the price move is mostly a change in the compensation demanded for interest-rate risk beyond that path. An investor who is long the bond cares which one is moving because the two pieces mean-revert on different horizons and respond to different news.</p>
+      <p class="sub">Compute the same split for any window you choose. Report which piece contributed more to the price change of the bond you priced, and whether that ranking has flipped relative to the 2022 episode.</p>
+    </div>
+  </section>
 </main>
 
 <footer>
