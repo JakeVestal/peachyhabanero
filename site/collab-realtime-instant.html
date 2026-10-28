@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Duke FinTech — Collaboration: Real-Time Payment Enablement</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Payments // Industry Collaboration &nbsp;&nbsp;|&nbsp;&nbsp; DRAFT &nbsp;&nbsp;|&nbsp;&nbsp; Type 2</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">Proposed Collaboration Module <span style="color: #e8a317;">Real-Time Payment Enablement</span></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.10.28 DRAFT</span> &nbsp;&nbsp;|&nbsp;&nbsp; PROF <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a></div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Module Overview</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Students design the decision and failure layer for a vertical that is moving from ACH to FedNow and RTP. The platform must choose a rail under real constraints (speed, cost, return risk, liquidity, fraud window) and stay consistent when an instant leg fails after a card or ACH leg has already moved.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The emphasis is on the operational problems that appear once volume is real: liquidity under 24/7 credit-push, fraud scoring inside a sub-50ms window, non-value messages, and the state machine when an RTP or FedNow payment is rejected or returned. Students produce reviewable artifacts rather than open-ended research.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // Core Deliverables</div>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 8px;"><strong>Rail decision framework</strong> — for a chosen vertical (gig payouts, real-estate escrow, or B2B invoice), when does FedNow or RTP beat ACH once returns, ops load, and liquidity cost are included?</li>
+            <li style="margin-bottom: 8px;"><strong>Hybrid failure state machine</strong> — what happens when an RTP leg is rejected after a card authorization or ACH credit has already posted. Ledger consistency under asynchronous settlement.</li>
+            <li style="margin-bottom: 8px;"><strong>Fraud and non-value message surface</strong> — which checks can run inside the instant window, which must be deferred, and how Request for Payment / status messages change the flow.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // Example Artifacts</div>
+        <p style="margin: 0 0 8px 0; color: #8aa0c4; font-size: 13px;">Students produce diagrams and short decision tables rather than polished product designs.</p>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 6px;">Vertical rail-choice decision table (ACH vs FedNow vs RTP) with explicit return and ops cost assumptions.</li>
+            <li style="margin-bottom: 6px;">State machine showing the failure path when an instant credit is rejected after a prior leg has settled.</li>
+            <li>Short memo on which fraud signals fit inside the real-time window and which must be handled as exceptions after the fact.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Why This Is Useful for an Industry Partner</div>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 6px;">Structured external look at vertical-specific rail choice and hybrid failure modes without consuming significant internal bandwidth.</li>
+            <li style="margin-bottom: 6px;">Early visibility into Duke FinTech talent working on production-shaped instant payment problems.</li>
+            <li style="margin-bottom: 6px;">Fresh perspective on the operational cost of moving a vertical from ACH to FedNow/RTP once returns and fraud are real.</li>
+            <li>Concrete, reviewable artifacts (decision tables, state machines, short memos) that product or engineering leads can read in 15–20 minutes.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Suggested Next Step</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">A short call to select which vertical and which failure mode is most interesting right now, then lock a lightweight scope. Students can work from public FedNow and RTP documentation and a small synthetic dataset; no proprietary data is required. Happy to adjust timing or emphasis based on current product priorities.</p>
+
+    </div>
+</div>
+</body>
+</html>

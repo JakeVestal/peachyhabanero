@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Duke FinTech — Collaboration: Embedded Finance & BaaS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Payments // Industry Collaboration &nbsp;&nbsp;|&nbsp;&nbsp; DRAFT &nbsp;&nbsp;|&nbsp;&nbsp; Type 3</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">Proposed Collaboration Module <span style="color: #e8a317;">Embedded Finance & BaaS Ledger</span></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.10.28 DRAFT</span> &nbsp;&nbsp;|&nbsp;&nbsp; PROF <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a></div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Module Overview</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Students design the money-movement and sub-ledger layer for a vertical SaaS that wants to embed accounts and cards. The platform must keep available balance correct under asynchronous settlement with a sponsor bank, and handle the exception path when the bank rejects, returns, or holds a transaction.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The emphasis is on the parts a production BaaS or embedded finance platform already owns: program management, sponsor-bank consistency, sub-ledger accuracy, and the operational workflow when the bank’s core and the fintech’s ledger disagree. Students produce reviewable artifacts rather than open-ended research.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // Core Deliverables</div>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 8px;"><strong>Available-balance model</strong> — how the fintech sub-ledger computes available balance when the sponsor bank settles asynchronously. What is reserved, what is pending, and what can be spent.</li>
+            <li style="margin-bottom: 8px;"><strong>Exception and return workflow</strong> — what happens when the sponsor bank rejects a payout, returns an ACH, or places a hold. How the sub-ledger and the customer-facing balance are updated.</li>
+            <li style="margin-bottom: 8px;"><strong>Program boundary sketch</strong> — where the BaaS platform’s ledger ends and the sponsor bank’s core begins, and which events must be reconciled across that boundary.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // Example Artifacts</div>
+        <p style="margin: 0 0 8px 0; color: #8aa0c4; font-size: 13px;">Students produce diagrams and short decision tables rather than polished product designs.</p>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 6px;">Sub-ledger schematic showing available, pending, and reserved balances under asynchronous settlement.</li>
+            <li style="margin-bottom: 6px;">Exception flow for a returned ACH or rejected card payout, including how the customer balance is restored.</li>
+            <li>Short memo on the reconciliation points between the fintech sub-ledger and the sponsor bank’s core.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Why This Is Useful for an Industry Partner</div>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 6px;">Structured external look at available-balance and exception-handling edge cases without consuming significant internal bandwidth.</li>
+            <li style="margin-bottom: 6px;">Early visibility into Duke FinTech talent working on production-shaped embedded finance problems.</li>
+            <li style="margin-bottom: 6px;">Fresh perspective on the operational cost of keeping a fintech sub-ledger consistent with a sponsor bank under real return and hold patterns.</li>
+            <li>Concrete, reviewable artifacts (balance models, exception flows, short memos) that product or engineering leads can read in 15–20 minutes.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Suggested Next Step</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">A short call to select which vertical and which exception pattern is most interesting right now, then lock a lightweight scope. Students can work from public documentation and a small synthetic dataset; no proprietary data is required. Happy to adjust timing or emphasis based on current product priorities.</p>
+
+    </div>
+</div>
+</body>
+</html>
