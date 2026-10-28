@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Duke FinTech — Proposed Collaboration Module</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Payments // Industry Collaboration &nbsp;&nbsp;|&nbsp;&nbsp; DRAFT</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">Proposed Collaboration Module <span style="color: #e8a317;">Multi-Rail Orchestration & Ledger Design</span></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.10.28 DRAFT</span> &nbsp;&nbsp;|&nbsp;&nbsp; PROF <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a></div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Opening Email (Draft)</div>
+        <div style="border: 1px solid #1a3a66; background-color: #07122b; padding: 16px 18px; margin: 0 0 18px 0; font-size: 14.5px; color: #d7e3fb;">
+            <div style="color: #7cff55; font-family: Consolas,monospace; font-size: 12px; margin-bottom: 8px;">Subject: Duke FinTech collaboration idea — multi-rail orchestration & ledger design module</div>
+            <p style="margin: 0 0 10px 0;">Hi [Name],</p>
+            <p style="margin: 0 0 10px 0;">I’m Jake Vestal, a lecturer in the FinTech program at Duke’s Pratt School of Engineering. We’re building a new course on modern payment systems and I’m looking for one or two industry partners who would be interested in shaping a short, practical module.</p>
+            <p style="margin: 0 0 10px 0;">A payments infrastructure company’s work on multi-rail orchestration, real-time ledgers, and exception handling is a natural fit. I have a few scoped project ideas that students could execute as a design/analysis exercise (roughly 3–4 weeks). The goal is mutual: students get a realistic problem with production constraints; you get a structured external look at a vertical or failure mode without it becoming a large time sink on your side.</p>
+            <p style="margin: 0 0 10px 0;">A few options we could discuss:</p>
+            <ol style="margin: 0 0 10px 20px; padding: 0;">
+                <li>Multi-rail payout orchestration for a high-velocity marketplace (state machine, rail routing by cost/speed/risk, double-entry ledger schema, exception workflow).</li>
+                <li>Exception handling and reconciliation under hybrid rails (what happens when an RTP leg fails after a stablecoin or ACH leg has already moved, ledger consistency under asynchronous settlement).</li>
+                <li>Vertical unit-economics of rail choice (gig payouts or real-estate escrow — when does FedNow/RTP beat ACH once returns and ops load are included?).</li>
+            </ol>
+            <p style="margin: 0 0 10px 0;">In each case the deliverables would be concrete (diagrams, decision frameworks, short memo) rather than open-ended research. I’m happy to adapt the scope to something that is actually interesting to your product or engineering team right now.</p>
+            <p style="margin: 0 0 10px 0;">Would you be open to a 20-minute call to see if any of this is worth exploring? I’m flexible on timing over the next couple of weeks.</p>
+            <p style="margin: 0;">Best,<br>Jake Vestal<br>Duke Pratt FinTech<br>fintechtradingcompetition@duke.edu</p>
+        </div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // Module Overview</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Students act as payment systems architects designing the money-movement layer for a high-velocity marketplace (gig, real-estate, or similar). The platform must support instant worker or seller payouts, escrow holds, sub-ledger tracking, and vendor disbursements across ACH, RTP/FedNow, and optionally stablecoins.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The emphasis is on the parts a production payments infrastructure company already owns at scale: asynchronous state, double-entry guarantees, rail choice under real constraints, and exception handling when something fails. Students produce reviewable artifacts rather than open-ended research.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // Core Deliverables</div>
+        <ol style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 8px;"><strong>Payment flow & state machine</strong> — End-to-end lifecycle from initiation to settlement, with explicit asynchronous states (initiated, pending_clearing, settled, returned, reconciled) and failure branches.</li>
+            <li style="margin-bottom: 8px;"><strong>Smart rail-routing framework</strong> — Decision logic that routes based on cost, speed/cutoff, reversibility risk, and counterparty trust. Includes a simple quantitative comparison for a representative payout size.</li>
+            <li style="margin-bottom: 8px;"><strong>Double-entry ledger architecture & reconciliation model</strong> — Schema sketch (omnibus, user wallets, escrow) that prevents negative balances and supports auditability. Automated exception workflow for common return codes and hybrid-rail failures.</li>
+            <li style="margin-bottom: 8px;"><strong>Short executive memo</strong> — Recommendations on when (or whether) to add a stablecoin leg for a subset of counterparties, with compliance, liquidity, and ops implications.</li>
+        </ol>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Example Artifacts</div>
+        <p style="margin: 0 0 8px 0; color: #8aa0c4; font-size: 13px;">Placeholder visuals illustrating the expected quality and style of student work.</p>
+
+        <div style="margin: 12px 0 6px 0; font-family: Consolas,monospace; font-size: 13px; color: #7cff55;">State machine with failure paths</div>
+        <img src="imagine_images/6G9Gq.jpg" alt="Multi-rail payment state machine" style="width:100%; border:1px solid #1a3a66; margin-bottom:14px;">
+
+        <div style="margin: 12px 0 6px 0; font-family: Consolas,monospace; font-size: 13px; color: #7cff55;">Rail unit-economics comparison</div>
+        <img src="imagine_images/6qUJq.jpg" alt="Payment rail unit economics chart" style="width:100%; border:1px solid #1a3a66; margin-bottom:14px;">
+
+        <div style="margin: 12px 0 6px 0; font-family: Consolas,monospace; font-size: 13px; color: #7cff55;">Double-entry ledger schematic</div>
+        <img src="imagine_images/YAT7z.jpg" alt="Marketplace double-entry ledger schematic" style="width:100%; border:1px solid #1a3a66; margin-bottom:14px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Why This Is Useful for an Industry Partner</div>
+        <ul style="margin: 0 0 12px 20px; color: #d7e3fb; font-size: 15.5px;">
+            <li style="margin-bottom: 6px;">Structured external look at edge cases and hybrid-rail failure modes without consuming significant internal bandwidth.</li>
+            <li style="margin-bottom: 6px;">Early visibility into Duke FinTech talent working on production-shaped problems.</li>
+            <li style="margin-bottom: 6px;">Fresh perspective on vertical-specific routing and reconciliation tradeoffs (marketplace / gig / real-estate) relative to legacy TMS and ERP systems.</li>
+            <li>Concrete, reviewable artifacts (diagrams, decision tables, short memos) that product or engineering leads can read in 15–20 minutes.</li>
+        </ul>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">06 // Suggested Next Step</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">A short call to select which variant (or hybrid) is most interesting right now, then lock a lightweight scope. Students can work from public documentation and a small synthetic dataset; no proprietary data is required. Happy to adjust timing, vertical, or emphasis based on current product priorities.</p>
+
+    </div>
+</div>
+</body>
+</html>
