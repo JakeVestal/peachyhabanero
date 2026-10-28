@@ -61,3 +61,4 @@ peachyhabanero-092-block-diagram.patch
 peachyhabanero-093-w-right.patch
 peachyhabanero-094-patch-prefix.patch
 peachyhabanero-095-drop-email-section.patch
+peachyhabanero-097-embed-images.patch
