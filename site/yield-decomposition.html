@@ -20,7 +20,7 @@
   <p class="sub">
     When the 10-year nominal Treasury yield moves, which piece moved — the real yield, expected inflation, the term premium, or the overnight rate itself — and what does that imply for the price of a fixed-coupon bond? Describe the changes you see over time and what the configuration after a major move implies for the future path of rates or inflation compensation. History from 2020 captures the COVID flight to safety and the subsequent inflation and real-rate rise.
   </p>
-  <p class="stat" id="asof">weekly from 2020-01 · sources: FRED DGS10, DFII10, T10YIE, THREEFYTP10, SOFR</p>
+  <p class="stat" id="asof">weekly from 2020-01 · sources: FRED DGS10, DFII10, T10YIE, THREEFYTP10, SOFR · NY Fed ACM</p>
 </header>
 
 <main>
@@ -50,13 +50,18 @@
         <p class="sub">THREEFYTP10 · residual beyond expected short rates</p>
       </div>
       <div class="col-card">
+        <h3>Term premium (ACM)</h3>
+        <p class="stat" style="font-size:28px; margin:8px 0;">0.63%</p>
+        <p class="sub">NY Fed ACM · Adrian–Crump–Moench estimate</p>
+      </div>
+      <div class="col-card">
         <h3>SOFR (overnight)</h3>
         <p class="stat" style="font-size:28px; margin:8px 0;">3.92%</p>
         <p class="sub">current secured overnight rate</p>
       </div>
     </div>
     <p class="stat" style="margin-top:16px; font-size:15px; line-height:1.5;">
-      Implied average expected short rate ≈ nominal − term premium = 5.00% − 0.94% = 4.06%. Current SOFR is 3.92%. The gap of about 14 bp is the market’s average expectation that short rates will be slightly higher than today over the next ten years.
+      Implied average expected short rate (KW) ≈ 5.00% − 0.94% = 4.06%. Implied (ACM) ≈ 5.00% − 0.63% = 4.37%. Current SOFR is 3.92%. The gaps show the market’s average expectation that short rates will be higher than today over the next ten years under both estimates.
     </p>
   </section>
 
@@ -83,7 +88,7 @@
   <section>
     <h2>Price and duration of a fixed-coupon bond</h2>
     <p class="sub">
-      Example: a 10-year annual-pay bond with a 5.00% coupon, priced at the current 5.00% par yield. Students must compute price from cash flows, recover the yield, and report the three duration measures plus the first-order price approximation.
+      Example: a 10-year annual par bond (coupon equal to that date’s DGS10). Price is 100 by construction. Students must still compute price from cash flows, recover the yield, and report the three duration measures plus the first-order price approximation.
     </p>
     <div class="grid-2">
       <div class="col-card">
@@ -104,11 +109,15 @@
       <h3>Price impact of different pieces (recent window)</h3>
       <p>Modified duration 7.61, price 100. A parallel move in the yield of the size observed in each component produces:</p>
       <p class="stat">SOFR +4 bp → ΔP ≈ −0.30</p>
-      <p class="stat">Implied short-rate path −4 bp → ΔP ≈ +0.30</p>
-      <p class="stat">Term premium −5 bp → ΔP ≈ +0.38</p>
-      <p class="sub">The approximation does not mix duration with maturity. Students must decide which Δy is the relevant one for the economic question they are asking.</p>
+      <p class="stat">Implied short-rate path (KW) −4 bp → ΔP ≈ +0.30</p>
+      <p class="stat">Implied short-rate path (ACM) −4 bp → ΔP ≈ +0.30</p>
+      <p class="stat">Term premium (KW) −5 bp → ΔP ≈ +0.38</p>
+      <p class="stat">Term premium (ACM) −5 bp → ΔP ≈ +0.38</p>
+      <p class="sub">The approximation does not mix duration with maturity. Students must decide which Δy is the relevant one for the economic question they are asking. Both term-premium estimates are shown so the sensitivity of the conclusion to the model can be checked.</p>
     </div>
   </section>
+
+    <p class="sub" style="margin-top:20px;">ACM term premium is the Adrian–Crump–Moench estimate published by the Federal Reserve Bank of New York (not a FRED series). The Kim–Wright estimate is FRED series THREEFYTP10.</p>
 
   <section>
     <h2>Chart · 2020–present</h2>
