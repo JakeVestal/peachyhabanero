@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Duke QFi — Applied Quantitative Finance (FI & Commodities) — V 2026.10.30</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; background-color:#050b1c;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Quantitative Finance // Syllabus</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">Applied Quantitative Finance <span style="color: #e8a317;">Fixed Income & Commodities</span></div>
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12px; color: #8aa0c4; margin-top: 6px;">FINTECH 534 &mdash; Spring 2027</div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.10.30</span> &nbsp;&nbsp;|&nbsp;&nbsp; PROF <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a></div>
+    <div style="padding: 8px 28px 28px 28px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // Description</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">This course builds on the models developed in the core FINTECH sequence and applies them to live fixed-income and commodity markets. The aim is threefold: to use those models as a portfolio manager would, to translate differences between model-implied value and observed market prices into investable positions, and to treat observed prices as information about the future path of policy, growth, inflation, and physical scarcity.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The fixed-income block covers the principal instruments (Treasuries, swaps, corporates, and related securitized products) and the quantities that define a price: yield, duration, convexity, and spread. Attention is given to the macroeconomic drivers of the curve and to market structure &mdash; cash versus futures versus swaps, dealer and non-dealer liquidity, RFQ and portfolio trading, TRACE, and the role of bond ETFs in price discovery. Students examine three families of practice that dominate electronic and levered rates and credit: discretionary relative-value, systematic factor and statistical-arbitrage approaches, and market-making / inventory.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">The commodities and energy block treats listed futures and related paper as claims on delivery. Oil, gas, power, metals, and freight are studied through term structure as a storage-and-carry problem, through transformation spreads (crack, spark) that inherit industrial constraints, and through the basis between the contract and the physical good &mdash; grade, location, and timing. Students model a curve, follow a contract toward delivery, and analyze the effect on paper positions when inventory, logistics, or grid conditions fail to match the screen.</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">Throughout, work is quantitative and uses current market data. Students fetch and wrangle feeds from professional market systems with AI used freely for code, parsing, and first-pass analysis. Students are expected to move repeatedly from data and models to a market view, from that view to a position, and from the position to an explicit assessment of expected return and risk. By the end of the term students will be able to price rates and commodity instruments from live data and state, in numbers, what those prices imply for policy, growth, inflation, and scarcity from here into the future.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // AI Policy</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">AI use is highly encouraged for data wrangling, formula construction, and first-pass analysis of curves and spreads. You remain solely responsible for everything you turn in: that the workbook or notebook runs on the live data you pulled, that the math is correct, and that a reader can follow the position and the risk without asking the tool what you meant. Invented market data or a strategy that cannot be defended from the tape is a zero.</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // Grading</div>
+        <table style="width: 100%; border-collapse: collapse; margin: 0 0 8px 0;">
+            <tbody>
+                <tr>
+                    <td style="width: 33.33%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">35%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Problem sets and participation</div>
+                    </td>
+                    <td style="width: 33.33%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">25%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Midterm exam</div>
+                    </td>
+                    <td style="width: 33.33%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">40%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">Final exam / strategy project</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 0 0; color: #8aa0c4; font-size: 13.5px;">Problem sets are workbooks or notebooks that start from live data. Answers are discussed in class; late submissions are not graded. The final may be a written exam, a strategy write-up with positions and risk, or a combination &mdash; announced mid-term.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Learning Objectives</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">01</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Price a fixed-income instrument from live data: extract a yield, compute duration and convexity, and state what a change in the curve does to the price.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">02</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Treat SOFR futures and the swap curve as the living bond market. Separate the expected path of policy from the term premium, and say what the curve is claiming about the Fed from here.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">03</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Read a futures curve as a claim on delivery. Explain contango, backwardation, storage, carry, and convenience yield in numbers, and follow a contract as it approaches physical settlement.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">04</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Build and interpret transformation spreads (crack, spark) and the basis (grade, location, timing). Use netbacks and ratios to turn physical constraints into a paper position.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">05</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Move from a macro view (policy, growth, inflation, scarcity) to a position in rates or commodities, and report expected return and risk in numbers. Distinguish relative-value, systematic, and inventory/market-making approaches.</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px;">06</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc;">Use professional data systems and AI as tools. Remain responsible for the integrity of the pull, the model, and the position.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Tentative Course Schedule</div>
+
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 01 &mdash; Curves, Term Premium, and Why These Markets Price the Same Way</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Course setup and the three aims</li>
+                <li style="margin: 4px 0;">A curve is a set of claims on the future; fixed income and commodities both live on one</li>
+                <li style="margin: 4px 0;">Term premium in rates vs storage/carry in commodities &mdash; the shared structure</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 02 &mdash; SOFR as the Living Bond Market and the Fed System</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">SOFR, the funds rate, and what the Fed actually sets</li>
+                <li style="margin: 4px 0;">SOFR futures as the market&rsquo;s path of policy</li>
+                <li style="margin: 4px 0;">Reading a hike, a cut, and a pause from the strip</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 03 &mdash; Duration, Convexity, and the Price of a Bond</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Yield to price; modified and effective duration</li>
+                <li style="margin: 4px 0;">Why long Treasuries can lose money in a hiking cycle</li>
+                <li style="margin: 4px 0;">Convexity as the second-order correction</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 04 &mdash; Cash, Futures, Swaps, and the Term Premium</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Three ways to take the same view on the curve</li>
+                <li style="margin: 4px 0;">Separating the expected path of short rates from the term premium</li>
+                <li style="margin: 4px 0;">Swap spreads and when cash and paper diverge</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 05 &mdash; Credit, Spreads, and Securitized Products</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Corporate spreads and what they are pricing</li>
+                <li style="margin: 4px 0;">Securitized products in brief (agency MBS, ABS) as curve + prepay / optionality</li>
+                <li style="margin: 4px 0;">Relative-value in credit: on-the-run vs off, sector vs sector</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 06 &mdash; Market Structure: TRACE, RFQ, Portfolio Trading, Bond ETFs</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Dealer vs non-dealer liquidity</li>
+                <li style="margin: 4px 0;">How prices are discovered in cash bonds</li>
+                <li style="margin: 4px 0;">Three practices: discretionary RV, systematic factors, market-making / inventory</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #14110a; color: #d4a017; border: 1px solid #8a6a1c;">Class 07 &mdash; Midterm Review</div>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #14110a; color: #d4a017; border: 1px solid #8a6a1c;">Class 08 &mdash; Midterm Exam</div>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 09 &mdash; Futures as Delivery Claims: Storage, Carry, and the Physical at Maturity</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">A futures contract is a bond that settles into something physical</li>
+                <li style="margin: 4px 0;">Full carry, convenience yield, and the cost of holding the good</li>
+                <li style="margin: 4px 0;">What happens to the paper when delivery is real</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 10 &mdash; Term Structure as a Storage Problem</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Contango, backwardation, and inventory</li>
+                <li style="margin: 4px 0;">Roll yield and the cost of staying in the front</li>
+                <li style="margin: 4px 0;">Modeling a curve and following a contract toward delivery</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 11 &mdash; Transformation Spreads: Crack, Spark, and Chemical Constraints</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Crack spreads and the refinery as a conversion plant</li>
+                <li style="margin: 4px 0;">Spark spreads and the power plant</li>
+                <li style="margin: 4px 0;">When industrial constraints (capacity, outages, weather) show up in the paper</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 12 &mdash; Basis, Netbacking, and the Gap Between Screen and Physical</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Grade, location, and timing basis</li>
+                <li style="margin: 4px 0;">Netbacks: working backward from the product price to the raw material</li>
+                <li style="margin: 4px 0;">What breaks when inventory, logistics, or the grid fail to match the screen</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 13 &mdash; Ratios, Relative Value, and Macro-Driven Strategies</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Ratios (gold/silver, crack, gas/power, etc.) as trades</li>
+                <li style="margin: 4px 0;">Using macros (policy, growth, inflation, scarcity) to identify a view</li>
+                <li style="margin: 4px 0;">From view to position to explicit expected return and risk</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">Class 14 &mdash; Putting It Together: A Position on the Curve</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">Design a rates or commodities position from the current tape</li>
+                <li style="margin: 4px 0;">State what the prices imply for policy, growth, inflation, or scarcity</li>
+                <li style="margin: 4px 0;">Risk the position (duration, curve, basis, inventory)</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #0a1220; color: #8aa0c4; border: 1px dashed #4a5d7a;">Optional class &mdash; Final review (after official classes end)</div>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #071a14; color: #7cff55; border: 1px solid #2f8a4a;">Final &mdash; date and time as posted in DukeHub</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">06 // Labs / Office Hours</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">There is no official lab. Office hours are set at the beginning of the semester. Students who wish to attend will receive guidance on problem sets, data pulls, or strategy design. The instructor is reachable on Duke Teams to arrange a meeting or a Zoom call.</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">07 // Your Computer</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">Work is done on live data from professional systems (LSEG / Refinitiv, IBKR, or equivalent). You are responsible for a working environment that can open and calculate the workbooks or notebooks assigned. AI is allowed for wrangling and first-pass analysis; you are not allowed to invent the tape. Paper-trader or live data access is through the accounts provided; keep those logins working.</div>
+        <div style="margin-top: 28px; text-align: center; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #8aa0c4; font-size: 11px;">&mdash; END &mdash;</div>
+    </div>
+</div>
+</body>
+</html>
