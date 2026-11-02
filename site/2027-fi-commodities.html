@@ -45,34 +45,38 @@
         <p style="margin: 8px 0 0 0; color: #8aa0c4; font-size: 13.5px;">Problem sets are workbooks or notebooks that start from live data. Answers are discussed in class; late submissions are not graded. The final may be a written exam, a strategy write-up with positions and risk, or a combination &mdash; announced mid-term.</p>
 
         <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // Learning Objectives</div>
-        <table style="width: 100%; border-collapse: collapse;">
-            <tbody>
-                <tr>
-                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">01</td>
-                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Price a fixed-income instrument from live data: extract a yield, compute duration and convexity, and state what a change in the curve does to the price.</td>
-                </tr>
-                <tr>
-                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">02</td>
-                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Treat SOFR futures and the swap curve as the living bond market. Separate the expected path of policy from the term premium, and say what the curve is claiming about the Fed from here.</td>
-                </tr>
-                <tr>
-                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">03</td>
-                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Read a futures curve as a claim on delivery. Explain contango, backwardation, storage, carry, and convenience yield in numbers, and follow a contract as it approaches physical settlement.</td>
-                </tr>
-                <tr>
-                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">04</td>
-                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Build and interpret transformation spreads (crack, spark) and the basis (grade, location, timing). Use netbacks and ratios to turn physical constraints into a paper position.</td>
-                </tr>
-                <tr>
-                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">05</td>
-                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">Move from a macro view (policy, growth, inflation, scarcity) to a position in rates or commodities, and report expected return and risk in numbers. Distinguish relative-value, systematic, and inventory/market-making approaches.</td>
-                </tr>
-                <tr>
-                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px;">06</td>
-                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc;">Use professional data systems and AI as tools. Remain responsible for the integrity of the pull, the model, and the position.</td>
-                </tr>
-            </tbody>
-        </table>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">01 &mdash; Price and risk fixed-income instruments from live data</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">From professional market feeds, extract yields and spreads for Treasuries, SOFR futures, swaps, and selected corporates or securitized products; compute duration, convexity, and key-rate exposures; and quantify, in numbers, the price and P&L impact of a specified change in the curve or a spread.</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">02 &mdash; Read the SOFR futures and swap curve as the living bond market</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">Separate the expected path of policy rates from the residual term premium; state, in numbers, what the current curve claims about the Federal Reserve&rsquo;s path over the relevant horizon and the compensation required for bearing path risk.</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">03 &mdash; Map physical commodity balances into futures prices and curves</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">For energy (crude oil and refined products, natural gas, and power) and selected industrial and monetary metals (copper, zinc, rare earths/indium, gold, silver), quantify from live physical indicators (inventories, production, refinery/power-generation runs, logistics, and demand proxies) how supply, demand, and constraints determine the futures curve shape, roll yield, contango/backwardation, and basis; explain the transmission mechanisms in numbers and follow a contract as physical conditions evolve toward delivery.</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">04 &mdash; Build and interpret energy transformation spreads and non-storable constraints</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">Construct crack spreads (and related product margins) and spark spreads from physical refining and power-generation economics; convert grade, location, timing, inventory, and grid constraints into equivalent paper positions via netbacks and ratios; and quantify residual risk when physical conditions diverge from the screen.</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">05 &mdash; Link commodity futures prices and curves to bond markets and macro drivers</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">Relate observed commodity curves and prices to bond yields, inflation expectations, real rates, growth, and policy paths; state, in numbers, what a given commodity curve implies for scarcity, inflation, or industrial demand relative to the rates market (and vice versa), and identify the principal channels (carry, inflation risk premia, growth betas, monetary demand).</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">06 &mdash; Move from a macro or physical view to a sized position with explicit return and risk</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">Translate a stated view on policy, growth, inflation, physical scarcity, or industrial/energy balances into a concrete position in rates, energy futures/spreads, or metals; report expected return and principal risks in numbers; and distinguish whether the trade is primarily relative-value, systematic/factor, or inventory/market-making.</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">07 &mdash; Model and visualize financial information in dynamic websites, and communicate complex results clearly in real time and across time series</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">Build interactive, web-based tools that display live or historical curves, spreads, physical balances, positions, and risk metrics; produce clear, compelling visualizations and narratives of complex financial relationships (real-time snapshots and time-series evolution); and explain the underlying data, models, and implications so that a knowledgeable reader can follow the analysis without additional clarification.</div>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">08 &mdash; Use professional data systems and AI as accountable tools</summary>
+            <div style="padding: 0 16px 12px 16px; color: #d5def3; font-size: 14px;">Fetch, wrangle, and document live market and physical data; employ AI freely for code, parsing, and first-pass analysis; and remain solely responsible for the integrity of the pull, the correctness of the model, and the defendability of the resulting position from the observed tape.</div>
+        </details>
 
         <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // Tentative Course Schedule</div>
 
