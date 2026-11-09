@@ -6,7 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin:0; background-color:#050b1c;">
-<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+<div style="background-color: #050b1c; color: #e8eefc; font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif; line-height: 1.55; padding: 0px; margin: 0px auto; max-width: 920px; border: 1px solid #d4a017;">
+<div id="langbar" style="position: sticky; top: 0; z-index: 5; display: flex; justify-content: flex-end; gap: 8px; padding: 10px 28px; background-color: #061433; border-bottom: 1px solid #1a3a66;">
+  <button type="button" id="btn-en" aria-pressed="true" style="font-family: Consolas, 'Cascadia Code', monospace; font-size: 12px; letter-spacing: 0.06em; color: #050b1c; background: #d4a017; border: 1px solid #d4a017; border-radius: 999px; padding: 4px 12px; cursor: pointer;">EN</button>
+  <button type="button" id="btn-zh" aria-pressed="false" style="font-family: Consolas, 'Cascadia Code', monospace; font-size: 12px; letter-spacing: 0.06em; color: #d4a017; background: transparent; border: 1px solid #d4a017; border-radius: 999px; padding: 4px 12px; cursor: pointer;">中文</button>
+</div>
+<div data-lang-panel="en">
+
     <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
         <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // Payments // Syllabus &nbsp;&nbsp;|&nbsp;&nbsp; SPRING</div>
         <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin:
@@ -205,5 +211,205 @@
         <div style="margin-top: 28px; text-align: center; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #8aa0c4; font-size: 11px;">&mdash; END &mdash;</div>
     </div>
 </div>
+<div data-lang-panel="zh" hidden>
+    <div style="background-color: #061433; border-bottom: 2px solid #d4a017; padding: 26px 28px 22px;">
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 11px; color: #d4a017; margin: 0 0 8px 0;">Duke // 支付 // 教学大纲 &nbsp;&nbsp;|&nbsp;&nbsp; 春季</div>
+        <div style="font-size: 26px; color: #7cff55; line-height: 1.25; margin: 0;">现代支付系统创新中的机会 <span style="color: #e8a317;">FINTECH 590</span></div>
+    </div>
+    <div style="background-color: #07122b; border-bottom: 1px solid #1a3a66; padding: 10px 28px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 12.5px; color: #8aa0c4;"><span style="color: #7cff55;">V 2026.09.18 草稿</span> &nbsp;&nbsp;|&nbsp;&nbsp; 教授 <span style="color: #7cff55;">JAKE VESTAL</span> &nbsp;&nbsp;|&nbsp;&nbsp; <a style="color: #3ecbff; text-decoration: none;" href="mailto:jacob.vestal@duke.edu">jacob.vestal@duke.edu</a><br><span style="color: #8aa0c4;">中文为译文。课程要求以英文为准。</span></div>
+    <div style="padding: 8px 28px 28px 28px;">
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">01 // 课程说明</div>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">一笔支付，是一次状态变更，加上一项法律上的请求权。本课程顺着这项请求权，穿过各条支付轨道——银行卡、ACH、电汇、FedNow/RTP、SWIFT，以及 ISO 20022 迁移——再穿过轨道之上的叠加层：钱包、支付处理商、银行即服务、开放银行与数据权利，以及被当作结算工具、而不是投机资产来用的稳定币。本课程不是一门加密货币选修课，也不同于 FINTECH 520 的产品概览。</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">这个市场里的优势，并不属于最先做出极速前端的人。优势属于控制身份的人、控制轨道之上那层软件的人，以及控制编排的人——编排把几十年的基础设施藏在一次授权后面。学生要为授权、清算、结算和失败建立模型：退回、拒付、代理行流动性、负载之下的账本行为，以及当发起实时支付的不是人、而是自动代理时，什么会坏掉。</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">课程作业是定量的，既交出数字，也交出系统：一条轨道的单位经济、一本结算风险账、一套退回与异常引擎，以及一条欺诈评分对误报的曲线。作业放在 GitHub Pages 上，让运营人员能够直接使用那张图。重点放在现有格局尚未占据的接缝——嵌入式收款与付款、商业与跨境资金流、对账与异常、由代理发起的结账，以及最终仍须落进银行的结算。</p>
+        <p style="margin: 0 0 12px 0; color: #d7e3fb; font-size: 15.5px;">鼓励用 AI 写代码、抽取文档。交换费的计算、流动性，以及失败情形，仍由学生本人负责。</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">02 // 可选教材</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">无指定教材。一手材料：网络费率表、NACHA 操作规则节选、FedNow / RTP 产品说明、一张卡组织拒付原因代码表、一份 ISO 20022 报文样本。</p>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">有用的案头读物，不必通读：一本当前的支付行业入门；国际清算银行（BIS）与美联储关于即时支付和批发结算的论文。对本课程而言，卡组织的 PDF 比教材有用。</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">03 // AI 政策</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">强烈鼓励使用 AI。你可以用任何模型来写编排代码、解析卡组织的 PDF，或起草备忘录。你对交上来的一切负全部责任：模拟器要能跑，单位经济要算对，读者不必去问那个工具你到底是什么意思，就能跟上状态机。结算风险估错了，或者拒付决策树是错的，那就是你的成绩。</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">04 // 成绩</div>
+        <table style="width: 100%; border-collapse: collapse; margin: 0 0 8px 0;">
+            <tbody>
+                <tr>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">45%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">项目（作业平均）</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">15%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">期中测验</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">25%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">期末项目（小组）</div>
+                    </td>
+                    <td style="width: 25%; background-color: #0a1633; padding: 14px 16px; vertical-align: top; border: 1px solid #1a3a66;">
+                        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 28px; color: #7cff55; line-height: 1.1;">15%</div>
+                        <div style="font-size: 12.5px; color: #8aa0c4; margin-top: 4px;">个人答辩</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 0 0; color: #8aa0c4; font-size: 13.5px;">项目是模拟器加 Pages：抽成率瀑布、结算风险账、退回引擎、欺诈精确率–召回率曲线。期中为闭卷（授权、清算与结算的区别，一套费用结构，一个流动性数字）。小组期末是接缝上的一个产品。个人答辩：你自己把状态机和损益讲清楚。</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">05 // 学习目标</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">01</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">画出任意一条主要轨道上的支付状态机：授权、清算、结算时谁是主责任方；法律上的请求权何时转移；一次退回或拒付撤销了什么。</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">02</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">计算单位经济：交换费 + 卡组织 + 收单机构 + 处理商 + 欺诈 + 奖励 + 在途资金成本 + 延迟结算的资金成本。给出单笔交易和组合层面的边际贡献。</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">03</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">测算结算与代理行流动性：净额与全额、预注资、在途敞口，以及一个被推迟的 ACH 批次对现金意味着什么。画出一天之内的敞口。</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">04</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">建立失败系统：退回、拒付、R 代码、异常队列。衡量一条欺诈规则的误报成本，而不是只看 AUC。</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px; border-bottom: 1px solid #1a2a4a;">05</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc; border-bottom: 1px solid #1a2a4a;">把一家公司放回技术栈上。说清谁已经拥有身份、轨道和编排。指出相邻的接缝（嵌入式、跨境、对账、代理结账、最终落入银行的稳定币结算），并做出一个薄版本。</td>
+                </tr>
+                <tr>
+                    <td style="width: 36px; vertical-align: top; padding: 10px 8px 10px 0; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #3ecbff; font-size: 13px;">06</td>
+                    <td style="vertical-align: top; padding: 10px 0; color: #e8eefc;">发布到 GitHub Pages。没有队友代讲，也能把账本和损益答辩清楚。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">06 // 暂定课程安排</div>
+
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">模块 1 — 状态变更 + 法律上的请求权</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">授权、清算、结算，是三套时钟</li>
+                <li style="margin: 4px 0;">谁是主责任方：发卡行、收单机构、卡组织、代理行、TCH、美联储</li>
+                <li style="margin: 4px 0;">ISO 20022 是一种报文，不是一种信仰</li>
+                <li style="margin: 4px 0;">实验：把一笔银行卡支付和一笔 ACH 贷记画成状态机；列出每一本发生变动的账</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">项目 1 — 一条轨道的单位经济</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">交换费 + 卡组织 + 收单机构 + 处理商 + 欺诈 + 奖励 + 在途资金</li>
+                <li style="margin: 4px 0;">同一笔 100 美元的销售，银行卡、ACH、FedNow 各算一遍；单笔，以及每天 1 万笔时的边际贡献</li>
+                <li style="margin: 4px 0;">敏感性：结构变化、交换费监管、欺诈率上升 40 个基点</li>
+                <li style="margin: 4px 0;">交付：工作簿 + 运营人员认得出来的 Pages 瀑布图</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">模块 2 — 支付轨道</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">银行卡：双报文与单报文，拒付窗口期</li>
+                <li style="margin: 4px 0;">ACH：批次、退回（真正要紧的 R01–R29）、当日 ACH</li>
+                <li style="margin: 4px 0;">电汇 / SWIFT / 代理行：往账账户（nostro）、封面支付（cover payment）、代理行的流动性</li>
+                <li style="margin: 4px 0;">FedNow / RTP：即时、大致不可撤销；“收款请求”改变了什么</li>
+                <li style="margin: 4px 0;">实验：时延与终局性对照表；画出一个营业日内各轨道的在途敞口</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">项目 2 — 结算风险账</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">模拟一家处理商的一天：请款、批次 ACH、即时出款、收到的退回</li>
+                <li style="margin: 4px 0;">现金、应付商户款、应收卡组织款、预存的 RTP 余额</li>
+                <li style="margin: 4px 0;">把这一天打断：ACH 窗口推迟、卡组织中断、退回率升到 2%</li>
+                <li style="margin: 4px 0;">交付：时间序列账本 + 你必须补上的最大日内资金缺口</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #14110a; color: #d4a017; border: 1px solid #8a6a1c;">期中测验 — 闭卷。状态机、费用结构、一个流动性数字。考前一周发放学习指南。</div>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #0a1220; color: #8aa0c4; border: 1px dashed #4a5d7a;">春假</div>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">模块 3 — 失败、欺诈、身份</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">拒付和 R 代码是损益，不是一张客服工单</li>
+                <li style="margin: 4px 0;">账户盗用（ATO）和授权推送支付欺诈（APP fraud），对照反洗钱的时钟（毫秒对可疑活动报告）——不要混为一谈</li>
+                <li style="margin: 4px 0;">身份：当前端是银行即服务的合作方时，谁拥有 KYC</li>
+                <li style="margin: 4px 0;">实验：给一串交易打分；画出精确率–召回率，以及误报的美元成本</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">项目 3 — 异常引擎</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">队列：退回、拒付、对不上的账、被退回的代理发起支付</li>
+                <li style="margin: 4px 0;">服务时限对资本：一笔异常可以搁多久，才会变成资金缺口</li>
+                <li style="margin: 4px 0;">交付：Pages 运营控制台 + 队列放着不处理的预期损失</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">模块 4 — 叠加层与接缝</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">钱包、处理商、银行即服务、开放银行 / 数据权利</li>
+                <li style="margin: 4px 0;">稳定币是一条结算轨道，最终仍须落进银行</li>
+                <li style="margin: 4px 0;">由代理发起的结账：谁授权，谁承担责任</li>
+                <li style="margin: 4px 0;">嵌入式收款与付款、商业、跨境——谁已经拥有这一层</li>
+            </ul>
+        </details>
+        <details style="background-color: #0a1633; margin: 8px 0px; border: 1px solid #1a3a66;">
+            <summary style="cursor: pointer; padding: 11px 14px; font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 13px; color: #7cff55;">期末项目（小组）+ 个人答辩</summary>
+            <ul style="margin: 0; padding: 0 16px 12px 34px; color: #d5def3;">
+                <li style="margin: 4px 0;">选一条接缝。做出薄产品：经济、状态机、失败账、流动性图</li>
+                <li style="margin: 4px 0;">运营人员能用的 GitHub Pages。点名拥有相邻层的那家公司。</li>
+                <li style="margin: 4px 0;">个人答辩：费用结构、日内缺口、异常损益、你的代码。不许队友代讲。</li>
+            </ul>
+        </details>
+        <div style="padding: 11px 14px; margin: 8px 0px; font-family: Consolas, 'Cascadia Code', 'Courier New', monospace; font-size: 13px; background-color: #071a14; color: #7cff55; border: 1px solid #2f8a4a;">期末 — 小组成果 + 个人答辩</div>
+        <p style="color: #8aa0c4; font-size: 13.5px; margin: 12px 0 0 0;">暂定。轨道会变；授权 / 清算 / 结算和损益不会。</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">07 // 实验课 / 答疑</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">无正式实验课。答疑须预约。Duke Teams 或 Zoom。把账本带来。</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">08 // 你的电脑</div>
+        <div style="border-left: 3px solid #d4a017; padding: 10px 14px; background-color: #120e06; color: #f0e2b8; font-size: 14.5px;">Python 3.12，Excel 或同等工具用来做费率瀑布，以及 GitHub Pages。推荐 PyCharm。不受支持的技术栈，自己解决。</div>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">09 // 团队规则</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">与 533 相同：名字写上去，就是贡献者。除名或退出须书面提出，并抄送教师。同伴评分在 Sakai 上。漏做一次同伴评价，该次作业的同伴系数扣 0.1。</p>
+
+        <div style="font-family: Consolas,'Cascadia Code','Courier New',monospace; font-size: 20px; color: #d4a017; margin: 22px 0 8px 0;">10 // GitHub</div>
+        <p style="margin: 0 0 12px 0; color: #e8eefc;">仓库一开始是公开的。教师、助教和同学必须能够克隆默认分支。计分成果 = Pages + 仓库。</p>
+
+        <div style="margin-top: 28px; text-align: center; font-family: Consolas,'Cascadia Code','Courier New',monospace; color: #8aa0c4; font-size: 11px;">— 完 —</div>
+    </div>
+</div>
+</div>
+<script>
+(function () {
+  var KEY = "payments-syllabus-lang";
+  var titles = {
+    en: "Duke Payments — Syllabus V 2026.09.18",
+    zh: "Duke 支付 — 教学大纲 V 2026.09.18"
+  };
+  function paint(btn, on) {
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.style.color = on ? "#050b1c" : "#d4a017";
+    btn.style.background = on ? "#d4a017" : "transparent";
+  }
+  function apply(lang) {
+    if (lang !== "zh") lang = "en";
+    document.querySelectorAll("[data-lang-panel]").forEach(function (el) {
+      el.hidden = el.getAttribute("data-lang-panel") !== lang;
+    });
+    document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en";
+    document.title = titles[lang];
+    paint(document.getElementById("btn-en"), lang === "en");
+    paint(document.getElementById("btn-zh"), lang === "zh");
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+  }
+  document.getElementById("btn-en").addEventListener("click", function () { apply("en"); });
+  document.getElementById("btn-zh").addEventListener("click", function () { apply("zh"); });
+  var saved = "en";
+  try { saved = localStorage.getItem(KEY) || "en"; } catch (e) {}
+  apply(saved);
+})();
+</script>
 </body>
 </html>
