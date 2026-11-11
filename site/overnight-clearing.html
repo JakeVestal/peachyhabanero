@@ -206,7 +206,8 @@
       banks: [],
       trades: [],
       history: [],
-      currentShock: null
+      currentShock: null,
+      dealerStress: false
     };
 
     const STARTING_BS = {
@@ -256,6 +257,15 @@
         description: "A large hedge fund (via sponsored repo / clearing bank) wants to lever a long Treasury basis or cash-futures trade. Absorbs excess cash and can drive SOFR higher. Introduce on Day 3+.",
         shock: { type: "external", note: "Instructor adds a large borrower demand of $15–25B at competitive rates." },
         tags: ["sponsored", "hedge fund", "leverage"]
+      },
+      {
+        id: "sept2019dealers",
+        title: "September 17, 2019 — Dealer Stress (MMs Pull Back)",
+        type: "Intermediary capacity failure",
+        description: "Corporate tax payments and large Treasury settlement drain reserves. Primary dealers’ balance sheets are already tight and they sharply reduce repo intermediation. Private GC market stops clearing smoothly; some prints spike toward 10%. SOFR prints 5.25%. The Fed must step in the next morning with emergency repo because the dealers can no longer make a market.",
+        shock: { type: "dealerStress", note: "Market makers’ capacity is severely limited. Residual funding needs must go to the Fed SRF at the penalty rate." },
+        historicalSOFR: 5.25,
+        tags: ["liquidity", "dealers", "reserves", "sept 2019", "fed backstop"]
       },
       {
         id: "specials",
@@ -411,6 +421,8 @@
       const card = MARKET_CARDS.find(c => c.id === id);
       if (!card) return;
       state.currentShock = card;
+      state.dealerStress = false;
+
       if (card.shock && card.shock.type === "systemic") {
         state.banks.forEach(b => {
           if (card.shock.field === "volatile") {
@@ -419,6 +431,15 @@
           } else if (card.shock.field === "treasuries") {
             b.treasuries += card.shock.amount;
             b.cash -= card.shock.amount;
+          }
+        });
+      } else if (card.shock && card.shock.type === "dealerStress") {
+        state.dealerStress = true;
+        // Limit MM capacity: mark them constrained and reduce their available size
+        state.banks.forEach(b => {
+          if (b.isBot) {
+            b.constrained = true;
+            b.maxResidual = 1; // only tiny residual capacity left
           }
         });
       }
@@ -677,16 +698,31 @@
             if (residualBanks.has(b.name) && gap < 0) {
               const mm = state.banks.find(x => x.name === "MM Bid") || state.banks.find(x => x.isBot);
               if (mm) {
-                const size = Math.min(Math.abs(gap), 8);
-                state.trades.push({
-                  lender: mm.name,
-                  borrower: b.name,
-                  volume: size,
-                  rate: mm.lendRate || 4.30,
-                  note: "MM residual (student choice)"
-                });
-                b.cash += size;
-                residualFilled++;
+                const maxSize = mm.constrained ? (mm.maxResidual || 1) : 8;
+                const size = Math.min(Math.abs(gap), maxSize);
+                if (size > 0.1) {
+                  state.trades.push({
+                    lender: mm.name,
+                    borrower: b.name,
+                    volume: size,
+                    rate: state.dealerStress ? (parseFloat($("srf-rate").value) || 4.50) : (mm.lendRate || 4.30),
+                    note: state.dealerStress ? "SRF (dealers constrained)" : "MM residual (student choice)"
+                  });
+                  b.cash += size;
+                  residualFilled++;
+                }
+                // Any remaining gap under dealer stress goes explicitly to SRF
+                const remaining = Math.abs(gap) - size;
+                if (state.dealerStress && remaining > 0.1) {
+                  state.trades.push({
+                    lender: "Fed SRF",
+                    borrower: b.name,
+                    volume: remaining,
+                    rate: parseFloat($("srf-rate").value) || 4.50,
+                    note: "SRF forced (dealers pulled back)"
+                  });
+                  b.cash += remaining;
+                }
               }
             } else if (parkBanks.has(b.name) && gap > 0) {
               const rate = parseFloat($("iorb-rate").value) || 4.40;
@@ -807,6 +843,7 @@
             Funding need / surplus: <span class="${gap < 0 ? 'gap-negative' : 'gap-positive'}">${fmtB(gap)}</span><br/>
             Available collateral: ${fmtB(b.treasuries)} ${collatOk ? '<span style="color:var(--lime)">(covers gap)</span>' : '<span style="color:#ff6b6b">(insufficient for full gap)</span>'}
             ${b.isBot ? '<br/>Standing rate: ' + (b.lendRate||b.borrowRate).toFixed(2) + '% (inside Fed corridor)' : ''}
+            ${b.constrained ? '<br/><span style="color:#ff6b6b">Constrained (dealer stress)</span>' : ''}
           </div>
         `;
         c.appendChild(div);
@@ -1041,6 +1078,9 @@
       state.trades = [];
       state.sofr = null;
       state.currentShock = null;
+      state.dealerStress = false;
+      // Reset MM constraints
+      state.banks.forEach(b => { if (b.isBot) { b.constrained = false; b.maxResidual = 8; } });
       $("day-display").textContent = state.day;
       $("sofr-display").textContent = "—";
       $("shock-banner").style.display = "none";
@@ -1082,7 +1122,7 @@
 
     function resetGame() {
       if (!confirm("Reset entire game? This clears local storage for this tool.")) return;
-      state = { day: 1, sofr: null, banks: [], trades: [], history: [], currentShock: null };
+      state = { day: 1, sofr: null, banks: [], trades: [], history: [], currentShock: null, dealerStress: false };
       localStorage.removeItem(STORAGE_KEY);
       location.reload();
     }
