@@ -94,11 +94,7 @@
         </select>
         <button class="neon-btn" id="apply-card">Apply Selected Card (systemic)</button>
         <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
-        <button class="neon-btn" id="trade-mms" style="background:rgba(255,200,0,0.12);">Trade Residual with Market Makers</button>
-        <div style="margin-top:10px;font-size:13px;">
-          Google Sheet URL: <input id="sheet-url" type="text" placeholder="Paste the normal Google Sheets link (edit or view)" style="width:420px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px;">
-          <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
-        </div>
+        <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
           <select id="shock-bank" style="background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px 8px;"></select>
@@ -124,7 +120,6 @@
         · IORB <input id="iorb-rate" type="number" step="0.01" value="4.40" style="width:70px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);">%
         <button class="neon-btn" id="add-srf">+ SRF trade</button>
         <button class="neon-btn" id="add-onrrp">+ ON RRP trade</button>
-        <button class="neon-btn" id="park-iorb">Park excess at IORB</button>
       </div>
       <div id="trades-container"></div>
       <button class="neon-btn" id="add-trade">+ Add Private Trade</button>
@@ -620,32 +615,93 @@
 
           if (rows.length < 2) return alert("Sheet appears empty or not publicly readable as CSV.");
 
-          // Skip header
+          const header = rows[0].map(h => h.toLowerCase().trim());
+          const col = name => header.findIndex(h => h.includes(name.toLowerCase()));
+
+          const iLender = col("lender");
+          const iBorrower = col("borrower");
+          const iVol = col("volume");
+          const iRate = col("rate");
+          const iNotes = col("notes");
+          const iResidual = col("trade residual");
+          const iPark = col("park excess");
+
+          // Clear existing trades then load
+          state.trades = [];
           let added = 0;
+
           for (let i = 1; i < rows.length; i++) {
             const parts = rows[i];
-            if (parts.length < 5) continue;
-            const day = parts[0];
-            const lender = parts[1];
-            const borrower = parts[2];
-            const vol = parseFloat(parts[3]);
-            const rate = parseFloat(parts[4]);
+            if (parts.length < 4) continue;
+            const lender = parts[iLender] || "";
+            const borrower = parts[iBorrower] || "";
+            const vol = parseFloat(parts[iVol]);
+            const rate = parseFloat(parts[iRate]);
             if (lender && borrower && !isNaN(vol) && vol > 0 && !isNaN(rate)) {
               state.trades.push({
                 lender,
                 borrower,
                 volume: vol,
                 rate: rate,
-                note: parts[5] || "from sheet"
+                note: (iNotes >= 0 ? parts[iNotes] : "") || "from sheet"
               });
               added++;
             }
           }
+
+          // Apply student decisions for residual / IORB
+          // For simplicity: if any row has TRUE in the residual or park column for a bank, apply it to that bank's current cash gap
+          const residualBanks = new Set();
+          const parkBanks = new Set();
+          for (let i = 1; i < rows.length; i++) {
+            const parts = rows[i];
+            const bankName = (parts[iLender] || parts[iBorrower] || "").trim();
+            if (!bankName) continue;
+            if (iResidual >= 0 && String(parts[iResidual]).toUpperCase() === "TRUE") residualBanks.add(bankName);
+            if (iPark >= 0 && String(parts[iPark]).toUpperCase() === "TRUE") parkBanks.add(bankName);
+          }
+
+          let residualFilled = 0;
+          let parked = 0;
+          state.banks.forEach(b => {
+            if (b.isBot) return;
+            const gap = b.cash;
+            if (Math.abs(gap) < 0.1) return;
+
+            if (residualBanks.has(b.name) && gap < 0) {
+              const mm = state.banks.find(x => x.name === "MM Bid") || state.banks.find(x => x.isBot);
+              if (mm) {
+                const size = Math.min(Math.abs(gap), 8);
+                state.trades.push({
+                  lender: mm.name,
+                  borrower: b.name,
+                  volume: size,
+                  rate: mm.lendRate || 4.30,
+                  note: "MM residual (student choice)"
+                });
+                b.cash += size;
+                residualFilled++;
+              }
+            } else if (parkBanks.has(b.name) && gap > 0) {
+              const rate = parseFloat($("iorb-rate").value) || 4.40;
+              state.trades.push({
+                lender: b.name,
+                borrower: "Fed IORB",
+                volume: gap,
+                rate: rate,
+                note: "IORB (student choice)"
+              });
+              b.cash = 0;
+              parked++;
+            }
+          });
+
+          renderBanks();
           renderTrades();
           save();
-          alert(`Pulled ${added} valid trades from sheet.`);
+          alert(`Pulled ${added} explicit trades.\nApplied residual MM to ${residualFilled} banks and IORB park to ${parked} banks based on sheet flags.`);
         })
-        .catch(err => alert("Could not fetch sheet.\nMake sure the sheet is shared as 'Anyone with the link can view' (or published to the web).\n" + err));
+        .catch(err => alert("Could not fetch sheet.\nMake sure the sheet is shared as 'Anyone with the link can view'.\n" + err));
     }
 
     function parkAtIORB() {
@@ -903,9 +959,7 @@
     $("advance-day").onclick = advanceDay;
     $("apply-card").onclick = applyCard;
     $("random-shocks").onclick = randomizeShocks;
-    $("trade-mms").onclick = tradeResidualWithMMs;
     $("pull-sheet").onclick = pullFromSheet;
-    $("park-iorb").onclick = parkAtIORB;
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
     $("srf-rate").onchange = $("onrrp-rate").onchange = () => { ensureMarketMakers(); renderBanks(); save(); };
