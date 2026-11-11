@@ -483,6 +483,54 @@
       }
     }
 
+    function randomizeShocks() {
+      if (state.banks.length === 0) return alert("Add banks first");
+      const options = [-9, -7, -5, -3, -1, 2, 4, 6, 8];
+      let shocks, hasPos, hasNeg, attempts = 0;
+      do {
+        shocks = state.banks.filter(b => !b.isBot).map(() => options[Math.floor(Math.random() * options.length)]);
+        hasPos = shocks.some(s => s > 0);
+        hasNeg = shocks.some(s => s < 0);
+        attempts++;
+      } while ((!hasPos || !hasNeg) && attempts < 20);
+
+      const summary = [];
+      let idx = 0;
+      state.banks.forEach(b => {
+        if (b.isBot) return;
+        const amt = shocks[idx++];
+        b.volatile += amt;
+        b.cash += amt;
+        summary.push(`${b.name}: ${amt > 0 ? "+" : ""}${amt}B`);
+      });
+
+      renderBanks();
+      save();
+      $("shock-banner").style.display = "block";
+      $("shock-banner").innerHTML = `<strong>Random liquidity shocks applied</strong><br>${summary.join(" · ")}<br><em>Positive = surplus cash to lend; negative = funding need.</em>`;
+    }
+
+    function applyBankShock() {
+      const bankIdx = parseInt($("shock-bank").value);
+      const field = $("shock-field").value;
+      const amt = parseFloat($("shock-amount").value) || 0;
+      if (isNaN(bankIdx) || !state.banks[bankIdx]) return alert("Select a bank");
+      const b = state.banks[bankIdx];
+      if (field === "volatile") {
+        b.volatile += amt;
+        b.cash += amt;
+      } else if (field === "cash") {
+        b.cash += amt;
+      } else if (field === "treasuries") {
+        b.treasuries += amt;
+        b.cash -= amt;
+      }
+      renderBanks();
+      save();
+      $("shock-banner").style.display = "block";
+      $("shock-banner").innerHTML = `Applied ${amt > 0 ? "+" : ""}${amt}B to ${field} for ${b.name}.`;
+    }
+
     function pullFromSheet() {
       return new Promise((resolve, reject) => {
         let url = $("sheet-url").value.trim();
@@ -556,7 +604,6 @@
               const parts = rows[i];
               if (parts.length < 4) continue;
 
-              // Only consider rows for the current day
               if (iDay >= 0) {
                 const rowDay = parseInt(parts[iDay], 10);
                 if (isNaN(rowDay) || rowDay !== state.day) continue;
@@ -569,7 +616,6 @@
 
               if (!lender || !borrower || isNaN(vol) || vol <= 0 || isNaN(rate)) continue;
 
-              // Unknown bank check
               if (!bankNames.has(lender) && lender !== "Fed SRF" && lender !== "Fed ON RRP" && lender !== "Fed IORB") {
                 errors.push(`Unknown lender "${lender}" (row ${i+1})`);
               }
@@ -577,7 +623,6 @@
                 errors.push(`Unknown borrower "${borrower}" (row ${i+1})`);
               }
 
-              // Capacity checks (only for known student/MM banks)
               if (bankNames.has(lender)) {
                 const avail = remainingCash[lender] || 0;
                 if (avail < vol - 0.1) {
@@ -601,7 +646,6 @@
               });
             }
 
-            // Residual / park flags (also only current-day rows)
             const residualBanks = new Set();
             const parkBanks = new Set();
             for (let i = 1; i < rows.length; i++) {
@@ -624,7 +668,6 @@
               });
             }
 
-            // All good — apply
             state.trades = candidateTrades;
             let residualFilled = 0;
             let parked = 0;
@@ -930,7 +973,7 @@
           if (!result.clean) {
             const msg = "Cannot advance — fix the sheet first:\n\n" + (result.warnings || []).join("\n");
             alert(msg);
-            return; // no state changes, no advance
+            return;
           }
 
           if (state.sofr == null && state.trades.length > 0) {
