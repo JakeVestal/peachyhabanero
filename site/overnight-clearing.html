@@ -117,7 +117,7 @@
       <div id="banks-container" class="bank-grid"></div>
 
       <h2>Interbank Repo Trading Floor</h2>
-      <p class="sub">Enter executed overnight secured trades. Rates are annualized. Volume in $B. Collateral must be available Treasuries.</p>
+      <p class="sub">Enter executed overnight secured trades. Rates are annualized. Volume in $B. All trades are Treasury-secured.</p>
       <div style="margin:8px 0;font-size:13px;">
         Fed backstops: SRF (penalty/ceiling) <input id="srf-rate" type="number" step="0.01" value="4.50" style="width:70px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);">%
         · ON RRP (floor) <input id="onrrp-rate" type="number" step="0.01" value="4.25" style="width:70px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);">%
@@ -515,7 +515,7 @@
       // Copy residual trades to clipboard as CSV for easy paste into the sheet
       const residual = state.trades.filter(t => t.note === "MM residual");
       if (residual.length) {
-        const csv = residual.map(t => `${state.day},${t.lender},${t.borrower},${t.volume},${t.rate},GC,MM residual`).join("\n");
+        const csv = residual.map(t => `${state.day},${t.lender},${t.borrower},${t.volume},${t.rate},MM residual`).join("\n");
         navigator.clipboard.writeText(csv).then(() => {
           alert(`Filled ${filled} residual positions against market makers.\nCSV rows copied to clipboard — paste into the shared sheet.`);
         }).catch(() => {
