@@ -422,27 +422,39 @@
     }
 
     function ensureMarketMakers() {
+      const srf = parseFloat($("srf-rate")?.value) || 4.50;
+      const onrrp = parseFloat($("onrrp-rate")?.value) || 4.25;
+      // MMs quote inside the corridor: bid a bit above floor, offer a bit below ceiling
+      const bidRate = Math.max(onrrp + 0.05, onrrp);
+      const offerRate = Math.min(srf - 0.05, srf);
+
       const hasBid = state.banks.some(b => b.name === "MM Bid");
       const hasOffer = state.banks.some(b => b.name === "MM Offer");
       if (!hasBid) {
         state.banks.push({
           name: "MM Bid",
           isBot: true,
-          lendRate: 4.10,
-          borrowRate: 4.10,
+          lendRate: bidRate,
+          borrowRate: bidRate,
           ...JSON.parse(JSON.stringify(STARTING_BS)),
           cash: 10, volatile: 10
         });
+      } else {
+        const mm = state.banks.find(b => b.name === "MM Bid");
+        if (mm) { mm.lendRate = bidRate; mm.borrowRate = bidRate; }
       }
       if (!hasOffer) {
         state.banks.push({
           name: "MM Offer",
           isBot: true,
-          lendRate: 4.35,
-          borrowRate: 4.35,
+          lendRate: offerRate,
+          borrowRate: offerRate,
           ...JSON.parse(JSON.stringify(STARTING_BS)),
           cash: -8, volatile: 12
         });
+      } else {
+        const mm = state.banks.find(b => b.name === "MM Offer");
+        if (mm) { mm.lendRate = offerRate; mm.borrowRate = offerRate; }
       }
     }
 
@@ -617,7 +629,7 @@
           <div style="font-size:12px;color:var(--muted);margin-top:6px;">
             Funding need / surplus: <span class="${gap < 0 ? 'gap-negative' : 'gap-positive'}">${fmtB(gap)}</span><br/>
             Available collateral: ${fmtB(b.treasuries)} ${collatOk ? '<span style="color:var(--lime)">(covers gap)</span>' : '<span style="color:#ff6b6b">(insufficient for full gap)</span>'}
-            ${b.isBot ? '<br/>Standing rate: ' + (b.lendRate||b.borrowRate).toFixed(2) + '%' : ''}
+            ${b.isBot ? '<br/>Standing rate: ' + (b.lendRate||b.borrowRate).toFixed(2) + '% (inside Fed corridor)' : ''}
           </div>
         `;
         c.appendChild(div);
@@ -779,6 +791,7 @@
     $("trade-mms").onclick = tradeResidualWithMMs;
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
+    $("srf-rate").onchange = $("onrrp-rate").onchange = () => { ensureMarketMakers(); renderBanks(); save(); };
     $("add-onrrp").onclick = () => addFedTrade("onrrp");
     $("import-csv").onclick = () => $("csv-file").click();
     $("csv-file").onchange = e => { if (e.target.files[0]) importCSV(e.target.files[0]); };
