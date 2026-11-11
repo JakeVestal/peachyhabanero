@@ -93,6 +93,7 @@
           <option value="">— Draw or select a card —</option>
         </select>
         <button class="neon-btn" id="apply-card">Apply Selected Card (systemic)</button>
+        <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
           <select id="shock-bank" style="background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px 8px;"></select>
@@ -419,6 +420,32 @@
       save();
     }
 
+    function randomizeShocks() {
+      if (state.banks.length === 0) return alert("Add banks first");
+      // Discrete set that produces both borrowers and lenders; regenerate if all same sign
+      const options = [-9, -7, -5, -3, -1, 2, 4, 6, 8];
+      let shocks, hasPos, hasNeg, attempts = 0;
+      do {
+        shocks = state.banks.map(() => options[Math.floor(Math.random() * options.length)]);
+        hasPos = shocks.some(s => s > 0);
+        hasNeg = shocks.some(s => s < 0);
+        attempts++;
+      } while ((!hasPos || !hasNeg) && attempts < 20);
+
+      const summary = [];
+      state.banks.forEach((b, i) => {
+        const amt = shocks[i];
+        b.volatile += amt;
+        b.cash += amt;
+        summary.push(`${b.name}: ${amt > 0 ? "+" : ""}${amt}B`);
+      });
+
+      renderBanks();
+      save();
+      $("shock-banner").style.display = "block";
+      $("shock-banner").innerHTML = `<strong>Random liquidity shocks applied</strong><br>${summary.join(" · ")}<br><em>Positive = surplus cash to lend; negative = funding need.</em>`;
+    }
+
     function applyBankShock() {
       const bankIdx = parseInt($("shock-bank").value);
       const field = $("shock-field").value;
@@ -670,6 +697,7 @@
     $("reset-game").onclick = resetGame;
     $("advance-day").onclick = advanceDay;
     $("apply-card").onclick = applyCard;
+    $("random-shocks").onclick = randomizeShocks;
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
     $("add-onrrp").onclick = () => addFedTrade("onrrp");
