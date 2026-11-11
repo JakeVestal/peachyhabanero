@@ -18,7 +18,7 @@
     .bank-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px 16px; }
     .bank-card h3 { margin: 0 0 8px; font-size: 14px; color: var(--cyan); }
     .bs-table { width: 100%; font-size: 12px; margin: 8px 0; }
-    .bs-table td { padding: 3px 6px; }
+    .bs-table tr[title] { cursor: help; }
     .gap-positive { color: var(--lime); }
     .gap-negative { color: #ff6b6b; font-weight: 600; }
     .shock-banner { background: rgba(255, 43, 214, 0.12); border: 1px solid var(--mag); border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
@@ -793,14 +793,14 @@
         div.innerHTML = `
           <h3>${b.name || "Bank " + (i+1)} ${b.isBot ? '<span style="color:var(--gold);font-size:11px">[MM]</span>' : ''} <button class="neon-btn" style="font-size:10px;padding:2px 8px;" onclick="removeBank(${i})">×</button></h3>
           <table class="bs-table">
-            <tr><td>Fixed loans (6.50%)</td><td>${fmtB(b.fixedLoans)}</td></tr>
-            <tr><td>Floating (SOFR+100)</td><td>${fmtB(b.floatingAssets)}</td></tr>
-            <tr><td>Treasuries (HQLA)</td><td>${fmtB(b.treasuries)}</td></tr>
-            <tr><td><strong>Cash (residual)</strong></td><td class="${gap < 0 ? 'gap-negative' : 'gap-positive'}">${fmtB(b.cash)}</td></tr>
+            <tr title="Fixed-rate corporate loans earning a constant 6.50%. These do not reprice with SOFR."><td>Fixed loans (6.50%)</td><td>${fmtB(b.fixedLoans)}</td></tr>
+            <tr title="Floating-rate assets that reprice daily to SOFR + 100 bps. Higher SOFR immediately improves the yield on this book."><td>Floating (SOFR+100)</td><td>${fmtB(b.floatingAssets)}</td></tr>
+            <tr title="US Treasury securities held as High-Quality Liquid Assets. These can be pledged as collateral in the overnight repo market."><td>Treasuries (HQLA)</td><td>${fmtB(b.treasuries)}</td></tr>
+            <tr title="Cash is the residual balancing item. Positive = surplus that can be lent; negative = funding need that must be covered in the repo market."><td><strong>Cash (residual)</strong></td><td class="${gap < 0 ? 'gap-negative' : 'gap-positive'}">${fmtB(b.cash)}</td></tr>
             <tr><td colspan="2" style="border-top:1px solid var(--gold-faint);padding-top:4px;"><strong>Assets</strong> ${fmtB(totalA)}</td></tr>
-            <tr><td>Sticky deposits (3.50%)</td><td>${fmtB(b.stickyDep)}</td></tr>
-            <tr><td>Volatile ST funding</td><td>${fmtB(b.volatile)}</td></tr>
-            <tr><td>Equity</td><td>${fmtB(b.equity)}</td></tr>
+            <tr title="Wholesale corporate deposits that are sticky and pay a fixed 3.50%. These are the stable funding base."><td>Sticky deposits (3.50%)</td><td>${fmtB(b.stickyDep)}</td></tr>
+            <tr title="Institutional short-term funding that can leave quickly. Shocks usually hit this line and create the cash gap."><td>Volatile ST funding</td><td>${fmtB(b.volatile)}</td></tr>
+            <tr title="Shareholders' equity. Starts at $10B and grows (or shrinks) each day as net interest income is accrued."><td>Equity</td><td>${fmtB(b.equity)}</td></tr>
             <tr><td colspan="2"><strong>Liab + Eq</strong> ${fmtB(totalL)}</td></tr>
           </table>
           <div style="font-size:12px;color:var(--muted);margin-top:6px;">
