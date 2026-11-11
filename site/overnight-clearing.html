@@ -130,8 +130,11 @@
       <input type="file" id="csv-file" accept=".csv" style="display:none;">
       <button class="neon-btn" id="calc-sofr" style="background:rgba(0,240,255,0.15);">Calculate SOFR (Volume-Weighted Median)</button>
       <div id="sofr-result" style="margin-top:12px;"></div>
+      <canvas id="sofr-chart" width="800" height="220" style="width:100%;max-width:800px;margin-top:12px;background:#101826;border-radius:8px;border:1px solid var(--gold-dim);"></canvas>
 
       <h2>End-of-Day P&L & Reset</h2>
+      <div id="leaderboard" style="margin:12px 0;"></div>
+      <canvas id="bank-chart" width="800" height="220" style="width:100%;max-width:800px;margin-top:8px;background:#101826;border-radius:8px;border:1px solid var(--gold-dim);"></canvas>
       <div id="eod-summary"></div>
     </div>
 
@@ -848,6 +851,96 @@
       return valid[valid.length - 1].rate;
     }
 
+    function drawSOFRChart() {
+      const canvas = $("sofr-chart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const hist = state.history.filter(x => x.sofr != null);
+      if (state.sofr != null) hist.push({ day: state.day, sofr: state.sofr });
+      if (hist.length === 0) {
+        ctx.fillStyle = "#888";
+        ctx.font = "14px IBM Plex Sans, sans-serif";
+        ctx.fillText("SOFR history will appear here after the first print", 20, h/2);
+        return;
+      }
+      const pad = { l: 50, r: 20, t: 20, b: 30 };
+      const xs = hist.map(x => x.day);
+      const ys = hist.map(x => x.sofr);
+      const minY = Math.min(...ys) - 0.1;
+      const maxY = Math.max(...ys) + 0.1;
+      const xScale = (d) => pad.l + (d - Math.min(...xs)) / Math.max(1, Math.max(...xs) - Math.min(...xs)) * (w - pad.l - pad.r);
+      const yScale = (v) => pad.t + (maxY - v) / (maxY - minY) * (h - pad.t - pad.b);
+
+      ctx.strokeStyle = "#333";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#00f0ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      hist.forEach((p, i) => {
+        const x = xScale(p.day), y = yScale(p.sofr);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = "#00f0ff";
+      hist.forEach(p => {
+        const x = xScale(p.day), y = yScale(p.sofr);
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ccc";
+        ctx.font = "11px IBM Plex Mono, monospace";
+        ctx.fillText(p.sofr.toFixed(2), x - 12, y - 8);
+        ctx.fillStyle = "#00f0ff";
+      });
+
+      ctx.fillStyle = "#888";
+      ctx.font = "11px IBM Plex Sans, sans-serif";
+      ctx.fillText("SOFR %", 8, 16);
+      ctx.fillText("Day", w - 40, h - 8);
+    }
+
+    function drawLeaderboard() {
+      const el = $("leaderboard");
+      if (!el) return;
+      const ranked = state.banks
+        .filter(b => !b.isBot)
+        .map(b => ({ name: b.name, equity: b.equity, pnl: (b.equity - 10) }))
+        .sort((a, b) => b.equity - a.equity);
+      if (ranked.length === 0) { el.innerHTML = ""; return; }
+      el.innerHTML = `<h3 style="margin:0 0 8px;color:var(--gold);font-size:14px;">Leaderboard (by equity / cumulative NIM)</h3>` +
+        ranked.map((b, i) => `<div style="font-size:13px;margin:2px 0;">${i+1}. ${b.name} — equity $${b.equity.toFixed(2)}B (Δ ${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(3)}B)</div>`).join("");
+
+      // Simple bar chart of equity
+      const canvas = $("bank-chart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const pad = { l: 40, r: 20, t: 20, b: 40 };
+      const maxEq = Math.max(...ranked.map(b => b.equity), 10.1);
+      const minEq = Math.min(...ranked.map(b => b.equity), 9.9);
+      const barW = (w - pad.l - pad.r) / ranked.length * 0.7;
+      ranked.forEach((b, i) => {
+        const x = pad.l + i * ((w - pad.l - pad.r) / ranked.length) + 10;
+        const barH = ((b.equity - minEq) / (maxEq - minEq || 1)) * (h - pad.t - pad.b);
+        const y = h - pad.b - barH;
+        ctx.fillStyle = i === 0 ? "#00f0ff" : "#666";
+        ctx.fillRect(x, y, barW, barH);
+        ctx.fillStyle = "#ccc";
+        ctx.font = "11px IBM Plex Sans, sans-serif";
+        ctx.fillText(b.name.slice(0, 10), x, h - 12);
+        ctx.fillText(b.equity.toFixed(2), x, y - 4);
+      });
+    }
+
     function calcSOFR() {
       const sofr = volumeWeightedMedian(state.trades);
       state.sofr = sofr;
@@ -863,6 +956,7 @@
       }
       $("sofr-display").textContent = fmtPct(sofr);
       save();
+      drawSOFRChart();
     }
 
     function advanceDay() {
@@ -894,6 +988,8 @@
       $("shock-banner").style.display = "none";
       renderAll();
       save();
+      drawSOFRChart();
+      drawLeaderboard();
       alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.`);
     }
 
@@ -938,6 +1034,8 @@
       renderTrades();
       $("day-display").textContent = state.day;
       $("sofr-display").textContent = fmtPct(state.sofr);
+      drawSOFRChart();
+      drawLeaderboard();
     }
 
     // ---------- Tabs ----------
