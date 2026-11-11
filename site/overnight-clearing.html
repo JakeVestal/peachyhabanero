@@ -916,29 +916,87 @@
         .sort((a, b) => b.equity - a.equity);
       if (ranked.length === 0) { el.innerHTML = ""; return; }
       el.innerHTML = `<h3 style="margin:0 0 8px;color:var(--gold);font-size:14px;">Leaderboard (by equity / cumulative NIM)</h3>` +
-        ranked.map((b, i) => `<div style="font-size:13px;margin:2px 0;">${i+1}. ${b.name} — equity $${b.equity.toFixed(2)}B (Δ ${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(3)}B)</div>`).join("");
+        ranked.map((b, i) => `<div style="font-size:13px;margin:2px 0;">${i+1}. ${b.name} — equity $${b.equity.toFixed(3)}B (cumulative Δ ${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(3)}B from start)</div>`).join("") +
+        `<p class="sub" style="margin-top:6px;">Starting equity is $10B. Delta updates only after you Advance Day (P&L accrues overnight).</p>`;
 
-      // Simple bar chart of equity
+      // Multi-line equity chart over days
       const canvas = $("bank-chart");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       const w = canvas.width, h = canvas.height;
       ctx.clearRect(0, 0, w, h);
-      const pad = { l: 40, r: 20, t: 20, b: 40 };
-      const maxEq = Math.max(...ranked.map(b => b.equity), 10.1);
-      const minEq = Math.min(...ranked.map(b => b.equity), 9.9);
-      const barW = (w - pad.l - pad.r) / ranked.length * 0.7;
-      ranked.forEach((b, i) => {
-        const x = pad.l + i * ((w - pad.l - pad.r) / ranked.length) + 10;
-        const barH = ((b.equity - minEq) / (maxEq - minEq || 1)) * (h - pad.t - pad.b);
-        const y = h - pad.b - barH;
-        ctx.fillStyle = i === 0 ? "#00f0ff" : "#666";
-        ctx.fillRect(x, y, barW, barH);
-        ctx.fillStyle = "#ccc";
-        ctx.font = "11px IBM Plex Sans, sans-serif";
-        ctx.fillText(b.name.slice(0, 10), x, h - 12);
-        ctx.fillText(b.equity.toFixed(2), x, y - 4);
+
+      // Build series: history + current
+      const series = {};
+      state.banks.filter(b => !b.isBot).forEach(b => { series[b.name] = []; });
+      state.history.forEach(h => {
+        if (h.banks) {
+          h.banks.filter(bb => !bb.isBot).forEach(bb => {
+            if (series[bb.name]) series[bb.name].push({ day: h.day, equity: bb.equity });
+          });
+        }
       });
+      // Current day point (if any equity change already applied, or just starting)
+      Object.keys(series).forEach(name => {
+        const b = state.banks.find(x => x.name === name);
+        if (b) series[name].push({ day: state.day, equity: b.equity });
+      });
+
+      const allPoints = Object.values(series).flat();
+      if (allPoints.length === 0) {
+        ctx.fillStyle = "#888";
+        ctx.font = "14px IBM Plex Sans, sans-serif";
+        ctx.fillText("Equity history will appear after the first Advance Day", 20, h/2);
+        return;
+      }
+
+      const days = [...new Set(allPoints.map(p => p.day))].sort((a,b)=>a-b);
+      const eqs = allPoints.map(p => p.equity);
+      const minY = Math.min(...eqs) - 0.01;
+      const maxY = Math.max(...eqs) + 0.01;
+      const pad = { l: 55, r: 20, t: 20, b: 30 };
+      const xScale = (d) => pad.l + (days.length <= 1 ? 0.5 : (d - days[0]) / (days[days.length-1] - days[0])) * (w - pad.l - pad.r);
+      const yScale = (v) => pad.t + (maxY - v) / (maxY - minY || 1) * (h - pad.t - pad.b);
+
+      // Axes
+      ctx.strokeStyle = "#333";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+
+      const colors = ["#00f0ff", "#ff2bd6", "#ffd166", "#06d6a0", "#ef476f", "#118ab2"];
+      Object.keys(series).forEach((name, idx) => {
+        const pts = series[name].sort((a,b)=>a.day-b.day);
+        if (pts.length === 0) return;
+        ctx.strokeStyle = colors[idx % colors.length];
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        pts.forEach((p, i) => {
+          const x = xScale(p.day), y = yScale(p.equity);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        // points + label
+        pts.forEach(p => {
+          const x = xScale(p.day), y = yScale(p.equity);
+          ctx.fillStyle = colors[idx % colors.length];
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI*2);
+          ctx.fill();
+        });
+        // name at end
+        const last = pts[pts.length-1];
+        ctx.fillStyle = colors[idx % colors.length];
+        ctx.font = "11px IBM Plex Sans, sans-serif";
+        ctx.fillText(name.slice(0,12), xScale(last.day) + 4, yScale(last.equity) - 4);
+      });
+
+      ctx.fillStyle = "#888";
+      ctx.font = "11px IBM Plex Sans, sans-serif";
+      ctx.fillText("Equity $B", 4, 14);
+      ctx.fillText("Day", w - 40, h - 8);
     }
 
     function calcSOFR() {
