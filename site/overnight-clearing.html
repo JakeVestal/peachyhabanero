@@ -486,7 +486,7 @@
     function pullFromSheet() {
       return new Promise((resolve, reject) => {
         let url = $("sheet-url").value.trim();
-        if (!url) return resolve({ added: 0, residualFilled: 0, parked: 0, warnings: ["No sheet URL — skipped pull"] });
+        if (!url) return resolve({ added: 0, residualFilled: 0, parked: 0, warnings: [], clean: true });
 
         const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
         if (idMatch) {
@@ -527,11 +527,12 @@
               if (row.some(x => x)) rows.push(row);
             }
 
-            if (rows.length < 2) return resolve({ added: 0, residualFilled: 0, parked: 0, warnings: ["Sheet empty or not readable"] });
+            if (rows.length < 2) return resolve({ added: 0, residualFilled: 0, parked: 0, warnings: ["Sheet empty or not readable"], clean: false });
 
             const header = rows[0].map(h => h.toLowerCase().trim());
             const col = name => header.findIndex(h => h.includes(name.toLowerCase()));
 
+            const iDay = col("day");
             const iLender = col("lender");
             const iBorrower = col("borrower");
             const iVol = col("volume");
@@ -540,10 +541,7 @@
             const iResidual = col("trade residual");
             const iPark = col("park excess");
 
-            state.trades = [];
-            let added = 0;
-            const warnings = [];
-
+            const bankNames = new Set(state.banks.map(b => b.name));
             const remainingCash = {};
             const remainingCollat = {};
             state.banks.forEach(b => {
@@ -551,48 +549,83 @@
               remainingCollat[b.name] = b.treasuries;
             });
 
+            const errors = [];
+            const candidateTrades = [];
+
             for (let i = 1; i < rows.length; i++) {
               const parts = rows[i];
               if (parts.length < 4) continue;
-              const lender = parts[iLender] || "";
-              const borrower = parts[iBorrower] || "";
+
+              // Only consider rows for the current day
+              if (iDay >= 0) {
+                const rowDay = parseInt(parts[iDay], 10);
+                if (isNaN(rowDay) || rowDay !== state.day) continue;
+              }
+
+              const lender = (parts[iLender] || "").trim();
+              const borrower = (parts[iBorrower] || "").trim();
               const vol = parseFloat(parts[iVol]);
               const rate = parseFloat(parts[iRate]);
-              if (!(lender && borrower && !isNaN(vol) && vol > 0 && !isNaN(rate))) continue;
 
-              const lenderCash = remainingCash[lender] || 0;
-              const borrowerCollat = remainingCollat[borrower] || 0;
-              if (lenderCash < vol - 0.1) {
-                warnings.push(`${lender} tried to lend ${vol}B but only has ${lenderCash.toFixed(1)}B cash — skipped`);
-                continue;
+              if (!lender || !borrower || isNaN(vol) || vol <= 0 || isNaN(rate)) continue;
+
+              // Unknown bank check
+              if (!bankNames.has(lender) && lender !== "Fed SRF" && lender !== "Fed ON RRP" && lender !== "Fed IORB") {
+                errors.push(`Unknown lender "${lender}" (row ${i+1})`);
               }
-              if (borrowerCollat < vol - 0.1) {
-                warnings.push(`${borrower} tried to borrow ${vol}B but only has ${borrowerCollat.toFixed(1)}B Treasuries — skipped`);
-                continue;
+              if (!bankNames.has(borrower) && borrower !== "Fed SRF" && borrower !== "Fed ON RRP" && borrower !== "Fed IORB") {
+                errors.push(`Unknown borrower "${borrower}" (row ${i+1})`);
               }
 
-              state.trades.push({
-                lender,
-                borrower,
-                volume: vol,
-                rate: rate,
+              // Capacity checks (only for known student/MM banks)
+              if (bankNames.has(lender)) {
+                const avail = remainingCash[lender] || 0;
+                if (avail < vol - 0.1) {
+                  errors.push(`${lender} tried to lend ${vol}B but only has ${avail.toFixed(1)}B cash (row ${i+1})`);
+                } else {
+                  remainingCash[lender] -= vol;
+                }
+              }
+              if (bankNames.has(borrower)) {
+                const collat = remainingCollat[borrower] || 0;
+                if (collat < vol - 0.1) {
+                  errors.push(`${borrower} tried to borrow ${vol}B but only has ${collat.toFixed(1)}B Treasuries (row ${i+1})`);
+                } else {
+                  remainingCollat[borrower] -= vol;
+                }
+              }
+
+              candidateTrades.push({
+                lender, borrower, volume: vol, rate,
                 note: (iNotes >= 0 ? parts[iNotes] : "") || "from sheet"
               });
-              remainingCash[lender] -= vol;
-              remainingCollat[borrower] -= vol;
-              added++;
             }
 
+            // Residual / park flags (also only current-day rows)
             const residualBanks = new Set();
             const parkBanks = new Set();
             for (let i = 1; i < rows.length; i++) {
               const parts = rows[i];
+              if (iDay >= 0) {
+                const rowDay = parseInt(parts[iDay], 10);
+                if (isNaN(rowDay) || rowDay !== state.day) continue;
+              }
               const bankName = (parts[iLender] || parts[iBorrower] || "").trim();
               if (!bankName) continue;
               if (iResidual >= 0 && String(parts[iResidual]).toUpperCase() === "TRUE") residualBanks.add(bankName);
               if (iPark >= 0 && String(parts[iPark]).toUpperCase() === "TRUE") parkBanks.add(bankName);
             }
 
+            if (errors.length > 0) {
+              return resolve({
+                added: 0, residualFilled: 0, parked: 0,
+                warnings: errors,
+                clean: false
+              });
+            }
+
+            // All good — apply
+            state.trades = candidateTrades;
             let residualFilled = 0;
             let parked = 0;
             state.banks.forEach(b => {
@@ -645,7 +678,7 @@
             renderBanks();
             renderTrades();
             save();
-            resolve({ added, residualFilled, parked, warnings });
+            resolve({ added: candidateTrades.length, residualFilled, parked, warnings: [], clean: true });
           })
           .catch(err => reject(err));
       });
@@ -894,9 +927,11 @@
     function advanceDay() {
       pullFromSheet()
         .then(result => {
-          let msg = `Pulled ${result.added} trades. Residual fills: ${result.residualFilled}. IORB parks: ${result.parked}.`;
-          if (result.warnings && result.warnings.length) msg += "\n\nWarnings:\n" + result.warnings.join("\n");
-          if (result.warnings && result.warnings.length) alert(msg);
+          if (!result.clean) {
+            const msg = "Cannot advance — fix the sheet first:\n\n" + (result.warnings || []).join("\n");
+            alert(msg);
+            return; // no state changes, no advance
+          }
 
           if (state.sofr == null && state.trades.length > 0) {
             if (!confirm("SOFR has not been calculated yet. Calculate it first?")) return;
@@ -930,7 +965,7 @@
           save();
           drawSOFRChart();
           drawLeaderboard();
-          alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.\n` + msg);
+          alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.\nPulled ${result.added} trades. Residual fills: ${result.residualFilled}. IORB parks: ${result.parked}.`);
         })
         .catch(err => alert("Could not pull from sheet before advancing:\n" + err));
     }
