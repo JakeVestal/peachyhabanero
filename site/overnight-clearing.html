@@ -94,7 +94,10 @@
         </select>
         <button class="neon-btn" id="apply-card">Apply Selected Card (systemic)</button>
         <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
-        <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
+        <div style="margin-top:10px;font-size:13px;">
+          Google Sheet URL: <input id="sheet-url" type="text" placeholder="Paste the normal Google Sheets link (edit or view)" style="width:420px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px;">
+          <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
+        </div>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
           <select id="shock-bank" style="background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px 8px;"></select>
@@ -969,6 +972,34 @@
     $("add-trade").onclick = addTrade;
     $("calc-sofr").onclick = calcSOFR;
     $("grade-quiz").onclick = gradeQuiz;
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `overnight-clearing-day${state.day}.json`;
+      a.click();
+    }
+    function exportCSV() {
+      const rows = [["Bank","Cash","Treasuries","Volatile","Equity","DayPnL"]];
+      state.banks.forEach(b => rows.push([b.name, b.cash, b.treasuries, b.volatile, b.equity, b.dayPnL || ""]));
+      const csv = rows.map(r => r.join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `banks-day${state.day}.csv`;
+      a.click();
+    }
+    function exportHistory() {
+      const rows = [["Day","SOFR","Volume"]];
+      state.history.forEach(h => rows.push([h.day, h.sofr, h.volume]));
+      const csv = rows.map(r => r.join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "sofr-history.csv";
+      a.click();
+    }
+
     $("export-json").onclick = exportJSON;
     $("export-csv").onclick = exportCSV;
     $("export-history").onclick = exportHistory;
