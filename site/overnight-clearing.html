@@ -94,6 +94,7 @@
         </select>
         <button class="neon-btn" id="apply-card">Apply Selected Card (systemic)</button>
         <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
+        <button class="neon-btn" id="trade-mms" style="background:rgba(255,200,0,0.12);">Trade Residual with Market Makers</button>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
           <select id="shock-bank" style="background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px 8px;"></select>
@@ -420,6 +421,82 @@
       save();
     }
 
+    function ensureMarketMakers() {
+      const hasBid = state.banks.some(b => b.name === "MM Bid");
+      const hasOffer = state.banks.some(b => b.name === "MM Offer");
+      if (!hasBid) {
+        state.banks.push({
+          name: "MM Bid",
+          isBot: true,
+          lendRate: 4.10,
+          borrowRate: 4.10,
+          ...JSON.parse(JSON.stringify(STARTING_BS)),
+          cash: 10, volatile: 10
+        });
+      }
+      if (!hasOffer) {
+        state.banks.push({
+          name: "MM Offer",
+          isBot: true,
+          lendRate: 4.35,
+          borrowRate: 4.35,
+          ...JSON.parse(JSON.stringify(STARTING_BS)),
+          cash: -8, volatile: 12
+        });
+      }
+    }
+
+    function tradeResidualWithMMs() {
+      const bots = state.banks.filter(b => b.isBot);
+      const humans = state.banks.filter(b => !b.isBot);
+      if (bots.length === 0 || humans.length === 0) return alert("Need both student banks and market makers");
+
+      let filled = 0;
+      humans.forEach(h => {
+        const gap = h.cash;
+        if (Math.abs(gap) < 0.1) return;
+
+        if (gap < 0) {
+          const mm = bots.find(b => b.name === "MM Bid") || bots[0];
+          const size = Math.min(Math.abs(gap), 8);
+          if (size > 0.1 && h.treasuries >= size) {
+            state.trades.push({
+              lender: mm.name,
+              borrower: h.name,
+              volume: size,
+              rate: mm.lendRate || 4.10,
+              note: "MM residual"
+            });
+            h.cash += size;
+            h.volatile += size;
+            mm.cash -= size;
+            filled++;
+          }
+        } else {
+          const mm = bots.find(b => b.name === "MM Offer") || bots[1] || bots[0];
+          const size = Math.min(gap, 8);
+          if (size > 0.1) {
+            state.trades.push({
+              lender: h.name,
+              borrower: mm.name,
+              volume: size,
+              rate: mm.borrowRate || 4.35,
+              note: "MM residual"
+            });
+            h.cash -= size;
+            h.volatile -= size;
+            mm.cash += size;
+            filled++;
+          }
+        }
+      });
+
+      renderBanks();
+      renderTrades();
+      save();
+      alert(`Filled ${filled} residual positions against market makers.`);
+    }
+
     function randomizeShocks() {
       if (state.banks.length === 0) return alert("Add banks first");
       // Discrete set that produces both borrowers and lenders; regenerate if all same sign
@@ -525,7 +602,7 @@
         const div = document.createElement("div");
         div.className = "bank-card";
         div.innerHTML = `
-          <h3>${b.name || "Bank " + (i+1)} <button class="neon-btn" style="font-size:10px;padding:2px 8px;" onclick="removeBank(${i})">×</button></h3>
+          <h3>${b.name || "Bank " + (i+1)} ${b.isBot ? '<span style="color:var(--gold);font-size:11px">[MM]</span>' : ''} <button class="neon-btn" style="font-size:10px;padding:2px 8px;" onclick="removeBank(${i})">×</button></h3>
           <table class="bs-table">
             <tr><td>Fixed loans (6.50%)</td><td>${fmtB(b.fixedLoans)}</td></tr>
             <tr><td>Floating (SOFR+100)</td><td>${fmtB(b.floatingAssets)}</td></tr>
@@ -540,6 +617,7 @@
           <div style="font-size:12px;color:var(--muted);margin-top:6px;">
             Funding need / surplus: <span class="${gap < 0 ? 'gap-negative' : 'gap-positive'}">${fmtB(gap)}</span><br/>
             Available collateral: ${fmtB(b.treasuries)} ${collatOk ? '<span style="color:var(--lime)">(covers gap)</span>' : '<span style="color:#ff6b6b">(insufficient for full gap)</span>'}
+            ${b.isBot ? '<br/>Standing rate: ' + (b.lendRate||b.borrowRate).toFixed(2) + '%' : ''}
           </div>
         `;
         c.appendChild(div);
@@ -698,6 +776,7 @@
     $("advance-day").onclick = advanceDay;
     $("apply-card").onclick = applyCard;
     $("random-shocks").onclick = randomizeShocks;
+    $("trade-mms").onclick = tradeResidualWithMMs;
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
     $("add-onrrp").onclick = () => addFedTrade("onrrp");
@@ -710,12 +789,16 @@
     $("export-csv").onclick = exportCSV;
     $("export-history").onclick = exportHistory;
 
-    // Auto-add a couple banks on first load if empty
+    // Auto-add student banks + market makers on first load if empty
     if (state.banks.length === 0) {
       state.banks.push({ name: "Bank Alpha", ...JSON.parse(JSON.stringify(STARTING_BS)) });
       state.banks.push({ name: "Bank Beta", ...JSON.parse(JSON.stringify(STARTING_BS)) });
+      ensureMarketMakers();
       renderBanks();
       save();
+    } else {
+      ensureMarketMakers();
+      renderBanks();
     }
   </script>
 </body>
