@@ -96,7 +96,6 @@
         <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
         <div style="margin-top:10px;font-size:13px;">
           Google Sheet URL: <input id="sheet-url" type="text" placeholder="Paste the normal Google Sheets link (edit or view)" style="width:420px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px;">
-          <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
         </div>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
@@ -435,11 +434,10 @@
         });
       } else if (card.shock && card.shock.type === "dealerStress") {
         state.dealerStress = true;
-        // Limit MM capacity: mark them constrained and reduce their available size
         state.banks.forEach(b => {
           if (b.isBot) {
             b.constrained = true;
-            b.maxResidual = 1; // only tiny residual capacity left
+            b.maxResidual = 1;
           }
         });
       }
@@ -452,7 +450,6 @@
     function ensureMarketMakers() {
       const srf = parseFloat($("srf-rate")?.value) || 4.50;
       const onrrp = parseFloat($("onrrp-rate")?.value) || 4.25;
-      // MMs quote inside the corridor: bid a bit above floor, offer a bit below ceiling
       const bidRate = Math.max(onrrp + 0.05, onrrp);
       const offerRate = Math.min(srf - 0.05, srf);
 
@@ -486,185 +483,94 @@
       }
     }
 
-    function tradeResidualWithMMs() {
-      const bots = state.banks.filter(b => b.isBot);
-      const humans = state.banks.filter(b => !b.isBot);
-      if (bots.length === 0 || humans.length === 0) return alert("Need both student banks and market makers");
-
-      let filled = 0;
-      humans.forEach(h => {
-        const gap = h.cash;
-        if (Math.abs(gap) < 0.1) return;
-
-        if (gap < 0) {
-          const mm = bots.find(b => b.name === "MM Bid") || bots[0];
-          const size = Math.min(Math.abs(gap), 8);
-          if (size > 0.1 && h.treasuries >= size) {
-            state.trades.push({
-              lender: mm.name,
-              borrower: h.name,
-              volume: size,
-              rate: mm.lendRate || 4.10,
-              note: "MM residual"
-            });
-            h.cash += size;
-            h.volatile += size;
-            mm.cash -= size;
-            filled++;
-          }
-        } else {
-          const mm = bots.find(b => b.name === "MM Offer") || bots[1] || bots[0];
-          const size = Math.min(gap, 8);
-          if (size > 0.1) {
-            state.trades.push({
-              lender: h.name,
-              borrower: mm.name,
-              volume: size,
-              rate: mm.borrowRate || 4.35,
-              note: "MM residual"
-            });
-            h.cash -= size;
-            h.volatile -= size;
-            mm.cash += size;
-            filled++;
-          }
-        }
-      });
-
-      renderBanks();
-      renderTrades();
-      save();
-      // Copy residual trades to clipboard as CSV for easy paste into the sheet
-      const residual = state.trades.filter(t => t.note === "MM residual");
-      if (residual.length) {
-        const csv = residual.map(t => `${state.day},${t.lender},${t.borrower},${t.volume},${t.rate},MM residual`).join("\n");
-        navigator.clipboard.writeText(csv).then(() => {
-          alert(`Filled ${filled} residual positions against market makers.\nCSV rows copied to clipboard — paste into the shared sheet.`);
-        }).catch(() => {
-          alert(`Filled ${filled} residual positions against market makers.\n(Clipboard copy failed — copy manually from the trade list.)`);
-        });
-      } else {
-        alert(`Filled ${filled} residual positions against market makers.`);
-      }
-    }
-
-    function randomizeShocks() {
-      if (state.banks.length === 0) return alert("Add banks first");
-      // Discrete set that produces both borrowers and lenders; regenerate if all same sign
-      const options = [-9, -7, -5, -3, -1, 2, 4, 6, 8];
-      let shocks, hasPos, hasNeg, attempts = 0;
-      do {
-        shocks = state.banks.map(() => options[Math.floor(Math.random() * options.length)]);
-        hasPos = shocks.some(s => s > 0);
-        hasNeg = shocks.some(s => s < 0);
-        attempts++;
-      } while ((!hasPos || !hasNeg) && attempts < 20);
-
-      const summary = [];
-      state.banks.forEach((b, i) => {
-        const amt = shocks[i];
-        b.volatile += amt;
-        b.cash += amt;
-        summary.push(`${b.name}: ${amt > 0 ? "+" : ""}${amt}B`);
-      });
-
-      renderBanks();
-      save();
-      $("shock-banner").style.display = "block";
-      $("shock-banner").innerHTML = `<strong>Random liquidity shocks applied</strong><br>${summary.join(" · ")}<br><em>Positive = surplus cash to lend; negative = funding need.</em>`;
-    }
-
-    function applyBankShock() {
-      const bankIdx = parseInt($("shock-bank").value);
-      const field = $("shock-field").value;
-      const amt = parseFloat($("shock-amount").value) || 0;
-      if (isNaN(bankIdx) || !state.banks[bankIdx]) return alert("Select a bank");
-      const b = state.banks[bankIdx];
-      if (field === "volatile") {
-        b.volatile += amt;
-        b.cash += amt;
-      } else if (field === "cash") {
-        b.cash += amt;
-      } else if (field === "treasuries") {
-        b.treasuries += amt;
-        b.cash -= amt;
-      }
-      renderBanks();
-      save();
-      $("shock-banner").style.display = "block";
-      $("shock-banner").innerHTML = `Applied ${amt > 0 ? "+" : ""}${amt}B to ${field} for ${b.name}.`;
-    }
-
     function pullFromSheet() {
-      let url = $("sheet-url").value.trim();
-      if (!url) return alert("Paste a Google Sheet URL first");
+      return new Promise((resolve, reject) => {
+        let url = $("sheet-url").value.trim();
+        if (!url) return resolve({ added: 0, residualFilled: 0, parked: 0, warnings: ["No sheet URL — skipped pull"] });
 
-      // Convert normal edit URL to CSV export URL
-      const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-      if (idMatch) {
-        const sheetId = idMatch[1];
-        const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
-        const gid = gidMatch ? gidMatch[1] : "0";
-        url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-      }
+        const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (idMatch) {
+          const sheetId = idMatch[1];
+          const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
+          const gid = gidMatch ? gidMatch[1] : "0";
+          url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+        }
 
-      fetch(url)
-        .then(r => {
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          return r.text();
-        })
-        .then(text => {
-          // Basic CSV parse that respects quotes
-          const rows = [];
-          let row = [], cur = "", inQuotes = false;
-          for (let i = 0; i < text.length; i++) {
-            const c = text[i];
-            if (c === '"') {
-              if (inQuotes && text[i+1] === '"') { cur += '"'; i++; }
-              else inQuotes = !inQuotes;
-            } else if (c === "," && !inQuotes) {
-              row.push(cur.trim());
-              cur = "";
-            } else if ((c === "\n" || c === "\r") && !inQuotes) {
-              if (c === "\r" && text[i+1] === "\n") i++;
+        fetch(url)
+          .then(r => {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.text();
+          })
+          .then(text => {
+            const rows = [];
+            let row = [], cur = "", inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+              const c = text[i];
+              if (c === '"') {
+                if (inQuotes && text[i+1] === '"') { cur += '"'; i++; }
+                else inQuotes = !inQuotes;
+              } else if (c === "," && !inQuotes) {
+                row.push(cur.trim());
+                cur = "";
+              } else if ((c === "\n" || c === "\r") && !inQuotes) {
+                if (c === "\r" && text[i+1] === "\n") i++;
+                row.push(cur.trim());
+                if (row.some(x => x)) rows.push(row);
+                row = [];
+                cur = "";
+              } else {
+                cur += c;
+              }
+            }
+            if (cur || row.length) {
               row.push(cur.trim());
               if (row.some(x => x)) rows.push(row);
-              row = [];
-              cur = "";
-            } else {
-              cur += c;
             }
-          }
-          if (cur || row.length) {
-            row.push(cur.trim());
-            if (row.some(x => x)) rows.push(row);
-          }
 
-          if (rows.length < 2) return alert("Sheet appears empty or not publicly readable as CSV.");
+            if (rows.length < 2) return resolve({ added: 0, residualFilled: 0, parked: 0, warnings: ["Sheet empty or not readable"] });
 
-          const header = rows[0].map(h => h.toLowerCase().trim());
-          const col = name => header.findIndex(h => h.includes(name.toLowerCase()));
+            const header = rows[0].map(h => h.toLowerCase().trim());
+            const col = name => header.findIndex(h => h.includes(name.toLowerCase()));
 
-          const iLender = col("lender");
-          const iBorrower = col("borrower");
-          const iVol = col("volume");
-          const iRate = col("rate");
-          const iNotes = col("notes");
-          const iResidual = col("trade residual");
-          const iPark = col("park excess");
+            const iLender = col("lender");
+            const iBorrower = col("borrower");
+            const iVol = col("volume");
+            const iRate = col("rate");
+            const iNotes = col("notes");
+            const iResidual = col("trade residual");
+            const iPark = col("park excess");
 
-          // Clear existing trades then load
-          state.trades = [];
-          let added = 0;
+            state.trades = [];
+            let added = 0;
+            const warnings = [];
 
-          for (let i = 1; i < rows.length; i++) {
-            const parts = rows[i];
-            if (parts.length < 4) continue;
-            const lender = parts[iLender] || "";
-            const borrower = parts[iBorrower] || "";
-            const vol = parseFloat(parts[iVol]);
-            const rate = parseFloat(parts[iRate]);
-            if (lender && borrower && !isNaN(vol) && vol > 0 && !isNaN(rate)) {
+            const remainingCash = {};
+            const remainingCollat = {};
+            state.banks.forEach(b => {
+              remainingCash[b.name] = b.cash;
+              remainingCollat[b.name] = b.treasuries;
+            });
+
+            for (let i = 1; i < rows.length; i++) {
+              const parts = rows[i];
+              if (parts.length < 4) continue;
+              const lender = parts[iLender] || "";
+              const borrower = parts[iBorrower] || "";
+              const vol = parseFloat(parts[iVol]);
+              const rate = parseFloat(parts[iRate]);
+              if (!(lender && borrower && !isNaN(vol) && vol > 0 && !isNaN(rate))) continue;
+
+              const lenderCash = remainingCash[lender] || 0;
+              const borrowerCollat = remainingCollat[borrower] || 0;
+              if (lenderCash < vol - 0.1) {
+                warnings.push(`${lender} tried to lend ${vol}B but only has ${lenderCash.toFixed(1)}B cash — skipped`);
+                continue;
+              }
+              if (borrowerCollat < vol - 0.1) {
+                warnings.push(`${borrower} tried to borrow ${vol}B but only has ${borrowerCollat.toFixed(1)}B Treasuries — skipped`);
+                continue;
+              }
+
               state.trades.push({
                 lender,
                 borrower,
@@ -672,140 +578,77 @@
                 rate: rate,
                 note: (iNotes >= 0 ? parts[iNotes] : "") || "from sheet"
               });
+              remainingCash[lender] -= vol;
+              remainingCollat[borrower] -= vol;
               added++;
             }
-          }
 
-          // Apply student decisions for residual / IORB
-          // For simplicity: if any row has TRUE in the residual or park column for a bank, apply it to that bank's current cash gap
-          const residualBanks = new Set();
-          const parkBanks = new Set();
-          for (let i = 1; i < rows.length; i++) {
-            const parts = rows[i];
-            const bankName = (parts[iLender] || parts[iBorrower] || "").trim();
-            if (!bankName) continue;
-            if (iResidual >= 0 && String(parts[iResidual]).toUpperCase() === "TRUE") residualBanks.add(bankName);
-            if (iPark >= 0 && String(parts[iPark]).toUpperCase() === "TRUE") parkBanks.add(bankName);
-          }
-
-          let residualFilled = 0;
-          let parked = 0;
-          state.banks.forEach(b => {
-            if (b.isBot) return;
-            const gap = b.cash;
-            if (Math.abs(gap) < 0.1) return;
-
-            if (residualBanks.has(b.name) && gap < 0) {
-              const mm = state.banks.find(x => x.name === "MM Bid") || state.banks.find(x => x.isBot);
-              if (mm) {
-                const maxSize = mm.constrained ? (mm.maxResidual || 1) : 8;
-                const size = Math.min(Math.abs(gap), maxSize);
-                if (size > 0.1) {
-                  state.trades.push({
-                    lender: mm.name,
-                    borrower: b.name,
-                    volume: size,
-                    rate: state.dealerStress ? (parseFloat($("srf-rate").value) || 4.50) : (mm.lendRate || 4.30),
-                    note: state.dealerStress ? "SRF (dealers constrained)" : "MM residual (student choice)"
-                  });
-                  b.cash += size;
-                  residualFilled++;
-                }
-                // Any remaining gap under dealer stress goes explicitly to SRF
-                const remaining = Math.abs(gap) - size;
-                if (state.dealerStress && remaining > 0.1) {
-                  state.trades.push({
-                    lender: "Fed SRF",
-                    borrower: b.name,
-                    volume: remaining,
-                    rate: parseFloat($("srf-rate").value) || 4.50,
-                    note: "SRF forced (dealers pulled back)"
-                  });
-                  b.cash += remaining;
-                }
-              }
-            } else if (parkBanks.has(b.name) && gap > 0) {
-              const rate = parseFloat($("iorb-rate").value) || 4.40;
-              state.trades.push({
-                lender: b.name,
-                borrower: "Fed IORB",
-                volume: gap,
-                rate: rate,
-                note: "IORB (student choice)"
-              });
-              b.cash = 0;
-              parked++;
+            const residualBanks = new Set();
+            const parkBanks = new Set();
+            for (let i = 1; i < rows.length; i++) {
+              const parts = rows[i];
+              const bankName = (parts[iLender] || parts[iBorrower] || "").trim();
+              if (!bankName) continue;
+              if (iResidual >= 0 && String(parts[iResidual]).toUpperCase() === "TRUE") residualBanks.add(bankName);
+              if (iPark >= 0 && String(parts[iPark]).toUpperCase() === "TRUE") parkBanks.add(bankName);
             }
-          });
 
-          renderBanks();
-          renderTrades();
-          save();
-          alert(`Pulled ${added} explicit trades.\nApplied residual MM to ${residualFilled} banks and IORB park to ${parked} banks based on sheet flags.`);
-        })
-        .catch(err => alert("Could not fetch sheet.\nMake sure the sheet is shared as 'Anyone with the link can view'.\n" + err));
-    }
+            let residualFilled = 0;
+            let parked = 0;
+            state.banks.forEach(b => {
+              if (b.isBot) return;
+              const gap = b.cash;
+              if (Math.abs(gap) < 0.1) return;
 
-    function parkAtIORB() {
-      const rate = parseFloat($("iorb-rate").value) || 0;
-      let parked = 0;
-      state.banks.forEach(b => {
-        if (!b.isBot && b.cash > 0.1) {
-          const size = b.cash;
-          state.trades.push({
-            lender: b.name,
-            borrower: "Fed IORB",
-            volume: size,
-            rate: rate,
-            note: "IORB"
-          });
-          b.cash = 0;
-          parked++;
-        }
-      });
-      renderBanks();
-      renderTrades();
-      save();
-      alert(`Parked excess cash for ${parked} banks at IORB ${rate.toFixed(2)}%.`);
-    }
-
-    function addFedTrade(type) {
-      const rate = parseFloat($(type === "srf" ? "srf-rate" : "onrrp-rate").value) || 0;
-      const bank = prompt(`Bank using ${type.toUpperCase()} (name):`);
-      if (!bank) return;
-      const vol = parseFloat(prompt("Volume $B:")) || 0;
-      if (vol <= 0) return;
-      state.trades.push({
-        lender: type === "onrrp" ? "Fed ON RRP" : bank,
-        borrower: type === "srf" ? "Fed SRF" : bank,
-        volume: vol,
-        rate: rate,
-        note: type.toUpperCase()
-      });
-      renderTrades();
-      save();
-    }
-
-    function importCSV(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const text = e.target.result;
-        const lines = text.trim().split(/\r?\n/).slice(1);
-        lines.forEach(line => {
-          const [day, lender, borrower, vol, rate] = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
-          if (lender && borrower && vol && rate) {
-            state.trades.push({
-              lender, borrower,
-              volume: parseFloat(vol) || 0,
-              rate: parseFloat(rate) || 0
+              if (residualBanks.has(b.name) && gap < 0) {
+                const mm = state.banks.find(x => x.name === "MM Bid") || state.banks.find(x => x.isBot);
+                if (mm) {
+                  const maxSize = mm.constrained ? (mm.maxResidual || 1) : 8;
+                  const size = Math.min(Math.abs(gap), maxSize, b.treasuries);
+                  if (size > 0.1) {
+                    state.trades.push({
+                      lender: mm.name,
+                      borrower: b.name,
+                      volume: size,
+                      rate: state.dealerStress ? (parseFloat($("srf-rate").value) || 4.50) : (mm.lendRate || 4.30),
+                      note: state.dealerStress ? "SRF (dealers constrained)" : "MM residual (student choice)"
+                    });
+                    b.cash += size;
+                    residualFilled++;
+                  }
+                  const remaining = Math.abs(gap) - size;
+                  if (state.dealerStress && remaining > 0.1) {
+                    state.trades.push({
+                      lender: "Fed SRF",
+                      borrower: b.name,
+                      volume: remaining,
+                      rate: parseFloat($("srf-rate").value) || 4.50,
+                      note: "SRF forced (dealers pulled back)"
+                    });
+                    b.cash += remaining;
+                  }
+                }
+              } else if (parkBanks.has(b.name) && gap > 0) {
+                const rate = parseFloat($("iorb-rate").value) || 4.40;
+                state.trades.push({
+                  lender: b.name,
+                  borrower: "Fed IORB",
+                  volume: gap,
+                  rate: rate,
+                  note: "IORB (student choice)"
+                });
+                b.cash = 0;
+                parked++;
+              }
             });
-          }
-        });
-        renderTrades();
-        save();
-        alert(`Imported ${lines.length} trade rows.`);
-      };
-      reader.readAsText(file);
+
+            renderBanks();
+            renderTrades();
+            save();
+            resolve({ added, residualFilled, parked, warnings });
+          })
+          .catch(err => reject(err));
+      });
     }
 
     function renderBanks() {
@@ -956,14 +799,12 @@
         ranked.map((b, i) => `<div style="font-size:13px;margin:2px 0;">${i+1}. ${b.name} — equity $${b.equity.toFixed(3)}B (cumulative Δ ${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(3)}B from start)</div>`).join("") +
         `<p class="sub" style="margin-top:6px;">Starting equity is $10B. Delta updates only after you Advance Day (P&L accrues overnight).</p>`;
 
-      // Multi-line equity chart over days
       const canvas = $("bank-chart");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       const w = canvas.width, h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      // Build series: history + current
       const series = {};
       state.banks.filter(b => !b.isBot).forEach(b => { series[b.name] = []; });
       state.history.forEach(h => {
@@ -973,7 +814,6 @@
           });
         }
       });
-      // Current day point (if any equity change already applied, or just starting)
       Object.keys(series).forEach(name => {
         const b = state.banks.find(x => x.name === name);
         if (b) series[name].push({ day: state.day, equity: b.equity });
@@ -995,7 +835,6 @@
       const xScale = (d) => pad.l + (days.length <= 1 ? 0.5 : (d - days[0]) / (days[days.length-1] - days[0])) * (w - pad.l - pad.r);
       const yScale = (v) => pad.t + (maxY - v) / (maxY - minY || 1) * (h - pad.t - pad.b);
 
-      // Axes
       ctx.strokeStyle = "#333";
       ctx.beginPath();
       ctx.moveTo(pad.l, pad.t);
@@ -1015,7 +854,6 @@
           if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         });
         ctx.stroke();
-        // points + label
         pts.forEach(p => {
           const x = xScale(p.day), y = yScale(p.equity);
           ctx.fillStyle = colors[idx % colors.length];
@@ -1023,7 +861,6 @@
           ctx.arc(x, y, 3, 0, Math.PI*2);
           ctx.fill();
         });
-        // name at end
         const last = pts[pts.length-1];
         ctx.fillStyle = colors[idx % colors.length];
         ctx.font = "11px IBM Plex Sans, sans-serif";
@@ -1055,40 +892,47 @@
     }
 
     function advanceDay() {
-      if (state.sofr == null && state.trades.length > 0) {
-        if (!confirm("SOFR has not been calculated yet. Calculate it first?")) return;
-        calcSOFR();
-      }
-      const dayFraction = 1/360;
-      state.banks.forEach(b => {
-        const floatYield = (state.sofr != null ? state.sofr : 0) + 1.0;
-        const interestIncome = (b.fixedLoans * 0.065 + b.floatingAssets * (floatYield/100)) * dayFraction * 1e9;
-        const interestExpense = (b.stickyDep * 0.035 + Math.max(0, -b.cash) * ((state.sofr||0)/100)) * dayFraction * 1e9;
-        const net = (interestIncome - interestExpense) / 1e9;
-        b.equity += net;
-        b.dayPnL = net;
-      });
-      state.history.push({
-        day: state.day,
-        sofr: state.sofr,
-        volume: state.trades.reduce((s,t)=>s+(t.volume||0),0),
-        banks: JSON.parse(JSON.stringify(state.banks))
-      });
-      state.day += 1;
-      state.trades = [];
-      state.sofr = null;
-      state.currentShock = null;
-      state.dealerStress = false;
-      // Reset MM constraints
-      state.banks.forEach(b => { if (b.isBot) { b.constrained = false; b.maxResidual = 8; } });
-      $("day-display").textContent = state.day;
-      $("sofr-display").textContent = "—";
-      $("shock-banner").style.display = "none";
-      renderAll();
-      save();
-      drawSOFRChart();
-      drawLeaderboard();
-      alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.`);
+      pullFromSheet()
+        .then(result => {
+          let msg = `Pulled ${result.added} trades. Residual fills: ${result.residualFilled}. IORB parks: ${result.parked}.`;
+          if (result.warnings && result.warnings.length) msg += "\n\nWarnings:\n" + result.warnings.join("\n");
+          if (result.warnings && result.warnings.length) alert(msg);
+
+          if (state.sofr == null && state.trades.length > 0) {
+            if (!confirm("SOFR has not been calculated yet. Calculate it first?")) return;
+            calcSOFR();
+          }
+          const dayFraction = 1/360;
+          state.banks.forEach(b => {
+            const floatYield = (state.sofr != null ? state.sofr : 0) + 1.0;
+            const interestIncome = (b.fixedLoans * 0.065 + b.floatingAssets * (floatYield/100)) * dayFraction * 1e9;
+            const interestExpense = (b.stickyDep * 0.035 + Math.max(0, -b.cash) * ((state.sofr||0)/100)) * dayFraction * 1e9;
+            const net = (interestIncome - interestExpense) / 1e9;
+            b.equity += net;
+            b.dayPnL = net;
+          });
+          state.history.push({
+            day: state.day,
+            sofr: state.sofr,
+            volume: state.trades.reduce((s,t)=>s+(t.volume||0),0),
+            banks: JSON.parse(JSON.stringify(state.banks))
+          });
+          state.day += 1;
+          state.trades = [];
+          state.sofr = null;
+          state.currentShock = null;
+          state.dealerStress = false;
+          state.banks.forEach(b => { if (b.isBot) { b.constrained = false; b.maxResidual = 8; } });
+          $("day-display").textContent = state.day;
+          $("sofr-display").textContent = "—";
+          $("shock-banner").style.display = "none";
+          renderAll();
+          save();
+          drawSOFRChart();
+          drawLeaderboard();
+          alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.\n` + msg);
+        })
+        .catch(err => alert("Could not pull from sheet before advancing:\n" + err));
     }
 
     function addBank() {
@@ -1136,7 +980,6 @@
       drawLeaderboard();
     }
 
-    // ---------- Tabs ----------
     document.querySelectorAll(".neon-btn[data-tab]").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".neon-btn[data-tab]").forEach(b => b.classList.remove("active"));
@@ -1146,7 +989,6 @@
       });
     });
 
-    // ---------- Init ----------
     load();
     populateCardSelect();
     renderCards();
@@ -1158,7 +1000,6 @@
     $("advance-day").onclick = advanceDay;
     $("apply-card").onclick = applyCard;
     $("random-shocks").onclick = randomizeShocks;
-    $("pull-sheet").onclick = pullFromSheet;
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
     $("srf-rate").onchange = $("onrrp-rate").onchange = () => { ensureMarketMakers(); renderBanks(); save(); };
@@ -1200,7 +1041,6 @@
     $("export-csv").onclick = exportCSV;
     $("export-history").onclick = exportHistory;
 
-    // Auto-add student banks + market makers on first load if empty
     if (state.banks.length === 0) {
       state.banks.push({ name: "Bank Alpha", ...JSON.parse(JSON.stringify(STARTING_BS)) });
       state.banks.push({ name: "Bank Beta", ...JSON.parse(JSON.stringify(STARTING_BS)) });
