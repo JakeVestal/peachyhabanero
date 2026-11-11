@@ -95,6 +95,10 @@
         <button class="neon-btn" id="apply-card">Apply Selected Card (systemic)</button>
         <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
         <button class="neon-btn" id="trade-mms" style="background:rgba(255,200,0,0.12);">Trade Residual with Market Makers</button>
+        <div style="margin-top:10px;font-size:13px;">
+          Google Sheet CSV URL: <input id="sheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv" style="width:420px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px;">
+          <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
+        </div>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
           <select id="shock-bank" style="background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px 8px;"></select>
@@ -117,8 +121,10 @@
       <div style="margin:8px 0;font-size:13px;">
         Fed backstops: SRF (penalty/ceiling) <input id="srf-rate" type="number" step="0.01" value="4.50" style="width:70px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);">%
         · ON RRP (floor) <input id="onrrp-rate" type="number" step="0.01" value="4.25" style="width:70px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);">%
+        · IORB <input id="iorb-rate" type="number" step="0.01" value="4.40" style="width:70px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);">%
         <button class="neon-btn" id="add-srf">+ SRF trade</button>
         <button class="neon-btn" id="add-onrrp">+ ON RRP trade</button>
+        <button class="neon-btn" id="park-iorb">Park excess at IORB</button>
       </div>
       <div id="trades-container"></div>
       <button class="neon-btn" id="add-trade">+ Add Private Trade</button>
@@ -506,7 +512,18 @@
       renderBanks();
       renderTrades();
       save();
-      alert(`Filled ${filled} residual positions against market makers.`);
+      // Copy residual trades to clipboard as CSV for easy paste into the sheet
+      const residual = state.trades.filter(t => t.note === "MM residual");
+      if (residual.length) {
+        const csv = residual.map(t => `${state.day},${t.lender},${t.borrower},${t.volume},${t.rate},GC,MM residual`).join("\n");
+        navigator.clipboard.writeText(csv).then(() => {
+          alert(`Filled ${filled} residual positions against market makers.\nCSV rows copied to clipboard — paste into the shared sheet.`);
+        }).catch(() => {
+          alert(`Filled ${filled} residual positions against market makers.\n(Clipboard copy failed — copy manually from the trade list.)`);
+        });
+      } else {
+        alert(`Filled ${filled} residual positions against market makers.`);
+      }
     }
 
     function randomizeShocks() {
@@ -554,6 +571,59 @@
       save();
       $("shock-banner").style.display = "block";
       $("shock-banner").innerHTML = `Applied ${amt > 0 ? "+" : ""}${amt}B to ${field} for ${b.name}.`;
+    }
+
+    function pullFromSheet() {
+      const url = $("sheet-url").value.trim();
+      if (!url) return alert("Paste a Google Sheet CSV export URL first");
+      fetch(url)
+        .then(r => r.text())
+        .then(text => {
+          const lines = text.trim().split(/\r?\n/).slice(1);
+          let added = 0;
+          lines.forEach(line => {
+            const parts = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
+            if (parts.length >= 5) {
+              const [day, lender, borrower, vol, rate] = parts;
+              if (lender && borrower && vol && rate) {
+                state.trades.push({
+                  lender, borrower,
+                  volume: parseFloat(vol) || 0,
+                  rate: parseFloat(rate) || 0,
+                  note: "from sheet"
+                });
+                added++;
+              }
+            }
+          });
+          renderTrades();
+          save();
+          alert(`Pulled ${added} trades from sheet.`);
+        })
+        .catch(err => alert("Could not fetch sheet. Make sure it is published to the web or the CSV export link is public.\n" + err));
+    }
+
+    function parkAtIORB() {
+      const rate = parseFloat($("iorb-rate").value) || 0;
+      let parked = 0;
+      state.banks.forEach(b => {
+        if (!b.isBot && b.cash > 0.1) {
+          const size = b.cash;
+          state.trades.push({
+            lender: b.name,
+            borrower: "Fed IORB",
+            volume: size,
+            rate: rate,
+            note: "IORB"
+          });
+          b.cash = 0;
+          parked++;
+        }
+      });
+      renderBanks();
+      renderTrades();
+      save();
+      alert(`Parked excess cash for ${parked} banks at IORB ${rate.toFixed(2)}%.`);
     }
 
     function addFedTrade(type) {
@@ -789,6 +859,8 @@
     $("apply-card").onclick = applyCard;
     $("random-shocks").onclick = randomizeShocks;
     $("trade-mms").onclick = tradeResidualWithMMs;
+    $("pull-sheet").onclick = pullFromSheet;
+    $("park-iorb").onclick = parkAtIORB;
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
     $("srf-rate").onchange = $("onrrp-rate").onchange = () => { ensureMarketMakers(); renderBanks(); save(); };
