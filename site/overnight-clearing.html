@@ -78,6 +78,7 @@
         <div class="stat-box"><div class="label">Current SOFR</div><div class="value" id="sofr-display">—</div></div>
         <div class="stat-box"><div class="label">Banks</div><div class="value" id="bank-count">0</div></div>
         <div class="stat-box"><div class="label">Total Repo Volume</div><div class="value" id="vol-display">$0B</div></div>
+        <div class="stat-box"><div class="label">Cash in Market</div><div class="value" id="cash-display">$0B</div></div>
       </div>
 
       <div style="margin: 12px 0;">
@@ -710,6 +711,9 @@
         c.appendChild(div);
       });
       $("bank-count").textContent = state.banks.length;
+      const totalCash = state.banks.reduce((s, b) => s + (b.cash || 0), 0);
+      const cashEl = $("cash-display");
+      if (cashEl) cashEl.textContent = "$" + totalCash.toFixed(1) + "B";
     }
 
     function renderTrades() {
