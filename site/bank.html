@@ -1,1 +1,129 @@
-REAL_BANK_WILL_BE_INJECTED
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bank Desk — Overnight Clearing · peachyhabanero</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    .bank-wrap { max-width: 640px; margin: 40px auto; padding: 20px; }
+    .bs-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 16px; }
+    .bs-table { width: 100%; font-size: 13px; }
+    .bs-table td { padding: 4px 6px; }
+    .form-row { margin: 12px 0; display: flex; gap: 8px; align-items: center; }
+    .form-row input { background: #101826; border: 1px solid var(--gold-dim); color: var(--ink); padding: 6px; border-radius: 4px; width: 100px; }
+    .ended { color: #ff6b6b; font-size: 18px; text-align: center; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="overnight-clearing.html">← main desk</a>
+      </p>
+    </div>
+    <h1 id="bank-title">Bank Desk</h1>
+    <p class="sub">Your temporary balance sheet and order entry. This page vanishes when the main tab closes.</p>
+  </header>
+
+  <div class="bank-wrap">
+    <div id="content">
+      <div class="bs-card">
+        <h3>Balance Sheet</h3>
+        <table class="bs-table" id="bs-table">
+          <tr><td>Loading...</td></tr>
+        </table>
+      </div>
+
+      <h2>Submit Bid / Offer</h2>
+      <div class="form-row">
+        <label>Bid rate %:</label>
+        <input id="bid-rate" type="number" step="0.01" placeholder="4.25">
+        <label>Volume $B:</label>
+        <input id="bid-vol" type="number" step="0.1" placeholder="2.0">
+        <button class="neon-btn" id="submit-bid">Submit Bid</button>
+      </div>
+      <div class="form-row">
+        <label>Offer rate %:</label>
+        <input id="offer-rate" type="number" step="0.01" placeholder="4.50">
+        <label>Volume $B:</label>
+        <input id="offer-vol" type="number" step="0.1" placeholder="1.5">
+        <button class="neon-btn" id="submit-offer">Submit Offer</button>
+      </div>
+      <div id="status" style="margin-top:12px;font-size:13px;color:var(--muted);"></div>
+    </div>
+    <div id="ended" class="ended" style="display:none;">Session ended by host. This temporary page is closed.</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "-----",
+      authDomain: "-----",
+      databaseURL: "https://overnight-clearing-default-rtdb.firebaseio.com",
+      projectId: "overnight-clearing",
+      storageBucket: "overnight-clearing.firebasestorage.app",
+      messagingSenderId: "854785405052",
+      appId: "1:854785405052:web:10895b910717a44ab359f9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const params = new URLSearchParams(location.search);
+    const stub = params.get("stub");
+    if (!stub) {
+      document.body.innerHTML = "<h1>Missing stub. Use the secret link from the host.</h1>";
+      throw new Error("no stub");
+    }
+
+    const bankRef = ref(db, `clearingDesk/banks/${stub}`);
+    const bidsRef = ref(db, `clearingDesk/banks/${stub}/bids`);
+    const offersRef = ref(db, `clearingDesk/banks/${stub}/offers`);
+
+    onValue(bankRef, (snap) => {
+      if (!snap.exists()) {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("ended").style.display = "block";
+        return;
+      }
+      const data = snap.val();
+      document.getElementById("bank-title").textContent = data.name || "Bank";
+      const bs = data.balanceSheet || {};
+      const table = document.getElementById("bs-table");
+      table.innerHTML = `
+        <tr><td>Fixed Loans</td><td>$${bs.fixedLoans || 0}B</td></tr>
+        <tr><td>Floating Assets</td><td>$${bs.floatingAssets || 0}B</td></tr>
+        <tr><td>Treasuries</td><td>$${bs.treasuries || 0}B</td></tr>
+        <tr><td>Cash</td><td>$${bs.cash || 0}B</td></tr>
+        <tr><td>Sticky Deposits</td><td>$${bs.stickyDep || 0}B</td></tr>
+        <tr><td>Volatile Funding</td><td>$${bs.volatile || 0}B</td></tr>
+        <tr><td>Equity</td><td>$${bs.equity || 0}B</td></tr>
+      `;
+    });
+
+    document.getElementById("submit-bid").onclick = () => {
+      const rate = parseFloat(document.getElementById("bid-rate").value);
+      const vol = parseFloat(document.getElementById("bid-vol").value);
+      if (isNaN(rate) || isNaN(vol)) return alert("Enter valid rate and volume");
+      push(bidsRef, { rate, volume: vol, ts: Date.now(), side: "bid" });
+      push(ref(db, "clearingDesk/orderBook/bids"), { bankStub: stub, rate, volume: vol, ts: Date.now() });
+      document.getElementById("status").textContent = `Bid submitted: ${vol}B @ ${rate}%`;
+    };
+
+    document.getElementById("submit-offer").onclick = () => {
+      const rate = parseFloat(document.getElementById("offer-rate").value);
+      const vol = parseFloat(document.getElementById("offer-vol").value);
+      if (isNaN(rate) || isNaN(vol)) return alert("Enter valid rate and volume");
+      push(offersRef, { rate, volume: vol, ts: Date.now(), side: "offer" });
+      push(ref(db, "clearingDesk/orderBook/offers"), { bankStub: stub, rate, volume: vol, ts: Date.now() });
+      document.getElementById("status").textContent = `Offer submitted: ${vol}B @ ${rate}%`;
+    };
+  </script>
+</body>
+</html>
