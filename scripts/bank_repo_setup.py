@@ -287,30 +287,29 @@ def liquidity_shock(banks, needs_cash=0.5, max_shortfall_frac_of_target=0.5, rng
     return results
 
 
-if __name__ == "__main__":
-    # Reproducible demo
-    rng = np.random.default_rng(42)
+# Reproducible demo
+rng = np.random.default_rng(42)
 
-    players = {
-        "Joe": create_bank(250, rng=rng),
-        "Jill": create_bank(250, rng=rng),
-        "Bob": create_bank(180, rng=rng),
-        "Alice": create_bank(320, rng=rng),
-        "George": create_bank(180, rng=rng),
-        "John": create_bank(320, rng=rng),
-        "Ringo": create_bank(180, rng=rng),
-        "Paul": create_bank(320, rng=rng),
-        "Cletus": create_bank(180, rng=rng),
-    }
+players = {
+    "Joe": create_bank(250, rng=rng),
+    "Jill": create_bank(250, rng=rng),
+    "Bob": create_bank(180, rng=rng),
+    "Alice": create_bank(320, rng=rng),
+    "George": create_bank(180, rng=rng),
+    "John": create_bank(320, rng=rng),
+    "Ringo": create_bank(180, rng=rng),
+    "Paul": create_bank(320, rng=rng),
+    "Cletus": create_bank(180, rng=rng),
+}
 
-    shocked = liquidity_shock(players, needs_cash=0.5, max_shortfall_frac_of_target=0.5, rng=rng)
+shocked = liquidity_shock(players, needs_cash=0.5, max_shortfall_frac_of_target=0.5, rng=rng)
 
-    print("Day-1 liquidity positions after shock\n")
-    for name, data in shocked.items():
-        status = "NEEDS CASH" if data["projected_shortfall_or_excess"] > 0 else "has excess"
-        print(
-            f"{name:8}  shortfall/excess = {data['projected_shortfall_or_excess']:7.2f}B  ({status})"
-        )
-        print(f"         target reserves = {data['target_reserves']:.2f}B, "
-              f"outflows = {data['projected_outflows']:.2f}B")
-        print()
+print("Day-1 liquidity positions after shock\n")
+for name, data in shocked.items():
+    status = "NEEDS CASH" if data["projected_shortfall_or_excess"] > 0 else "has excess"
+    print(
+        f"{name:8}  shortfall/excess = {data['projected_shortfall_or_excess']:7.2f}B  ({status})"
+    )
+    print(f"         target reserves = {data['target_reserves']:.2f}B, "
+          f"outflows = {data['projected_outflows']:.2f}B")
+    print()
