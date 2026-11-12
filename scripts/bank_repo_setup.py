@@ -184,19 +184,14 @@ def calculate_eod_reserves_target(balance_sheet, rng=None):
     return round(target, 2)
 
 
-def liquidity_shock(banks, needs_cash=0.5, shortfall_limit=0.25, rng=None):
+def liquidity_shock(banks, needs_cash=0.5, max_shortfall_frac_of_target=0.5, rng=None):
     """
-    Apply a liquidity shock to a dictionary of banks.
+    Apply a modest liquidity shock to a dictionary of banks.
 
-    For each bank:
-    - Compute its EOD reserves target.
-    - Generate random projected outflows scaled to bank size.
-    - Compute projected_shortfall_or_excess = target - (current_reserves - projected_outflows).
-      Positive values mean the bank needs cash (shortfall).
-
-    Approximately `needs_cash` fraction of banks are forced into a positive shortfall.
-    No bank's shortfall is allowed to exceed (1 + shortfall_limit) * current_reserves.
-    Outflows are kept non-negative.
+    Outflows are scaled relative to current reserves so they stay realistic
+    for a normal day. Banks designated to need cash receive a shortfall that
+    is a modest fraction of their reserve target (default max 50% of target).
+    Banks not designated prefer a small excess.
 
     Parameters
     ----------
@@ -204,8 +199,9 @@ def liquidity_shock(banks, needs_cash=0.5, shortfall_limit=0.25, rng=None):
         {bank_name: balance_sheet_df}
     needs_cash : float
         Target fraction of banks that should have a shortfall (default 0.5).
-    shortfall_limit : float
-        Maximum shortfall as a multiple of current reserves (default 0.25 → max = 1.25× reserves).
+    max_shortfall_frac_of_target : float
+        Maximum shortfall as a fraction of the bank's reserve target
+        (default 0.5). Also never exceeds current reserves.
     rng : np.random.Generator, optional
 
     Returns
@@ -236,47 +232,49 @@ def liquidity_shock(banks, needs_cash=0.5, shortfall_limit=0.25, rng=None):
             bs["Item"] == "Cash + Reserves at Fed", "Amount ($B)"
         ].values[0]
         target = calculate_eod_reserves_target(bs, rng=rng)
-        total_assets = bs.loc[bs["Item"] == "Total Assets", "Amount ($B)"].values[0]
 
-        # Random outflows scaled to bank size
-        base_outflow_scale = total_assets * rng.uniform(0.005, 0.02)
-        corp_payments = rng.uniform(0.3, 1.2) * base_outflow_scale
-        maturing_st = rng.uniform(0.1, 0.8) * base_outflow_scale
-        loan_fundings = rng.uniform(0.2, 1.0) * base_outflow_scale
-        projected_outflows = corp_payments + maturing_st + loan_fundings
+        # Modest outflows: 10–60% of current reserves (normal-day payment volatility)
+        outflow_frac = rng.uniform(0.10, 0.60)
+        projected_outflows = current_reserves * outflow_frac
 
-        max_allowed_shortfall = (1 + shortfall_limit) * current_reserves
+        # Hard cap on shortfall: min(50% of target, current reserves)
+        max_shortfall = min(
+            max_shortfall_frac_of_target * target,
+            current_reserves
+        )
+        max_shortfall = max(max_shortfall, 0.5)  # at least a small positive possibility
 
         if name in need_cash_banks:
-            # Ensure a positive shortfall, capped
+            # Force a modest positive shortfall
             projected_ending = current_reserves - projected_outflows
             shortfall = target - projected_ending
             if shortfall <= 0:
-                desired = rng.uniform(0.05 * current_reserves, max_allowed_shortfall)
-                projected_outflows += desired - shortfall
+                desired = rng.uniform(0.10 * target, max_shortfall)
+                # Increase outflows just enough to reach the desired shortfall
+                extra = desired - shortfall
+                projected_outflows += extra
             # Recompute and enforce cap
             projected_ending = current_reserves - projected_outflows
             shortfall = target - projected_ending
-            if shortfall > max_allowed_shortfall:
-                shortfall = max_allowed_shortfall
+            if shortfall > max_shortfall:
+                shortfall = max_shortfall
                 projected_outflows = current_reserves - (target - shortfall)
         else:
-            # Prefer excess or only a tiny shortfall
+            # Prefer a small excess (or at most a tiny shortfall)
             projected_ending = current_reserves - projected_outflows
             shortfall = target - projected_ending
-            if shortfall > 0:
-                # Reduce outflows enough to eliminate most or all of the shortfall
-                reduction = shortfall + rng.uniform(0, 0.4 * current_reserves)
+            if shortfall > 0.5:  # allow only a very small accidental shortfall
+                reduction = shortfall - rng.uniform(0.0, 0.5)
                 projected_outflows = max(0.0, projected_outflows - reduction)
                 projected_ending = current_reserves - projected_outflows
                 shortfall = target - projected_ending
 
-        # Final non-negativity and hard cap
+        # Final cleanup
         projected_outflows = max(0.0, projected_outflows)
         projected_ending = current_reserves - projected_outflows
         shortfall = target - projected_ending
-        if shortfall > max_allowed_shortfall:
-            shortfall = max_allowed_shortfall
+        if shortfall > max_shortfall:
+            shortfall = max_shortfall
             projected_outflows = max(0.0, current_reserves - (target - shortfall))
 
         results[name] = {
@@ -305,7 +303,7 @@ if __name__ == "__main__":
         "Cletus": create_bank(180, rng=rng),
     }
 
-    shocked = liquidity_shock(players, needs_cash=0.5, shortfall_limit=0.25, rng=rng)
+    shocked = liquidity_shock(players, needs_cash=0.5, max_shortfall_frac_of_target=0.5, rng=rng)
 
     print("Day-1 liquidity positions after shock\n")
     for name, data in shocked.items():
