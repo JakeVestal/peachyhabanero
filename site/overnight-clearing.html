@@ -96,6 +96,7 @@
         <button class="neon-btn" id="random-shocks" style="background:rgba(0,240,255,0.12);">Randomize Liquidity Shocks</button>
         <div style="margin-top:10px;font-size:13px;">
           Google Sheet URL: <input id="sheet-url" type="text" placeholder="Paste the normal Google Sheets link (edit or view)" style="width:420px;background:#101826;color:var(--ink);border:1px solid var(--gold-dim);padding:4px;">
+          <button class="neon-btn" id="pull-sheet">Pull Trades from Sheet</button>
         </div>
         <div style="margin-top:10px;">
           <label>Per-bank shock: </label>
@@ -790,6 +791,16 @@
         `;
         c.appendChild(row);
       });
+      if (state.trades.length > 0) {
+        const summary = document.createElement("div");
+        summary.style.marginTop = "10px";
+        summary.style.fontSize = "12px";
+        summary.style.color = "var(--muted)";
+        summary.innerHTML = "<strong>Executed:</strong><br>" + state.trades.map(t => 
+          `${t.lender || "?"} → ${t.borrower || "?"} $${(t.volume||0).toFixed(1)}B @ ${(t.rate||0).toFixed(2)}% ${t.note ? "(" + t.note + ")" : ""}`
+        ).join("<br>");
+        c.appendChild(summary);
+      }
       const totalVol = state.trades.reduce((s, t) => s + (t.volume || 0), 0);
       $("vol-display").textContent = "$" + totalVol.toFixed(1) + "B";
     }
@@ -968,49 +979,39 @@
     }
 
     function advanceDay() {
-      pullFromSheet()
-        .then(result => {
-          if (!result.clean) {
-            const msg = "Cannot advance — fix the sheet first:\n\n" + (result.warnings || []).join("\n");
-            alert(msg);
-            return;
-          }
-
-          if (state.sofr == null && state.trades.length > 0) {
-            if (!confirm("SOFR has not been calculated yet. Calculate it first?")) return;
-            calcSOFR();
-          }
-          const dayFraction = 1/360;
-          state.banks.forEach(b => {
-            const floatYield = (state.sofr != null ? state.sofr : 0) + 1.0;
-            const interestIncome = (b.fixedLoans * 0.065 + b.floatingAssets * (floatYield/100)) * dayFraction * 1e9;
-            const interestExpense = (b.stickyDep * 0.035 + Math.max(0, -b.cash) * ((state.sofr||0)/100)) * dayFraction * 1e9;
-            const net = (interestIncome - interestExpense) / 1e9;
-            b.equity += net;
-            b.dayPnL = net;
-          });
-          state.history.push({
-            day: state.day,
-            sofr: state.sofr,
-            volume: state.trades.reduce((s,t)=>s+(t.volume||0),0),
-            banks: JSON.parse(JSON.stringify(state.banks))
-          });
-          state.day += 1;
-          state.trades = [];
-          state.sofr = null;
-          state.currentShock = null;
-          state.dealerStress = false;
-          state.banks.forEach(b => { if (b.isBot) { b.constrained = false; b.maxResidual = 8; } });
-          $("day-display").textContent = state.day;
-          $("sofr-display").textContent = "—";
-          $("shock-banner").style.display = "none";
-          renderAll();
-          save();
-          drawSOFRChart();
-          drawLeaderboard();
-          alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.\nPulled ${result.added} trades. Residual fills: ${result.residualFilled}. IORB parks: ${result.parked}.`);
-        })
-        .catch(err => alert("Could not pull from sheet before advancing:\n" + err));
+      if (state.sofr == null && state.trades.length > 0) {
+        if (!confirm("SOFR has not been calculated yet. Calculate it first?")) return;
+        calcSOFR();
+      }
+      const dayFraction = 1/360;
+      state.banks.forEach(b => {
+        const floatYield = (state.sofr != null ? state.sofr : 0) + 1.0;
+        const interestIncome = (b.fixedLoans * 0.065 + b.floatingAssets * (floatYield/100)) * dayFraction * 1e9;
+        const interestExpense = (b.stickyDep * 0.035 + Math.max(0, -b.cash) * ((state.sofr||0)/100)) * dayFraction * 1e9;
+        const net = (interestIncome - interestExpense) / 1e9;
+        b.equity += net;
+        b.dayPnL = net;
+      });
+      state.history.push({
+        day: state.day,
+        sofr: state.sofr,
+        volume: state.trades.reduce((s,t)=>s+(t.volume||0),0),
+        banks: JSON.parse(JSON.stringify(state.banks))
+      });
+      state.day += 1;
+      state.trades = [];
+      state.sofr = null;
+      state.currentShock = null;
+      state.dealerStress = false;
+      state.banks.forEach(b => { if (b.isBot) { b.constrained = false; b.maxResidual = 8; } });
+      $("day-display").textContent = state.day;
+      $("sofr-display").textContent = "—";
+      $("shock-banner").style.display = "none";
+      renderAll();
+      save();
+      drawSOFRChart();
+      drawLeaderboard();
+      alert(`Advanced to Day ${state.day}. Prior day P&L accrued into equity.`);
     }
 
     function addBank() {
@@ -1078,6 +1079,10 @@
     $("advance-day").onclick = advanceDay;
     $("apply-card").onclick = applyCard;
     $("random-shocks").onclick = randomizeShocks;
+    $("pull-sheet").onclick = () => pullFromSheet().then(r => {
+      if (!r.clean) alert("Problems:\n" + (r.warnings||[]).join("\n"));
+      else alert(`Pulled ${r.added} trades. Residual fills: ${r.residualFilled}. IORB parks: ${r.parked}.`);
+    }).catch(err => alert(err));
     $("apply-bank-shock").onclick = applyBankShock;
     $("add-srf").onclick = () => addFedTrade("srf");
     $("srf-rate").onchange = $("onrrp-rate").onchange = () => { ensureMarketMakers(); renderBanks(); save(); };
