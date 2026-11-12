@@ -1,1 +1,276 @@
-PLACEHOLDER_SOFR
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>SOFR, Tri-Party GC & the Short End · peachyhabanero</title>
+  <meta name="description" content="Historical SOFR, tri-party general collateral rate, and short-term US Treasury yields. How overnight secured funding rates transmit into the front of the Treasury curve."/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    .rate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+    .rate-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px 16px; }
+    .rate-card .label { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+    .rate-card .value { font-size: 28px; font-weight: 600; color: var(--cyan); margin: 4px 0; }
+    .rate-card .date { font-size: 12px; color: var(--muted); }
+    .plot-box { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; margin: 12px 0 20px; overflow: hidden; }
+    .plot-box .js-plotly-plot { width: 100% !important; }
+    .note { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+    .source-list { font-size: 13px; color: var(--muted); }
+    .source-list a { color: var(--gold); }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      <a href="phase.html">phase (draft)</a> ·
+      <a href="trackers.html">trackers</a> ·
+      <a href="data.html">data</a> ·
+      <a href="sofr-treasury-front-end.html">sofr & front end</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>SOFR, TRI-PARTY GC & THE SHORT END</h1>
+  <p class="sub">
+    Overnight secured funding rates and the front of the US Treasury curve.
+    SOFR is the volume-weighted median of overnight Treasury-collateralized repo.
+    The short-term bill and constant-maturity yields sit on top of that funding complex.
+  </p>
+  <p class="stat" id="stamp">loading published rates…</p>
+</header>
+
+<main>
+<section>
+  <h2>What is being plotted</h2>
+  <p>
+    <strong>SOFR</strong> (Secured Overnight Financing Rate) is the volume-weighted median rate on overnight Treasury-collateralized repurchase agreements across the tri-party, GCF, and FICC DVP segments. It is administered by the Federal Reserve Bank of New York and has been the primary USD overnight benchmark since the LIBOR transition.
+  </p>
+  <p>
+    <strong>TGCR</strong> (Tri-Party General Collateral Rate) is the volume-weighted median of overnight specific-counterparty tri-party GC repo secured by Treasuries (BNY Mellon data only; excludes GCF and Fed counterparties). It is a close cousin of SOFR and usually trades within a few basis points of it.
+  </p>
+  <p>
+    <strong>Short-term Treasury yields</strong> are the constant-maturity yields on 1-month, 3-month, 6-month, and 1-year notes/bills (FRED DGS1MO, DGS3MO, DGS6MO, DGS1). These are the cash market prices of short-duration US government debt.
+  </p>
+  <p class="note">
+    All series are daily, percent. SOFR and TGCR begin in April 2018. Treasury CMT series have longer history; the charts focus on the overlapping period.
+  </p>
+</section>
+
+<section>
+  <h2>Latest prints</h2>
+  <div class="rate-grid" id="latest-cards"></div>
+</section>
+
+<section>
+  <h2>Levels — funding rates and the bill curve</h2>
+  <p>
+    The overnight secured rates and the short end of the Treasury curve move together because the repo market is the financing market for those securities. A dealer or money-market fund that buys a T-bill can finance it overnight in GC repo. Arbitrage keeps the bill yield close to the expected path of the overnight rate (adjusted for the small term premium and any specialness). When funding is scarce, both SOFR and bill yields rise; when reserves are abundant or the ON RRP is absorbing cash, the rates can compress toward the floor.
+  </p>
+  <div class="plot-box" id="levels-plot" style="height:480px;"></div>
+</section>
+
+<section>
+  <h2>Spreads — how tightly they are bound</h2>
+  <p>
+    SOFR minus the 1-month Treasury yield is usually small and mean-reverting. Large positive spreads have appeared in funding stress (September 2019, March 2020, and episodes of QT-driven reserve scarcity). TGCR minus SOFR is typically a few basis points and reflects the composition difference (tri-party only vs. the broader SOFR universe). The 3-month and 6-month yields sit above the overnight rate by the amount of expected rate changes over that horizon plus a modest term premium.
+  </p>
+  <div class="plot-box" id="spreads-plot" style="height:420px;"></div>
+</section>
+
+<section>
+  <h2>Does SOFR “drive” the bond market?</h2>
+  <p>
+    Yes, at the front end, in a precise sense. The overnight secured rate is the foundation of the short-rate complex. SOFR futures and the SOFR swap curve price the market’s expected path of that overnight rate. That expected path is the dominant driver of the pricing of short-term fixed-rate instruments — T-bills, short coupons, and the short end of the swap curve. Longer-term yields add term premium, inflation compensation, and supply/demand for duration; they are not a mechanical function of today’s SOFR. But the entire curve is anchored by the expected path of the overnight funding rate that SOFR measures.
+  </p>
+  <p>
+    Policy works through this channel. The FOMC sets the target range for the federal funds rate and administers the interest on reserve balances (IORB) and the overnight reverse repo facility (ON RRP). Those administered rates bound the unsecured and secured overnight markets. SOFR, TGCR, and the bill curve then transmit the policy stance into the pricing of government debt and into the rest of the fixed-income market via the futures and swap curves.
+  </p>
+  <p>
+    Stress episodes make the transmission visible. In September 2019, SOFR spiked above 5% while the funds rate was still inside its target range; bill yields followed. In March 2020, the opposite occurred as the Fed flooded the system with reserves. In the 2022–2024 hiking cycle and subsequent QT, the bill curve tracked SOFR tightly while the longer end was more about the terminal rate and term premium. The charts below let you see those co-movements directly.
+  </p>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ul class="source-list">
+    <li>SOFR and TGCR: Federal Reserve Bank of New York Markets Data API (<a href="https://markets.newyorkfed.org/" target="_blank" rel="noopener">markets.newyorkfed.org</a>). Volume-weighted medians of overnight Treasury-collateralized repo.</li>
+    <li>Short-term Treasury yields: FRED constant-maturity series DGS1MO, DGS3MO, DGS6MO, DGS1 (U.S. Treasury / Board of Governors H.15). <a href="https://fred.stlouisfed.org/series/DGS1MO" target="_blank" rel="noopener">FRED</a>.</li>
+    <li>Methodology notes: New York Fed “Additional Information about Reference Rates.”</li>
+  </ul>
+  <p class="note">
+    Data are fetched live in the browser from the public NY Fed API (SOFR, TGCR) and FRED graph CSVs (Treasury CMTs). If a series fails to load (CORS or temporary outage), the corresponding traces are omitted and a note appears above the chart. No API key is required.
+  </p>
+</section>
+</main>
+
+<footer>
+  peachyhabanero.com · public data ·
+  <a href="https://github.com/JakeVestal/peachyhabanero">source</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+
+<script>
+const SERIES = {
+  sofr:  { id: 'SOFR',     name: 'SOFR',     color: '#00f0ff', source: 'nyfed' },
+  tgcr:  { id: 'TGCR',     name: 'TGCR',     color: '#ff2bd6', source: 'nyfed' },
+  dgs1m: { id: 'DGS1MO',   name: '1M Tsy',   color: '#c4a35a', source: 'fred' },
+  dgs3m: { id: 'DGS3MO',   name: '3M Tsy',   color: '#39ff14', source: 'fred' },
+  dgs6m: { id: 'DGS6MO',   name: '6M Tsy',   color: '#7f93a6', source: 'fred' },
+  dgs1y: { id: 'DGS1',     name: '1Y Tsy',   color: '#e8f6ff', source: 'fred' }
+};
+
+async function fetchNYFed(rateType, start = '2018-04-01') {
+  const end = new Date().toISOString().slice(0, 10);
+  const url = `https://markets.newyorkfed.org/api/rates/secured/${rateType.toLowerCase()}/search.json?startDate=${start}&endDate=${end}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(rateType + ' ' + res.status);
+  const json = await res.json();
+  const rows = (json.refRates || []).map(r => ({
+    date: r.effectiveDate,
+    value: r.percentRate
+  })).sort((a, b) => a.date.localeCompare(b.date));
+  return rows;
+}
+
+async function fetchFRED(seriesId) {
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(seriesId + ' ' + res.status);
+  const text = await res.text();
+  const lines = text.trim().split('\n');
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const [date, val] = lines[i].split(',');
+    if (val && val !== '.' && val.trim() !== '') {
+      rows.push({ date, value: parseFloat(val) });
+    }
+  }
+  return rows;
+}
+
+function toTrace(rows, name, color) {
+  return {
+    x: rows.map(r => r.date),
+    y: rows.map(r => r.value),
+    type: 'scatter',
+    mode: 'lines',
+    name,
+    line: { color, width: 1.6 },
+    hovertemplate: '%{x|%Y-%m-%d}<br>' + name + ': %{y:.2f}%<extra></extra>'
+  };
+}
+
+function layout(title, height = 420) {
+  return {
+    title: { text: title, font: { family: 'IBM Plex Mono, ui-monospace, monospace', size: 13, color: '#00f0ff' } },
+    paper_bgcolor: '#0d1117',
+    plot_bgcolor: '#0d1117',
+    font: { family: 'IBM Plex Sans, Segoe UI, sans-serif', color: '#d5e4f0', size: 12 },
+    margin: { t: 48, r: 24, b: 48, l: 48 },
+    height,
+    xaxis: { gridcolor: 'rgba(127,147,166,0.15)', zeroline: false, tickfont: { size: 11 } },
+    yaxis: { gridcolor: 'rgba(127,147,166,0.15)', zeroline: false, tickfont: { size: 11 }, title: { text: '%', font: { size: 11 } } },
+    legend: { orientation: 'h', y: 1.12, x: 0, font: { size: 11 } },
+    hovermode: 'x unified'
+  };
+}
+
+async function main() {
+  const stamp = document.getElementById('stamp');
+  const data = {};
+  const errors = [];
+
+  // Funding rates from NY Fed (reliable CORS)
+  try {
+    data.sofr = await fetchNYFed('sofr');
+  } catch (e) { errors.push('SOFR: ' + e.message); }
+  try {
+    data.tgcr = await fetchNYFed('tgcr');
+  } catch (e) { errors.push('TGCR: ' + e.message); }
+
+  // Treasury CMTs from FRED (may hit CORS in some browsers)
+  for (const key of ['dgs1m', 'dgs3m', 'dgs6m', 'dgs1y']) {
+    try {
+      data[key] = await fetchFRED(SERIES[key].id);
+    } catch (e) { errors.push(SERIES[key].name + ': ' + e.message); }
+  }
+
+  if (errors.length) {
+    stamp.textContent = 'partial load — ' + errors.join('; ');
+    stamp.style.color = '#c4a35a';
+  } else {
+    stamp.textContent = 'loaded · ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  }
+
+  // Latest cards
+  const cards = document.getElementById('latest-cards');
+  for (const key of Object.keys(SERIES)) {
+    const rows = data[key];
+    if (!rows || !rows.length) continue;
+    const last = rows[rows.length - 1];
+    const card = document.createElement('div');
+    card.className = 'rate-card';
+    card.innerHTML = `
+      <div class="label">${SERIES[key].name}</div>
+      <div class="value">${last.value.toFixed(2)}%</div>
+      <div class="date">${last.date}</div>
+    `;
+    cards.appendChild(card);
+  }
+
+  // Levels plot
+  const levelTraces = [];
+  for (const key of Object.keys(SERIES)) {
+    if (data[key] && data[key].length) {
+      levelTraces.push(toTrace(data[key], SERIES[key].name, SERIES[key].color));
+    }
+  }
+  if (levelTraces.length) {
+    Plotly.newPlot('levels-plot', levelTraces, layout('SOFR, TGCR, and short-term Treasury yields', 480), { responsive: true, displayModeBar: false });
+  }
+
+  // Spreads
+  function spread(a, b, name, color) {
+    if (!data[a] || !data[b]) return null;
+    const mapB = new Map(data[b].map(r => [r.date, r.value]));
+    const rows = data[a]
+      .filter(r => mapB.has(r.date))
+      .map(r => ({ date: r.date, value: (r.value - mapB.get(r.date)) * 100 })); // in bp
+    if (!rows.length) return null;
+    return {
+      x: rows.map(r => r.date),
+      y: rows.map(r => r.value),
+      type: 'scatter',
+      mode: 'lines',
+      name,
+      line: { color, width: 1.4 },
+      hovertemplate: '%{x|%Y-%m-%d}<br>' + name + ': %{y:.1f} bp<extra></extra>'
+    };
+  }
+
+  const spreadTraces = [
+    spread('sofr', 'dgs1m', 'SOFR − 1M Tsy (bp)', '#00f0ff'),
+    spread('tgcr', 'sofr', 'TGCR − SOFR (bp)', '#ff2bd6'),
+    spread('dgs3m', 'sofr', '3M Tsy − SOFR (bp)', '#39ff14'),
+    spread('dgs6m', 'sofr', '6M Tsy − SOFR (bp)', '#c4a35a')
+  ].filter(Boolean);
+
+  if (spreadTraces.length) {
+    Plotly.newPlot('spreads-plot', spreadTraces, {
+      ...layout('Spreads (basis points)', 420),
+      yaxis: { ...layout('').yaxis, title: { text: 'bp', font: { size: 11 } }, zeroline: true, zerolinecolor: 'rgba(255,255,255,0.25)' }
+    }, { responsive: true, displayModeBar: false });
+  }
+}
+
+main().catch(err => {
+  document.getElementById('stamp').textContent = 'failed to load: ' + err.message;
+});
+</script>
+</body>
+</html>
