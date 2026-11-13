@@ -359,13 +359,15 @@
       renderBanks();
       save();
       if (window.firebaseDb) {
-        const bankRef = window.firebaseRef(window.firebaseDb, `clearingDesk/banks/${stub}`);
+        const sessionId = window.currentSessionId;
+        if (!sessionId) { alert("Session not ready yet. Wait a moment and try again."); return; }
+        const bankRef = window.firebaseRef(window.firebaseDb, `sessions/${sessionId}/banks/${stub}`);
         window.firebaseSet(bankRef, {
           name,
           balanceSheet: JSON.parse(JSON.stringify(STARTING_BS)),
           created: Date.now()
         });
-        const playerUrl = location.origin + location.pathname.replace("overnight-clearing.html", "bank.html") + "?stub=" + encodeURIComponent(stub);
+        const playerUrl = location.origin + location.pathname.replace("overnight-clearing.html", "bank.html") + "?session=" + encodeURIComponent(sessionId) + "&stub=" + encodeURIComponent(stub);
                 // Copyable link modal
         const modal = document.createElement("div");
         modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;";
@@ -421,7 +423,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, onDisconnect, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, onValue, onDisconnect, set, update, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     // TODO: replace with your Firebase config
     const firebaseConfig = {
@@ -440,17 +442,37 @@
     window.firebaseRef = ref;
     window.firebaseSet = set;
     window.firebaseUpdate = update;
+    window.firebasePush = push;
 
-    const hostRef = ref(db, "clearingDesk/host");
-    set(hostRef, { online: true, ts: Date.now() });
-    onDisconnect(hostRef).remove();
+    // Generate a short session ID for this host instance
+    function generateSessionId() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let id = "";
+      for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      return id;
+    }
+    const sessionId = generateSessionId();
+    window.currentSessionId = sessionId;
+
+    // Write session meta
+    set(ref(db, `sessions/${sessionId}/meta`), { created: Date.now(), status: "active" });
+
+    // Multi-connection presence: each host tab gets its own child
+    const connRef = push(ref(db, `sessions/${sessionId}/hostConnections`));
+    onDisconnect(connRef).remove();
+    set(connRef, { ts: Date.now() });
+
+    // Re-establish presence on reconnect
+    onValue(ref(db, ".info/connected"), (snap) => {
+      if (snap.val() === true) set(connRef, { ts: Date.now() });
+    });
 
     const statusEl = document.getElementById("firebase-status");
     const listEl = document.getElementById("bank-list");
     const bookEl = document.getElementById("order-book");
     const selectEl = document.getElementById("write-bank-select");
 
-    onValue(ref(db, "clearingDesk/banks"), (snap) => {
+    onValue(ref(db, `sessions/${sessionId}/banks`), (snap) => {
       if (!snap.exists()) {
         listEl.innerHTML = "<em>No banks yet. Click + Add Bank.</em>";
         selectEl.innerHTML = "";
@@ -460,10 +482,10 @@
       const names = Object.entries(banks).map(([stub, b]) => `<li>${b.name}</li>`).join("");
       listEl.innerHTML = `<strong>Banks:</strong><ul>${names}</ul>`;
       selectEl.innerHTML = Object.entries(banks).map(([stub, b]) => `<option value="${stub}">${b.name}</option>`).join("");
-      statusEl.textContent = "Connected. Host owns the session.";
+      statusEl.textContent = `Session ${sessionId} active. Host owns this game.`;
     });
 
-    onValue(ref(db, "clearingDesk/orderBook/bids"), (snap) => {
+    onValue(ref(db, `sessions/${sessionId}/orderBook/bids`), (snap) => {
       if (!snap.exists()) {
         bookEl.innerHTML = "<em>No bids yet.</em>";
         return;
