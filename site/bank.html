@@ -26,7 +26,7 @@
       </p>
     </div>
     <h1 id="bank-title">Bank Desk</h1>
-    <p class="sub">Your temporary balance sheet and order entry. This page vanishes when the main tab closes.</p>
+    <p class="sub">Your temporary balance sheet and order entry for this session. This page ends when the host closes the session.</p>
   </header>
 
   <div class="bank-wrap">
@@ -77,16 +77,32 @@
     const db = getDatabase(app);
 
     const params = new URLSearchParams(location.search);
+    const sessionId = params.get("session");
     const stub = params.get("stub");
-    if (!stub) {
-      document.body.innerHTML = "<h1>Missing stub. Use the secret link from the host.</h1>";
-      throw new Error("no stub");
+    if (!sessionId || !stub) {
+      document.body.innerHTML = "<h1>Missing session or stub. Use the secret link from the host.</h1>";
+      throw new Error("missing params");
     }
 
-    const bankRef = ref(db, `clearingDesk/banks/${stub}`);
-    const bidsRef = ref(db, `clearingDesk/banks/${stub}/bids`);
-    const offersRef = ref(db, `clearingDesk/banks/${stub}/offers`);
-    const hostRef = ref(db, "clearingDesk/host");
+    const base = `sessions/${sessionId}`;
+    const bankRef = ref(db, `${base}/banks/${stub}`);
+    const bidsRef = ref(db, `${base}/banks/${stub}/bids`);
+    const offersRef = ref(db, `${base}/banks/${stub}/offers`);
+    const hostConnsRef = ref(db, `${base}/hostConnections`);
+    const metaRef = ref(db, `${base}/meta`);
+
+    let hostAlive = false;
+    let sessionEnded = false;
+
+    function updateEndedState() {
+      if (sessionEnded || !hostAlive) {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("ended").style.display = "block";
+      } else {
+        document.getElementById("content").style.display = "block";
+        document.getElementById("ended").style.display = "none";
+      }
+    }
 
     onValue(bankRef, (snap) => {
       if (!snap.exists()) {
@@ -108,15 +124,14 @@
       `;
     });
 
-    // Only end the player page when the host presence node is gone
-    onValue(hostRef, (snap) => {
-      if (!snap.exists()) {
-        document.getElementById("content").style.display = "none";
-        document.getElementById("ended").style.display = "block";
-      } else {
-        document.getElementById("content").style.display = "block";
-        document.getElementById("ended").style.display = "none";
-      }
+    onValue(hostConnsRef, (snap) => {
+      hostAlive = snap.exists() && snap.numChildren() > 0;
+      updateEndedState();
+    });
+
+    onValue(metaRef, (snap) => {
+      sessionEnded = snap.exists() && snap.val().status === "ended";
+      updateEndedState();
     });
 
     document.getElementById("submit-bid").onclick = () => {
@@ -124,7 +139,7 @@
       const vol = parseFloat(document.getElementById("bid-vol").value);
       if (isNaN(rate) || isNaN(vol)) return alert("Enter valid rate and volume");
       push(bidsRef, { rate, volume: vol, ts: Date.now(), side: "bid" });
-      push(ref(db, "clearingDesk/orderBook/bids"), { bankStub: stub, rate, volume: vol, ts: Date.now() });
+      push(ref(db, `${base}/orderBook/bids`), { bankStub: stub, rate, volume: vol, ts: Date.now() });
       document.getElementById("status").textContent = `Bid submitted: ${vol}B @ ${rate}%`;
     };
 
@@ -133,7 +148,7 @@
       const vol = parseFloat(document.getElementById("offer-vol").value);
       if (isNaN(rate) || isNaN(vol)) return alert("Enter valid rate and volume");
       push(offersRef, { rate, volume: vol, ts: Date.now(), side: "offer" });
-      push(ref(db, "clearingDesk/orderBook/offers"), { bankStub: stub, rate, volume: vol, ts: Date.now() });
+      push(ref(db, `${base}/orderBook/offers`), { bankStub: stub, rate, volume: vol, ts: Date.now() });
       document.getElementById("status").textContent = `Offer submitted: ${vol}B @ ${rate}%`;
     };
   </script>

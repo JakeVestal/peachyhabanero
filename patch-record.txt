@@ -74,3 +74,4 @@ peachyhabanero-106-dual-tp-par (1).patch
 peachyhabanero-107-learning-objectives-collapsible.patch
 peachyhabanero-109-fix-session-end (2).patch
 peachyhabanero-110a-host-sessions (1).patch
+peachyhabanero-111-bank-sessions.patch
