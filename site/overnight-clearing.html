@@ -444,7 +444,6 @@
     const hostRef = ref(db, "clearingDesk/host");
     set(hostRef, { online: true, ts: Date.now() });
     onDisconnect(hostRef).remove();
-    onDisconnect(ref(db, "clearingDesk")).remove();
 
     const statusEl = document.getElementById("firebase-status");
     const listEl = document.getElementById("bank-list");

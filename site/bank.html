@@ -86,11 +86,11 @@
     const bankRef = ref(db, `clearingDesk/banks/${stub}`);
     const bidsRef = ref(db, `clearingDesk/banks/${stub}/bids`);
     const offersRef = ref(db, `clearingDesk/banks/${stub}/offers`);
+    const hostRef = ref(db, "clearingDesk/host");
 
     onValue(bankRef, (snap) => {
       if (!snap.exists()) {
-        document.getElementById("content").style.display = "none";
-        document.getElementById("ended").style.display = "block";
+        document.getElementById("bs-table").innerHTML = "<tr><td>Waiting for host to create bank...</td></tr>";
         return;
       }
       const data = snap.val();
@@ -106,6 +106,17 @@
         <tr><td>Volatile Funding</td><td>$${bs.volatile || 0}B</td></tr>
         <tr><td>Equity</td><td>$${bs.equity || 0}B</td></tr>
       `;
+    });
+
+    // Only end the player page when the host presence node is gone
+    onValue(hostRef, (snap) => {
+      if (!snap.exists()) {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("ended").style.display = "block";
+      } else {
+        document.getElementById("content").style.display = "block";
+        document.getElementById("ended").style.display = "none";
+      }
     });
 
     document.getElementById("submit-bid").onclick = () => {
