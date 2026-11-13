@@ -75,3 +75,4 @@ peachyhabanero-107-learning-objectives-collapsible.patch
 peachyhabanero-109-fix-session-end (2).patch
 peachyhabanero-110a-host-sessions (1).patch
 peachyhabanero-111-bank-sessions.patch
+peachyhabanero-112-host-firebase-config (2).patch
