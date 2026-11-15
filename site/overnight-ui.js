@@ -123,3 +123,63 @@ export function bestQuotes(s) {
   const offers = open.filter((o) => o.side === "offer").map((o) => o.rate);
   return { bestBid: bids.length ? Math.max(...bids) : null, bestOffer: offers.length ? Math.min(...offers) : null };
 }
+
+// Overnight results for a bank on a finished day.
+// Uses the same interest math as advanceDay (volume * rate / 100 / DAY_COUNT).
+// Principals are unwound at advance, so the net cash change from the overnight
+// market is exactly the net interest on these flows.
+export function overnightResultsHTML(s, stub, day) {
+  if (!day || day < 1) return "";
+  const trades = E.tradesForDay(s, day).filter(t => t.lender === stub || t.borrower === stub);
+  if (!trades.length) return `<div class="muted small">No overnight activity on day ${day}.</div>`;
+
+  const interestOf = (t) => E.r6(t.volume * t.rate / 100 / E.DAY_COUNT);
+
+  const borrowed = [];
+  const lent = [];
+  let net = 0;
+
+  for (const t of trades) {
+    const int = interestOf(t);
+    if (t.borrower === stub) {
+      borrowed.push({ t, int });
+      net = E.r6(net - int);
+    } else if (t.lender === stub) {
+      lent.push({ t, int });
+      net = E.r6(net + int);
+    }
+  }
+
+  const line = (t, int, verb) => {
+    const who = verb === "Borrowed" ? esc(t.lenderName) : esc(t.borrowerName);
+    const kind = t.kind === "srf" ? " (SRF)" : t.kind === "overdraft" ? " (overdraft)" : t.kind === "iorb" ? " (IORB)" : "";
+    return `<div>${verb} ${fmtB(t.volume, 2)} ${verb === "Borrowed" ? "from" : "to"} ${who}${kind} @ ${fmtPct(t.rate)} — interest ${verb === "Borrowed" ? "paid" : "earned"} ${fmtM(int)}</div>`;
+  };
+
+  let html = `<div class="overnight-results">`;
+  html += `<div class="pending-h">Overnight results · Day ${day}</div>`;
+  if (borrowed.length) {
+    html += borrowed.map(({t, int}) => line(t, int, "Borrowed")).join("");
+  } else {
+    html += `<div class="muted">No borrowings.</div>`;
+  }
+  if (lent.length) {
+    html += lent.map(({t, int}) => line(t, int, "Lent")).join("");
+  } else {
+    html += `<div class="muted">No lending / IORB.</div>`;
+  }
+  const netCls = net < 0 ? "neg" : "pos";
+  html += `<div class="small" style="margin-top:6px">Net cash change from overnight: <span class="${netCls}">${fmtM(net)}</span></div>`;
+  html += `</div>`;
+  return html;
+}
+
+// Full history of overnight results for a bank (most recent first).
+export function overnightHistoryHTML(s, stub) {
+  if (!s.day || s.day <= 1) return `<div class="muted small">No completed nights yet.</div>`;
+  let html = "";
+  for (let d = s.day - 1; d >= 1; d--) {
+    html += overnightResultsHTML(s, stub, d);
+  }
+  return html || `<div class="muted small">No overnight activity recorded.</div>`;
+}

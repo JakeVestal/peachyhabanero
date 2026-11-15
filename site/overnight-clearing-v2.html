@@ -192,9 +192,10 @@
         : "<li class='muted'>No closes yet.</li>";
 
       const banksEl = document.getElementById("banks");
-      banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) =>
-        `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}</div>`
-      ).join("") || "<em class='muted'>No banks yet.</em>";
+      banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
+        const ov = state.day > 1 ? UI.overnightResultsHTML(state, stub, state.day - 1) : "";
+        return `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}${ov}</div>`;
+      }).join("") || "<em class='muted'>No banks yet.</em>";
 
       document.getElementById("book").innerHTML = UI.orderBookHTML(state);
       const trades = E.tradesForDay(state);

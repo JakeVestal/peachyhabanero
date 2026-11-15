@@ -62,6 +62,8 @@
           <div id="mine"></div>
           <h3 style="margin-top:18px">My Trades Today</h3>
           <div id="my-trades"></div>
+          <h3 style="margin-top:18px">Overnight Results</h3>
+          <div id="overnight-results" class="small"></div>
           <div id="book" style="margin-top:16px"></div>
         </div>
       </div>
@@ -143,6 +145,7 @@
       document.getElementById("my-trades").innerHTML = mineTrades.length
         ? mineTrades.slice().reverse().map(t => `<div>${UI.tradeLineFor(t, stub)}</div>`).join("")
         : "<p class='muted'>No trades yet.</p>";
+      document.getElementById("overnight-results").innerHTML = UI.overnightHistoryHTML(state, stub);
 
       const closedEl = document.getElementById("closed-banner");
       const formDisabled = state.phase !== "trading";
