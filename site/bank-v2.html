@@ -82,16 +82,26 @@
     let state = null;
     const sessRef = ref(db, "sessions/" + sessionId);
 
+    function formatRemaining(rem) {
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      return m + ":" + String(s).padStart(2, "0");
+    }
+
     function updateCountdown() {
       const el = document.getElementById("countdown");
       if (!el || !state) return;
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
+      if (state.timerPaused) {
+        const rem = Math.max(0, state.timerRemainingMs || 0);
+        el.textContent = formatRemaining(rem) + " paused";
+        el.className = "value countdown";
+        return;
+      }
       if (!state.timerEnd) { el.textContent = "—"; el.className = "value countdown"; return; }
       const rem = state.timerEnd - Date.now();
       if (rem <= 0) { el.textContent = "0:00"; el.className = "value countdown urgent"; return; }
-      const m = Math.floor(rem / 60000);
-      const s = Math.floor((rem % 60000) / 1000);
-      el.textContent = m + ":" + String(s).padStart(2, "0");
+      el.textContent = formatRemaining(rem);
       el.className = rem < 30000 ? "value countdown urgent" : "value countdown";
     }
 

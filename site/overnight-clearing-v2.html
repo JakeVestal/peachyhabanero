@@ -65,6 +65,8 @@
         <label>Minutes</label>
         <input id="timer-minutes" class="field" type="number" min="1" max="120" step="1" value="5" style="width:70px">
         <button class="neon-btn" id="start-trading">Start Trading</button>
+        <button class="neon-btn" id="pause-timer" style="display:none">Pause Timer</button>
+        <button class="neon-btn" id="resume-timer" style="display:none">Resume Timer</button>
         <span class="countdown" id="countdown">—</span>
       </div>
       <p class="small muted">Start writes a shared timer end into the session. Both screens count down. At zero the market closes the same way as the Close button.</p>
@@ -210,16 +212,46 @@
       updateCountdown();
     }
 
+    function formatRemaining(rem) {
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      return m + ":" + String(s).padStart(2, "0");
+    }
+
+    function updateTimerControls() {
+      const startBtn = document.getElementById("start-trading");
+      const pauseBtn = document.getElementById("pause-timer");
+      const resumeBtn = document.getElementById("resume-timer");
+      const minutes = document.getElementById("timer-minutes");
+      if (!startBtn || !state) return;
+      // Hide Start (and the minutes input) once a timer is running or paused,
+      // and keep it hidden after close until the next trading day.
+      const hideStart = state.phase !== "trading" || !!state.timerEnd || !!state.timerPaused;
+      const running = state.phase === "trading" && !!state.timerEnd && !state.timerPaused;
+      const paused = state.phase === "trading" && !!state.timerPaused;
+      startBtn.style.display = hideStart ? "none" : "";
+      if (minutes) minutes.style.display = hideStart ? "none" : "";
+      const label = minutes && minutes.previousElementSibling;
+      if (label && label.tagName === "LABEL") label.style.display = hideStart ? "none" : "";
+      pauseBtn.style.display = running ? "" : "none";
+      resumeBtn.style.display = paused ? "" : "none";
+    }
+
     function updateCountdown() {
       const el = document.getElementById("countdown");
       if (!el || !state) return;
+      updateTimerControls();
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "countdown"; return; }
+      if (state.timerPaused) {
+        const rem = Math.max(0, state.timerRemainingMs || 0);
+        el.textContent = formatRemaining(rem) + " paused";
+        el.className = "countdown";
+        return;
+      }
       if (!state.timerEnd) { el.textContent = "—"; el.className = "countdown"; return; }
       const rem = state.timerEnd - Date.now();
       if (rem <= 0) { el.textContent = "0:00"; el.className = "countdown urgent"; return; }
-      const m = Math.floor(rem / 60000);
-      const s = Math.floor((rem % 60000) / 1000);
-      el.textContent = m + ":" + String(s).padStart(2, "0");
+      el.textContent = formatRemaining(rem);
       el.className = rem < 30000 ? "countdown urgent" : "countdown";
     }
 
@@ -272,6 +304,32 @@
       busy = true;
       try {
         state.timerEnd = Date.now() + mins * 60 * 1000;
+        state.timerPaused = false;
+        state.timerRemainingMs = null;
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("pause-timer").onclick = async () => {
+      if (!state || busy || !state.timerEnd || state.timerPaused) return;
+      busy = true;
+      try {
+        const rem = Math.max(0, state.timerEnd - Date.now());
+        state.timerRemainingMs = rem;
+        state.timerPaused = true;
+        state.timerEnd = null;
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("resume-timer").onclick = async () => {
+      if (!state || busy || !state.timerPaused) return;
+      busy = true;
+      try {
+        const rem = Math.max(0, state.timerRemainingMs || 0);
+        state.timerEnd = Date.now() + rem;
+        state.timerPaused = false;
+        state.timerRemainingMs = null;
         await writeState();
       } finally { busy = false; }
     };

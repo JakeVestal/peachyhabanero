@@ -42,6 +42,8 @@ export function newState(now = Date.now()) {
     rates: { srf: 4.50, iorb: 4.40 },
     banks: {}, orders: {}, trades: {}, history: {},
     timerEnd: null,                // epoch ms; host sets this to open a timed session
+    timerPaused: false,            // true while the countdown is paused
+    timerRemainingMs: null,        // remaining ms while paused
     sofrHistory: [],               // [{day, sofr}] appended on each close
     closedBy: null,                // "timer" | "manual" | null
   };
@@ -62,6 +64,8 @@ export function normalize(raw) {
   if (s.sofr === undefined) s.sofr = null;
   if (s.lastSofr === undefined) s.lastSofr = null;
   if (s.timerEnd === undefined) s.timerEnd = null;
+  if (s.timerPaused === undefined) s.timerPaused = false;
+  if (s.timerRemainingMs === undefined) s.timerRemainingMs = null;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
   for (const b of Object.values(s.banks)) {
@@ -280,6 +284,8 @@ export function closeMarket(s, now = Date.now(), idFn = makeId) {
   s.phase = "closed";
   s.closedAt = now;
   s.timerEnd = null;                 // countdown is over
+  s.timerPaused = false;
+  s.timerRemainingMs = null;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (!s.sofrHistory.some((h) => h.day === s.day)) {
     s.sofrHistory.push({ day: s.day, sofr: s.sofr });
@@ -354,6 +360,8 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   s.phase = "trading";
   s.shock = null;
   s.timerEnd = null;
+  s.timerPaused = false;
+  s.timerRemainingMs = null;
   s.closedBy = null;
   for (const [id, o] of Object.entries(s.orders)) if (o.day < s.day) delete s.orders[id];
   return { finishedDay, sofrRef };
