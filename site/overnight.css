@@ -1,0 +1,33 @@
+/* Game-specific styles for the Overnight Clearing Desk.
+   The site's main style.css still provides the overall look, nav, and buttons. */
+
+.book { display: flex; gap: 16px; margin: 12px 0; }
+.book-side { flex: 1; background: #101826; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px; }
+.book-h { font-weight: 600; margin-bottom: 8px; font-size: 13px; }
+.book-h.bid { color: #7ee787; }
+.book-h.offer { color: #ff7b72; }
+.book-table { width: 100%; font-size: 12px; font-family: "IBM Plex Mono", monospace; }
+.book-table td { padding: 3px 4px; }
+.book-table .num { text-align: right; }
+.mine { background: rgba(0, 240, 255, 0.08); }
+
+.tape-row { font-family: "IBM Plex Mono", monospace; font-size: 12px; padding: 2px 0; }
+.tape-t { color: var(--muted); margin-right: 8px; }
+.tape-k { font-weight: 600; margin-right: 6px; }
+.k-private { color: var(--cyan); }
+.k-srf { color: var(--gold); }
+.k-od { color: #ff6b6b; }
+.k-iorb { color: var(--lime); }
+
+.pending { margin-top: 8px; font-size: 12px; }
+.pending-h { font-weight: 600; margin-bottom: 4px; }
+.bid { color: #7ee787; }
+.offer { color: #ff7b72; }
+.neg { color: #ff6b6b; font-weight: 600; }
+.pos { color: var(--lime); }
+.hl { color: var(--cyan); }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.bs-h { font-weight: 600; background: rgba(255,255,255,0.03); }
+.bs-total { font-weight: 600; border-top: 1px solid var(--gold-dim); }
+.num { text-align: right; font-family: "IBM Plex Mono", monospace; }
