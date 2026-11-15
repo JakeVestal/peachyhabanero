@@ -60,6 +60,8 @@
           <div id="msg" class="msg"></div>
           <h3 style="margin-top:18px">My Open Orders</h3>
           <div id="mine"></div>
+          <h3 style="margin-top:18px">My Trades Today</h3>
+          <div id="my-trades"></div>
           <div id="book" style="margin-top:16px"></div>
         </div>
       </div>
@@ -137,6 +139,10 @@
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
       document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
       renderMine();
+      const mineTrades = E.tradesForDay(state).filter(t => t.lender === stub || t.borrower === stub);
+      document.getElementById("my-trades").innerHTML = mineTrades.length
+        ? mineTrades.slice().reverse().map(t => `<div>${UI.tradeLineFor(t, stub)}</div>`).join("")
+        : "<p class='muted'>No trades yet.</p>";
 
       const closedEl = document.getElementById("closed-banner");
       const formDisabled = state.phase !== "trading";

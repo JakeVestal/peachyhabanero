@@ -142,17 +142,14 @@
       document.getElementById("session-code").textContent = sessionId;
 
       const sessRef = ref(db, "sessions/" + sessionId);
-      onValue(sessRef, async (snap) => {
+      onValue(sessRef, (snap) => {
         if (!snap.exists()) { setStatus("Session not found.", "err"); return; }
         state = E.normalize(snap.val());
-        // Host is the matcher: when a new order crosses, fill it and write back.
-        if (!busy && state.phase === "trading" && E.hasCross(state)) {
-          busy = true;
-          try {
-            E.matchOrders(state);
-            await writeState();
-          } finally { busy = false; }
-          return;
+        // Host is the matcher. A cross is filled from a local copy and written
+        // back as a partial update, so a concurrent new order is not clobbered.
+        if (state.phase === "trading" && E.hasCross(state)) {
+          matchDirty = true;
+          pumpMatches();
         }
         render();
         setStatus("Session " + sessionId + " active. Host owns the game.");
@@ -256,8 +253,51 @@
     }
 
     let busy = false;
+    let matching = false;
+    let matchDirty = false;
+
     async function writeState() {
       await set(ref(db, "sessions/" + sessionId), E.clean(state));
+    }
+
+    // Fill any crossed orders and persist only what the fill changes:
+    // the orders, the new trades, and the two banks' balance sheets.
+    async function pumpMatches() {
+      if (matching) return;
+      matching = true;
+      try {
+        while (matchDirty) {
+          matchDirty = false;
+          if (!state || state.phase !== "trading" || !E.hasCross(state)) break;
+          const before = E.clean(state);
+          const working = E.normalize(before);
+          const fills = E.matchOrders(working);
+          const ordersChanged = JSON.stringify(working.orders) !== JSON.stringify(before.orders);
+          if (!fills.length && !ordersChanged) break;
+
+          const patch = {};
+          for (const [id, o] of Object.entries(working.orders)) {
+            if (JSON.stringify(o) !== JSON.stringify(before.orders[id])) patch["orders/" + id] = o;
+          }
+          for (const [id, t] of Object.entries(working.trades)) {
+            if (!before.trades[id]) patch["trades/" + id] = t;
+          }
+          for (const [stub, b] of Object.entries(working.banks)) {
+            if (JSON.stringify(b) !== JSON.stringify(before.banks[stub])) patch["banks/" + stub] = b;
+          }
+          if (Object.keys(patch).length) {
+            await update(ref(db, "sessions/" + sessionId), patch);
+          }
+          // Apply locally so the tape and sheets update before the echo arrives.
+          state = working;
+          render();
+        }
+      } catch (e) {
+        setStatus(explainError(e), "err");
+      } finally {
+        matching = false;
+        if (matchDirty) pumpMatches();
+      }
     }
 
     async function closeNow(reason) {
