@@ -49,8 +49,52 @@ export function newState(now = Date.now()) {
   };
 }
 
-export function newBank(name, now = Date.now()) {
-  return { name, created: now, ...STARTING_BS };
+// Inclusive range, rounded to 2 decimals. Used only for starting balance sheets.
+function randBetween(rnd, lo, hi) {
+  return lo + (hi - lo) * rnd();
+}
+
+// Build a starting balance sheet that still totals $120B of assets (and
+// balances), but is not identical across banks. Cash is deliberately spread
+// so some banks have surplus to lend and some have a funding need.
+//
+// Ranges are kept tight on purpose:
+//   cash            −4 to +12   (more lenders than borrowers)
+//   treasuries      14 to 26    (enough free collateral to repo against)
+//   floatingAssets  12 to 26
+//   fixedLoans      the residual of the non-cash assets (stays the bulk)
+//   volatile        12 to 28    (sticky deposits take the rest of the 110 of funding)
+//   equity          fixed at 10
+export function randomStartingBS(rnd = Math.random) {
+  const cash = r2(randBetween(rnd, -4, 12));
+  const remaining = 120 - cash;
+  let treasuries = r2(randBetween(rnd, 14, 26));
+  let floatingAssets = r2(randBetween(rnd, 12, 26));
+  let fixedLoans = r2(remaining - treasuries - floatingAssets);
+  // If the residual lands outside a sane band, pull from the other two.
+  if (fixedLoans < 55) {
+    const need = r2(55 - fixedLoans);
+    const cutT = r2(Math.min(treasuries - 14, need));
+    treasuries = r2(treasuries - cutT);
+    floatingAssets = r2(floatingAssets - (need - cutT));
+    fixedLoans = r2(remaining - treasuries - floatingAssets);
+  } else if (fixedLoans > 90) {
+    const extra = r2(fixedLoans - 90);
+    treasuries = r2(treasuries + extra / 2);
+    floatingAssets = r2(floatingAssets + extra / 2);
+    fixedLoans = r2(remaining - treasuries - floatingAssets);
+  }
+  const volatile = r2(randBetween(rnd, 12, 28));
+  const stickyDep = r2(110 - volatile);
+  return {
+    fixedLoans, floatingAssets, treasuries, cash, repoLent: 0,
+    stickyDep, volatile, repoBorrowed: 0, equity: 10,
+    pledged: 0,
+  };
+}
+
+export function newBank(name, now = Date.now(), rnd = Math.random) {
+  return { name, created: now, ...randomStartingBS(rnd) };
 }
 
 // Firebase drops empty objects and null values, so anything read back from
