@@ -280,6 +280,13 @@
     document.getElementById("add-bank").onclick = async () => {
       const name = document.getElementById("bank-name").value.trim();
       if (!name || !state) return;
+      const taken = Object.values(state.banks).some(
+        (b) => (b.name || "").trim().toLowerCase() === name.toLowerCase()
+      );
+      if (taken) {
+        alert("That bank name is already taken. Please choose a different name.");
+        return;
+      }
       const stub = "b" + Math.random().toString(36).slice(2, 8);
       const bank = E.newBank(name);
       await update(ref(db, "sessions/" + sessionId + "/banks/" + stub), bank);
