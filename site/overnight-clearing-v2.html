@@ -10,6 +10,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
+    .countdown { font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--lime); min-width: 70px; }
+    .countdown.urgent { color: #ff6b6b; }
+    .history-list { list-style: none; padding: 0; margin: 8px 0; font-family: "IBM Plex Mono", monospace; }
+    .history-list li { padding: 4px 0; border-bottom: 1px solid var(--gold-faint); }
+    .msg.warn { color: #ffe2a8; }
+  </style>
 </head>
 <body>
   <header>
@@ -47,6 +55,39 @@
       <button class="neon-btn" id="advance">Advance to Next Day</button>
       <button class="neon-btn" id="end-session">End Session</button>
     </div>
+
+    <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
+    <div id="shock-banner" class="shock-banner" style="display:none"></div>
+
+    <div class="panel">
+      <h3>Trading Timer</h3>
+      <div class="row">
+        <label>Minutes</label>
+        <input id="timer-minutes" class="field" type="number" min="1" max="120" step="1" value="5" style="width:70px">
+        <button class="neon-btn" id="start-trading">Start Trading</button>
+        <span class="countdown" id="countdown">—</span>
+      </div>
+      <p class="small muted">Start writes a shared timer end into the session. Both screens count down. At zero the market closes the same way as the Close button.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Corridor</h3>
+      <div class="row">
+        <label>IORB %</label>
+        <input id="iorb" class="field" type="number" step="0.01" value="4.40" style="width:80px">
+        <label>SRF %</label>
+        <input id="srf" class="field" type="number" step="0.01" value="4.50" style="width:80px">
+        <button class="neon-btn" id="update-corridor">Update Corridor</button>
+        <span id="corridor-display" class="muted"></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="neon-btn" id="shock">Apply Systemic Shock (−5B volatile)</button>
+    </div>
+
+    <h2>SOFR History</h2>
+    <ul id="sofr-history" class="history-list"></ul>
 
     <h2>Banks</h2>
     <div id="banks" class="bank-grid"></div>
@@ -99,9 +140,18 @@
       document.getElementById("session-code").textContent = sessionId;
 
       const sessRef = ref(db, "sessions/" + sessionId);
-      onValue(sessRef, (snap) => {
+      onValue(sessRef, async (snap) => {
         if (!snap.exists()) { setStatus("Session not found.", "err"); return; }
         state = E.normalize(snap.val());
+        // Host is the matcher: when a new order crosses, fill it and write back.
+        if (!busy && state.phase === "trading" && E.hasCross(state)) {
+          busy = true;
+          try {
+            E.matchOrders(state);
+            await writeState();
+          } finally { busy = false; }
+          return;
+        }
         render();
         setStatus("Session " + sessionId + " active. Host owns the game.");
       }, (err) => setStatus(explainError(err), "err"));
@@ -118,6 +168,30 @@
       document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
       document.getElementById("phase").textContent = state.phase;
 
+      const corridor = document.getElementById("corridor-display");
+      if (corridor) corridor.textContent = `Current: IORB ${state.rates.iorb.toFixed(2)}% · SRF ${state.rates.srf.toFixed(2)}%`;
+
+      const closedEl = document.getElementById("closed-banner");
+      if (state.phase === "closed") {
+        closedEl.style.display = "block";
+        closedEl.textContent = state.closedBy === "timer" ? "Market closed — time’s up" : "Market closed";
+      } else {
+        closedEl.style.display = "none";
+      }
+
+      const sh = document.getElementById("shock-banner");
+      if (state.shock) {
+        sh.style.display = "block";
+        sh.innerHTML = `<strong>${UI.esc(state.shock.title)}</strong> — ${UI.esc(state.shock.text)}`;
+      } else {
+        sh.style.display = "none";
+      }
+
+      const hist = Array.isArray(state.sofrHistory) ? state.sofrHistory : [];
+      document.getElementById("sofr-history").innerHTML = hist.length
+        ? hist.map(h => `<li>Day ${h.day}: ${h.sofr != null ? Number(h.sofr).toFixed(2) + "%" : "— (no private trades)"}</li>`).join("")
+        : "<li class='muted'>No closes yet.</li>";
+
       const banksEl = document.getElementById("banks");
       banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) =>
         `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}</div>`
@@ -132,7 +206,44 @@
         const url = location.origin + location.pathname.replace("overnight-clearing-v2.html", "bank-v2.html") + "?session=" + sessionId + "&stub=" + stub;
         return `<div class="row"><code>${UI.esc(b.name)}</code> <input class="field" value="${url}" readonly style="flex:1"> <button class="neon-btn" onclick="navigator.clipboard.writeText('${url}')">Copy</button></div>`;
       }).join("");
+
+      updateCountdown();
     }
+
+    function updateCountdown() {
+      const el = document.getElementById("countdown");
+      if (!el || !state) return;
+      if (state.phase === "closed") { el.textContent = "closed"; el.className = "countdown"; return; }
+      if (!state.timerEnd) { el.textContent = "—"; el.className = "countdown"; return; }
+      const rem = state.timerEnd - Date.now();
+      if (rem <= 0) { el.textContent = "0:00"; el.className = "countdown urgent"; return; }
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      el.textContent = m + ":" + String(s).padStart(2, "0");
+      el.className = rem < 30000 ? "countdown urgent" : "countdown";
+    }
+
+    let busy = false;
+    async function writeState() {
+      await set(ref(db, "sessions/" + sessionId), E.clean(state));
+    }
+
+    async function closeNow(reason) {
+      if (!state || state.phase === "closed" || busy) return;
+      busy = true;
+      try {
+        state.closedBy = reason;
+        E.closeMarket(state);
+        await writeState();
+      } finally { busy = false; }
+    }
+
+    setInterval(() => {
+      updateCountdown();
+      if (state && state.phase === "trading" && state.timerEnd && Date.now() >= state.timerEnd) {
+        closeNow("timer");
+      }
+    }, 250);
 
     document.getElementById("add-bank").onclick = async () => {
       const name = document.getElementById("bank-name").value.trim();
@@ -143,16 +254,47 @@
       document.getElementById("bank-name").value = "";
     };
 
-    document.getElementById("close-market").onclick = async () => {
-      if (!state) return;
-      E.closeMarket(state);
-      await set(ref(db, "sessions/" + sessionId), E.clean(state));
-    };
+    document.getElementById("close-market").onclick = () => closeNow("manual");
 
     document.getElementById("advance").onclick = async () => {
-      if (!state) return;
-      E.advanceDay(state);
-      await set(ref(db, "sessions/" + sessionId), E.clean(state));
+      if (!state || busy) return;
+      busy = true;
+      try {
+        E.advanceDay(state);
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("start-trading").onclick = async () => {
+      if (!state || busy || state.phase !== "trading") return;
+      const mins = parseFloat(document.getElementById("timer-minutes").value);
+      if (!isFinite(mins) || mins <= 0 || mins > 180) return;
+      busy = true;
+      try {
+        state.timerEnd = Date.now() + mins * 60 * 1000;
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("update-corridor").onclick = async () => {
+      if (!state || busy) return;
+      const iorb = parseFloat(document.getElementById("iorb").value);
+      const srf = parseFloat(document.getElementById("srf").value);
+      if (!isFinite(iorb) || !isFinite(srf)) return;
+      busy = true;
+      try {
+        state.rates = { iorb, srf };
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("shock").onclick = async () => {
+      if (!state || busy) return;
+      busy = true;
+      try {
+        E.systemicShock(state, -5, "volatile");
+        await writeState();
+      } finally { busy = false; }
     };
 
     document.getElementById("end-session").onclick = async () => {

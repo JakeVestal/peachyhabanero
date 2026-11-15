@@ -9,6 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
+    .countdown { font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--lime); min-width: 70px; }
+    .countdown.urgent { color: #ff6b6b; }
+    .history-list { list-style: none; padding: 0; margin: 8px 0; font-family: "IBM Plex Mono", monospace; }
+    .history-list li { padding: 4px 0; border-bottom: 1px solid var(--gold-faint); }
+    .msg.warn { color: #ffe2a8; }
+  </style>
 </head>
 <body>
   <header>
@@ -24,6 +32,17 @@
   <div class="bank-wrap">
     <div id="content">
       <div id="status" class="status-bar">Connecting…</div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="label">Day</div><div class="value" id="day">1</div></div>
+        <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
+        <div class="stat-box"><div class="label">Phase</div><div class="value" id="phase">trading</div></div>
+        <div class="stat-box"><div class="label">Corridor</div><div class="value" id="corridor" style="font-size:14px">—</div></div>
+        <div class="stat-box"><div class="label">Time left</div><div class="value countdown" id="countdown">—</div></div>
+      </div>
+
+      <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
+
       <div class="two-col">
         <div class="panel">
           <h3>Balance Sheet</h3>
@@ -37,6 +56,7 @@
           <div class="row"><label>Rate %</label><input id="rate" class="field" type="number" step="0.01" value="4.40"></div>
           <div class="row"><label>Volume $B</label><input id="vol" class="field" type="number" step="0.1" value="1.0"></div>
           <button class="neon-btn" id="submit">Submit Order</button>
+          <div id="warn" class="msg"></div>
           <div id="msg" class="msg"></div>
           <div id="book" style="margin-top:16px"></div>
         </div>
@@ -62,6 +82,29 @@
     let state = null;
     const sessRef = ref(db, "sessions/" + sessionId);
 
+    function updateCountdown() {
+      const el = document.getElementById("countdown");
+      if (!el || !state) return;
+      if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
+      if (!state.timerEnd) { el.textContent = "—"; el.className = "value countdown"; return; }
+      const rem = state.timerEnd - Date.now();
+      if (rem <= 0) { el.textContent = "0:00"; el.className = "value countdown urgent"; return; }
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      el.textContent = m + ":" + String(s).padStart(2, "0");
+      el.className = rem < 30000 ? "value countdown urgent" : "value countdown";
+    }
+
+    function updateWarn() {
+      const wEl = document.getElementById("warn");
+      if (!wEl || !state) return;
+      const side = document.getElementById("side").value;
+      const rate = parseFloat(document.getElementById("rate").value);
+      const warn = isFinite(rate) ? E.corridorWarning(state, side, rate) : null;
+      wEl.textContent = warn ? "⚠ " + warn : "";
+      wEl.className = warn ? "msg warn" : "msg";
+    }
+
     onValue(sessRef, (snap) => {
       if (!snap.exists()) {
         document.getElementById("content").style.display = "none";
@@ -75,11 +118,35 @@
         return;
       }
       document.getElementById("title").textContent = bank.name;
+      document.getElementById("day").textContent = state.day;
+      document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
+      document.getElementById("phase").textContent = state.phase;
+      document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
       document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+
+      const closedEl = document.getElementById("closed-banner");
+      const formDisabled = state.phase !== "trading";
+      if (formDisabled) {
+        closedEl.style.display = "block";
+        closedEl.textContent = state.closedBy === "timer" ? "Market closed — time’s up" : "Market closed";
+      } else {
+        closedEl.style.display = "none";
+      }
+      document.getElementById("submit").disabled = formDisabled;
+      document.getElementById("side").disabled = formDisabled;
+      document.getElementById("rate").disabled = formDisabled;
+      document.getElementById("vol").disabled = formDisabled;
+
+      updateCountdown();
+      updateWarn();
       statusEl.textContent = "Connected to session " + sessionId;
       statusEl.className = "status-bar";
     }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
+
+    setInterval(updateCountdown, 250);
+    document.getElementById("rate").addEventListener("input", updateWarn);
+    document.getElementById("side").addEventListener("change", updateWarn);
 
     document.getElementById("submit").onclick = async () => {
       if (!state) return;

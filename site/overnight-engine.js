@@ -41,6 +41,9 @@ export function newState(now = Date.now()) {
     phase: "trading",              // "trading" | "closed"
     rates: { srf: 4.50, iorb: 4.40 },
     banks: {}, orders: {}, trades: {}, history: {},
+    timerEnd: null,                // epoch ms; host sets this to open a timed session
+    sofrHistory: [],               // [{day, sofr}] appended on each close
+    closedBy: null,                // "timer" | "manual" | null
   };
 }
 
@@ -58,6 +61,9 @@ export function normalize(raw) {
   for (const k of ["banks", "orders", "trades", "history"]) s[k] = s[k] || {};
   if (s.sofr === undefined) s.sofr = null;
   if (s.lastSofr === undefined) s.lastSofr = null;
+  if (s.timerEnd === undefined) s.timerEnd = null;
+  if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
+  if (s.closedBy === undefined) s.closedBy = null;
   for (const b of Object.values(s.banks)) {
     for (const f of BS_FIELDS) if (typeof b[f] !== "number" || isNaN(b[f])) b[f] = 0;
   }
@@ -273,6 +279,11 @@ export function closeMarket(s, now = Date.now(), idFn = makeId) {
   }
   s.phase = "closed";
   s.closedAt = now;
+  s.timerEnd = null;                 // countdown is over
+  if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
+  if (!s.sofrHistory.some((h) => h.day === s.day)) {
+    s.sofrHistory.push({ day: s.day, sofr: s.sofr });
+  }
   return { sofr: s.sofr, privateCount: privateTrades.length, srfCount, overdraftCount, parkedCount };
 }
 
@@ -342,6 +353,8 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   s.sofr = null;
   s.phase = "trading";
   s.shock = null;
+  s.timerEnd = null;
+  s.closedBy = null;
   for (const [id, o] of Object.entries(s.orders)) if (o.day < s.day) delete s.orders[id];
   return { finishedDay, sofrRef };
 }
@@ -351,6 +364,19 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
 // field: "volatile" (wholesale funding runs off / flows in),
 //        "stickyDep" (deposit outflow such as tax payments),
 //        "treasuries" (bank buys / receives Treasuries and pays cash).
+// Subtract (or add) the same amount from every bank. Default is a 5B
+// runoff of volatile funding — cash falls by the same amount.
+export function systemicShock(s, amount = -5, field = "volatile") {
+  const n = Object.keys(s.banks).length;
+  for (const b of Object.values(s.banks)) shockBank(b, field, amount);
+  s.shock = {
+    title: "Systemic Shock",
+    text: `Every bank: ${amount > 0 ? "+" : ""}${amount}B ${field}`,
+    note: "Volatile funding runoff. Cash falls by the same amount.",
+  };
+  return n;
+}
+
 export function shockBank(b, field, amount) {
   const a = Number(amount) || 0;
   if (field === "volatile") { b.volatile = r6(b.volatile + a); b.cash = r6(b.cash + a); }
