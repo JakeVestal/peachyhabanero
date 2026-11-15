@@ -86,6 +86,17 @@
       </div>
     </div>
 
+    <div class="panel">
+      <h3>Situation Cards</h3>
+      <div class="row">
+        <select id="card-select" class="field" style="min-width:240px">
+          <option value="">Choose a card…</option>
+        </select>
+        <button class="neon-btn" id="apply-card">Apply Card</button>
+      </div>
+      <p id="card-preview" class="small muted" style="margin-top:8px">Pick a card to see its story, corridor, and shock shape.</p>
+    </div>
+
     <div class="row">
       <button class="neon-btn" id="shock">Apply Systemic Shock (−5B volatile)</button>
     </div>
@@ -171,6 +182,11 @@
 
       const corridor = document.getElementById("corridor-display");
       if (corridor) corridor.textContent = `Current: IORB ${state.rates.iorb.toFixed(2)}% · SRF ${state.rates.srf.toFixed(2)}%`;
+      // Keep the corridor inputs in sync unless the instructor is typing in one.
+      const iorbEl = document.getElementById("iorb");
+      const srfEl = document.getElementById("srf");
+      if (iorbEl && document.activeElement !== iorbEl) iorbEl.value = state.rates.iorb;
+      if (srfEl && document.activeElement !== srfEl) srfEl.value = state.rates.srf;
 
       const closedEl = document.getElementById("closed-banner");
       if (state.phase === "closed") {
@@ -183,7 +199,17 @@
       const sh = document.getElementById("shock-banner");
       if (state.shock) {
         sh.style.display = "block";
-        sh.innerHTML = `<strong>${UI.esc(state.shock.title)}</strong> — ${UI.esc(state.shock.text)}`;
+        let dist = "";
+        if (state.shock.perBank && Object.keys(state.shock.perBank).length) {
+          const bits = Object.entries(state.shock.perBank).map(([stub, amt]) => {
+            const name = state.banks[stub]?.name || stub;
+            const sign = amt > 0 ? "+" : "";
+            return `${UI.esc(name)}: ${sign}${amt}B`;
+          });
+          dist = `<div class="small" style="margin-top:6px;opacity:0.9">${bits.join(" · ")}</div>`;
+        }
+        const note = state.shock.note ? `<div class="small muted" style="margin-top:4px">${UI.esc(state.shock.note)}</div>` : "";
+        sh.innerHTML = `<strong>${UI.esc(state.shock.title)}</strong> — ${UI.esc(state.shock.text)}${note}${dist}`;
       } else {
         sh.style.display = "none";
       }
@@ -401,6 +427,40 @@
       busy = true;
       try {
         E.systemicShock(state, -5, "volatile");
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    // Situation cards: dropdown + Apply. Engine owns the card list, rates, and shocks.
+    const cardSelect = document.getElementById("card-select");
+    const cardPreview = document.getElementById("card-preview");
+    if (cardSelect && Array.isArray(E.SITUATION_CARDS)) {
+      for (const c of E.SITUATION_CARDS) {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.title;
+        cardSelect.appendChild(opt);
+      }
+      cardSelect.onchange = () => {
+        const c = E.SITUATION_CARDS.find(x => x.id === cardSelect.value);
+        if (!c) { cardPreview.textContent = "Pick a card to see its story, corridor, and shock shape."; return; }
+        const rates = c.rates ? `IORB ${c.rates.iorb.toFixed(2)}% · SRF ${c.rates.srf.toFixed(2)}%` : "corridor unchanged";
+        cardPreview.textContent = `${c.story} Corridor → ${rates}. ${c.note || ""}`;
+      };
+    }
+
+    document.getElementById("apply-card").onclick = async () => {
+      if (!state || busy) return;
+      const id = cardSelect ? cardSelect.value : "";
+      const card = E.SITUATION_CARDS.find(c => c.id === id);
+      if (!card) return;
+      busy = true;
+      try {
+        E.applySituationCard(state, card);
+        const iorbEl = document.getElementById("iorb");
+        const srfEl = document.getElementById("srf");
+        if (iorbEl) iorbEl.value = state.rates.iorb;
+        if (srfEl) srfEl.value = state.rates.srf;
         await writeState();
       } finally { busy = false; }
     };

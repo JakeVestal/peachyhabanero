@@ -411,6 +411,152 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   return { finishedDay, sofrRef };
 }
 
+// ---------------------------------------------------------------- situation cards
+//
+// Named scenarios for the instructor. Each card sets the corridor and
+// assigns a non-uniform liquidity shock from a fixed pool so the
+// distribution is simple and explainable.
+//
+// mode:
+//   "shuffle"     — shuffle the pool and assign (most cards).
+//   "byCashAsc"   — sort banks by cash ascending; lowest cash gets the
+//                   first (usually most negative) pool value.
+//   "bySizeDesc"  — sort banks by total assets descending, then by
+//                   volatile funding; largest / more levered gets the
+//                   first (usually most negative) pool value.
+//
+// Pool values are $ billions of volatile funding (and matching cash).
+// Positive = inflow, negative = runoff.
+
+export const SITUATION_CARDS = [
+  {
+    id: "pandemic",
+    title: "Pandemic shock",
+    story: "A sudden global health emergency freezes risk appetite. The Fed cuts the corridor hard to keep markets open. Wholesale funding runs off at most banks; a handful with strong deposit franchises see inflows.",
+    rates: { iorb: 0.15, srf: 0.25 },
+    field: "volatile",
+    pool: [-10, -8, -7, -6, -5, -4, -3, -2, 2, 4],
+    mode: "shuffle",
+    note: "Most banks lose volatile funding; a few gain. Fixed pool is shuffled and assigned.",
+  },
+  {
+    id: "inflation",
+    title: "Hot inflation print",
+    story: "A hotter-than-expected CPI print forces the Fed to hike. Funding tightens mildly to moderately, and the pressure falls hardest on banks that are already short cash.",
+    rates: { iorb: 5.40, srf: 5.50 },
+    field: "volatile",
+    pool: [-6, -5, -4, -3, -2, -2, -1, 0, 1],
+    mode: "byCashAsc",
+    note: "Mild-to-moderate tightening. Banks sorted by cash (lowest first) and given the more negative shocks from the pool.",
+  },
+  {
+    id: "liqcrisis",
+    title: "Liquidity crisis (2019-style)",
+    story: "A sharp, concentrated liquidity squeeze hits a few banks hard while most feel only mild pressure. The corridor widens as the Fed emphasizes the standing repo facility as a backstop.",
+    rates: { iorb: 4.40, srf: 5.00 },
+    field: "volatile",
+    pool: [-12, -9, -6, -2, -1, 0, 0, 1],
+    mode: "shuffle",
+    note: "Sharp, concentrated outflows for some banks; mild for the rest. SRF is raised to emphasize the facility.",
+  },
+  {
+    id: "flight",
+    title: "Flight to safety",
+    story: "Risk aversion drives deposits and cash into the banking system. Most banks gain funding; a couple see modest outflows as counterparties rebalance.",
+    rates: { iorb: 4.25, srf: 4.35 },
+    field: "volatile",
+    pool: [8, 6, 5, 4, 3, 2, -1, -2],
+    mode: "shuffle",
+    note: "Most banks gain volatile funding; a couple see modest outflows. Fixed pool is shuffled and assigned.",
+  },
+  {
+    id: "quarterend",
+    title: "Quarter-end turn",
+    story: "Window-dressing and balance-sheet constraints create mild, fairly even funding pressure into the turn. Larger banks feel a slight extra squeeze.",
+    rates: { iorb: 4.40, srf: 4.55 },
+    field: "volatile",
+    pool: [-4, -3, -3, -2, -2, -1, -1, 0],
+    mode: "bySizeDesc",
+    note: "Mild, fairly even pressure. Banks sorted by total assets, then by volatile funding (more wholesale-funded first), and given the more negative shocks from the pool.",
+  },
+];
+
+function shuffleInPlace(arr, rnd) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+// Take n values from a fixed pool. Repeats the pool if there are more banks
+// than values, then shuffles so assignment is not tied to list order.
+function drawFromPool(pool, n, rnd) {
+  if (!pool || !pool.length || n <= 0) return [];
+  const repeated = [];
+  while (repeated.length < n) repeated.push(...pool);
+  return shuffleInPlace(repeated.slice(0, Math.max(n, pool.length)), rnd).slice(0, n);
+}
+
+// Apply a situation card: set the corridor, assign a non-uniform liquidity
+// shock via shockBank, and write the story into s.shock so every page can
+// display it. Returns the per-bank summary.
+export function applySituationCard(s, cardOrId, rnd = Math.random) {
+  const card = typeof cardOrId === "string"
+    ? SITUATION_CARDS.find((c) => c.id === cardOrId)
+    : cardOrId;
+  if (!card) throw new Error("Unknown situation card");
+
+  if (card.rates && isFinite(card.rates.iorb) && isFinite(card.rates.srf)) {
+    s.rates = { iorb: card.rates.iorb, srf: card.rates.srf };
+  }
+
+  const field = card.field || "volatile";
+  const stubs = Object.keys(s.banks);
+  let ordered = stubs.slice();
+
+  if (card.mode === "byCashAsc") {
+    ordered.sort((a, b) => (s.banks[a].cash || 0) - (s.banks[b].cash || 0));
+  } else if (card.mode === "bySizeDesc") {
+    // Largest assets first; when sizes match (common on day 1), more
+    // wholesale-funded banks are treated as more levered and go first.
+    ordered.sort((a, b) => {
+      const ba = s.banks[b], aa = s.banks[a];
+      const sizeDiff = totals(ba).assets - totals(aa).assets;
+      if (Math.abs(sizeDiff) > 0.01) return sizeDiff;
+      return (ba.volatile || 0) - (aa.volatile || 0);
+    });
+  } else {
+    ordered = shuffleInPlace(ordered, rnd);
+  }
+
+  let amounts;
+  if (card.mode === "byCashAsc" || card.mode === "bySizeDesc") {
+    // Pool is ordered worst-to-best; assign in that order after the sort.
+    const pool = card.pool || [];
+    amounts = ordered.map((_, i) => pool[i % pool.length]);
+  } else {
+    amounts = drawFromPool(card.pool || [], ordered.length, rnd);
+  }
+
+  const summary = [];
+  for (let i = 0; i < ordered.length; i++) {
+    const stub = ordered[i];
+    shockBank(s.banks[stub], field, amounts[i]);
+    summary.push({ stub, name: s.banks[stub].name, amount: amounts[i] });
+  }
+
+  s.shock = {
+    title: card.title,
+    text: card.story,
+    note: card.note || "",
+    cardId: card.id,
+    field,
+    perBank: Object.fromEntries(summary.map((x) => [x.stub, x.amount])),
+  };
+  return summary;
+}
+
 // ---------------------------------------------------------------- shocks
 
 // field: "volatile" (wholesale funding runs off / flows in),

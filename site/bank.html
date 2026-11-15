@@ -42,6 +42,7 @@
       </div>
 
       <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
+      <div id="shock-banner" class="shock-banner" style="display:none"></div>
 
       <div class="two-col">
         <div class="panel">
@@ -154,6 +155,21 @@
         closedEl.textContent = state.closedBy === "timer" ? "Market closed — time’s up" : "Market closed";
       } else {
         closedEl.style.display = "none";
+      }
+
+      const sh = document.getElementById("shock-banner");
+      if (sh) {
+        if (state.shock) {
+          sh.style.display = "block";
+          const mine = state.shock.perBank && state.shock.perBank[stub];
+          const field = state.shock.field || "volatile";
+          const mineLine = (mine != null)
+            ? `<div class="small" style="margin-top:6px">Your bank: ${mine > 0 ? "+" : ""}${mine}B ${UI.esc(field)} funding.</div>`
+            : "";
+          sh.innerHTML = `<strong>${UI.esc(state.shock.title)}</strong> — ${UI.esc(state.shock.text)}${mineLine}`;
+        } else {
+          sh.style.display = "none";
+        }
       }
       document.getElementById("submit").disabled = formDisabled;
       document.getElementById("side").disabled = formDisabled;
