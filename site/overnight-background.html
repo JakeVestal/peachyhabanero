@@ -6,6 +6,39 @@
   <title>Overnight Market Background · peachyhabanero</title>
   <meta name="description" content="What a repo is, how SOFR is calculated, and why the overnight Treasury repo market is the plumbing of the financial system."/>
   <link rel="stylesheet" href="style.css"/>
+  <style>
+    .scatter-wrap {
+      background: var(--panel);
+      border: 1px solid var(--gold-dim);
+      border-radius: 10px;
+      padding: 12px;
+      margin: 12px 0 8px;
+      max-width: 860px;
+    }
+    #sofr-scatter {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 480px;
+    }
+    .chart-caption {
+      font-size: 14px;
+      color: var(--ink);
+      margin: 8px 0 4px;
+      max-width: 860px;
+      line-height: 1.5;
+    }
+    .chart-sources {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 0 0 16px;
+      max-width: 860px;
+      line-height: 1.45;
+    }
+    .chart-sources a { color: var(--gold); }
+    .chart-status { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted); margin: 4px 0 8px; }
+    .chart-status.err { color: #ff2bd6; }
+  </style>
 </head>
 <body>
 <header>
@@ -74,6 +107,25 @@
       <a href="overnight-clearing.html">← back to the Overnight Clearing Desk</a>
     </p>
   </section>
+
+  <section>
+    <h2>SOFR and the 1-month Treasury yield</h2>
+    <p>
+      The chart below plots daily published SOFR against the contemporaneous 1-month constant-maturity Treasury yield. Each point is one overlapping business day. An ordinary least-squares line summarizes the co-movement. Points from the September 2019 funding episode are highlighted.
+    </p>
+    <p class="chart-status" id="scatter-status">loading published rates…</p>
+    <div class="scatter-wrap">
+      <canvas id="sofr-scatter" width="800" height="480" aria-label="Scatter of daily SOFR versus 1-month Treasury yield"></canvas>
+    </div>
+    <p class="chart-caption">Overnight secured funding (SOFR) and the 1-month Treasury yield move together. The Fed’s corridor anchors the short end of the curve.</p>
+    <p class="chart-sources">
+      Sources: SOFR — Federal Reserve Bank of New York Markets Data API
+      (<a href="https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=2018-04-02&endDate=2026-11-15" target="_blank" rel="noopener">search.json</a>,
+      percentRate on effectiveDate). 1-month CMT — FRED series DGS1MO via keyless graph CSV
+      (<a href="https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS1MO" target="_blank" rel="noopener">fredgraph.csv?id=DGS1MO</a>),
+      republished U.S. Treasury H.15. Points are real published rates; missing days are dropped. Retrieved live on page load.
+    </p>
+  </section>
 </main>
 
 <footer>
@@ -81,5 +133,220 @@
   <a href="https://github.com/JakeVestal/peachyhabanero">source</a>
   <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
 </footer>
+
+<script>
+(function () {
+  const canvas = document.getElementById('sofr-scatter');
+  const statusEl = document.getElementById('scatter-status');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  function setStatus(msg, isErr) {
+    statusEl.textContent = msg;
+    statusEl.className = 'chart-status' + (isErr ? ' err' : '');
+  }
+
+  async function fetchSOFR() {
+    const end = new Date().toISOString().slice(0, 10);
+    const url = `https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=2018-04-02&endDate=${end}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('SOFR ' + res.status);
+    const json = await res.json();
+    const map = new Map();
+    (json.refRates || []).forEach(r => {
+      if (r.effectiveDate && typeof r.percentRate === 'number' && isFinite(r.percentRate)) {
+        map.set(r.effectiveDate, r.percentRate);
+      }
+    });
+    return map;
+  }
+
+  async function fetchDGS1MO() {
+    const url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS1MO';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('DGS1MO ' + res.status);
+    const text = await res.text();
+    const lines = text.trim().split(/\r?\n/);
+    const map = new Map();
+    // header is observation_date,DGS1MO or Date,DGS1MO
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 2) continue;
+      const date = parts[0].trim();
+      const valStr = parts[1].trim();
+      if (!date || valStr === '.' || valStr === '') continue;
+      const val = parseFloat(valStr);
+      if (isFinite(val)) map.set(date, val);
+    }
+    return map;
+  }
+
+  function ols(xs, ys) {
+    const n = xs.length;
+    if (n < 2) return null;
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++) {
+      sx += xs[i];
+      sy += ys[i];
+      sxx += xs[i] * xs[i];
+      sxy += xs[i] * ys[i];
+    }
+    const denom = n * sxx - sx * sx;
+    if (Math.abs(denom) < 1e-12) return null;
+    const b = (n * sxy - sx * sy) / denom;
+    const a = (sy - b * sx) / n;
+    return { a, b };
+  }
+
+  function isSep2019(date) {
+    return date >= '2019-09-16' && date <= '2019-09-20';
+  }
+
+  function draw(points, line) {
+    const w = canvas.clientWidth || 800;
+    const h = Math.min(480, Math.round(w * 0.6));
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const padL = 52, padR = 20, padT = 28, padB = 40;
+    const plotW = w - padL - padR;
+    const plotH = h - padT - padB;
+
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    let xMin = Math.min(...xs), xMax = Math.max(...xs);
+    let yMin = Math.min(...ys), yMax = Math.max(...ys);
+    const xPad = (xMax - xMin) * 0.06 || 0.5;
+    const yPad = (yMax - yMin) * 0.06 || 0.5;
+    xMin -= xPad; xMax += xPad;
+    yMin -= yPad; yMax += yPad;
+
+    const xScale = x => padL + ((x - xMin) / (xMax - xMin)) * plotW;
+    const yScale = y => padT + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+
+    // background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, w, h);
+
+    // grid
+    ctx.strokeStyle = 'rgba(127,147,166,0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 4; i++) {
+      const x = padL + (plotW * i) / 4;
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, padT + plotH);
+      const y = padT + (plotH * i) / 4;
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + plotW, y);
+    }
+    ctx.stroke();
+
+    // axes
+    ctx.strokeStyle = 'rgba(196,163,90,0.55)';
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.stroke();
+
+    // labels
+    ctx.fillStyle = '#7f93a6';
+    ctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SOFR (%)', padL + plotW / 2, h - 10);
+    ctx.save();
+    ctx.translate(16, padT + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('1-month Treasury CMT (%)', 0, 0);
+    ctx.restore();
+
+    // tick labels
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#9fb3c8';
+    for (let i = 0; i <= 4; i++) {
+      const xv = xMin + (xMax - xMin) * i / 4;
+      ctx.fillText(xv.toFixed(1), xScale(xv), padT + plotH + 16);
+      const yv = yMin + (yMax - yMin) * (4 - i) / 4;
+      ctx.textAlign = 'right';
+      ctx.fillText(yv.toFixed(1), padL - 8, yScale(yv) + 4);
+      ctx.textAlign = 'center';
+    }
+
+    // OLS line
+    if (line) {
+      const x1 = xMin, x2 = xMax;
+      const y1 = line.a + line.b * x1;
+      const y2 = line.a + line.b * x2;
+      ctx.strokeStyle = '#c4a35a';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(xScale(x1), yScale(y1));
+      ctx.lineTo(xScale(x2), yScale(y2));
+      ctx.stroke();
+    }
+
+    // points
+    for (const p of points) {
+      const highlight = isSep2019(p.date);
+      ctx.fillStyle = highlight ? '#ff2bd6' : 'rgba(0,240,255,0.55)';
+      ctx.beginPath();
+      ctx.arc(xScale(p.x), yScale(p.y), highlight ? 3.2 : 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // legend
+    ctx.fillStyle = '#d5e4f0';
+    ctx.font = '11px "IBM Plex Sans", "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(0,240,255,0.9)';
+    ctx.beginPath(); ctx.arc(padL + 8, padT + 12, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d5e4f0';
+    ctx.fillText('daily overlapping days', padL + 16, padT + 16);
+    ctx.fillStyle = '#ff2bd6';
+    ctx.beginPath(); ctx.arc(padL + 8, padT + 28, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d5e4f0';
+    ctx.fillText('Sep 2019 episode', padL + 16, padT + 32);
+    if (line) {
+      ctx.strokeStyle = '#c4a35a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padL + 4, padT + 46);
+      ctx.lineTo(padL + 22, padT + 46);
+      ctx.stroke();
+      ctx.fillStyle = '#d5e4f0';
+      ctx.fillText(`OLS  y = ${line.a.toFixed(2)} + ${line.b.toFixed(2)} x`, padL + 28, padT + 50);
+    }
+  }
+
+  async function main() {
+    try {
+      const [sofrMap, dgsMap] = await Promise.all([fetchSOFR(), fetchDGS1MO()]);
+      const points = [];
+      for (const [date, sofr] of sofrMap) {
+        if (dgsMap.has(date)) {
+          points.push({ date, x: sofr, y: dgsMap.get(date) });
+        }
+      }
+      points.sort((a, b) => a.date.localeCompare(b.date));
+      if (points.length < 5) {
+        setStatus('data unavailable — insufficient overlapping observations', true);
+        return;
+      }
+      const line = ols(points.map(p => p.x), points.map(p => p.y));
+      setStatus(`${points.length} overlapping business days · live from NY Fed & FRED`);
+      draw(points, line);
+      window.addEventListener('resize', () => draw(points, line));
+    } catch (err) {
+      setStatus('data unavailable — ' + (err.message || 'fetch failed'), true);
+      console.error(err);
+    }
+  }
+
+  main();
+})();
+</script>
 </body>
 </html>
