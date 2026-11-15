@@ -59,14 +59,14 @@ function randBetween(rnd, lo, hi) {
 // so some banks have surplus to lend and some have a funding need.
 //
 // Ranges are kept tight on purpose:
-//   cash            −4 to +12   (more lenders than borrowers)
+//   cash            −6 to +7    (~45% need cash, the rest can lend)
 //   treasuries      14 to 26    (enough free collateral to repo against)
 //   floatingAssets  12 to 26
 //   fixedLoans      the residual of the non-cash assets (stays the bulk)
 //   volatile        12 to 28    (sticky deposits take the rest of the 110 of funding)
 //   equity          fixed at 10
 export function randomStartingBS(rnd = Math.random) {
-  const cash = r2(randBetween(rnd, -4, 12));
+  const cash = r2(randBetween(rnd, -6, 7));
   const remaining = 120 - cash;
   let treasuries = r2(randBetween(rnd, 14, 26));
   let floatingAssets = r2(randBetween(rnd, 12, 26));
