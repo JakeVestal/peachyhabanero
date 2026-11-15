@@ -204,7 +204,7 @@
       const linksEl = document.getElementById("links");
       linksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
         const url = location.origin + location.pathname.replace("overnight-clearing-v2.html", "bank-v2.html") + "?session=" + sessionId + "&stub=" + stub;
-        return `<div class="row"><code>${UI.esc(b.name)}</code> <input class="field" value="${url}" readonly style="flex:1"> <button class="neon-btn" onclick="navigator.clipboard.writeText('${url}')">Copy</button></div>`;
+        return `<div class="row"><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a> <input class="field" value="${url}" readonly style="flex:1"> <button class="neon-btn" onclick="navigator.clipboard.writeText('${url}')">Copy</button></div>`;
       }).join("");
 
       updateCountdown();
