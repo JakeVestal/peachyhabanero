@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bank Desk — Overnight Clearing · peachyhabanero</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="overnight.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="overnight-clearing-v2.html">← main desk</a>
+      </p>
+    </div>
+    <h1 id="title">Bank Desk</h1>
+    <p class="sub">Your balance sheet and order entry for this session.</p>
+  </header>
+
+  <div class="bank-wrap">
+    <div id="content">
+      <div id="status" class="status-bar">Connecting…</div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Balance Sheet</h3>
+          <div id="bs"></div>
+        </div>
+        <div class="panel order-form">
+          <h3>Post Order</h3>
+          <div class="row"><label>Side</label>
+            <select id="side" class="field"><option value="bid">Bid (borrow cash)</option><option value="offer">Offer (lend cash)</option></select>
+          </div>
+          <div class="row"><label>Rate %</label><input id="rate" class="field" type="number" step="0.01" value="4.40"></div>
+          <div class="row"><label>Volume $B</label><input id="vol" class="field" type="number" step="0.1" value="1.0"></div>
+          <button class="neon-btn" id="submit">Submit Order</button>
+          <div id="msg" class="msg"></div>
+          <div id="book" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </div>
+    <div id="ended" class="ended" style="display:none">Session ended by host.</div>
+  </div>
+
+  <script type="module">
+    import * as E from "./overnight-engine.js";
+    import * as UI from "./overnight-ui.js";
+    import { db, ref, onValue, update, push, configError, explainError } from "./overnight-db.js";
+
+    const params = new URLSearchParams(location.search);
+    const sessionId = params.get("session");
+    const stub = params.get("stub");
+    const statusEl = document.getElementById("status");
+    const msgEl = document.getElementById("msg");
+
+    if (configError) { statusEl.textContent = configError; statusEl.className = "status-bar err"; throw new Error(configError); }
+    if (!sessionId || !stub) { document.body.innerHTML = "<h1>Missing session or stub. Use the private link from the instructor.</h1>"; throw new Error("missing params"); }
+
+    let state = null;
+    const sessRef = ref(db, "sessions/" + sessionId);
+
+    onValue(sessRef, (snap) => {
+      if (!snap.exists()) {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("ended").style.display = "block";
+        return;
+      }
+      state = E.normalize(snap.val());
+      const bank = state.banks[stub];
+      if (!bank) {
+        document.getElementById("bs").innerHTML = "<p class='muted'>Waiting for bank…</p>";
+        return;
+      }
+      document.getElementById("title").textContent = bank.name;
+      document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
+      document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+      statusEl.textContent = "Connected to session " + sessionId;
+      statusEl.className = "status-bar";
+    }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
+
+    document.getElementById("submit").onclick = async () => {
+      if (!state) return;
+      const side = document.getElementById("side").value;
+      const rate = parseFloat(document.getElementById("rate").value);
+      const volume = parseFloat(document.getElementById("vol").value);
+      const err = E.validateOrder(state, stub, side, rate, volume);
+      if (err) { msgEl.textContent = err; msgEl.className = "msg err"; return; }
+      const warn = E.corridorWarning(state, side, rate);
+      if (warn && !confirm(warn + "\n\nSubmit anyway?")) return;
+
+      const order = {
+        stub, name: state.banks[stub].name, side, rate, volume,
+        remaining: volume, filled: 0, status: "open", day: state.day, ts: Date.now()
+      };
+      const orderId = push(ref(db, "sessions/" + sessionId + "/orders")).key;
+      await update(ref(db, "sessions/" + sessionId + "/orders/" + orderId), order);
+
+      // Host does the matching; we just write the order.
+      msgEl.textContent = "Order submitted.";
+      msgEl.className = "msg ok";
+    };
+  </script>
+</body>
+</html>

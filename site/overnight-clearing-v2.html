@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Overnight Clearing Desk — SOFR & Repo Simulation · peachyhabanero</title>
+  <meta name="description" content="Interactive classroom simulation of the overnight repo market." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="overnight.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="index.html">home</a>
+        <a href="sustainability.html">sustainability</a>
+        <a href="fiscal-dominance.html">fiscal dominance</a>
+        <a href="financing.html">financing</a>
+        <a href="phase.html">phase</a>
+        <a href="trackers.html">trackers</a>
+        <a href="data.html">data</a>
+        <a href="overnight-clearing-v2.html" style="color:var(--mag)">overnight desk</a>
+      </p>
+      <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <h1>THE OVERNIGHT CLEARING DESK</h1>
+    <p class="sub">Classroom simulation of the SOFR market. Instructor screen. Students use private bank links.</p>
+  </header>
+
+  <div class="game-wrap">
+    <div id="status" class="status-bar">Connecting…</div>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="label">Session</div><div class="value" id="session-code">—</div></div>
+      <div class="stat-box"><div class="label">Day</div><div class="value" id="day">1</div></div>
+      <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
+      <div class="stat-box"><div class="label">Phase</div><div class="value" id="phase">trading</div></div>
+    </div>
+
+    <div class="row">
+      <input id="bank-name" class="field" placeholder="Bank name" style="width:180px">
+      <button class="neon-btn" id="add-bank">+ Add Bank</button>
+      <button class="neon-btn" id="close-market">Close Market & Print SOFR</button>
+      <button class="neon-btn" id="advance">Advance to Next Day</button>
+      <button class="neon-btn" id="end-session">End Session</button>
+    </div>
+
+    <h2>Banks</h2>
+    <div id="banks" class="bank-grid"></div>
+
+    <h2>Order Book</h2>
+    <div id="book"></div>
+
+    <h2>Trade Tape</h2>
+    <div id="tape" class="tape"></div>
+
+    <h2>Student Links</h2>
+    <div id="links"></div>
+  </div>
+
+  <footer>
+    <p>Classroom tool for FINTECH. Engine by Hanna Boud; site by peachyhabanero.</p>
+  </footer>
+
+  <script type="module">
+    import * as E from "./overnight-engine.js";
+    import * as UI from "./overnight-ui.js";
+    import { db, ref, onValue, set, update, push, remove, onDisconnect, configError, explainError } from "./overnight-db.js";
+
+    const statusEl = document.getElementById("status");
+    const setStatus = (msg, cls = "") => { statusEl.className = "status-bar " + cls; statusEl.textContent = msg; };
+
+    if (configError) {
+      setStatus(configError, "err");
+      throw new Error(configError);
+    }
+
+    const params = new URLSearchParams(location.search);
+    let sessionId = params.get("session") || null;
+    let state = null;
+
+    function generateSessionId() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let id = "";
+      for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      return id;
+    }
+
+    async function start() {
+      if (!sessionId) {
+        sessionId = generateSessionId();
+        history.replaceState(null, "", "?session=" + sessionId);
+        const s = E.newState();
+        await set(ref(db, "sessions/" + sessionId), E.clean(s));
+      }
+      document.getElementById("session-code").textContent = sessionId;
+
+      const sessRef = ref(db, "sessions/" + sessionId);
+      onValue(sessRef, (snap) => {
+        if (!snap.exists()) { setStatus("Session not found.", "err"); return; }
+        state = E.normalize(snap.val());
+        render();
+        setStatus("Session " + sessionId + " active. Host owns the game.");
+      }, (err) => setStatus(explainError(err), "err"));
+
+      // presence
+      const connRef = push(ref(db, "sessions/" + sessionId + "/hostConnections"));
+      onDisconnect(connRef).remove();
+      set(connRef, { ts: Date.now() });
+    }
+
+    function render() {
+      if (!state) return;
+      document.getElementById("day").textContent = state.day;
+      document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
+      document.getElementById("phase").textContent = state.phase;
+
+      const banksEl = document.getElementById("banks");
+      banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) =>
+        `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}</div>`
+      ).join("") || "<em class='muted'>No banks yet.</em>";
+
+      document.getElementById("book").innerHTML = UI.orderBookHTML(state);
+      const trades = E.tradesForDay(state);
+      document.getElementById("tape").innerHTML = trades.slice(-20).reverse().map(UI.tapeLine).join("") || "<em class='muted'>No trades yet.</em>";
+
+      const linksEl = document.getElementById("links");
+      linksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
+        const url = location.origin + location.pathname.replace("overnight-clearing-v2.html", "bank-v2.html") + "?session=" + sessionId + "&stub=" + stub;
+        return `<div class="row"><code>${UI.esc(b.name)}</code> <input class="field" value="${url}" readonly style="flex:1"> <button class="neon-btn" onclick="navigator.clipboard.writeText('${url}')">Copy</button></div>`;
+      }).join("");
+    }
+
+    document.getElementById("add-bank").onclick = async () => {
+      const name = document.getElementById("bank-name").value.trim();
+      if (!name || !state) return;
+      const stub = "b" + Math.random().toString(36).slice(2, 8);
+      const bank = E.newBank(name);
+      await update(ref(db, "sessions/" + sessionId + "/banks/" + stub), bank);
+      document.getElementById("bank-name").value = "";
+    };
+
+    document.getElementById("close-market").onclick = async () => {
+      if (!state) return;
+      E.closeMarket(state);
+      await set(ref(db, "sessions/" + sessionId), E.clean(state));
+    };
+
+    document.getElementById("advance").onclick = async () => {
+      if (!state) return;
+      E.advanceDay(state);
+      await set(ref(db, "sessions/" + sessionId), E.clean(state));
+    };
+
+    document.getElementById("end-session").onclick = async () => {
+      if (!sessionId) return;
+      await remove(ref(db, "sessions/" + sessionId));
+      location.href = location.pathname;
+    };
+
+    start().catch(e => setStatus(explainError(e), "err"));
+  </script>
+</body>
+</html>

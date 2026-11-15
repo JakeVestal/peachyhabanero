@@ -1,33 +1,106 @@
-/* Game-specific styles for the Overnight Clearing Desk.
-   The site's main style.css still provides the overall look, nav, and buttons. */
-
-.book { display: flex; gap: 16px; margin: 12px 0; }
-.book-side { flex: 1; background: #101826; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px; }
-.book-h { font-weight: 600; margin-bottom: 8px; font-size: 13px; }
-.book-h.bid { color: #7ee787; }
-.book-h.offer { color: #ff7b72; }
-.book-table { width: 100%; font-size: 12px; font-family: "IBM Plex Mono", monospace; }
-.book-table td { padding: 3px 4px; }
-.book-table .num { text-align: right; }
-.mine { background: rgba(0, 240, 255, 0.08); }
-
-.tape-row { font-family: "IBM Plex Mono", monospace; font-size: 12px; padding: 2px 0; }
-.tape-t { color: var(--muted); margin-right: 8px; }
-.tape-k { font-weight: 600; margin-right: 6px; }
-.k-private { color: var(--cyan); }
-.k-srf { color: var(--gold); }
-.k-od { color: #ff6b6b; }
-.k-iorb { color: var(--lime); }
-
-.pending { margin-top: 8px; font-size: 12px; }
-.pending-h { font-weight: 600; margin-bottom: 4px; }
-.bid { color: #7ee787; }
-.offer { color: #ff7b72; }
+/* Overnight Clearing Desk — game styles (theme comes from style.css). */
+.game-wrap { max-width: 1240px; margin: 0 auto; padding: 16px 28px 60px; }
+.tabs { margin: 4px 0 18px; display: flex; flex-wrap: wrap; gap: 4px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; line-height: 1.5; margin-top: 4px; }
+.num { text-align: right; font-family: "IBM Plex Mono", monospace; white-space: nowrap; }
 .neg { color: #ff6b6b; font-weight: 600; }
 .pos { color: var(--lime); }
 .hl { color: var(--cyan); }
-.muted { color: var(--muted); }
-.small { font-size: 12px; }
-.bs-h { font-weight: 600; background: rgba(255,255,255,0.03); }
-.bs-total { font-weight: 600; border-top: 1px solid var(--gold-dim); }
-.num { text-align: right; font-family: "IBM Plex Mono", monospace; }
+.bid { color: #ffb86b; font-weight: 600; }
+.offer { color: #7ee0ff; font-weight: 600; }
+input.field, select.field {
+  background: #101826; border: 1px solid var(--gold-dim); color: var(--ink);
+  padding: 6px 8px; border-radius: 4px; font-family: inherit; font-size: 13px;
+}
+.panel { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px 16px; margin: 10px 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+
+/* stats */
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+.stat-box { background: #101826; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--gold-faint); min-width: 120px; }
+.stat-box .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-box .value { font-family: "IBM Plex Mono", monospace; font-size: 18px; color: var(--cyan); }
+
+/* status bars */
+.status-bar { font-size: 13px; padding: 8px 12px; border-radius: 6px; background: #101826; border: 1px solid var(--gold-faint); margin: 8px 0; }
+.status-bar.err { border-color: #ff6b6b; color: #ffb3b3; background: rgba(255, 107, 107, 0.08); }
+.status-bar.warn { border-color: var(--gold); color: #ffe2a8; }
+.shock-banner { background: rgba(255, 43, 214, 0.12); border: 1px solid var(--mag); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; }
+
+/* bank cards */
+.bank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin: 14px 0; }
+.bank-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 12px 14px; }
+.bank-card h3 { margin: 0 0 6px; font-size: 15px; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
+.bank-card h3 .spacer { flex: 1; }
+.bank-card.needs { border-color: rgba(255, 107, 107, 0.6); }
+.mini-btn { font-size: 10px !important; padding: 2px 8px !important; }
+/* override the site's global table look (mono, green first column, grid lines) */
+.bs-table, .book-table { width: 100%; min-width: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+.bs-table td, .book-table td { border-right: none; white-space: normal; text-align: left; }
+.bs-table td:first-child, .book-table td:first-child { color: var(--ink); }
+.bs-table td.num, .book-table td.num { text-align: right; white-space: nowrap; }
+.status-bar, .msg { font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }
+.bs-table { font-size: 12.5px; border-collapse: collapse; margin: 4px 0 6px; }
+.bs-table td { padding: 2px 4px; }
+.bs-table tr[title] { cursor: help; }
+.bs-table tr.bs-h td { color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 8px; }
+.bs-table tr.bs-total td { border-top: 1px solid var(--gold-dim); font-weight: 600; }
+.pending { margin-top: 8px; padding: 8px 10px; border: 1px dashed var(--gold-dim); border-radius: 6px; font-size: 12.5px; background: rgba(255, 184, 107, 0.05); }
+.pending-h { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+
+/* order book & tape */
+.book { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.book-side { background: #101826; border-radius: 8px; padding: 8px 10px; border: 1px solid var(--gold-faint); }
+.book-h { font-size: 11px; letter-spacing: 0.05em; margin-bottom: 6px; }
+.book-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.book-table td { padding: 2px 4px; }
+.book-table tr.mine td, .book-table tr.mine td:first-child { color: var(--cyan); }
+.tape { background: #101826; border-radius: 8px; padding: 8px 10px; border: 1px solid var(--gold-faint); font-size: 12.5px; max-height: 260px; overflow: auto; font-family: "IBM Plex Mono", monospace; }
+.tape-row { padding: 2px 0; }
+.tape-t { color: var(--muted); margin-right: 8px; }
+.tape-k { display: inline-block; min-width: 76px; font-weight: 600; }
+.k-private, .tape-row.k-private .tape-k { color: var(--cyan); }
+.k-srf, .tape-row.k-srf .tape-k { color: var(--mag); }
+.k-od, .tape-row.k-od .tape-k { color: #ff6b6b; }
+.k-iorb, .tape-row.k-iorb { color: var(--muted); }
+.sofr-print { font-size: 30px; font-family: "IBM Plex Mono", monospace; color: var(--cyan); margin: 6px 0; }
+canvas.chart { width: 100%; max-width: 820px; margin-top: 10px; background: #101826; border-radius: 8px; border: 1px solid var(--gold-dim); }
+
+/* cards / quiz */
+.card-list { display: grid; gap: 12px; }
+.mkt-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px; cursor: pointer; }
+.mkt-card:hover { border-color: var(--cyan); }
+.mkt-card h4 { margin: 0 0 6px; color: var(--gold); font-size: 14px; }
+.quiz-q { margin: 18px 0; padding: 14px; background: var(--panel); border-radius: 8px; border: 1px solid var(--gold-faint); }
+.quiz-q label { display: block; margin: 6px 0; cursor: pointer; }
+.quiz-q input { margin-right: 8px; }
+.correct { color: var(--lime); }
+.incorrect { color: #ff6b6b; }
+.rules ol, .rules ul { line-height: 1.6; }
+
+/* modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.modal { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 20px; max-width: 640px; width: 92%; max-height: 85vh; overflow: auto; }
+.modal h3 { margin: 0 0 10px; color: var(--cyan); }
+.modal textarea, .modal input { width: 100%; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+
+/* student page */
+.bank-wrap { max-width: 980px; margin: 0 auto; padding: 10px 20px 60px; }
+.two-col { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr); gap: 16px; }
+.order-form .row label { min-width: 70px; font-size: 13px; }
+.order-form input.field { width: 100px; }
+.msg { font-size: 13px; margin-top: 8px; min-height: 18px; }
+.msg.err { color: #ff6b6b; }
+.msg.ok { color: var(--lime); }
+.ended { color: #ff6b6b; font-size: 18px; text-align: center; margin-top: 40px; }
+.list-plain { list-style: none; padding: 0; margin: 4px 0; font-size: 13px; }
+.list-plain li { padding: 3px 0; border-bottom: 1px solid var(--gold-faint); display: flex; gap: 8px; align-items: center; }
+.list-plain li .spacer { flex: 1; }
+
+@media (max-width: 720px) {
+  .two-col, .book { grid-template-columns: 1fr; }
+  .game-wrap, .bank-wrap { padding: 10px 12px 40px; }
+}
