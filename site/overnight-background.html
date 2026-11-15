@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Overnight Market Background · peachyhabanero</title>
+  <meta name="description" content="What a repo is, how SOFR is calculated, and why the overnight Treasury repo market is the plumbing of the financial system."/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      <a href="phase.html">phase (draft)</a> ·
+      <a href="trackers.html">trackers</a> ·
+      <a href="data.html">data</a> ·
+      <a href="overnight-clearing.html">overnight desk</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>OVERNIGHT MARKET BACKGROUND</h1>
+  <p class="sub">
+    A short note on repo, SOFR, and why the overnight Treasury market is the plumbing of the financial system.
+  </p>
+</header>
+
+<main>
+  <section>
+    <h2>What a repo is</h2>
+    <p>
+      A repurchase agreement (repo) is a secured short-term loan. One party sells a security—usually a Treasury—and simultaneously agrees to buy it back the next day (or a few days later) at a slightly higher price. The difference is the interest rate on the loan. The security is the collateral. From the other side it is a reverse repo: cash lent against collateral.
+    </p>
+    <p>
+      Overnight Treasury repo is the dominant form of short-term secured funding in the U.S. system. Banks, money-market funds, dealers, and others use it to finance inventories, park cash, or manage liquidity. Because the collateral is high-quality and the term is one day, these rates move quickly when the supply of or demand for cash changes.
+    </p>
+  </section>
+
+  <section>
+    <h2>How SOFR is calculated</h2>
+    <p>
+      The Secured Overnight Financing Rate (SOFR) is a broad measure of the cost of borrowing cash overnight against Treasury collateral. It is produced by the Federal Reserve Bank of New York.
+    </p>
+    <p>
+      SOFR is the volume-weighted median of eligible overnight Treasury repo transactions. The calculation pools trades from three segments—tri-party, GCF Repo, and FICC DVP—and finds the rate at which half the volume (by dollar amount) traded at or below and half traded at or above. It is not a simple average and it is not a survey; it is based on actual transaction volume.
+    </p>
+  </section>
+
+  <section>
+    <h2>The Fed corridor</h2>
+    <p>
+      The Federal Reserve does not set SOFR by decree, but it influences the short end of the market through the administered rates that form a corridor around it.
+    </p>
+    <p>
+      Interest on Reserve Balances (IORB) is paid on balances banks hold at the Fed. It acts as a floor: banks are generally unwilling to lend overnight in the market at a rate below what they can earn risk-free at the Fed. The Standing Repo Facility (SRF) is a ceiling: eligible counterparties can borrow from the Fed against Treasury collateral at the SRF rate, so private overnight rates rarely need to rise far above it. In normal conditions SOFR prints inside this corridor.
+    </p>
+    <p>
+      When reserves are abundant, overnight rates tend to sit near the floor. When reserves become scarce or there is a sudden demand for cash, rates can press against the ceiling. The September 2019 episode is the textbook case: overnight repo rates spiked well above the then-prevailing target range until the Fed intervened.
+    </p>
+  </section>
+
+  <section>
+    <h2>Why it matters</h2>
+    <p>
+      The overnight repo market is the plumbing of the financial system. Changes in the supply of reserves, the demand for Treasury collateral, or the willingness of cash lenders to roll funding show up first in overnight rates. Those short-term rates feed into money-market fund yields, the pricing of floating-rate instruments, the cost of dealer financing, and the broader cost of credit.
+    </p>
+    <p>
+      The Fed does not set the 10-year Treasury yield. Longer-term rates are set by the market’s view of future short rates, inflation, and term premia. But the Fed influences the short end of the curve through the overnight market and the corridor around it. When that plumbing is tight or loose, the effect is visible quickly in short-term yields and, with a lag, in the rest of the term structure.
+    </p>
+    <p>
+      <a href="overnight-clearing.html">← back to the Overnight Clearing Desk</a>
+    </p>
+  </section>
+</main>
+
+<footer>
+  peachyhabanero.com · public data ·
+  <a href="https://github.com/JakeVestal/peachyhabanero">source</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+</body>
+</html>

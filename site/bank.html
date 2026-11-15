@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bank Desk — Overnight Clearing · peachyhabanero</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="overnight.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    .bank-wrap { max-width: 640px; margin: 40px auto; padding: 20px; }
-    .bs-card { background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 16px; }
-    .bs-table { width: 100%; font-size: 13px; }
-    .bs-table td { padding: 4px 6px; }
-    .form-row { margin: 12px 0; display: flex; gap: 8px; align-items: center; }
-    .form-row input { background: #101826; border: 1px solid var(--gold-dim); color: var(--ink); padding: 6px; border-radius: 4px; width: 100px; }
-    .ended { color: #ff6b6b; font-size: 18px; text-align: center; margin-top: 40px; }
+    .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
+    .countdown { font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--lime); min-width: 70px; }
+    .countdown.urgent { color: #ff6b6b; }
+    .history-list { list-style: none; padding: 0; margin: 8px 0; font-family: "IBM Plex Mono", monospace; }
+    .history-list li { padding: 4px 0; border-bottom: 1px solid var(--gold-faint); }
+    .msg.warn { color: #ffe2a8; }
   </style>
 </head>
 <body>
@@ -25,131 +25,229 @@
         <a href="overnight-clearing.html">← main desk</a>
       </p>
     </div>
-    <h1 id="bank-title">Bank Desk</h1>
-    <p class="sub">Your temporary balance sheet and order entry for this session. This page ends when the host closes the session.</p>
+    <h1 id="title">Bank Desk</h1>
+    <p class="sub">Your balance sheet and order entry for this session.</p>
   </header>
 
   <div class="bank-wrap">
     <div id="content">
-      <div class="bs-card">
-        <h3>Balance Sheet</h3>
-        <table class="bs-table" id="bs-table">
-          <tr><td>Loading...</td></tr>
-        </table>
+      <div id="status" class="status-bar">Connecting…</div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="label">Day</div><div class="value" id="day">1</div></div>
+        <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
+        <div class="stat-box"><div class="label">Phase</div><div class="value" id="phase">trading</div></div>
+        <div class="stat-box"><div class="label">Corridor</div><div class="value" id="corridor" style="font-size:14px">—</div></div>
+        <div class="stat-box"><div class="label">Time left</div><div class="value countdown" id="countdown">—</div></div>
       </div>
 
-      <h2>Submit Bid / Offer</h2>
-      <div class="form-row">
-        <label>Bid rate %:</label>
-        <input id="bid-rate" type="number" step="0.01" placeholder="4.25">
-        <label>Volume $B:</label>
-        <input id="bid-vol" type="number" step="0.1" placeholder="2.0">
-        <button class="neon-btn" id="submit-bid">Submit Bid</button>
+      <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Balance Sheet</h3>
+          <div id="bs"></div>
+        </div>
+        <div class="panel order-form">
+          <h3>Post Order</h3>
+          <div class="row"><label>Side</label>
+            <select id="side" class="field"><option value="bid">Bid (borrow cash)</option><option value="offer">Offer (lend cash)</option></select>
+          </div>
+          <div class="row"><label>Rate %</label><input id="rate" class="field" type="number" step="0.01" value="4.40"></div>
+          <div class="row"><label>Volume $B</label><input id="vol" class="field" type="number" step="0.1" value="1.0"></div>
+          <button class="neon-btn" id="submit">Submit Order</button>
+          <div id="warn" class="msg"></div>
+          <div id="msg" class="msg"></div>
+          <h3 style="margin-top:18px">My Open Orders</h3>
+          <div id="mine"></div>
+          <h3 style="margin-top:18px">My Trades Today</h3>
+          <div id="my-trades"></div>
+          <h3 style="margin-top:18px">Overnight Results</h3>
+          <div id="overnight-results" class="small"></div>
+          <div id="book" style="margin-top:16px"></div>
+        </div>
       </div>
-      <div class="form-row">
-        <label>Offer rate %:</label>
-        <input id="offer-rate" type="number" step="0.01" placeholder="4.50">
-        <label>Volume $B:</label>
-        <input id="offer-vol" type="number" step="0.1" placeholder="1.5">
-        <button class="neon-btn" id="submit-offer">Submit Offer</button>
-      </div>
-      <div id="status" style="margin-top:12px;font-size:13px;color:var(--muted);"></div>
     </div>
-    <div id="ended" class="ended" style="display:none;">Session ended by host. This temporary page is closed.</div>
+    <div id="ended" class="ended" style="display:none">Session ended by host.</div>
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDCpR9zeEoSlfgRQHK9J1jH7KEZoPxijp8",
-    authDomain: "overnight-clearing.firebaseapp.com",
-    databaseURL: "https://overnight-clearing-default-rtdb.firebaseio.com",
-    projectId: "overnight-clearing",
-    storageBucket: "overnight-clearing.firebasestorage.app",
-    messagingSenderId: "854785405052",
-    appId: "1:854785405052:web:10895b910717a44ab359f9",
-    measurementId: "G-0BBXPNPFV9"
-  };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    import * as E from "./overnight-engine.js";
+    import * as UI from "./overnight-ui.js";
+    import { db, ref, onValue, update, push, configError, explainError } from "./overnight-db.js";
 
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("session");
     const stub = params.get("stub");
-    if (!sessionId || !stub) {
-      document.body.innerHTML = "<h1>Missing session or stub. Use the secret link from the host.</h1>";
-      throw new Error("missing params");
+    const statusEl = document.getElementById("status");
+    const msgEl = document.getElementById("msg");
+
+    if (configError) { statusEl.textContent = configError; statusEl.className = "status-bar err"; throw new Error(configError); }
+    if (!sessionId || !stub) { document.body.innerHTML = "<h1>Missing session or stub. Use the private link from the instructor.</h1>"; throw new Error("missing params"); }
+
+    let state = null;
+    const sessRef = ref(db, "sessions/" + sessionId);
+
+    function formatRemaining(rem) {
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      return m + ":" + String(s).padStart(2, "0");
     }
 
-    const base = `sessions/${sessionId}`;
-    const bankRef = ref(db, `${base}/banks/${stub}`);
-    const bidsRef = ref(db, `${base}/banks/${stub}/bids`);
-    const offersRef = ref(db, `${base}/banks/${stub}/offers`);
-    const hostConnsRef = ref(db, `${base}/hostConnections`);
-    const metaRef = ref(db, `${base}/meta`);
-
-    let hostAlive = false;
-    let sessionEnded = false;
-
-    function updateEndedState() {
-      if (sessionEnded || !hostAlive) {
-        document.getElementById("content").style.display = "none";
-        document.getElementById("ended").style.display = "block";
-      } else {
-        document.getElementById("content").style.display = "block";
-        document.getElementById("ended").style.display = "none";
-      }
-    }
-
-    onValue(bankRef, (snap) => {
-      if (!snap.exists()) {
-        document.getElementById("bs-table").innerHTML = "<tr><td>Waiting for host to create bank...</td></tr>";
+    function updateCountdown() {
+      const el = document.getElementById("countdown");
+      if (!el || !state) return;
+      if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
+      if (state.timerPaused) {
+        const rem = Math.max(0, state.timerRemainingMs || 0);
+        el.textContent = formatRemaining(rem) + " paused";
+        el.className = "value countdown";
         return;
       }
-      const data = snap.val();
-      document.getElementById("bank-title").textContent = data.name || "Bank";
-      const bs = data.balanceSheet || {};
-      const table = document.getElementById("bs-table");
-      table.innerHTML = `
-        <tr><td>Fixed Loans</td><td>$${bs.fixedLoans || 0}B</td></tr>
-        <tr><td>Floating Assets</td><td>$${bs.floatingAssets || 0}B</td></tr>
-        <tr><td>Treasuries</td><td>$${bs.treasuries || 0}B</td></tr>
-        <tr><td>Cash</td><td>$${bs.cash || 0}B</td></tr>
-        <tr><td>Sticky Deposits</td><td>$${bs.stickyDep || 0}B</td></tr>
-        <tr><td>Volatile Funding</td><td>$${bs.volatile || 0}B</td></tr>
-        <tr><td>Equity</td><td>$${bs.equity || 0}B</td></tr>
-      `;
-    });
+      if (!state.timerEnd) { el.textContent = "—"; el.className = "value countdown"; return; }
+      const rem = state.timerEnd - Date.now();
+      if (rem <= 0) { el.textContent = "0:00"; el.className = "value countdown urgent"; return; }
+      el.textContent = formatRemaining(rem);
+      el.className = rem < 30000 ? "value countdown urgent" : "value countdown";
+    }
 
-    onValue(hostConnsRef, (snap) => {
-      hostAlive = snap.exists() && snap.numChildren() > 0;
-      updateEndedState();
-    });
+    function updateWarn() {
+      const wEl = document.getElementById("warn");
+      if (!wEl || !state) return;
+      const side = document.getElementById("side").value;
+      const rate = parseFloat(document.getElementById("rate").value);
+      const warn = isFinite(rate) ? E.corridorWarning(state, side, rate) : null;
+      wEl.textContent = warn ? "⚠ " + warn : "";
+      wEl.className = warn ? "msg warn" : "msg";
+    }
 
-    onValue(metaRef, (snap) => {
-      sessionEnded = snap.exists() && snap.val().status === "ended";
-      updateEndedState();
-    });
+    onValue(sessRef, (snap) => {
+      if (!snap.exists()) {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("ended").style.display = "block";
+        return;
+      }
+      state = E.normalize(snap.val());
+      const bank = state.banks[stub];
+      if (!bank) {
+        document.getElementById("bs").innerHTML = "<p class='muted'>Waiting for bank…</p>";
+        return;
+      }
+      document.getElementById("title").textContent = bank.name;
+      document.getElementById("day").textContent = state.day;
+      document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
+      document.getElementById("phase").textContent = state.phase;
+      document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
+      document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
+      document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+      renderMine();
+      const mineTrades = E.tradesForDay(state).filter(t => t.lender === stub || t.borrower === stub);
+      document.getElementById("my-trades").innerHTML = mineTrades.length
+        ? mineTrades.slice().reverse().map(t => `<div>${UI.tradeLineFor(t, stub)}</div>`).join("")
+        : "<p class='muted'>No trades yet.</p>";
+      document.getElementById("overnight-results").innerHTML = UI.overnightHistoryHTML(state, stub);
 
-    document.getElementById("submit-bid").onclick = () => {
-      const rate = parseFloat(document.getElementById("bid-rate").value);
-      const vol = parseFloat(document.getElementById("bid-vol").value);
-      if (isNaN(rate) || isNaN(vol)) return alert("Enter valid rate and volume");
-      push(bidsRef, { rate, volume: vol, ts: Date.now(), side: "bid" });
-      push(ref(db, `${base}/orderBook/bids`), { bankStub: stub, rate, volume: vol, ts: Date.now() });
-      document.getElementById("status").textContent = `Bid submitted: ${vol}B @ ${rate}%`;
+      const closedEl = document.getElementById("closed-banner");
+      const formDisabled = state.phase !== "trading";
+      if (formDisabled) {
+        closedEl.style.display = "block";
+        closedEl.textContent = state.closedBy === "timer" ? "Market closed — time’s up" : "Market closed";
+      } else {
+        closedEl.style.display = "none";
+      }
+      document.getElementById("submit").disabled = formDisabled;
+      document.getElementById("side").disabled = formDisabled;
+      document.getElementById("rate").disabled = formDisabled;
+      document.getElementById("vol").disabled = formDisabled;
+
+      updateCountdown();
+      updateWarn();
+      statusEl.textContent = "Connected to session " + sessionId;
+      statusEl.className = "status-bar";
+    }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
+
+    setInterval(updateCountdown, 250);
+    document.getElementById("rate").addEventListener("input", updateWarn);
+    document.getElementById("side").addEventListener("change", updateWarn);
+
+    function renderMine() {
+      const el = document.getElementById("mine");
+      if (!el || !state) return;
+      // Don't wipe the inputs while the student is editing one.
+      if (el.contains(document.activeElement)) return;
+      const mine = E.openOrders(state, stub);
+      const closed = state.phase !== "trading";
+      if (!mine.length) {
+        el.innerHTML = "<p class='muted'>No open orders.</p>";
+        return;
+      }
+      el.innerHTML = mine.map((o) => {
+        const filled = o.filled ? ` <span class="muted">(${Number(o.filled).toFixed(2)} filled)</span>` : "";
+        return `<div class="row" data-id="${o.id}" style="gap:6px">
+          <span class="${o.side}" style="min-width:52px">${o.side === "bid" ? "BID" : "OFFER"}</span>
+          <label class="muted">Rate</label>
+          <input class="field mine-rate" type="number" step="0.01" value="${o.rate}" style="width:78px" ${closed ? "disabled" : ""}>
+          <label class="muted">$B</label>
+          <input class="field mine-vol" type="number" step="0.1" value="${o.remaining}" style="width:78px" ${closed ? "disabled" : ""}>
+          ${filled}
+          <button class="neon-btn mine-update" ${closed ? "disabled" : ""}>Update</button>
+          <button class="neon-btn mine-cancel" ${closed ? "disabled" : ""}>Cancel</button>
+        </div>`;
+      }).join("");
+    }
+
+    document.getElementById("mine").onclick = async (e) => {
+      if (!state) return;
+      const row = e.target.closest("[data-id]");
+      if (!row) return;
+      const id = row.dataset.id;
+      const order = state.orders[id];
+      if (!order || order.stub !== stub || order.status !== "open") return;
+      const orderRef = ref(db, "sessions/" + sessionId + "/orders/" + id);
+
+      if (e.target.classList.contains("mine-cancel")) {
+        await update(orderRef, { status: "cancelled", note: "Cancelled by bank" });
+        msgEl.textContent = "Order cancelled.";
+        msgEl.className = "msg ok";
+        return;
+      }
+      if (!e.target.classList.contains("mine-update")) return;
+
+      const rate = parseFloat(row.querySelector(".mine-rate").value);
+      const volume = parseFloat(row.querySelector(".mine-vol").value);
+      const err = E.validateOrder(state, stub, order.side, rate, volume, id);
+      if (err) { msgEl.textContent = err; msgEl.className = "msg err"; return; }
+      const warn = E.corridorWarning(state, order.side, rate);
+      if (warn && !confirm(warn + "\n\nUpdate anyway?")) return;
+
+      const patch = { rate, volume, remaining: volume };
+      // Price change or size increase loses time priority.
+      if (Math.abs(rate - order.rate) > 1e-9 || volume > order.remaining + 1e-9) patch.ts = Date.now();
+      await update(orderRef, patch);
+      msgEl.textContent = "Order updated.";
+      msgEl.className = "msg ok";
     };
 
-    document.getElementById("submit-offer").onclick = () => {
-      const rate = parseFloat(document.getElementById("offer-rate").value);
-      const vol = parseFloat(document.getElementById("offer-vol").value);
-      if (isNaN(rate) || isNaN(vol)) return alert("Enter valid rate and volume");
-      push(offersRef, { rate, volume: vol, ts: Date.now(), side: "offer" });
-      push(ref(db, `${base}/orderBook/offers`), { bankStub: stub, rate, volume: vol, ts: Date.now() });
-      document.getElementById("status").textContent = `Offer submitted: ${vol}B @ ${rate}%`;
+    document.getElementById("submit").onclick = async () => {
+      if (!state) return;
+      const side = document.getElementById("side").value;
+      const rate = parseFloat(document.getElementById("rate").value);
+      const volume = parseFloat(document.getElementById("vol").value);
+      const err = E.validateOrder(state, stub, side, rate, volume);
+      if (err) { msgEl.textContent = err; msgEl.className = "msg err"; return; }
+      const warn = E.corridorWarning(state, side, rate);
+      if (warn && !confirm(warn + "\n\nSubmit anyway?")) return;
+
+      const order = {
+        stub, name: state.banks[stub].name, side, rate, volume,
+        remaining: volume, filled: 0, status: "open", day: state.day, ts: Date.now()
+      };
+      const orderId = push(ref(db, "sessions/" + sessionId + "/orders")).key;
+      await update(ref(db, "sessions/" + sessionId + "/orders/" + orderId), order);
+
+      // Host does the matching; we just write the order.
+      msgEl.textContent = "Order submitted.";
+      msgEl.className = "msg ok";
     };
   </script>
 </body>
