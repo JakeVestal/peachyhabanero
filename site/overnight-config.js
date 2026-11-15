@@ -3,11 +3,12 @@
 // Make sure the Realtime Database is created first so databaseURL appears.
 
 export const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://PASTE_YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "PASTE_YOUR_PROJECT",
-  storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
-  messagingSenderId: "PASTE_YOUR_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID"
+  apiKey: "AIzaSyDCpR9zeEoSlfgRQHK9J1jH7KEZoPxijp8",
+  authDomain: "overnight-clearing.firebaseapp.com",
+  databaseURL: "https://overnight-clearing-default-rtdb.firebaseio.com",
+  projectId: "overnight-clearing",
+  storageBucket: "overnight-clearing.firebasestorage.app",
+  messagingSenderId: "854785405052",
+  appId: "1:854785405052:web:10895b910717a44ab359f9",
+  measurementId: "G-0BBXPNPFV9"
 };
