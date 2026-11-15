@@ -148,10 +148,10 @@ export function openOrders(s, stub) {
 }
 
 // How much more a bank can bid for / offer, after its resting orders.
-export function capacity(s, stub) {
+export function capacity(s, stub, excludeId = null) {
   const b = s.banks[stub];
   if (!b) return { canBorrow: 0, canLend: 0 };
-  const mine = openOrders(s, stub);
+  const mine = openOrders(s, stub).filter((o) => o.id !== excludeId);
   const openBids = mine.filter((o) => o.side === "bid").reduce((a, o) => a + o.remaining, 0);
   const openOffers = mine.filter((o) => o.side === "offer").reduce((a, o) => a + o.remaining, 0);
   return {
@@ -161,7 +161,7 @@ export function capacity(s, stub) {
 }
 
 // Returns an error string, or null if the order is acceptable.
-export function validateOrder(s, stub, side, rate, volume) {
+export function validateOrder(s, stub, side, rate, volume, excludeId = null) {
   if (s.phase !== "trading") return "The market is closed for today. Wait for the next day.";
   if (!s.banks[stub] && !isExternal(stub)) return "This bank no longer exists in the session.";
   if (side !== "bid" && side !== "offer") return "Unknown order side.";
@@ -169,7 +169,7 @@ export function validateOrder(s, stub, side, rate, volume) {
   if (!isFinite(volume) || volume < 0.01) return "Enter a volume of at least $0.01B.";
   if (volume > 200) return "Volume is too large.";
   if (isExternal(stub)) return null;
-  const cap = capacity(s, stub);
+  const cap = capacity(s, stub, excludeId);
   if (side === "bid" && volume > cap.canBorrow + 1e-9) {
     return `You can only borrow up to $${cap.canBorrow.toFixed(2)}B: that is how many Treasuries you have left to pledge as collateral.`;
   }

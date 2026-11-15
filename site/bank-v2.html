@@ -58,6 +58,8 @@
           <button class="neon-btn" id="submit">Submit Order</button>
           <div id="warn" class="msg"></div>
           <div id="msg" class="msg"></div>
+          <h3 style="margin-top:18px">My Open Orders</h3>
+          <div id="mine"></div>
           <div id="book" style="margin-top:16px"></div>
         </div>
       </div>
@@ -134,6 +136,7 @@
       document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
       document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+      renderMine();
 
       const closedEl = document.getElementById("closed-banner");
       const formDisabled = state.phase !== "trading";
@@ -157,6 +160,64 @@
     setInterval(updateCountdown, 250);
     document.getElementById("rate").addEventListener("input", updateWarn);
     document.getElementById("side").addEventListener("change", updateWarn);
+
+    function renderMine() {
+      const el = document.getElementById("mine");
+      if (!el || !state) return;
+      // Don't wipe the inputs while the student is editing one.
+      if (el.contains(document.activeElement)) return;
+      const mine = E.openOrders(state, stub);
+      const closed = state.phase !== "trading";
+      if (!mine.length) {
+        el.innerHTML = "<p class='muted'>No open orders.</p>";
+        return;
+      }
+      el.innerHTML = mine.map((o) => {
+        const filled = o.filled ? ` <span class="muted">(${Number(o.filled).toFixed(2)} filled)</span>` : "";
+        return `<div class="row" data-id="${o.id}" style="gap:6px">
+          <span class="${o.side}" style="min-width:52px">${o.side === "bid" ? "BID" : "OFFER"}</span>
+          <label class="muted">Rate</label>
+          <input class="field mine-rate" type="number" step="0.01" value="${o.rate}" style="width:78px" ${closed ? "disabled" : ""}>
+          <label class="muted">$B</label>
+          <input class="field mine-vol" type="number" step="0.1" value="${o.remaining}" style="width:78px" ${closed ? "disabled" : ""}>
+          ${filled}
+          <button class="neon-btn mine-update" ${closed ? "disabled" : ""}>Update</button>
+          <button class="neon-btn mine-cancel" ${closed ? "disabled" : ""}>Cancel</button>
+        </div>`;
+      }).join("");
+    }
+
+    document.getElementById("mine").onclick = async (e) => {
+      if (!state) return;
+      const row = e.target.closest("[data-id]");
+      if (!row) return;
+      const id = row.dataset.id;
+      const order = state.orders[id];
+      if (!order || order.stub !== stub || order.status !== "open") return;
+      const orderRef = ref(db, "sessions/" + sessionId + "/orders/" + id);
+
+      if (e.target.classList.contains("mine-cancel")) {
+        await update(orderRef, { status: "cancelled", note: "Cancelled by bank" });
+        msgEl.textContent = "Order cancelled.";
+        msgEl.className = "msg ok";
+        return;
+      }
+      if (!e.target.classList.contains("mine-update")) return;
+
+      const rate = parseFloat(row.querySelector(".mine-rate").value);
+      const volume = parseFloat(row.querySelector(".mine-vol").value);
+      const err = E.validateOrder(state, stub, order.side, rate, volume, id);
+      if (err) { msgEl.textContent = err; msgEl.className = "msg err"; return; }
+      const warn = E.corridorWarning(state, order.side, rate);
+      if (warn && !confirm(warn + "\n\nUpdate anyway?")) return;
+
+      const patch = { rate, volume, remaining: volume };
+      // Price change or size increase loses time priority.
+      if (Math.abs(rate - order.rate) > 1e-9 || volume > order.remaining + 1e-9) patch.ts = Date.now();
+      await update(orderRef, patch);
+      msgEl.textContent = "Order updated.";
+      msgEl.className = "msg ok";
+    };
 
     document.getElementById("submit").onclick = async () => {
       if (!state) return;
