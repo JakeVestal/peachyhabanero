@@ -55,6 +55,7 @@
       <button class="neon-btn" id="add-bank">+ Add Bank</button>
       <button class="neon-btn" id="close-market">Close Market & Print SOFR</button>
       <button class="neon-btn" id="advance">Advance to Next Day</button>
+      <button class="neon-btn" id="reset-day">Reset to Day 1</button>
       <button class="neon-btn" id="end-session">End Session</button>
     </div>
 
@@ -370,6 +371,33 @@
       busy = true;
       try {
         E.advanceDay(state);
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("reset-day").onclick = async () => {
+      if (!state || busy) return;
+      if (!confirm("Reset to the start of day 1? Banks and balance sheets stay; the book, tape, SOFR, and timer are cleared.")) return;
+      busy = true;
+      try {
+        state.day = 1;
+        state.phase = "trading";
+        state.sofr = null;
+        state.lastSofr = null;
+        state.orders = {};
+        state.trades = {};
+        state.history = {};
+        state.sofrHistory = [];
+        state.shock = null;
+        state.timerEnd = null;
+        state.timerPaused = false;
+        state.timerRemainingMs = null;
+        state.closedBy = null;
+        state.closedAt = null;
+        for (const b of Object.values(state.banks)) {
+          delete b.dayPnL;
+          delete b.pnl;
+        }
         await writeState();
       } finally { busy = false; }
     };
