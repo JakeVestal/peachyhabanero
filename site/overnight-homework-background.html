@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Overnight Desk — Background for the Homework · peachyhabanero</title>
+  <meta name="description" content="Background knowledge, theory, and equations for the Overnight Clearing Desk quantitative homework: volume-weighted median, the Fed corridor, overnight interest, duration gap, and the term premium."/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      });
+    });
+  </script>
+  <style>
+    .eq { margin: 1.2em 0; text-align: center; }
+    .note { font-size: 14px; color: var(--muted); margin-top: 0.4em; }
+    ol.steps { padding-left: 1.4em; }
+    ol.steps li { margin: 0.45em 0; }
+    table.ref { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 15px; }
+    table.ref th, table.ref td { border: 1px solid var(--gold-dim); padding: 8px 10px; text-align: left; }
+    table.ref th { background: var(--panel); color: var(--gold); font-weight: 600; }
+    .kicker { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan); margin: 0 0 6px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      <a href="phase.html">phase (draft)</a> ·
+      <a href="trackers.html">trackers</a> ·
+      <a href="data.html">data</a> ·
+      <a href="overnight-clearing.html">overnight desk</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <p class="kicker">Reference · for the homework</p>
+  <h1>OVERNIGHT DESK — BACKGROUND</h1>
+  <p class="sub">
+    The theory and the equations you need to complete the quantitative homework.
+    This page explains the methods. It does not contain the answers.
+  </p>
+</header>
+
+<main>
+  <section>
+    <h2>What this page is for</h2>
+    <p>
+      The homework asks you to compute a volume-weighted median, measure the opportunity cost of trading outside the Fed corridor, calculate one night of interest on a bank balance sheet, estimate a duration gap, and back out a term premium from the Treasury curve. Each section below gives the definition, the reason the calculation is done that way, and the formula. The numbers you need are on the Market_Data sheet of the workbook.
+    </p>
+    <p>
+      All rates in the assignment are annualized. Overnight interest uses the money-market day-count convention of 360. A basis point is 0.01 percentage point, or 0.0001 in decimal form.
+    </p>
+  </section>
+
+  <section>
+    <h2>1. The volume-weighted median</h2>
+    <p>
+      SOFR is not a survey and it is not a simple average. It is the rate at which half the dollar volume of eligible overnight Treasury repo traded at or below, and half traded at or above. That is a volume-weighted median.
+    </p>
+    <p>The procedure is mechanical:</p>
+    <ol class="steps">
+      <li>Sort the trades from lowest rate to highest rate.</li>
+      <li>Compute the total volume and divide by two. Call that the half-volume.</li>
+      <li>Walk down the sorted list, accumulating volume as you go.</li>
+      <li>The volume-weighted median is the rate on the first trade where the cumulative volume reaches or exceeds the half-volume.</li>
+    </ol>
+    <p>
+      In symbols, if the trades are ordered so that $r_1 \le r_2 \le \cdots \le r_n$ with volumes $v_1, v_2, \ldots, v_n$, the median rate is the smallest $r_k$ such that
+    </p>
+    <div class="eq">$$\sum_{i=1}^{k} v_i \ge \frac{1}{2} \sum_{i=1}^{n} v_i.$$</div>
+    <p>
+      The New York Fed then rounds the result to the nearest basis point. For the homework you can leave the rate at the precision of the tape unless the problem asks you to round.
+    </p>
+    <h3>Why the median and not the mean</h3>
+    <p>
+      A volume-weighted average (the mean) is
+    </p>
+    <div class="eq">$$\bar{r} = \frac{\sum_i r_i v_i}{\sum_i v_i}.$$</div>
+    <p>
+      A small volume of trades at an extreme rate moves the mean. The same trades often leave the median unchanged, because the median only cares about where the 50th percentile of volume sits. That is intentional. SOFR is meant to describe the rate at which the bulk of volume cleared, not the rate of the most desperate trade. When you compute both, the difference between them is a measure of how much the tails are pulling.
+    </p>
+    <p class="note">
+      The teaching tape in the homework is scaled so the arithmetic is manageable. The method is identical to the one the New York Fed uses on the full set of eligible trades.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. The corridor as a no-arbitrage band</h2>
+    <p>
+      The Federal Reserve does not set SOFR by decree. It influences the short end by offering two administered rates that form a corridor around it.
+    </p>
+    <p>
+      <strong>Interest on Reserve Balances (IORB)</strong> is the rate the Fed pays on balances that eligible banks hold at the Federal Reserve. A bank that can earn IORB risk-free will not willingly lend cash in the private market at a lower rate. IORB is therefore a floor for banks.
+    </p>
+    <p>
+      <strong>The Standing Repo Facility (SRF)</strong> is the rate at which eligible counterparties can borrow from the Fed against Treasury collateral. A bank that can borrow at the SRF will not willingly pay a higher rate in the private market for the same collateral. The SRF is therefore a ceiling for those who can access it.
+    </p>
+    <p>
+      The <strong>overnight reverse repo (ON RRP)</strong> offering rate is a floor for a broader set of non-bank cash lenders (money-market funds, GSEs, primary dealers) who cannot earn IORB. It sits below IORB.
+    </p>
+    <p>
+      The width of the bank corridor, in basis points, is
+    </p>
+    <div class="eq">$$\text{width (bp)} = (\text{SRF} - \text{IORB}) \times 10{,}000.$$</div>
+    <h3>Opportunity cost</h3>
+    <p>
+      If a bank offers cash in the private market at a rate $r$ below IORB, the opportunity cost per year, in basis points, is
+    </p>
+    <div class="eq">$$(\text{IORB} - r) \times 10{,}000.$$</div>
+    <p>
+      On a notional amount $N$ for one night, under the 360-day convention, the dollar cost is
+    </p>
+    <div class="eq">$$N \times \frac{\text{IORB} - r}{360}.$$</div>
+    <p>
+      If a bank with free Treasury collateral bids for cash at a rate $r$ above the SRF, the extra cost relative to borrowing at the facility is
+    </p>
+    <div class="eq">$$N \times \frac{r - \text{SRF}}{360}.$$</div>
+    <p>
+      These are not abstract penalties. They are the dollars the bank gives up by not using the Fed’s administered rates.
+    </p>
+    <h3>What a print outside the band means</h3>
+    <p>
+      If SOFR prints well above the SRF, either some borrowers cannot access the facility, the collateral is special (scarce), or cash lenders are constrained. If it prints well below IORB, non-bank cash that cannot earn IORB is abundant, and the ON RRP is the relevant floor for those lenders. The location of SOFR inside or outside the corridor is information about the state of the plumbing.
+    </p>
+  </section>
+
+  <section>
+    <h2>3. One night of interest</h2>
+    <p>
+      Overnight interest uses a 360-day count. For a balance $B$ (in the same units throughout) earning or paying an annualized rate $r$, the interest for one night is
+    </p>
+    <div class="eq">$$\text{one-night interest} = B \times \frac{r}{360}.$$</div>
+    <p>
+      Income is positive. Expense is negative. Net interest for the night is the sum of the signed amounts.
+    </p>
+    <p>
+      A floating-rate asset that resets to SOFR plus a fixed spread earns
+    </p>
+    <div class="eq">$$r_{\text{float}} = \text{SOFR} + \text{spread}.$$</div>
+    <p>
+      Surplus cash parked at the Fed earns IORB. Overnight repo borrowed in the private market costs the rate on that trade (or SOFR, if the problem states that it is funded at SOFR). Fixed-rate loans and sticky deposits do not reprice when SOFR moves; their rates are contractual.
+    </p>
+    <h3>A parallel move in SOFR</h3>
+    <p>
+      If SOFR rises by $\Delta r$ and nothing else changes, only the items that reprice with SOFR are affected. The change in one-night interest on a floating-rate asset of size $B$ is
+    </p>
+    <div class="eq">$$\Delta = B \times \frac{\Delta r}{360}.$$</div>
+    <p>
+      On overnight borrowing the sign flips: a higher SOFR raises the cost, so the change in net interest is negative. The net effect of a SOFR move on the bank depends on whether it is a net floating-rate asset holder or a net overnight borrower. Items that do not reprice contribute zero to the change.
+    </p>
+    <p>
+      To annualize a one-night net interest figure, multiply by 360. That recovers the annualized dollar amount under the same day-count convention.
+    </p>
+  </section>
+
+  <section>
+    <h2>4. Duration and the duration gap</h2>
+    <p>
+      Macaulay duration is the present-value-weighted average maturity of a bond’s cash flows. Modified duration converts that into a price sensitivity. For this assignment you are given approximate durations for each balance-sheet item, so you do not need to compute Macaulay duration from coupons. The economic idea is the same: duration measures how much the value of an item changes when yields change.
+    </p>
+    <p>
+      Overnight items (cash, reserves, overnight repo) have duration near zero, because they reprice in one day. A floating-rate asset that resets daily has duration on the order of $1/360$ of a year. Fixed-rate loans and longer-term Treasuries carry most of the rate risk.
+    </p>
+    <h3>Portfolio duration</h3>
+    <p>
+      The duration of a portfolio is the weighted average of the durations of its pieces:
+    </p>
+    <div class="eq">$$D = \frac{\sum_i B_i \, D_i}{\sum_i B_i}.$$</div>
+    <p>
+      Compute this separately for assets and for liabilities (excluding equity).
+    </p>
+    <h3>The duration gap</h3>
+    <p>
+      The duration gap measures the mismatch between the rate sensitivity of assets and the rate sensitivity of liabilities:
+    </p>
+    <div class="eq">$$D_{\text{gap}} = D_A - \frac{L}{A} \, D_L,$$</div>
+    <p>
+      where $A$ is total assets, $L$ is total liabilities excluding equity, $D_A$ is asset duration, and $D_L$ is liability duration.
+    </p>
+    <p>
+      A first-order approximation for the change in the economic value of equity when all rates rise in parallel by $\Delta r$ (in decimal form) is
+    </p>
+    <div class="eq">$$\Delta E \approx -D_{\text{gap}} \times \Delta r \times A.$$</div>
+    <p>
+      The negative sign is the usual bond math: when yields rise, the present value of fixed cash flows falls. A positive duration gap means the economic value of equity declines when rates rise. Expressing $\Delta E$ as a percent of equity is $\Delta E$ divided by the equity amount.
+    </p>
+    <p>
+      This approximation ignores convexity. It is the right tool for a small parallel shift and for seeing which items drive the gap. Overnight funding and a daily-reset floating book contribute almost nothing; fixed-rate loans and Treasuries dominate.
+    </p>
+  </section>
+
+  <section>
+    <h2>5. Expectations and the term premium</h2>
+    <p>
+      The pure expectations hypothesis says that a longer-term yield equals the average of the expected short-term rates over the life of the bond. In the linear approximation used in the homework,
+    </p>
+    <div class="eq">$$y_n \approx \frac{1}{n} \sum_{t=1}^{n} \mathbb{E}[r_t] + TP_n,$$</div>
+    <p>
+      where $y_n$ is the $n$-year yield, $\mathbb{E}[r_t]$ is the expected overnight rate in period $t$, and $TP_n$ is the term premium.
+    </p>
+    <p>
+      If the market expects the overnight rate to stay constant at the current SOFR for the full maturity, the pure-expectations yield is simply that SOFR. The implied term premium is then the observed Treasury yield minus that constant path:
+    </p>
+    <div class="eq">$$TP_n = y_n - \text{SOFR}.$$</div>
+    <p>
+      In basis points, multiply by 10,000. This is an assumption, not a fact about the market’s actual expected path. It is useful because it isolates how much of the distance between the overnight rate and the longer yield is left unexplained by a flat path.
+    </p>
+    <h3>A permanent shift versus a one-day spike</h3>
+    <p>
+      If the expected overnight rate rises permanently by $\Delta r$, every term in the average rises by $\Delta r$. Under pure expectations the $n$-year yield rises by the same amount:
+    </p>
+    <div class="eq">$$\Delta y_n = \Delta r.$$</div>
+    <p>
+      A one-day spike is different. If the overnight rate is higher by $s$ basis points for a single day and then returns to the original path, that day is one observation out of roughly $365 \times n$ days in an $n$-year bond. The effect on the pure-expectations $n$-year yield, in basis points, is approximately
+    </p>
+    <div class="eq">$$\Delta y_n \approx \frac{s}{365 \times n}.$$</div>
+    <p>
+      For a 10-year bond the denominator is 3,650. For a 2-year bond it is 730. A large one-day move in the overnight rate has a negligible effect on the longer yield unless the market interprets the spike as information about the future path of policy.
+    </p>
+    <p>
+      That is the quantitative content of the claim that the overnight repo market is the plumbing of the financial system. Changes there show up immediately in short-term rates. They show up in the 10-year only to the extent that they change what the market expects the short rate to be in the future. The Fed does not set the 10-year yield. It influences the short end through the corridor, and the long end moves when the expected path of that short end moves.
+    </p>
+  </section>
+
+  <section>
+    <h2>Units and conventions used in the homework</h2>
+    <table class="ref">
+      <thead>
+        <tr><th>Item</th><th>Convention</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Rates</td><td>Annualized, in decimal form in formulas (3.90% = 0.0390)</td></tr>
+        <tr><td>Basis points</td><td>1 bp = 0.01 percentage point = 0.0001 in decimal</td></tr>
+        <tr><td>Day count for overnight interest</td><td>360</td></tr>
+        <tr><td>Balance-sheet amounts</td><td>Given in billions of dollars unless noted</td></tr>
+        <tr><td>One-night interest</td><td>$B \times r / 360$, with income positive and expense negative</td></tr>
+        <tr><td>Duration</td><td>Approximate values are supplied; you do not need to compute Macaulay duration</td></tr>
+        <tr><td>Term premium</td><td>Observed yield minus the pure-expectations yield under the stated path</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The Market_Data sheet documents every published figure and its source. If you want to verify a number, the Sources sheet lists the series and the URLs.
+    </p>
+  </section>
+
+  <section>
+    <h2>How the pieces fit together</h2>
+    <p>
+      The volume-weighted median tells you the rate at which the overnight market actually cleared. The corridor tells you the band the Fed is defending and the opportunity cost of trading outside it. One-night interest converts those rates into dollars on a balance sheet, and shows which items reprice when SOFR moves. The duration gap converts the same balance sheet into a sensitivity of economic value to a parallel shift in rates. The expectations calculation shows why a permanent change in the overnight path moves the long yield, while a one-day spike in the plumbing does not.
+    </p>
+    <p>
+      You now have the definitions and the formulas. The workbook has the data. The rest is arithmetic.
+    </p>
+  </section>
+</main>
+
+<footer>
+  peachyhabanero.com · reference ·
+  <a href="https://github.com/JakeVestal/peachyhabanero">source</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+</body>
+</html>
