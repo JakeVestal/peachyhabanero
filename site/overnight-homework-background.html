@@ -49,28 +49,22 @@
   <p class="kicker">Reference · for the homework</p>
   <h1>OVERNIGHT DESK — BACKGROUND</h1>
   <p class="sub">
-    The theory and the equations you need to complete the quantitative homework.
-    This page explains the methods. It does not contain the answers.
+    Theory & background knowlege supporting the overnight trading lab
+    exercise and associated homework.
   </p>
 </header>
 
 <main>
-  <section>
-    <h2>What this page is for</h2>
-    <p>
-      The homework asks you to compute a volume-weighted median, measure the opportunity cost of trading outside the Fed corridor, calculate one night of interest on a bank balance sheet, estimate a duration gap, and back out a term premium from the Treasury curve. Each section below gives the definition, the reason the calculation is done that way, and the formula. The numbers you need are on the Market_Data sheet of the workbook.
-    </p>
-    <p>
-      All rates in the assignment are annualized. Overnight interest uses the money-market day-count convention of 360. A basis point is 0.01 percentage point, or 0.0001 in decimal form.
-    </p>
-  </section>
 
   <section>
     <h2>1. The volume-weighted median</h2>
     <p>
-      SOFR is not a survey and it is not a simple average. It is the rate at which half the dollar volume of eligible overnight Treasury repo traded at or below, and half traded at or above. That is a volume-weighted median.
+      SOFR is the volume-weighted average of the overnight rates that banks
+      loan cash to each other in the overnight repo market. Equivalently, it is
+      the rate at which half the dollar volume of eligible overnight Treasury
+      repo traded at or below, and half traded at or above.
     </p>
-    <p>The procedure is mechanical:</p>
+    <p>Calculating SOFR for a given day is mechanical:</p>
     <ol class="steps">
       <li>Sort the trades from lowest rate to highest rate.</li>
       <li>Compute the total volume and divide by two. Call that the half-volume.</li>
