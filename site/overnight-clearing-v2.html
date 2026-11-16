@@ -86,6 +86,7 @@
 
     <div class="row">
       <button class="neon-btn" id="shock">Apply Systemic Shock (−5B volatile)</button>
+      <button class="neon-btn" id="reroll-cash">Re-randomize Cash (~40% short)</button>
     </div>
 
     <h2>SOFR History</h2>
@@ -399,6 +400,15 @@
       busy = true;
       try {
         E.systemicShock(state, -5, "volatile");
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("reroll-cash").onclick = async () => {
+      if (!state || busy) return;
+      busy = true;
+      try {
+        E.rerollCash(state);
         await writeState();
       } finally { busy = false; }
     };

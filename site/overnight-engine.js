@@ -564,6 +564,31 @@ export function applySituationCard(s, cardOrId, rnd = Math.random) {
 //        "treasuries" (bank buys / receives Treasuries and pays cash).
 // Subtract (or add) the same amount from every bank. Default is a 5B
 // runoff of volatile funding — cash falls by the same amount.
+// Re-draw every bank's cash so about `negShare` of them are short and the
+// rest have surplus. The change is offset against volatile funding so the
+// balance sheet stays balanced. Returns the number of banks now short cash.
+export function rerollCash(s, rnd = Math.random, negShare = 0.4) {
+  const stubs = Object.keys(s.banks);
+  const nNeg = Math.round(stubs.length * negShare);
+  const shuffled = stubs.slice().sort(() => rnd() - 0.5);
+  const neg = new Set(shuffled.slice(0, nNeg));
+  for (const stub of stubs) {
+    const b = s.banks[stub];
+    const cash = neg.has(stub)
+      ? r2(randBetween(rnd, -8, -0.5))
+      : r2(randBetween(rnd, 0.5, 10));
+    const delta = r6(cash - (b.cash || 0));
+    b.cash = cash;
+    b.volatile = r6((b.volatile || 0) + delta);
+  }
+  s.shock = {
+    title: "Cash reshuffle",
+    text: `${nNeg} of ${stubs.length} banks need cash; the rest have surplus.`,
+    note: "Cash was redrawn. Volatile funding moved by the same amount so the sheet still balances.",
+  };
+  return nNeg;
+}
+
 export function systemicShock(s, amount = -5, field = "volatile") {
   const n = Object.keys(s.banks).length;
   for (const b of Object.values(s.banks)) shockBank(b, field, amount);
