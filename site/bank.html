@@ -186,11 +186,12 @@
     document.getElementById("rate").addEventListener("input", updateWarn);
     document.getElementById("side").addEventListener("change", updateWarn);
 
-    function renderMine() {
+    function renderMine(force = false) {
       const el = document.getElementById("mine");
       if (!el || !state) return;
-      // Don't wipe the inputs while the student is editing one.
-      if (el.contains(document.activeElement)) return;
+      // Don't wipe the inputs while the student is editing one,
+      // unless we are forcing a refresh (e.g. after cancel).
+      if (!force && el.contains(document.activeElement)) return;
       const mine = E.openOrders(state, stub);
       const closed = state.phase !== "trading";
       if (!mine.length) {
@@ -223,6 +224,10 @@
 
       if (e.target.classList.contains("mine-cancel")) {
         await update(orderRef, { status: "cancelled", note: "Cancelled by bank" });
+        // Optimistically remove from local state so the list clears immediately.
+        if (state.orders[id]) state.orders[id].status = "cancelled";
+        if (document.activeElement) document.activeElement.blur();
+        renderMine(true);
         msgEl.textContent = "Order cancelled.";
         msgEl.className = "msg ok";
         return;
