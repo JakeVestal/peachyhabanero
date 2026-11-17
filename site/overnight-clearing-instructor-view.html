@@ -158,6 +158,7 @@
       document.getElementById("session-code").textContent = sessionId;
 
       const sessRef = ref(db, "sessions/" + sessionId);
+      // First verify the token before setting up the live listener and controls.
       const snap = await get(sessRef);
       if (!snap.exists()) {
         setStatus("Session not found.", "err");
@@ -175,11 +176,14 @@
       onValue(sessRef, (snap) => {
         if (!snap.exists()) { setStatus("Session not found.", "err"); return; }
         state = E.normalize(snap.val());
+        // Re-check token on every update in case it was altered (defense in depth).
         if (state.hostToken !== token) {
           setStatus("Instructor access only.", "err");
           document.querySelector(".game-wrap").style.display = "none";
           return;
         }
+        // Host is the matcher. A cross is filled from a local copy and written
+        // back as a partial update, so a concurrent new order is not clobbered.
         if (state.phase === "trading" && E.hasCross(state)) {
           matchDirty = true;
           pumpMatches();
@@ -188,6 +192,7 @@
         setStatus("Session " + sessionId + " active. Host owns the game.");
       }, (err) => setStatus(explainError(err), "err"));
 
+      // presence
       const connRef = push(ref(db, "sessions/" + sessionId + "/hostConnections"));
       onDisconnect(connRef).remove();
       set(connRef, { ts: Date.now() });
@@ -201,6 +206,7 @@
 
       const corridor = document.getElementById("corridor-display");
       if (corridor) corridor.textContent = `Current: IORB ${state.rates.iorb.toFixed(2)}% · SRF ${state.rates.srf.toFixed(2)}%`;
+      // Keep the corridor inputs in sync unless the instructor is typing in one.
       const iorbEl = document.getElementById("iorb");
       const srfEl = document.getElementById("srf");
       if (iorbEl && document.activeElement !== iorbEl) iorbEl.value = state.rates.iorb;
@@ -269,6 +275,8 @@
       const resumeBtn = document.getElementById("resume-timer");
       const minutes = document.getElementById("timer-minutes");
       if (!startBtn || !state) return;
+      // Hide Start (and the minutes input) once a timer is running or paused,
+      // and keep it hidden after close until the next trading day.
       const hideStart = state.phase !== "trading" || !!state.timerEnd || !!state.timerPaused;
       const running = state.phase === "trading" && !!state.timerEnd && !state.timerPaused;
       const paused = state.phase === "trading" && !!state.timerPaused;
@@ -306,6 +314,8 @@
       await set(ref(db, "sessions/" + sessionId), E.clean(state));
     }
 
+    // Fill any crossed orders and persist only what the fill changes:
+    // the orders, the new trades, and the two banks' balance sheets.
     async function pumpMatches() {
       if (matching) return;
       matching = true;
@@ -340,6 +350,7 @@
           if (Object.keys(patch).length) {
             await update(ref(db, "sessions/" + sessionId), patch);
           }
+          // Apply locally so the tape and sheets update before the echo arrives.
           state = working;
           render();
         }
@@ -471,6 +482,49 @@
       busy = true;
       try {
         E.systemicShock(state, -5, "volatile");
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("reroll-cash").onclick = async () => {
+      if (!state || busy) return;
+      busy = true;
+      try {
+        E.rerollCash(state);
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    // Situation cards: dropdown + Apply. Engine owns the card list, rates, and shocks.
+    const cardSelect = document.getElementById("card-select");
+    const cardPreview = document.getElementById("card-preview");
+    if (cardSelect && Array.isArray(E.SITUATION_CARDS)) {
+      for (const c of E.SITUATION_CARDS) {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.title;
+        cardSelect.appendChild(opt);
+      }
+      cardSelect.onchange = () => {
+        const c = E.SITUATION_CARDS.find(x => x.id === cardSelect.value);
+        if (!c) { cardPreview.textContent = "Pick a card to see its story, corridor, and shock shape."; return; }
+        const rates = c.rates ? `IORB ${c.rates.iorb.toFixed(2)}% · SRF ${c.rates.srf.toFixed(2)}%` : "corridor unchanged";
+        cardPreview.textContent = `${c.story} Corridor → ${rates}. ${c.note || ""}`;
+      };
+    }
+
+    document.getElementById("apply-card").onclick = async () => {
+      if (!state || busy) return;
+      const id = cardSelect ? cardSelect.value : "";
+      const card = E.SITUATION_CARDS.find(c => c.id === id);
+      if (!card) return;
+      busy = true;
+      try {
+        E.applySituationCard(state, card);
+        const iorbEl = document.getElementById("iorb");
+        const srfEl = document.getElementById("srf");
+        if (iorbEl) iorbEl.value = state.rates.iorb;
+        if (srfEl) srfEl.value = state.rates.srf;
         await writeState();
       } finally { busy = false; }
     };
