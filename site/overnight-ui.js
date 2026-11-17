@@ -198,3 +198,33 @@ export function overnightHistoryHTML(s, stub) {
   }
   return html || `<div class="muted small">No overnight activity recorded.</div>`;
 }
+
+
+const EDIT_FIELDS = [
+  ["fixedLoans", "Fixed loans"],
+  ["floatingAssets", "Floating"],
+  ["treasuries", "Treasuries"],
+  ["repoLent", "Reverse repo"],
+  ["cash", "Cash / reserves"],
+  ["stickyDep", "Sticky deposits"],
+  ["volatile", "Volatile ST"],
+  ["repoBorrowed", "Repo borrowings"],
+  ["equity", "Equity"],
+  ["pledged", "Pledged Treasuries"],
+];
+
+export function editableBalanceSheetHTML(s, stub) {
+  const b = s.banks[stub];
+  if (!b) return "";
+  const rows = EDIT_FIELDS.map(([key, label]) =>
+    `<div class="row" style="gap:8px;margin:4px 0">
+      <label class="muted" style="min-width:140px">${label}</label>
+      <input class="field bs-edit" data-stub="${esc(stub)}" data-field="${key}" type="number" step="0.01" value="${Number(b[key] || 0)}" style="width:110px">
+    </div>`
+  ).join("");
+  return `<div class="bs-edit-box" data-stub="${esc(stub)}">
+    <div class="small muted" style="margin:6px 0">Edit balances ($B). Save writes them into the game.</div>
+    ${rows}
+    <button class="neon-btn bs-save" data-stub="${esc(stub)}">Save ${esc(b.name)}</button>
+  </div>`;
+}
