@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Designing a Thesis · peachyhabanero</title>
+  <meta name="description" content="How to develop a trading thesis: a belief that a risk is mispriced, a time horizon, a live tracker, and a macro overlay. Guidance for portfolio, technical, and factor approaches."/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <p class="navline">
+      <a href="index.html">home</a> ·
+      <a href="sustainability.html">sustainability</a> ·
+      <a href="fiscal-dominance.html">fiscal dominance</a> ·
+      <a href="financing.html">financing</a> ·
+      <a href="phase.html">phase (draft)</a> ·
+      <a href="trackers.html">trackers</a> ·
+      <a href="data.html">data</a> ·
+      <a href="overnight-clearing.html">overnight desk</a>
+    </p>
+    <a class="gh-badge" href="https://github.com/JakeVestal/peachyhabanero" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <h1>DESIGNING A THESIS</h1>
+  <p class="sub">
+    A thesis is a belief about the market that can be turned into a trading strategy. It must identify a specific risk that is over- or undervalued for a logical economic reason, estimate how long the mispricing will last, and supply a continuously updated tracker so you can see whether the idea still holds.
+  </p>
+</header>
+
+<main>
+  <section>
+    <h2>What makes a good thesis</h2>
+    <p>
+      A good thesis starts with a belief about the market or economy based on sound mercantile logic. It identifies a risk that is over- or undervalued because of a concrete economic reason — even if that risk is an abstract parameter such as vega or beta.
+    </p>
+    <p>
+      Examples:
+    </p>
+    <ul>
+      <li>If you believe a stock will rise, you are saying the market has overestimated the risk of the company declining in value. You accept that residual risk by buying the shares.</li>
+      <li>If you believe vega is overpriced, you might write options (accepting the risk that you are wrong). If you believe vega is underpriced, you might buy options.</li>
+      <li>If you believe a spread is under- or overpriced, you enter a pairs trade.</li>
+    </ul>
+    <p>
+      The thesis writer then asks a time-based question: how long until the market realizes its mistake and re-values the asset? You estimate this from logic and available data, and that estimate becomes the expected holding period.
+    </p>
+    <p>
+      Next, the mispricing must be quantified, plotted, and tracked. A live tracker (updated nightly or continuously) both validates that the insight is real and helps quantify how much value might be harvested. See the finished example from Nils at <a href="https://nilsbln4.github.io/535/" target="_blank" rel="noopener">Built Beats Building</a>.
+    </p>
+    <p>
+      Finally, the trader must consider the overall macro environment and how it will affect the trade.
+    </p>
+  </section>
+
+  <section>
+    <h2>Kill criteria</h2>
+    <p>
+      Write two or three observable conditions that would make you abandon the thesis. These are not vague feelings; they are numbers you can check.
+    </p>
+    <p>
+      Examples: the spread falls 15 % from its high since inception; beta to QQQ drifts above 0.3; the economic-surprise series no longer predicts the next month’s return; the rule’s equity curve underperforms cash for 20 consecutive trading days.
+    </p>
+  </section>
+
+  <section>
+    <h2>Estimating harvestable alpha</h2>
+    <p>
+      Look at the historical volatility or Sharpe of your tracker (even a rough one), rough turnover, and a simple cost assumption. The goal is not a precise number. It is to notice when an idea has a tiny edge after costs.
+    </p>
+  </section>
+
+  <section>
+    <h2>Different types of theses</h2>
+
+    <h3>Portfolio-based</h3>
+    <p>
+      Track risk contributions, correlations, or a simple multi-sleeve allocation versus a benchmark. You can also run different strategies (mean reversion, wheels) on multiple assets at the same time and watch the combined risk picture.
+    </p>
+    <p>
+      Starter tracker: a rolling correlation matrix or a risk-contribution pie versus a benchmark.
+    </p>
+
+    <h3>Technicals</h3>
+    <p>
+      Track a rule’s live or historical equity curve plus a regime filter. Be very careful to identify when and why the technical relationship can break.
+    </p>
+    <p>
+      Starter tracker: simple rule equity curve with an ATR-expansion filter that turns the rule off.
+    </p>
+
+    <h3>Macro / factor</h3>
+    <p>
+      Track a long/short factor or a simple economic-surprise versus price relationship.
+    </p>
+    <p>
+      Starter tracker: long/short quality-minus-growth or a basic economic-surprise versus subsequent return scatter.
+    </p>
+
+    <h3>Less motivated</h3>
+    <p>
+      Apply and extend one of the strategies we have already developed. Take the overnight or wheel code and add one observable condition that would turn it off.
+    </p>
+  </section>
+
+  <section>
+    <h2>Data and updates</h2>
+    <p>
+      Use what is already easy: course server or IBKR bars, LSEG, free FRED, Yahoo. The tracker should be able to update with a GitHub Action or a simple nightly script so it stays current while you are away.
+    </p>
+  </section>
+
+  <section>
+    <h2>Common failure modes</h2>
+    <ul>
+      <li>Vague theses that do not identify a specific mispriced risk.</li>
+      <li>Trackers that do not actually test the claimed belief.</li>
+      <li>No kill criteria.</li>
+      <li>Ignoring beta or costs.</li>
+      <li>Pure curve-fit with no regime awareness.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Homework checklist</h2>
+    <ul>
+      <li>One-sentence thesis</li>
+      <li>Time-horizon estimate</li>
+      <li>Tracker definition and chart</li>
+      <li>Two or three wrong-if conditions</li>
+      <li>Rough alpha / cost note</li>
+      <li>Macro-environment paragraph</li>
+      <li>Link to a live page (GitHub Pages is fine)</li>
+    </ul>
+    <p>
+      Reference example: <a href="https://nilsbln4.github.io/535/" target="_blank" rel="noopener">Built Beats Building</a>.
+    </p>
+  </section>
+</main>
+
+<footer>
+  peachyhabanero.com · public data ·
+  <a href="https://github.com/JakeVestal/peachyhabanero">source</a>
+  <span class="grok-credit">powered by <a href="https://grok.com" target="_blank" rel="noopener">Grok</a></span>
+</footer>
+</body>
+</html>
