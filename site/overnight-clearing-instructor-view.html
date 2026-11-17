@@ -55,6 +55,7 @@
       <button class="neon-btn" id="add-bank">+ Add Bank</button>
       <button class="neon-btn" id="close-market">Close Market & Print SOFR</button>
       <button class="neon-btn" id="advance">Advance to Next Day</button>
+      <button class="neon-btn" id="new-game">New Game</button>
       <button class="neon-btn" id="reset-day">Reset to Day 1</button>
       <button class="neon-btn" id="end-session">End Session</button>
     </div>
@@ -525,6 +526,16 @@
         const srfEl = document.getElementById("srf");
         if (iorbEl) iorbEl.value = state.rates.iorb;
         if (srfEl) srfEl.value = state.rates.srf;
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("new-game").onclick = async () => {
+      if (!state || busy) return;
+      if (!confirm("Start a new game with the same banks and session? Balance sheets are re-randomized. Day, book, tape, SOFR, timer, and shocks are cleared.")) return;
+      busy = true;
+      try {
+        E.newGame(state);
         await writeState();
       } finally { busy = false; }
     };
