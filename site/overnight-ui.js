@@ -267,10 +267,10 @@ export function historyRows(s, { live = false } = {}) {
   }));
   if (live && s.phase === "trading") {
     const snap = E.marketSnapshot(s);
-    const private = E.tradesForDay(s).filter((t) => t.kind === "private");
+    const privateTrades = E.tradesForDay(s).filter((t) => t.kind === "private");
     rows.push({
       day: s.day,
-      sofr: E.volumeWeightedMedian(private),
+      sofr: E.volumeWeightedMedian(privateTrades),
       volume: snap.volume,
       grossCash: snap.grossCash,
       pledged: snap.pledged,
