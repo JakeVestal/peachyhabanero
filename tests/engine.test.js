@@ -100,12 +100,12 @@ test("basic matching still works after curve changes", () => {
   s.banks.borr.treasuries = 10;
   s.banks.borr.treasuryBook = E.defaultTreasuryBook(10);
   E.markToMarket(s);
-  // Simple cross
+  // Simple cross — bid is resting (ts 1), so trade prints at the bid rate
   s.orders.b1 = { stub: "borr", side: "bid", rate: 4.50, volume: 1, remaining: 1, status: "open", day: 1, ts: 1 };
   s.orders.o1 = { stub: "lend", side: "offer", rate: 4.40, volume: 1, remaining: 1, status: "open", day: 1, ts: 2 };
   const fills = E.matchOrders(s);
   assert.equal(fills.length, 1);
-  assert.equal(fills[0].rate, 4.40);
+  assert.equal(fills[0].rate, 4.50); // bid was resting (earlier ts)
   assert.equal(fills[0].volume, 1);
 });
 
