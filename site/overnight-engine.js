@@ -27,6 +27,11 @@ export const DAY_COUNT = 360;
 export const FED = "FED";
 export const EPS = 0.005;              // $5M — anything smaller is treated as zero
 
+export const TENORS = ["1M", "6M", "1Y", "2Y", "5Y", "10Y"];
+export const TENOR_YEARS = { "1M": 1/12, "6M": 0.5, "1Y": 1, "2Y": 2, "5Y": 5, "10Y": 10 };
+export const DEFAULT_CURVE = { "1M": 4.45, "6M": 4.50, "1Y": 4.55, "2Y": 4.60, "5Y": 4.70, "10Y": 4.85 };
+
+
 const BS_FIELDS = Object.keys(STARTING_BS);
 
 export const r2 = (x) => Math.round(x * 100) / 100;      // volumes, rates
@@ -45,6 +50,9 @@ export function newState(now = Date.now()) {
     timerPaused: false,            // true while the countdown is paused
     timerRemainingMs: null,        // remaining ms while paused
     sofrHistory: [],               // [{day, sofr}] appended on each close
+    curve: { ...DEFAULT_CURVE },
+    curveHistory: [],
+
     closedBy: null,                // "timer" | "manual" | null
   };
 }
@@ -86,10 +94,12 @@ export function randomStartingBS(rnd = Math.random) {
   }
   const volatile = r2(randBetween(rnd, 12, 28));
   const stickyDep = r2(110 - volatile);
+  const treasuryBook = defaultTreasuryBook(treasuries);
   return {
     fixedLoans, floatingAssets, treasuries, cash, repoLent: 0,
     stickyDep, volatile, repoBorrowed: 0, equity: 10,
     pledged: 0,
+    treasuryBook,
   };
 }
 
@@ -112,8 +122,13 @@ export function normalize(raw) {
   if (s.timerRemainingMs === undefined) s.timerRemainingMs = null;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
+  if (!s.curve || typeof s.curve !== "object") s.curve = { ...DEFAULT_CURVE };
+  for (const t of TENORS) if (typeof s.curve[t] !== "number") s.curve[t] = DEFAULT_CURVE[t];
+  if (!Array.isArray(s.curveHistory)) s.curveHistory = [];
   for (const b of Object.values(s.banks)) {
     for (const f of BS_FIELDS) if (typeof b[f] !== "number" || isNaN(b[f])) b[f] = 0;
+    if (!b.treasuryBook || typeof b.treasuryBook !== "object") b.treasuryBook = defaultTreasuryBook(b.treasuries || 0);
+    for (const t of TENORS) if (typeof b.treasuryBook[t] !== "number") b.treasuryBook[t] = 0;
   }
   for (const o of Object.values(s.orders)) {
     o.remaining = typeof o.remaining === "number" ? o.remaining : o.volume;
@@ -414,6 +429,11 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   };
 
   s.lastSofr = s.sofr ?? s.lastSofr ?? null;
+  // Snapshot the curve that was in force for the day just finished.
+  if (!Array.isArray(s.curveHistory)) s.curveHistory = [];
+  if (!s.curveHistory.some((h) => h.day === s.day)) {
+    s.curveHistory.push({ day: s.day, curve: { ...(s.curve || DEFAULT_CURVE) } });
+  }
   s.day += 1;
   s.sofr = null;
   s.phase = "trading";
@@ -670,5 +690,72 @@ export function newGame(s, now = Date.now(), rnd = Math.random) {
   fresh.banks = kept;
   for (const k of Object.keys(s)) delete s[k];
   Object.assign(s, fresh);
+  return s;
+}
+
+// ---------------------------------------------------------------- yield curve / Treasury book
+
+// Split a face total into a simple default mix (mostly intermediate/long).
+export function defaultTreasuryBook(face) {
+  const f = r2(Math.max(0, face || 0));
+  if (f < 0.01) return Object.fromEntries(TENORS.map((t) => [t, 0]));
+  // Rough weights: light short end, bulk in 2Y/5Y/10Y.
+  const weights = { "1M": 0.05, "6M": 0.05, "1Y": 0.10, "2Y": 0.25, "5Y": 0.30, "10Y": 0.25 };
+  const book = {};
+  let allocated = 0;
+  for (const t of TENORS.slice(0, -1)) {
+    book[t] = r2(f * weights[t]);
+    allocated = r2(allocated + book[t]);
+  }
+  book["10Y"] = r2(f - allocated);
+  return book;
+}
+
+// Simple price of a zero / bullet: face / (1 + y)^t
+export function priceFromYield(face, yPercent, years) {
+  if (!face || years <= 0) return 0;
+  const y = (yPercent || 0) / 100;
+  return r6(face / Math.pow(1 + y, years));
+}
+
+export function duration(book, curve) {
+  if (!book) return 0;
+  let wSum = 0, dSum = 0;
+  for (const t of TENORS) {
+    const face = book[t] || 0;
+    if (face <= 0) continue;
+    const years = TENOR_YEARS[t];
+    const y = (curve && curve[t]) || DEFAULT_CURVE[t];
+    const px = priceFromYield(face, y, years);
+    wSum += px;
+    dSum += px * years;
+  }
+  return wSum > 0 ? r2(dSum / wSum) : 0;
+}
+
+// Mark every bank's Treasury book to the current curve.
+// Updates b.treasuries (market value). Face amounts in treasuryBook stay unchanged.
+// Free collateral continues to use the marked treasuries value.
+export function markToMarket(s) {
+  const curve = s.curve || DEFAULT_CURVE;
+  for (const b of Object.values(s.banks || {})) {
+    if (!b.treasuryBook) b.treasuryBook = defaultTreasuryBook(b.treasuries || 0);
+    let mtm = 0;
+    for (const t of TENORS) {
+      const face = b.treasuryBook[t] || 0;
+      mtm += priceFromYield(face, curve[t], TENOR_YEARS[t]);
+    }
+    b.treasuries = r6(mtm);
+  }
+  return s;
+}
+
+// Set a new curve and immediately mark all books.
+export function applyCurve(s, newCurve) {
+  s.curve = { ...DEFAULT_CURVE, ...(newCurve || {}) };
+  for (const t of TENORS) {
+    if (!isFinite(s.curve[t])) s.curve[t] = DEFAULT_CURVE[t];
+  }
+  markToMarket(s);
   return s;
 }
