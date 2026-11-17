@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stylizations & Caveats · Overnight Clearing Desk</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="overnight.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    main { max-width: 720px; margin: 2rem auto; padding: 0 1.25rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .lede { color: var(--muted); margin-bottom: 1.5rem; }
+    h2 { font-size: 1.1rem; margin-top: 1.75rem; margin-bottom: 0.4rem; }
+    p { margin: 0.4rem 0 0.9rem; line-height: 1.55; }
+    .back { margin-top: 2.5rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="index.html">home</a>
+        <a href="overnight-clearing.html">overnight desk</a>
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <h1>Stylizations & Caveats</h1>
+    <p class="lede">The Overnight Clearing Desk captures the essential plumbing of the overnight Treasury repo market for classroom use. The notes below flag the deliberate simplifications so the teaching stays accurate.</p>
+
+    <h2>1. No ON RRP</h2>
+    <p>The real floor system has both IORB (for banks) and the Overnight Reverse Repo facility (for money funds, GSEs, and other non-banks). This game only shows the bank side. Non-bank cash also has a floor via the ON RRP.</p>
+
+    <h2>2. Yield curve is instructor-driven</h2>
+    <p>Students could walk away thinking “the Fed sets the whole curve.” Longer yields are mostly market-determined; the instructor is standing in for those market forces. The relative shifts and the accumulating 3-D surface already show that the curve can move for reasons other than a pure Fed decree. Future versions may model the curve more endogenously.</p>
+
+    <h2>3. Mark-to-market affects free collateral immediately</h2>
+    <p>Real general-collateral repo is usually done at a fixed haircut. Price moves can trigger margin calls or haircut changes, but they do not always produce an instantaneous dollar-for-dollar reduction in borrowing capacity. The directional lesson is correct; the precision is stylized.</p>
+
+    <h2>4. No distinction between tri-party and bilateral; no “specials”</h2>
+    <p>SOFR itself filters specials. The game treats all Treasuries as pure general collateral. That is acceptable for the stated goals, but worth noting.</p>
+
+    <h2>5. Banks can run negative cash until the close</h2>
+    <p>Real banks face intraday constraints and regulatory liquidity ratios. The end-of-day clean-up still teaches the right incentive: residual shortfalls are funded at the SRF (or a penalty overdraft), and surplus reserves earn IORB.</p>
+
+    <p class="back"><a href="overnight-clearing.html">← back to the desk</a></p>
+  </main>
+
+  <footer>
+    <p>Classroom tool for FINTECH. Engine by Hanna Boud; site by peachyhabanero.</p>
+  </footer>
+</body>
+</html>
