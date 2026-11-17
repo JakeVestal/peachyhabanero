@@ -118,10 +118,10 @@
       <div class="row" style="margin-top:8px;gap:8px">
         <label>Parallel (bps)</label>
         <input id="yc-parallel" class="field" type="number" step="1" value="10" style="width:70px">
-        <button class="neon-btn" id="parallel-shift">Parallel Shift</button>
+        <button class="neon-btn" id="parallel-shift" title="Adds the same number of basis points to every tenor (1M–10Y), then marks every bank’s Treasury book and updates free collateral. Same result as typing the new yields and clicking Update Curve, just faster.">Parallel Shift</button>
         <label>Short-end (bps)</label>
         <input id="yc-short" class="field" type="number" step="1" value="25" style="width:70px">
-        <button class="neon-btn" id="short-shift">Short-end Shift</button>
+        <button class="neon-btn" id="short-shift" title="Adds the basis points only to the front of the curve (1M, 6M, 1Y). 2Y/5Y/10Y stay put. Then marks every book and updates free collateral. Same result as editing those three inputs and clicking Update Curve.">Short-end Shift</button>
       </div>
       <div id="curve-2d" style="height:280px;margin-top:12px"></div>
       <div id="curve-3d" style="height:380px;margin-top:8px"></div>
