@@ -289,6 +289,14 @@ export function tradesForDay(s, day = s.day) {
 //  3. fund any remaining shortfall at the Fed SRF (secured by free Treasuries),
 //     anything beyond the collateral as an unsecured overdraft at SRF + 100 bps,
 //  4. record surplus cash as parked at the Fed earning IORB.
+export function marketSnapshot(s) {
+  const banks = Object.values(s.banks || {});
+  const grossCash = r6(banks.reduce((a, b) => a + (b.cash || 0), 0));
+  const pledged = r6(banks.reduce((a, b) => a + (b.pledged || 0), 0));
+  const privateVol = r2(tradesForDay(s).filter((t) => t.kind === "private").reduce((a, t) => a + (t.volume || 0), 0));
+  return { grossCash, pledged, available: r6(grossCash - pledged), volume: privateVol };
+}
+
 export function closeMarket(s, now = Date.now(), idFn = makeId) {
   if (s.phase === "closed") return { sofr: s.sofr, already: true };
   for (const o of Object.values(s.orders)) {
@@ -332,7 +340,15 @@ export function closeMarket(s, now = Date.now(), idFn = makeId) {
   s.timerRemainingMs = null;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (!s.sofrHistory.some((h) => h.day === s.day)) {
-    s.sofrHistory.push({ day: s.day, sofr: s.sofr });
+    const snap = marketSnapshot(s);
+    s.sofrHistory.push({
+      day: s.day,
+      sofr: s.sofr,
+      volume: snap.volume,
+      grossCash: snap.grossCash,
+      pledged: snap.pledged,
+      available: snap.available,
+    });
   }
   return { sofr: s.sofr, privateCount: privateTrades.length, srfCount, overdraftCount, parkedCount };
 }
