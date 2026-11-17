@@ -434,6 +434,23 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   if (!s.curveHistory.some((h) => h.day === s.day)) {
     s.curveHistory.push({ day: s.day, curve: { ...(s.curve || DEFAULT_CURVE) } });
   }
+
+  // Small day-to-day curve evolution: short end tracks the day's SOFR change,
+  // plus modest noise. Not a card-sized move.
+  const daySofr = s.sofr;
+  const prevSofr = s.lastSofr;
+  if (isFinite(daySofr)) {
+    const dSofr = isFinite(prevSofr) ? (daySofr - prevSofr) : 0;
+    const next = {};
+    const weights = { "1M": 0.75, "6M": 0.45, "1Y": 0.25, "2Y": 0.12, "5Y": 0.05, "10Y": 0.02 };
+    for (const t of TENORS) {
+      const base = (s.curve && s.curve[t]) || DEFAULT_CURVE[t];
+      const noise = (Math.random() - 0.5) * 0.08; // roughly ±4 bps
+      next[t] = r2(base + dSofr * (weights[t] || 0) + noise);
+    }
+    applyCurve(s, next);
+  }
+
   s.day += 1;
   s.sofr = null;
   s.phase = "trading";
