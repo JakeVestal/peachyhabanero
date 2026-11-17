@@ -42,6 +42,8 @@
       </div>
 
       <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
+      <h3 style="margin-top:16px">Market History</h3>
+      <div id="sofr-history"></div>
       <div id="shock-banner" class="shock-banner" style="display:none"></div>
 
       <div class="two-col">
@@ -178,6 +180,7 @@
 
       updateCountdown();
       updateWarn();
+      document.getElementById("sofr-history").innerHTML = UI.marketTableHTML(UI.historyRows(state));
       statusEl.textContent = "Connected to session " + sessionId;
       statusEl.className = "status-bar";
     }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
