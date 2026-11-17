@@ -78,3 +78,4 @@ peachyhabanero-111-bank-sessions.patch
 peachyhabanero-112-host-firebase-config (2).patch
 peachyhabanero-113-fix-private-reserved.patch
 peachyhabanero-114-engine-yield-curve.patch
+peachyhabanero-115-ui-yield-curve.patch

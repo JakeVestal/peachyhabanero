@@ -23,6 +23,45 @@ export const fmtB = (x, d = 1) => (x < -1e-9 ? "−" : "") + "$" + Math.abs(x ||
 export const fmtM = (x) => (x < 0 ? "−" : "+") + "$" + Math.abs((x || 0) * 1000).toFixed(2) + "M";
 export const fmtPct = (x) => (x == null || !isFinite(x) ? "—" : Number(x).toFixed(2) + "%");
 
+// Shared plot config so instructor and student pages stay consistent.
+export const PLOT_TENORS = E.TENORS || ["1M", "6M", "1Y", "2Y", "5Y", "10Y"];
+export const PLOT_COLOR = "#4fc3f7";
+export const PLOT_SURFACE_COLORS = "Viridis";
+
+export function fmtTreasuryMix(book) {
+  if (!book) return "";
+  const parts = [];
+  for (const t of PLOT_TENORS) {
+    const v = Number(book[t]) || 0;
+    if (v > 0.05) parts.push(`${t} ${v.toFixed(1)}`);
+  }
+  return parts.length ? parts.join(" · ") : "—";
+}
+
+export function fmtDuration(book, curve) {
+  if (!book) return "—";
+  const d = E.duration(book, curve);
+  return isFinite(d) ? d.toFixed(2) + "y" : "—";
+}
+
+// If a situation card carries a curve or curveShift, apply it and mark books.
+export function applyCardCurve(s, card) {
+  if (!card) return s;
+  if (card.curve) {
+    E.applyCurve(s, card.curve);
+  } else if (card.curveShift) {
+    const shift = card.curveShift;
+    const next = {};
+    for (const t of PLOT_TENORS) {
+      const base = (s.curve && s.curve[t]) || E.DEFAULT_CURVE[t];
+      const delta = typeof shift === "number" ? shift : (shift[t] || 0);
+      next[t] = E.r2(base + delta);
+    }
+    E.applyCurve(s, next);
+  }
+  return s;
+}
+
 const TIP = {
   fixedLoans: "Fixed-rate corporate loans earning a constant 6.50%. They do not reprice with SOFR.",
   floatingAssets: "Floating-rate assets that reprice daily to SOFR + 100 bps. A higher SOFR raises the yield on this book.",
@@ -81,6 +120,7 @@ export function balanceSheetHTML(s, stub) {
       ${row("Fixed loans (6.50%)", "fixedLoans", fmtMoney(b.fixedLoans))}
       ${row("Floating (SOFR+100)", "floatingAssets", fmtMoney(b.floatingAssets))}
       ${row("Treasuries (HQLA)" + pledgedNote, "treasuries", fmtMoney(b.treasuries))}
+      ${b.treasuryBook ? `<tr><td colspan="2" class="muted small" style="padding-left:1.2em">Mix: ${esc(fmtTreasuryMix(b.treasuryBook))} · Dur ${fmtDuration(b.treasuryBook, s.curve)}</td></tr>` : ""}
       ${row("Reverse repo (cash lent)", "repoLent", fmtMoney(b.repoLent), b.repoLent > E.EPS ? "hl" : "")}
       ${row("<strong>Cash / reserves</strong>", "cash", fmtMoney(gap), gap < -E.EPS ? "neg" : "pos")}
       <tr class="bs-total"><td>Total assets</td><td class="num">${fmtMoney(t.assets)}</td></tr>
