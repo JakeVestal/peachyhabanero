@@ -16,6 +16,8 @@
     .countdown.urgent { color: #ff6b6b; }
     .history-list { list-style: none; padding: 0; margin: 8px 0; font-family: "IBM Plex Mono", monospace; }
     .history-list li { padding: 4px 0; border-bottom: 1px solid var(--gold-faint); }
+    .control-row { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+    .control-row .panel { flex: 1 1 280px; margin: 10px 0; }
     .msg.warn { color: #ffe2a8; }
   </style>
 </head>
@@ -63,6 +65,7 @@
     <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
     <div id="shock-banner" class="shock-banner" style="display:none"></div>
 
+    <div class="control-row">
     <div class="panel">
       <h3>Trading Timer</h3>
       <div class="row">
@@ -73,7 +76,7 @@
         <button class="neon-btn" id="resume-timer" style="display:none">Resume Timer</button>
         <span class="countdown" id="countdown">—</span>
       </div>
-      <p class="small muted">Start writes a shared timer end into the session. Both screens count down. At zero the market closes the same way as the Close button.</p>
+      <p class="small muted">Shared countdown. At zero the market closes.</p>
     </div>
 
     <div class="panel">
@@ -97,6 +100,7 @@
         <button class="neon-btn" id="apply-card">Apply Card</button>
       </div>
       <p id="card-preview" class="small muted" style="margin-top:8px">Pick a card to see its story, corridor, and shock shape.</p>
+    </div>
     </div>
 
     <div class="row">
