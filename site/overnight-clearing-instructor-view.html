@@ -104,8 +104,8 @@
       <button class="neon-btn" id="reroll-cash">Re-randomize Cash (~40% short)</button>
     </div>
 
-    <h2>SOFR History</h2>
-    <ul id="sofr-history" class="history-list"></ul>
+    <h2>Market History</h2>
+    <div id="sofr-history"></div>
 
     <h2>Banks</h2>
     <div id="banks" class="bank-grid"></div>
@@ -239,10 +239,7 @@
         sh.style.display = "none";
       }
 
-      const hist = Array.isArray(state.sofrHistory) ? state.sofrHistory : [];
-      document.getElementById("sofr-history").innerHTML = hist.length
-        ? hist.map(h => `<li>Day ${h.day}: ${h.sofr != null ? Number(h.sofr).toFixed(2) + "%" : "— (no private trades)"}</li>`).join("")
-        : "<li class='muted'>No closes yet.</li>";
+      document.getElementById("sofr-history").innerHTML = UI.marketTableHTML(UI.historyRows(state, { live: true }));
 
       const banksEl = document.getElementById("banks");
       const editingBank = banksEl && banksEl.contains(document.activeElement);
