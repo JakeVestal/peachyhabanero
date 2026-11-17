@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
     .countdown { font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--lime); min-width: 70px; }
@@ -46,15 +45,6 @@
       <h3 style="margin-top:16px">Market History</h3>
       <div id="sofr-history"></div>
       <div id="shock-banner" class="shock-banner" style="display:none"></div>
-
-      <div class="panel" style="margin:12px 0">
-        <h3>Today's Yield Curve</h3>
-        <div id="curve-2d" style="height:240px"></div>
-        <details style="margin-top:8px">
-          <summary class="small muted">Yield surface (maturity × day × yield)</summary>
-          <div id="curve-3d" style="height:300px"></div>
-        </details>
-      </div>
 
       <div class="two-col">
         <div class="panel">
@@ -191,33 +181,9 @@
       updateCountdown();
       updateWarn();
       document.getElementById("sofr-history").innerHTML = UI.marketTableHTML(UI.historyRows(state));
-      renderCurvePlots();
       statusEl.textContent = "Connected to session " + sessionId;
       statusEl.className = "status-bar";
     }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
-
-    const TENORS = ["1M","6M","1Y","2Y","5Y","10Y"];
-    function renderCurvePlots() {
-      if (!state || typeof Plotly === "undefined") return;
-      const curve = state.curve || {};
-      const xs = TENORS;
-      const ys = xs.map(t => curve[t] || 0);
-      const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", name: "Today", line: { color: "#c8ff00", width: 3 } };
-      const layout = { title: "Today's Curve", margin: { t: 30, l: 40, r: 10, b: 30 }, paper_bgcolor: "transparent", plot_bgcolor: "transparent", font: { color: "#eee" }, yaxis: { title: "%" } };
-      Plotly.react("curve-2d", [trace], layout, { displayModeBar: false });
-
-      const hist = Array.isArray(state.curveHistory) ? state.curveHistory : [];
-      const el3 = document.getElementById("curve-3d");
-      if (hist.length >= 1 && el3) {
-        const days = hist.map(h => h.day);
-        const z = hist.map(h => TENORS.map(t => h.curve[t] || 0));
-        const surface = { type: "surface", x: TENORS, y: days, z, colorscale: "Viridis", showscale: false };
-        const layout3 = { title: "Surface", margin: { t: 30, l: 0, r: 0, b: 0 }, scene: { xaxis: { title: "Tenor" }, yaxis: { title: "Day" }, zaxis: { title: "%" } }, paper_bgcolor: "transparent", font: { color: "#eee" } };
-        Plotly.react("curve-3d", [surface], layout3, { displayModeBar: false });
-      } else if (el3) {
-        el3.innerHTML = "<p class='muted small'>Appears after day 2.</p>";
-      }
-    }
 
     setInterval(updateCountdown, 250);
     document.getElementById("rate").addEventListener("input", updateWarn);
