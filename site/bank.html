@@ -189,9 +189,11 @@
     function renderMine(force = false) {
       const el = document.getElementById("mine");
       if (!el || !state) return;
-      // Don't wipe the inputs while the student is editing one,
-      // unless we are forcing a refresh (e.g. after cancel).
-      if (!force && el.contains(document.activeElement)) return;
+      // Only skip the refresh if the student is actively editing an input.
+      // A focused Cancel/Update button should not freeze a partial fill.
+      const active = document.activeElement;
+      const editing = active && el.contains(active) && active.tagName === "INPUT";
+      if (!force && editing) return;
       const mine = E.openOrders(state, stub);
       const closed = state.phase !== "trading";
       if (!mine.length) {
