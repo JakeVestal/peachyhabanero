@@ -82,3 +82,4 @@ peachyhabanero-115-ui-yield-curve.patch
 peachyhabanero-116-instructor-yield-curve.patch
 peachyhabanero-117-treasury-curve-load.patch
 peachyhabanero-118-student-yield-curve.patch
+peachyhabanero-119-situation-cards-curve.patch

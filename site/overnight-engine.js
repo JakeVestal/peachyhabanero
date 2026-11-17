@@ -482,7 +482,8 @@ export const SITUATION_CARDS = [
     field: "volatile",
     pool: [-6, -5, -4, -3, -2, -2, -1, 0, 1],
     mode: "byCashAsc",
-    note: "Mild-to-moderate tightening. Banks sorted by cash (lowest first) and given the more negative shocks from the pool.",
+    curveShift: { "1M": 0.25, "6M": 0.25, "1Y": 0.20, "2Y": 0.15, "5Y": 0.10, "10Y": 0.05 },
+    note: "Mild-to-moderate tightening. Banks sorted by cash (lowest first) and given the more negative shocks from the pool. Curve steepens at the front.",
   },
   {
     id: "liqcrisis",
@@ -492,7 +493,8 @@ export const SITUATION_CARDS = [
     field: "volatile",
     pool: [-12, -9, -6, -2, -1, 0, 0, 1],
     mode: "shuffle",
-    note: "Sharp, concentrated outflows for some banks; mild for the rest. SRF is raised to emphasize the facility.",
+    curveShift: { "1M": 0.40, "6M": 0.30, "1Y": 0.15, "2Y": 0.05, "5Y": 0.0, "10Y": -0.05 },
+    note: "Sharp, concentrated outflows for some banks; mild for the rest. SRF is raised to emphasize the facility. Short-end yields rise.",
   },
   {
     id: "flight",
@@ -502,7 +504,8 @@ export const SITUATION_CARDS = [
     field: "volatile",
     pool: [8, 6, 5, 4, 3, 2, -1, -2],
     mode: "shuffle",
-    note: "Most banks gain volatile funding; a couple see modest outflows.",
+    curveShift: { "1M": 0.0, "6M": -0.05, "1Y": -0.10, "2Y": -0.20, "5Y": -0.30, "10Y": -0.35 },
+    note: "Most banks gain volatile funding; a couple see modest outflows. Longer yields fall on the flight to quality.",
   },
   {
     id: "quarterend",
@@ -544,6 +547,20 @@ export function applySituationCard(s, cardOrId, rnd = Math.random) {
 
   if (card.rates && isFinite(card.rates.iorb) && isFinite(card.rates.srf)) {
     s.rates = { iorb: card.rates.iorb, srf: card.rates.srf };
+  }
+
+  // Optional yield-curve move (absolute curve or per-tenor shift in percent).
+  if (card.curve) {
+    applyCurve(s, card.curve);
+  } else if (card.curveShift) {
+    const shift = card.curveShift;
+    const next = {};
+    for (const t of TENORS) {
+      const base = (s.curve && s.curve[t]) || DEFAULT_CURVE[t];
+      const delta = typeof shift === "number" ? shift : (shift[t] || 0);
+      next[t] = r2(base + delta);
+    }
+    applyCurve(s, next);
   }
 
   const field = card.field || "volatile";
