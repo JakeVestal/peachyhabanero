@@ -27,6 +27,11 @@ export const DAY_COUNT = 360;
 export const FED = "FED";
 export const EPS = 0.005;              // $5M — anything smaller is treated as zero
 
+export const TENORS = ["1M", "6M", "1Y", "2Y", "5Y", "10Y"];
+export const TENOR_YEARS = { "1M": 1/12, "6M": 0.5, "1Y": 1, "2Y": 2, "5Y": 5, "10Y": 10 };
+export const DEFAULT_CURVE = { "1M": 4.45, "6M": 4.50, "1Y": 4.55, "2Y": 4.60, "5Y": 4.70, "10Y": 4.85 };
+export const DEFAULT_MIX = { "1M": 0.10, "6M": 0.15, "1Y": 0.20, "2Y": 0.25, "5Y": 0.20, "10Y": 0.10 };
+
 const BS_FIELDS = Object.keys(STARTING_BS);
 
 export const r2 = (x) => Math.round(x * 100) / 100;      // volumes, rates
@@ -40,6 +45,8 @@ export function newState(now = Date.now()) {
     day: 1,
     phase: "trading",              // "trading" | "closed"
     rates: { srf: 4.50, iorb: 4.40 },
+    curve: { ...DEFAULT_CURVE },
+    curveHistory: [],
     banks: {}, orders: {}, trades: {}, history: {},
     timerEnd: null,                // epoch ms; host sets this to open a timed session
     timerPaused: false,            // true while the countdown is paused
@@ -94,7 +101,16 @@ export function randomStartingBS(rnd = Math.random) {
 }
 
 export function newBank(name, now = Date.now(), rnd = Math.random) {
-  return { name, created: now, ...randomStartingBS(rnd) };
+  const bs = randomStartingBS(rnd);
+  const book = {};
+  const total = bs.treasuries || 0;
+  for (const t of TENORS) book[t] = r2(total * (DEFAULT_MIX[t] || 0));
+  // Adjust last to exact
+  const sum = TENORS.reduce((a, t) => a + book[t], 0);
+  book["10Y"] = r2(book["10Y"] + (total - sum));
+  bs.treasuryBook = book;
+  bs.treasuries = markBookToMarket(book, DEFAULT_CURVE); // initial MTM
+  return { name, created: now, ...bs };
 }
 
 // Firebase drops empty objects and null values, so anything read back from
@@ -112,8 +128,18 @@ export function normalize(raw) {
   if (s.timerRemainingMs === undefined) s.timerRemainingMs = null;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
+  if (!s.curve) s.curve = { ...DEFAULT_CURVE };
+  if (!Array.isArray(s.curveHistory)) s.curveHistory = [];
   for (const b of Object.values(s.banks)) {
     for (const f of BS_FIELDS) if (typeof b[f] !== "number" || isNaN(b[f])) b[f] = 0;
+    if (!b.treasuryBook) {
+      const book = {};
+      const total = b.treasuries || 0;
+      for (const t of TENORS) book[t] = r2(total * (DEFAULT_MIX[t] || 0));
+      const sum = TENORS.reduce((a, t) => a + book[t], 0);
+      book["10Y"] = r2(book["10Y"] + (total - sum));
+      b.treasuryBook = book;
+    }
   }
   for (const o of Object.values(s.orders)) {
     o.remaining = typeof o.remaining === "number" ? o.remaining : o.volume;
@@ -129,6 +155,67 @@ let idCounter = 0;
 export function makeId(prefix = "t", now = Date.now()) {
   idCounter = (idCounter + 1) % 1296;
   return `${prefix}${now.toString(36)}${idCounter.toString(36).padStart(2, "0")}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+// ---------------------------------------------------------------- yield curve / Treasury book
+
+export function tenorYears(tenor) { return TENOR_YEARS[tenor] || 0; }
+
+export function zeroPrice(yieldPct, years) {
+  if (years <= 0) return 1;
+  const y = (yieldPct || 0) / 100;
+  return 1 / Math.pow(1 + y, years);
+}
+
+export function markBookToMarket(book, curve) {
+  if (!book) return 0;
+  let mtm = 0;
+  for (const t of TENORS) {
+    const face = book[t] || 0;
+    const y = curve[t] || 0;
+    const px = zeroPrice(y, tenorYears(t));
+    mtm += face * px;
+  }
+  return r6(mtm);
+}
+
+export function duration(book, curve) {
+  if (!book) return 0;
+  let wsum = 0, mtm = 0;
+  for (const t of TENORS) {
+    const face = book[t] || 0;
+    if (face <= 0) continue;
+    const y = curve[t] || 0;
+    const yrs = tenorYears(t);
+    const px = zeroPrice(y, yrs);
+    const mv = face * px;
+    mtm += mv;
+    wsum += mv * yrs;
+  }
+  return mtm > 0 ? r2(wsum / mtm) : 0;
+}
+
+export function markToMarket(state) {
+  const curve = state.curve || DEFAULT_CURVE;
+  for (const b of Object.values(state.banks || {})) {
+    if (!b.treasuryBook) continue;
+    const old = b.treasuries || 0;
+    b.treasuries = markBookToMarket(b.treasuryBook, curve);
+    // free collateral is recomputed from treasuries - pledged automatically
+  }
+  return state;
+}
+
+export function applyCurve(state, newCurve) {
+  state.curve = { ...(newCurve || DEFAULT_CURVE) };
+  markToMarket(state);
+  return state;
+}
+
+export function snapshotCurve(state) {
+  if (!Array.isArray(state.curveHistory)) state.curveHistory = [];
+  state.curveHistory.push({ day: state.day, curve: { ...state.curve } });
+  return state;
 }
 
 // ---------------------------------------------------------------- bank math
@@ -414,6 +501,9 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   };
 
   const finishedDay = s.day;
+  // Snapshot the curve that was in force for this day before advancing.
+  if (!Array.isArray(s.curveHistory)) s.curveHistory = [];
+  s.curveHistory.push({ day: finishedDay, curve: { ...(s.curve || DEFAULT_CURVE) } });
   s.lastSofr = s.sofr ?? s.lastSofr ?? null;
   s.day += 1;
   s.sofr = null;
@@ -436,7 +526,8 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
 // mode:
 //   "shuffle"     — shuffle the pool and assign (most cards).
 //   "byCashAsc"   — sort banks by cash ascending; lowest cash gets the
-//                   first (usually most negative) pool value.
+//                   first (usually most negative) pool value
+.
 //   "bySizeDesc"  — sort banks by total assets descending, then by
 //                   volatile funding; largest / more levered gets the
 //                   first (usually most negative) pool value.
@@ -468,22 +559,24 @@ export const SITUATION_CARDS = [
   {
     id: "liqcrisis",
     title: "Liquidity crisis (2019-style)",
-    story: "A sharp, concentrated liquidity squeeze hits a few banks hard while most feel only mild pressure. The corridor widens as the Fed emphasizes the standing repo facility as a backstop.",
+    story: "A sharp, concentrated liquidity squeeze hits a few banks hard while most feel only mild pressure. The corridor widens as the Fed emphasizes the standing repo facility as a backstop. Short-end yields rise as funding stress intensifies.",
     rates: { iorb: 4.40, srf: 5.00 },
+    curveShift: { "1M": 0.50, "6M": 0.35, "1Y": 0.20 },
     field: "volatile",
     pool: [-12, -9, -6, -2, -1, 0, 0, 1],
     mode: "shuffle",
-    note: "Sharp, concentrated outflows for some banks; mild for the rest. SRF is raised to emphasize the facility.",
+    note: "Sharp, concentrated outflows for some banks; mild for the rest. SRF is raised to emphasize the facility. Short-end yields rise.",
   },
   {
     id: "flight",
     title: "Flight to safety",
-    story: "Risk aversion drives deposits and cash into the banking system. Most banks gain funding; a couple see modest outflows as counterparties rebalance.",
+    story: "Risk aversion drives deposits and cash into the banking system. Most banks gain funding; a couple see modest outflows as counterparties rebalance. Longer-term yields fall as flight-to-quality bids Treasuries.",
     rates: { iorb: 4.25, srf: 4.35 },
+    curveShift: { "5Y": -0.30, "10Y": -0.40 },
     field: "volatile",
     pool: [8, 6, 5, 4, 3, 2, -1, -2],
     mode: "shuffle",
-    note: "Most banks gain volatile funding; a couple see modest outflows. Fixed pool is shuffled and assigned.",
+    note: "Most banks gain volatile funding; a couple see modest outflows. Longer yields decline on flight-to-quality.",
   },
   {
     id: "quarterend",
@@ -525,6 +618,15 @@ export function applySituationCard(s, cardOrId, rnd = Math.random) {
 
   if (card.rates && isFinite(card.rates.iorb) && isFinite(card.rates.srf)) {
     s.rates = { iorb: card.rates.iorb, srf: card.rates.srf };
+  }
+  if (card.curve) {
+    applyCurve(s, card.curve);
+  } else if (card.curveShift) {
+    const base = { ...(s.curve || DEFAULT_CURVE) };
+    for (const t of TENORS) {
+      if (card.curveShift[t] != null) base[t] = r2(base[t] + card.curveShift[t]);
+    }
+    applyCurve(s, base);
   }
 
   const field = card.field || "volatile";

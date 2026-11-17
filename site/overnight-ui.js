@@ -23,6 +23,20 @@ export const fmtB = (x, d = 1) => (x < -1e-9 ? "−" : "") + "$" + Math.abs(x ||
 export const fmtM = (x) => (x < 0 ? "−" : "+") + "$" + Math.abs((x || 0) * 1000).toFixed(2) + "M";
 export const fmtPct = (x) => (x == null || !isFinite(x) ? "—" : Number(x).toFixed(2) + "%");
 
+export function fmtTreasuryMix(book) {
+  if (!book) return "";
+  const parts = [];
+  for (const t of ["1M", "6M", "1Y", "2Y", "5Y", "10Y"]) {
+    const v = book[t] || 0;
+    if (v > 0.005) parts.push(`${t} ${v.toFixed(1)}`);
+  }
+  return parts.join(" · ") || "—";
+}
+
+export function fmtDuration(d) {
+  return (d == null || !isFinite(d)) ? "—" : Number(d).toFixed(1) + "y";
+}
+
 const TIP = {
   fixedLoans: "Fixed-rate corporate loans earning a constant 6.50%. They do not reprice with SOFR.",
   floatingAssets: "Floating-rate assets that reprice daily to SOFR + 100 bps. A higher SOFR raises the yield on this book.",
@@ -81,6 +95,7 @@ export function balanceSheetHTML(s, stub) {
       ${row("Fixed loans (6.50%)", "fixedLoans", fmtMoney(b.fixedLoans))}
       ${row("Floating (SOFR+100)", "floatingAssets", fmtMoney(b.floatingAssets))}
       ${row("Treasuries (HQLA)" + pledgedNote, "treasuries", fmtMoney(b.treasuries))}
+      <tr><td class="small muted" colspan="2" style="padding-left:18px">Mix: ${fmtTreasuryMix(b.treasuryBook)} · Dur ${fmtDuration(E.duration(b.treasuryBook, s.curve))}</td></tr>
       ${row("Reverse repo (cash lent)", "repoLent", fmtMoney(b.repoLent), b.repoLent > E.EPS ? "hl" : "")}
       ${row("<strong>Cash / reserves</strong>", "cash", fmtMoney(gap), gap < -E.EPS ? "neg" : "pos")}
       <tr class="bs-total"><td>Total assets</td><td class="num">${fmtMoney(t.assets)}</td></tr>

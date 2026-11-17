@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
     .countdown { font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--lime); min-width: 70px; }
@@ -101,6 +102,28 @@
       </div>
       <p id="card-preview" class="small muted" style="margin-top:8px">Pick a card to see its story, corridor, and shock shape.</p>
     </div>
+    </div>
+
+    <div class="panel">
+      <h3>Yield Curve</h3>
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <label>1M</label><input id="yc-1M" class="field yc-input" type="number" step="0.01" style="width:70px">
+        <label>6M</label><input id="yc-6M" class="field yc-input" type="number" step="0.01" style="width:70px">
+        <label>1Y</label><input id="yc-1Y" class="field yc-input" type="number" step="0.01" style="width:70px">
+        <label>2Y</label><input id="yc-2Y" class="field yc-input" type="number" step="0.01" style="width:70px">
+        <label>5Y</label><input id="yc-5Y" class="field yc-input" type="number" step="0.01" style="width:70px">
+        <label>10Y</label><input id="yc-10Y" class="field yc-input" type="number" step="0.01" style="width:70px">
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="neon-btn" id="update-curve">Update Curve</button>
+        <label>Parallel bps</label><input id="parallel-bps" class="field" type="number" step="1" value="0" style="width:60px">
+        <button class="neon-btn" id="parallel-shift">Parallel Shift</button>
+        <label>Short-end bps</label><input id="short-bps" class="field" type="number" step="1" value="0" style="width:60px">
+        <button class="neon-btn" id="short-shift">Short-end Shift</button>
+      </div>
+      <div id="curve-2d" style="height:280px;margin-top:12px"></div>
+      <div id="curve-3d" style="height:360px;margin-top:8px"></div>
+      <p class="small muted">2-D is today's curve. 3-D surface grows with each advanced day (maturity × day × yield). Update Curve marks every bank's Treasury book to market and refreshes free collateral.</p>
     </div>
 
     <div class="row">
@@ -429,6 +452,8 @@
         state.timerPaused = false;
         state.timerRemainingMs = null;
         state.closedBy = null;
+        state.curveHistory = [];
+        // keep current curve or reset? restart history only
         await writeState();
       } finally { busy = false; }
     };
@@ -450,8 +475,7 @@
       if (!state || busy || !state.timerEnd || state.timerPaused) return;
       busy = true;
       try {
-        const rem = Math.max(0, state.timerEnd - Date.now());
-        state.timerRemainingMs = rem;
+        state.timerRemainingMs = Math.max(0, state.timerEnd - Date.now());
         state.timerPaused = true;
         state.timerEnd = null;
         await writeState();
@@ -462,8 +486,7 @@
       if (!state || busy || !state.timerPaused) return;
       busy = true;
       try {
-        const rem = Math.max(0, state.timerRemainingMs || 0);
-        state.timerEnd = Date.now() + rem;
+        state.timerEnd = Date.now() + (state.timerRemainingMs || 0);
         state.timerPaused = false;
         state.timerRemainingMs = null;
         await writeState();
@@ -530,6 +553,88 @@
         const srfEl = document.getElementById("srf");
         if (iorbEl) iorbEl.value = state.rates.iorb;
         if (srfEl) srfEl.value = state.rates.srf;
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    // ---- Yield curve plots and controls ----
+    const TENORS = ["1M","6M","1Y","2Y","5Y","10Y"];
+    function readCurveInputs() {
+      const c = {};
+      for (const t of TENORS) {
+        const el = document.getElementById("yc-" + t);
+        c[t] = el ? parseFloat(el.value) : (state.curve?.[t] || 0);
+      }
+      return c;
+    }
+    function syncCurveInputs() {
+      if (!state || !state.curve) return;
+      for (const t of TENORS) {
+        const el = document.getElementById("yc-" + t);
+        if (el && document.activeElement !== el) el.value = state.curve[t];
+      }
+    }
+    function renderCurvePlots() {
+      if (!state || typeof Plotly === "undefined") return;
+      const curve = state.curve || {};
+      const xs = TENORS;
+      const ys = xs.map(t => curve[t] || 0);
+      const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", name: "Today", line: { color: "#c8ff00", width: 3 } };
+      const layout = { title: "Today's Yield Curve", margin: { t: 40, l: 50, r: 20, b: 40 }, paper_bgcolor: "transparent", plot_bgcolor: "transparent", font: { color: "#eee" }, yaxis: { title: "Yield %" } };
+      Plotly.react("curve-2d", [trace], layout, { displayModeBar: false });
+
+      const hist = Array.isArray(state.curveHistory) ? state.curveHistory : [];
+      if (hist.length >= 1) {
+        const days = hist.map(h => h.day);
+        const z = hist.map(h => TENORS.map(t => h.curve[t] || 0));
+        const surface = { type: "surface", x: TENORS, y: days, z, colorscale: "Viridis", showscale: true };
+        const layout3 = { title: "Yield Surface (maturity × day × yield)", margin: { t: 40, l: 0, r: 0, b: 0 }, scene: { xaxis: { title: "Tenor" }, yaxis: { title: "Day" }, zaxis: { title: "Yield %" } }, paper_bgcolor: "transparent", font: { color: "#eee" } };
+        Plotly.react("curve-3d", [surface], layout3, { displayModeBar: false });
+      } else {
+        document.getElementById("curve-3d").innerHTML = "<p class='muted small'>Surface appears after the first day is advanced.</p>";
+      }
+    }
+
+    // Hook into existing render
+    const origRender = render;
+    render = function() {
+      origRender();
+      syncCurveInputs();
+      renderCurvePlots();
+    };
+
+    document.getElementById("update-curve").onclick = async () => {
+      if (!state || busy) return;
+      busy = true;
+      try {
+        const newC = readCurveInputs();
+        E.applyCurve(state, newC);
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("parallel-shift").onclick = async () => {
+      if (!state || busy) return;
+      const bps = parseFloat(document.getElementById("parallel-bps").value) || 0;
+      if (!bps) return;
+      busy = true;
+      try {
+        const c = { ...(state.curve || {}) };
+        for (const t of TENORS) c[t] = E.r2((c[t] || 0) + bps / 100);
+        E.applyCurve(state, c);
+        await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("short-shift").onclick = async () => {
+      if (!state || busy) return;
+      const bps = parseFloat(document.getElementById("short-bps").value) || 0;
+      if (!bps) return;
+      busy = true;
+      try {
+        const c = { ...(state.curve || {}) };
+        for (const t of ["1M", "6M", "1Y"]) c[t] = E.r2((c[t] || 0) + bps / 100);
+        E.applyCurve(state, c);
         await writeState();
       } finally { busy = false; }
     };
