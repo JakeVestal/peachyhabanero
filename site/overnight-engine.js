@@ -472,7 +472,8 @@ export const SITUATION_CARDS = [
     field: "volatile",
     pool: [-10, -8, -7, -6, -5, -4, -3, -2, 2, 4],
     mode: "shuffle",
-    note: "Most banks lose volatile funding; a few gain. Fixed pool is shuffled and assigned.",
+    curveShift: { "1M": -1.50, "6M": -1.25, "1Y": -1.00, "2Y": -0.75, "5Y": -0.50, "10Y": -0.40 },
+    note: "Most banks lose volatile funding; a few gain. Fixed pool is shuffled and assigned. Yields fall sharply, front end most.",
   },
   {
     id: "inflation",
@@ -515,7 +516,8 @@ export const SITUATION_CARDS = [
     field: "volatile",
     pool: [-4, -3, -3, -2, -2, -1, -1, 0],
     mode: "bySizeDesc",
-    note: "Mild, fairly even pressure. Banks sorted by total assets, then by volatile funding (more wholesale-funded first), and given the more negative shocks from the pool.",
+    curveShift: { "1M": 0.15, "6M": 0.10, "1Y": 0.05, "2Y": 0.0, "5Y": 0.0, "10Y": 0.0 },
+    note: "Mild, fairly even pressure. Banks sorted by total assets, then by volatile funding (more wholesale-funded first), and given the more negative shocks from the pool. Short-end yields rise into the turn.",
   },
 ];
 
