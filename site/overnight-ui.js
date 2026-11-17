@@ -2,7 +2,22 @@
 import * as E from "./overnight-engine.js";
 
 export const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" }[c]));
+
+// x is in $ billions.
+// Large amounts stay in $B. Small non-zero residuals switch to $M (or $K)
+// so a real $12M repo does not display as $0.00B.
+export function fmtMoney(x) {
+  const n = Number(x) || 0;
+  const sign = n < -1e-12 ? "−" : "";
+  const a = Math.abs(n);
+  if (a < 1e-9) return "$0";
+  if (a >= 0.05) return sign + "$" + a.toFixed(2) + "B";
+  const millions = a * 1000;
+  if (millions >= 0.05) return sign + "$" + millions.toFixed(millions >= 10 ? 1 : 2) + "M";
+  const thousands = a * 1e6;
+  return sign + "$" + thousands.toFixed(0) + "K";
+}
 
 export const fmtB = (x, d = 1) => (x < -1e-9 ? "−" : "") + "$" + Math.abs(x || 0).toFixed(d) + "B";
 export const fmtM = (x) => (x < 0 ? "−" : "+") + "$" + Math.abs((x || 0) * 1000).toFixed(2) + "M";
@@ -27,7 +42,7 @@ function row(label, key, value, cls = "") {
 export function orderLine(o) {
   const verb = o.side === "bid" ? "BID · borrow" : "OFFER · lend";
   const part = o.filled ? ` <span class="muted">(${o.filled.toFixed(2)} of ${o.volume.toFixed(2)} filled)</span>` : "";
-  return `<span class="${o.side}">${verb}</span> ${fmtB(o.remaining, 2)} @ ${fmtPct(o.rate)}${part}`;
+  return `<span class="${o.side}">${verb}</span> ${fmtMoney(o.remaining)} @ ${fmtPct(o.rate)}${part}`;
 }
 
 export function balanceSheetHTML(s, stub) {
@@ -37,16 +52,16 @@ export function balanceSheetHTML(s, stub) {
   const gap = b.cash;
   const free = E.freeCollateral(b);
   const { srf, iorb } = s.rates;
-  const pledgedNote = b.pledged > E.EPS ? ` <span class="muted">(${fmtB(b.pledged)} pledged)</span>` : "";
+  const pledgedNote = b.pledged > E.EPS ? ` <span class="muted">(${fmtMoney(b.pledged)} pledged)</span>` : "";
   let status;
   if (gap < -E.EPS) {
     status = s.phase === "trading"
-      ? `<span class="neg">Funding need ${fmtB(gap, 2)}</span>: bid for cash. Anything still short at the close is funded by the Fed SRF at ${fmtPct(srf)}.`
-      : `<span class="neg">Funding need ${fmtB(gap, 2)}</span>`;
+      ? `<span class="neg">Funding need ${fmtMoney(gap)}</span>: bid for cash. Anything still short at the close is funded by the Fed SRF at ${fmtPct(srf)}.`
+      : `<span class="neg">Funding need ${fmtMoney(gap)}</span>`;
   } else if (gap > E.EPS) {
     status = s.phase === "trading"
-      ? `<span class="pos">Surplus ${fmtB(gap, 2)}</span>: offer it to banks that need cash, or leave it at the Fed earning IORB ${fmtPct(iorb)}.`
-      : `<span class="pos">Surplus ${fmtB(gap, 2)}</span> at the Fed earning IORB ${fmtPct(iorb)}.`;
+      ? `<span class="pos">Surplus ${fmtMoney(gap)}</span>: offer it to banks that need cash, or leave it at the Fed earning IORB ${fmtPct(iorb)}.`
+      : `<span class="pos">Surplus ${fmtMoney(gap)}</span> at the Fed earning IORB ${fmtPct(iorb)}.`;
   } else {
     status = `<span class="pos">Flat</span>: no funding gap.`;
   }
@@ -63,27 +78,27 @@ export function balanceSheetHTML(s, stub) {
   return `
     <table class="bs-table">
       <tr class="bs-h"><td colspan="2">Assets</td></tr>
-      ${row("Fixed loans (6.50%)", "fixedLoans", fmtB(b.fixedLoans))}
-      ${row("Floating (SOFR+100)", "floatingAssets", fmtB(b.floatingAssets))}
-      ${row("Treasuries (HQLA)" + pledgedNote, "treasuries", fmtB(b.treasuries))}
-      ${row("Reverse repo (cash lent)", "repoLent", fmtB(b.repoLent, 2), b.repoLent > E.EPS ? "hl" : "")}
-      ${row("<strong>Cash / reserves</strong>", "cash", fmtB(gap, 2), gap < -E.EPS ? "neg" : "pos")}
-      <tr class="bs-total"><td>Total assets</td><td class="num">${fmtB(t.assets, 2)}</td></tr>
-      <tr class="bs-h"><td colspan="2">Liabilities &amp; equity</td></tr>
-      ${row("Sticky deposits (3.50%)", "stickyDep", fmtB(b.stickyDep))}
-      ${row("Volatile ST funding", "volatile", fmtB(b.volatile))}
-      ${row("Repo borrowings", "repoBorrowed", fmtB(b.repoBorrowed, 2), b.repoBorrowed > E.EPS ? "hl" : "")}
-      ${row("Equity", "equity", "$" + b.equity.toFixed(3) + "B")}
-      <tr class="bs-total"><td>Total liab. + equity</td><td class="num">${fmtB(t.liabEq, 2)}</td></tr>
+      ${row("Fixed loans (6.50%)", "fixedLoans", fmtMoney(b.fixedLoans))}
+      ${row("Floating (SOFR+100)", "floatingAssets", fmtMoney(b.floatingAssets))}
+      ${row("Treasuries (HQLA)" + pledgedNote, "treasuries", fmtMoney(b.treasuries))}
+      ${row("Reverse repo (cash lent)", "repoLent", fmtMoney(b.repoLent), b.repoLent > E.EPS ? "hl" : "")}
+      ${row("<strong>Cash / reserves</strong>", "cash", fmtMoney(gap), gap < -E.EPS ? "neg" : "pos")}
+      <tr class="bs-total"><td>Total assets</td><td class="num">${fmtMoney(t.assets)}</td></tr>
+      <tr class="bs-h"><td colspan="2">Liabilities & equity</td></tr>
+      ${row("Sticky deposits (3.50%)", "stickyDep", fmtMoney(b.stickyDep))}
+      ${row("Volatile ST funding", "volatile", fmtMoney(b.volatile))}
+      ${row("Repo borrowings", "repoBorrowed", fmtMoney(b.repoBorrowed), b.repoBorrowed > E.EPS ? "hl" : "")}
+      ${row("Equity", "equity", fmtMoney(b.equity))}
+      <tr class="bs-total"><td>Total liab. + equity</td><td class="num">${fmtMoney(t.liabEq)}</td></tr>
     </table>
     <div class="small">${status}</div>
-    <div class="muted small">Free collateral: ${fmtB(free, 2)} of Treasuries left to pledge</div>
+    <div class="muted small">Free collateral: ${fmtMoney(free)} of Treasuries left to pledge</div>
     ${pnl}
     ${ordersHTML}`;
 }
 
 export function tradeLineFor(t, stub) {
-  const v = fmtB(t.volume, 2), r = fmtPct(t.rate);
+  const v = fmtMoney(t.volume), r = fmtPct(t.rate);
   if (t.kind === "iorb") return `<span class="k-iorb">Left ${v} at the Fed earning IORB ${r}</span>`;
   if (t.borrower === stub) {
     const cls = t.kind === "private" ? "k-private" : t.kind === "srf" ? "k-srf" : "k-od";
@@ -93,7 +108,7 @@ export function tradeLineFor(t, stub) {
 }
 
 export function tapeLine(t) {
-  const v = fmtB(t.volume, 2), r = fmtPct(t.rate);
+  const v = fmtMoney(t.volume), r = fmtPct(t.rate);
   const time = new Date(t.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const label = { private: "REPO", srf: "SRF", overdraft: "OVERDRAFT", iorb: "IORB" }[t.kind] || t.kind;
   return `<div class="tape-row k-${t.kind === "overdraft" ? "od" : t.kind}"><span class="tape-t">${time}</span>`
@@ -105,7 +120,7 @@ export function orderBookHTML(s, { highlightStub = null } = {}) {
   const open = Object.values(s.orders).filter((o) => o.status === "open" && o.day === s.day && o.remaining > E.EPS);
   const bids = open.filter((o) => o.side === "bid").sort((a, b) => b.rate - a.rate || a.ts - b.ts);
   const offers = open.filter((o) => o.side === "offer").sort((a, b) => a.rate - b.rate || a.ts - b.ts);
-  const line = (o) => `<tr class="${o.stub === highlightStub ? "mine" : ""}"><td>${esc(E.orderName(s, o))}${o.stub === highlightStub ? " (you)" : ""}</td><td class="num">${fmtB(o.remaining, 2)}</td><td class="num">${fmtPct(o.rate)}</td></tr>`;
+  const line = (o) => `<tr class="${o.stub === highlightStub ? "mine" : ""}"><td>${esc(E.orderName(s, o))}${o.stub === highlightStub ? " (you)" : ""}</td><td class="num">${fmtMoney(o.remaining)}</td><td class="num">${fmtPct(o.rate)}</td></tr>`;
   const side = (title, list, cls, empty) => `
     <div class="book-side">
       <div class="book-h ${cls}">${title}</div>
@@ -153,7 +168,7 @@ export function overnightResultsHTML(s, stub, day) {
   const line = (t, int, verb) => {
     const who = verb === "Borrowed" ? esc(t.lenderName) : esc(t.borrowerName);
     const kind = t.kind === "srf" ? " (SRF)" : t.kind === "overdraft" ? " (overdraft)" : t.kind === "iorb" ? " (IORB)" : "";
-    return `<div>${verb} ${fmtB(t.volume, 2)} ${verb === "Borrowed" ? "from" : "to"} ${who}${kind} @ ${fmtPct(t.rate)} — interest ${verb === "Borrowed" ? "paid" : "earned"} ${fmtM(int)}</div>`;
+    return `<div>${verb} ${fmtMoney(t.volume)} ${verb === "Borrowed" ? "from" : "to"} ${who}${kind} @ ${fmtPct(t.rate)} — interest ${verb === "Borrowed" ? "paid" : "earned"} ${fmtM(int)}</div>`;
   };
 
   let html = `<div class="overnight-results">`;
