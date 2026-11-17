@@ -117,10 +117,10 @@
       </div>
       <div class="row" style="margin-top:8px;gap:8px">
         <label>Parallel (bps)</label>
-        <input id="yc-parallel" class="field" type="number" step="1" value="0" style="width:70px">
+        <input id="yc-parallel" class="field" type="number" step="1" value="10" style="width:70px">
         <button class="neon-btn" id="parallel-shift">Parallel Shift</button>
         <label>Short-end (bps)</label>
-        <input id="yc-short" class="field" type="number" step="1" value="0" style="width:70px">
+        <input id="yc-short" class="field" type="number" step="1" value="25" style="width:70px">
         <button class="neon-btn" id="short-shift">Short-end Shift</button>
       </div>
       <div id="curve-2d" style="height:280px;margin-top:12px"></div>
@@ -691,6 +691,43 @@
     };
 
     start().catch(e => setStatus(explainError(e), "err"));
-  </script>
+
+    // ---- Load today's Treasury CMT curve on first connect ----
+    const TREASURY_CSV = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_yield_curve&field_tdr_date_value=2026&page&_format=csv";
+    const TENOR_MAP = { "1M": "1 Mo", "6M": "6 Mo", "1Y": "1 Yr", "2Y": "2 Yr", "5Y": "5 Yr", "10Y": "10 Yr" };
+
+    async function loadTodayCurve() {
+      if (!state) return;
+      try {
+        const res = await fetch(TREASURY_CSV);
+        if (!res.ok) return;
+        const csv = await res.text();
+        const lines = csv.trim().split(/\r?\n/);
+        if (lines.length < 2) return;
+        const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
+        const latest = lines[1].split(",").map(c => c.replace(/^"|"$/g, "").trim());
+        const curve = {};
+        for (const [our, their] of Object.entries(TENOR_MAP)) {
+          const idx = headers.indexOf(their);
+          const v = idx >= 0 ? parseFloat(latest[idx]) : NaN;
+          curve[our] = isFinite(v) ? v : E.DEFAULT_CURVE[our];
+        }
+        const isDefault = !state.curve || Object.keys(E.DEFAULT_CURVE).every(t =>
+          Math.abs((state.curve[t] || 0) - E.DEFAULT_CURVE[t]) < 0.001
+        );
+        if (isDefault) {
+          E.applyCurve(state, curve);
+          await writeState();
+          syncCurveInputs();
+          drawCurvePlots();
+          console.log("Loaded today's Treasury curve", curve);
+        }
+      } catch (e) {
+        console.warn("Could not load Treasury curve", e);
+      }
+    }
+
+    setTimeout(loadTodayCurve, 1200);
+</script>
 </body>
 </html>
