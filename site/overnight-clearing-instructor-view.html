@@ -245,10 +245,13 @@
         : "<li class='muted'>No closes yet.</li>";
 
       const banksEl = document.getElementById("banks");
-      banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
-        const ov = state.day > 1 ? UI.overnightResultsHTML(state, stub, state.day - 1) : "";
-        return `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}${ov}</div>`;
-      }).join("") || "<em class='muted'>No banks yet.</em>";
+      const editingBank = banksEl && banksEl.contains(document.activeElement);
+      if (!editingBank) {
+        banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
+          const ov = state.day > 1 ? UI.overnightResultsHTML(state, stub, state.day - 1) : "";
+          return `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
+        }).join("") || "<em class='muted'>No banks yet.</em>";
+      }
 
       document.getElementById("book").innerHTML = UI.orderBookHTML(state);
       const trades = E.tradesForDay(state);
@@ -527,6 +530,25 @@
         if (iorbEl) iorbEl.value = state.rates.iorb;
         if (srfEl) srfEl.value = state.rates.srf;
         await writeState();
+      } finally { busy = false; }
+    };
+
+    document.getElementById("banks").onclick = async (e) => {
+      const btn = e.target.closest(".bs-save");
+      if (!btn || !state || busy) return;
+      const stub = btn.dataset.stub;
+      const bank = state.banks[stub];
+      if (!bank) return;
+      const inputs = document.querySelectorAll(`.bs-edit[data-stub="${stub}"]`);
+      for (const inp of inputs) {
+        const field = inp.dataset.field;
+        const val = parseFloat(inp.value);
+        if (!isFinite(val)) continue;
+        bank[field] = E.r6(val);
+      }
+      busy = true;
+      try {
+        await update(ref(db, "sessions/" + sessionId + "/banks/" + stub), E.clean(bank));
       } finally { busy = false; }
     };
 
