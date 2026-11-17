@@ -228,3 +228,55 @@ export function editableBalanceSheetHTML(s, stub) {
     <button class="neon-btn bs-save" data-stub="${esc(stub)}">Save ${esc(b.name)}</button>
   </div>`;
 }
+
+
+export function marketTableHTML(rows) {
+  if (!rows || !rows.length) return "<p class='muted'>No days yet.</p>";
+  const cell = (v, kind) => {
+    if (v == null || (typeof v === "number" && !isFinite(v))) return "—";
+    if (kind === "pct") return fmtPct(v);
+    return fmtMoney(v);
+  };
+  const body = rows.map((r) => `<tr>
+    <td>Day ${r.day}${r.live ? " <span class='muted'>(live)</span>" : ""}</td>
+    <td class="num">${cell(r.sofr, "pct")}</td>
+    <td class="num">${cell(r.volume)}</td>
+    <td class="num">${cell(r.grossCash)}</td>
+    <td class="num">${cell(r.pledged)}</td>
+    <td class="num">${cell(r.available)}</td>
+  </tr>`).join("");
+  return `<table class="ref" style="width:100%;border-collapse:collapse;font-size:14px">
+    <thead><tr>
+      <th>Day</th><th>SOFR</th><th>Repo Volume</th>
+      <th>Total Reserves</th><th>Pledged Treasuries</th><th>Available Reserves</th>
+    </tr></thead>
+    <tbody>${body}</tbody>
+  </table>
+  <p class="small muted">Available Reserves = Total Reserves − Pledged Treasuries. Repo Volume is private interbank deals only.</p>`;
+}
+
+export function historyRows(s, { live = false } = {}) {
+  const hist = Array.isArray(s.sofrHistory) ? s.sofrHistory.slice() : [];
+  const rows = hist.map((h) => ({
+    day: h.day,
+    sofr: h.sofr,
+    volume: h.volume,
+    grossCash: h.grossCash,
+    pledged: h.pledged,
+    available: h.available,
+  }));
+  if (live && s.phase === "trading") {
+    const snap = E.marketSnapshot(s);
+    const private = E.tradesForDay(s).filter((t) => t.kind === "private");
+    rows.push({
+      day: s.day,
+      sofr: E.volumeWeightedMedian(private),
+      volume: snap.volume,
+      grossCash: snap.grossCash,
+      pledged: snap.pledged,
+      available: snap.available,
+      live: true,
+    });
+  }
+  return rows;
+}
