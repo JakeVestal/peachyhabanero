@@ -311,12 +311,21 @@
       }
       const days = hist.map(h => h.day);
       const z = hist.map(h => tenors.map(t => (h.curve && h.curve[t]) || E.DEFAULT_CURVE[t]));
+      const xIdx = tenors.map((_, i) => i);
       Plotly.react("curve-3d", [{
-        type: "surface", x: tenors, y: days, z: z,
-        colorscale: UI.PLOT_SURFACE_COLORS
+        type: "surface",
+        x: xIdx,
+        y: days,
+        z: z,
+        colorscale: UI.PLOT_SURFACE_COLORS,
+        showscale: true
       }], {
         margin: { t: 10, b: 30, l: 30, r: 10 },
-        scene: { xaxis: { title: "Tenor" }, yaxis: { title: "Day" }, zaxis: { title: "Yield %" } },
+        scene: {
+          xaxis: { title: "Tenor", tickvals: xIdx, ticktext: tenors },
+          yaxis: { title: "Day" },
+          zaxis: { title: "Yield %" }
+        },
         paper_bgcolor: "rgba(0,0,0,0)",
         font: { color: "#e0e0e0" }
       }, { responsive: true });
