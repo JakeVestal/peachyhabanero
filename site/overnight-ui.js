@@ -2,7 +2,7 @@
 import * as E from "./overnight-engine.js";
 
 export const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) =>
-  ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" }[c]));
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // x is in $ billions.
 // Large amounts stay in $B. Small non-zero residuals switch to $M (or $K)
