@@ -142,21 +142,21 @@ test("calculateTargetReserveBalance applies minimum floor", () => {
   assert.ok(t >= 0.5, `floor not applied, got ${t}`);
 });
 
-test("generateReservePlans creates a plan per bank and jumps that net to trueEod", () => {
+test("generateReservePlans assigns net flows and jumps sum to assignedNetCashFlow", () => {
   const s = E.newState();
   s.banks.a = E.newBank("A", Date.now(), () => 0.4);
   s.banks.b = E.newBank("B", Date.now(), () => 0.6);
-  // deterministic seed
   let seed = 0.1;
   const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   E.generateReservePlans(s, rnd);
   assert.ok(s.reservePlans.a && s.reservePlans.b, "plans missing");
   for (const [stub, plan] of Object.entries(s.reservePlans)) {
-    const start = s.banks[stub].cash || 0;
     const netJumps = plan.jumps.reduce((a, j) => a + j.amount, 0);
-    const final = start + netJumps;
-    assert.ok(almost(final, plan.trueEod, 0.15), `${stub}: final ${final} vs trueEod ${plan.trueEod}`);
+    assert.ok(almost(netJumps, plan.assignedNetCashFlow, 0.15),
+      `${stub}: jumps sum ${netJumps} vs assigned ${plan.assignedNetCashFlow}`);
     assert.ok(plan.target > 0, "target should be positive");
+    // Starting cash should be above target
+    assert.ok(s.banks[stub].cash >= plan.target - 0.1, "should start near or above target");
   }
 });
 
