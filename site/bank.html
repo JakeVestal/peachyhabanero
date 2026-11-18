@@ -187,9 +187,6 @@
         el.innerHTML = "<p class='muted small' style='padding:20px'>Waiting for cash flows…</p>";
         return;
       }
-      const xs = tape.map(e => e.tick);
-      const ys = [];
-      let running = state.banks[stub]?.cash || 0;
       // Reconstruct path from tape (tape is chronological)
       const sorted = tape.slice().sort((a, b) => a.tick - b.tick);
       let c = (state.banks[stub]?.cash || 0);

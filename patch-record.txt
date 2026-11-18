@@ -122,3 +122,4 @@ peachyhabanero-156-true-inplace-bs-edit.patch
 peachyhabanero-157-clock-and-fixed-chart-axis.patch
 peachyhabanero-158-remove-phase-box.patch
 peachyhabanero-159-robust-connecting-and-target.patch
+peachyhabanero-160-fix-duplicate-xs (1).patch
