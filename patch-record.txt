@@ -114,3 +114,4 @@ peachyhabanero-147-tests-and-docs-sync.patch
 peachyhabanero-148-regenerate-plans-every-day.patch
 peachyhabanero-149-gap-message-and-instructor-banners.patch
 peachyhabanero-151-prominent-howtoplay-links.patch
+peachyhabanero-152-howtoplay-styling.patch
