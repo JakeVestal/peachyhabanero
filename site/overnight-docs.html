@@ -178,7 +178,7 @@
 
 ## Reserve targets and tick-driven cash flows
 
-When the instructor starts trading, `generateReservePlans` computes each bank’s risk-desk target (deterministic function of short-term funding) and assigns an `assignedNetCashFlow` for the day. Approximately `fractionShort` (default 40%) of banks are given a net outflow large enough that they will finish below target if they do nothing; the rest receive a net inflow. A random walk of tick-by-tick jumps (clustering optional) is pre-computed so the jumps sum to that assigned net flow. Students see the live Current reserve balance and the shortfall/surplus versus target. They start the day above target. A future regulatory-penalty threshold for severe shortfalls is noted for later implementation.
+When a new trading day begins (on Start Trading for day 1, and automatically at the end of every subsequent day via `advanceDay`), `generateReservePlans` computes each bank’s risk-desk target (deterministic function of short-term funding) and assigns an `assignedNetCashFlow` for the day. Approximately `fractionShort` (default 40%) of banks are given a net outflow large enough that they will finish below target if they do nothing; the rest receive a net inflow. A random walk of tick-by-tick jumps (clustering optional) is pre-computed so the jumps sum to that assigned net flow. Students see the live Current reserve balance and the shortfall/surplus versus target. They start the day above target. A future regulatory-penalty threshold for severe shortfalls is noted for later implementation.
 
 ## Future work (reserve-target system)
 

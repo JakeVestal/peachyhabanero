@@ -636,6 +636,11 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   s.tick = 0;
   s.closedBy = null;
   for (const [id, o] of Object.entries(s.orders)) if (o.day < s.day) delete s.orders[id];
+
+  // Fresh assigned net cash flows and walks for the new day.
+  // Resamples which banks will finish short if idle (~fractionShort).
+  generateReservePlans(s);
+
   return { finishedDay: s.day - 1, sofrRef };
 }
 

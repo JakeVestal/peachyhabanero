@@ -111,3 +111,4 @@ peachyhabanero-144-reserve-chart.patch
 peachyhabanero-145-instructor-edit-and-early-target.patch
 peachyhabanero-146-start-green-assigned-net-flow.patch
 peachyhabanero-147-tests-and-docs-sync.patch
+peachyhabanero-148-regenerate-plans-every-day.patch
