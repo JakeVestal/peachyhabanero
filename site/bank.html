@@ -161,14 +161,20 @@
     function updateCountdown() {
       const el = document.getElementById("countdown");
       if (!el || !state) return;
-      const tick = state.tick || 0;
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
+      let tick = state.tick || 0;
+      // Compute tick locally from timer so the clock moves between Firebase updates
+      if (state.timerStart && state.timerDurationMs && !state.timerPaused) {
+        const elapsed = Date.now() - state.timerStart;
+        const totalTicks = 78;
+        tick = Math.min(totalTicks, Math.floor((elapsed / state.timerDurationMs) * totalTicks));
+      }
       if (state.timerPaused) {
         el.textContent = inGameClock(tick) + " paused";
         el.className = "value countdown";
         return;
       }
-      if (!state.timerEnd) { el.textContent = "—"; el.className = "value countdown"; return; }
+      if (!state.timerEnd && !state.timerStart) { el.textContent = "—"; el.className = "value countdown"; return; }
       el.textContent = inGameClock(tick);
       el.className = "value countdown";
     }
@@ -208,9 +214,22 @@
         bals.unshift(bal);
         bal -= sorted[i].amount;
       }
+      // Fixed axis: 09:30 to 16:00 (78 ticks). Convert tick to minutes past 9:30.
+      const toMin = (t) => 9*60 + 30 + t * 5;
+      const xs = ticks.map(toMin);
+      const targetX = [toMin(0), toMin(78)];
+      const tickvals = [];
+      const ticktext = [];
+      for (let m = 9*60+30; m <= 16*60; m += 30) {
+        tickvals.push(m);
+        let h = Math.floor(m/60); const mm = m%60;
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+        ticktext.push(String(h).padStart(2,"0") + ":" + String(mm).padStart(2,"0") + " " + ampm);
+      }
       Plotly.react(el, [
         {
-          x: ticks,
+          x: xs,
           y: bals,
           mode: "lines+markers",
           name: "Reserve balance",
@@ -218,19 +237,26 @@
           marker: { size: 6 }
         },
         {
-          x: [ticks[0] || 0, ticks[ticks.length-1] || 78],
+          x: targetX,
           y: [target, target],
           mode: "lines",
           name: "Risk target",
           line: { color: "#e33", width: 2, dash: "dash" }
         }
       ], {
-        margin: { t: 20, r: 20, b: 40, l: 50 },
+        margin: { t: 20, r: 20, b: 50, l: 55 },
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
-        xaxis: { title: "Tick", gridcolor: "#333" },
+        xaxis: {
+          title: "Time of day",
+          range: [9*60+30, 16*60],
+          tickvals: tickvals,
+          ticktext: ticktext,
+          gridcolor: "#333",
+          fixedrange: true
+        },
         yaxis: { title: "Reserve balance ($B)", gridcolor: "#333" },
-        legend: { orientation: "h", y: -0.2 },
+        legend: { orientation: "h", y: -0.25 },
         font: { color: "#ccc" }
       }, { displayModeBar: false });
     }
