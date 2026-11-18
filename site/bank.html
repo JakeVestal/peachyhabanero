@@ -9,7 +9,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js">    document.getElementById("lb-close")?.addEventListener("click", () => {
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js">    document.getElementById("letter-close")?.addEventListener("click", () => {
+      document.getElementById("warning-letter").style.display = "none";
+      window._letterSeen = true;
+    });
+    document.getElementById("lb-close")?.addEventListener("click", () => {
       document.getElementById("leaderboard-overlay").style.display = "none";
       window._lbDismissed = true;
     });
@@ -72,6 +76,20 @@
           <h3>Balance Sheet</h3>
           <div id="gap-indicator" class="gap-indicator" style="margin:12px 0;padding:12px;border-radius:6px;font-weight:600;text-align:center;"></div>
     <div id="bs"></div>
+    <div id="warning-letter" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:1001; align-items:center; justify-content:center;">
+      <div style="background:#f8f5ef; color:#1a1a1a; padding:36px 40px; max-width:560px; width:92%; font-family:Georgia, 'Times New Roman', serif; border:1px solid #c9b99a; box-shadow:0 8px 40px rgba(0,0,0,.5);">
+        <div style="text-align:center; letter-spacing:3px; font-size:11px; color:#666; margin-bottom:8px;">CONFIDENTIAL — PERSONNEL MATTER</div>
+        <h2 style="text-align:center; font-size:1.35rem; margin:0 0 16px; font-weight:normal; border-bottom:1px solid #c9b99a; padding-bottom:12px;">Notice of Liquidity Performance Deficiency</h2>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Dear Liquidity Manager,</p>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">This letter is to formally advise you that your desk closed the trading day with a negative reserve balance. Under the terms of your engagement and the firm’s liquidity risk policy, a negative close constitutes a <strong>Red Day</strong>.</p>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Please be advised that the posting of a second Red Day — whether consecutive or not — will result in the <strong>immediate termination</strong> of your responsibilities as Liquidity Manager. No further warning will be issued.</p>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 20px;">You are directed to restore compliance with the risk-desk target on the next trading day.</p>
+        <p style="font-size:14px; margin:0;">Very truly yours,<br><strong>Office of the Chief Risk Officer</strong></p>
+        <div style="text-align:center; margin-top:24px;">
+          <button id="letter-close" class="neon-btn" style="background:#1a1a1a; color:#f8f5ef; border-color:#1a1a1a;">Acknowledge</button>
+        </div>
+      </div>
+    </div>
     <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000; align-items:center; justify-content:center;">
       <div style="background:#fff; padding:24px; border-radius:8px; max-width:520px; width:90%; max-height:80vh; overflow:auto;">
         <h2>Day <span id="lb-day"></span> Leaderboard</h2>
@@ -258,6 +276,16 @@
       updateReserveChart();
       const tapeEl = document.getElementById("cash-tape");
       if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
+      // Formal warning letter on first red day
+      const letter = document.getElementById("warning-letter");
+      if (letter && state.phase === "closed" && state.banks[stub]) {
+        const b = state.banks[stub];
+        if (b.zone === "red" && (b.redCount || 0) === 1 && !window._letterSeen) {
+          letter.style.display = "flex";
+        }
+      }
+      if (letter && state.phase !== "closed") window._letterSeen = false;
+
       // Leaderboard overlay after close
       const ov = document.getElementById("leaderboard-overlay");
       if (ov && state.phase === "closed" && !window._lbDismissed) {

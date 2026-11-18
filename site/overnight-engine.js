@@ -464,11 +464,11 @@ export function calculateDayBonus(s, stub) {
   // Apply equity charge immediately
   if (equityCharge > 0) b.equity = r6(b.equity - equityCharge);
 
-  // Track consecutive reds
-  b.redStreak = (zone === "red") ? (b.redStreak || 0) + 1 : 0;
+  // Track total red days (not consecutive)
+  if (zone === "red") b.redCount = (b.redCount || 0) + 1;
 
-  // Firing check
-  const fired = cash < -2.0 || b.redStreak >= 2 || b.equity < 5;
+  // Firing check: any of cash < -2, two red days total, or equity < 5
+  const fired = cash < -2.0 || (b.redCount || 0) >= 2 || b.equity < 5;
   if (fired) b.fired = true;
 
   b.dayBonus = bonus;
