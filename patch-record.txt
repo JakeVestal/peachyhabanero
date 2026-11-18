@@ -107,3 +107,4 @@ peachyhabanero-140-bonus-leaderboard-howto.patch
 peachyhabanero-141-tape-clock-fixes.patch
 peachyhabanero-142-tape-open-by-default.patch
 peachyhabanero-143-starting-cash-gap-indicator.patch
+peachyhabanero-144-reserve-chart.patch

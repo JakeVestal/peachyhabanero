@@ -47,6 +47,12 @@
       </div>
 
       <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
+
+      <div class="panel" style="margin:12px 0">
+        <h3>Reserve balance through the day</h3>
+        <div id="reserve-chart" style="height:220px"></div>
+      </div>
+
       <h3 style="margin-top:16px">Market History</h3>
       <div id="sofr-history"></div>
       <div id="shock-banner" class="shock-banner" style="display:none"></div>
@@ -141,6 +147,68 @@
       el.className = "value countdown";
     }
 
+    function updateReserveChart() {
+      const el = document.getElementById("reserve-chart");
+      if (!el || !state || typeof Plotly === "undefined") return;
+      const plan = state.reservePlans && state.reservePlans[stub];
+      const tape = (plan && plan.tape) || [];
+      if (!tape.length) {
+        el.innerHTML = "<p class='muted small' style='padding:20px'>Waiting for cash flows…</p>";
+        return;
+      }
+      const xs = tape.map(e => e.tick);
+      const ys = [];
+      let running = state.banks[stub]?.cash || 0;
+      // Reconstruct path from tape (tape is chronological)
+      const sorted = tape.slice().sort((a, b) => a.tick - b.tick);
+      let c = (state.banks[stub]?.cash || 0);
+      // Better: walk forward from start of day if we stored it; for now use cumulative from tape
+      // We don't have start-of-day cash stored separately, so show the tape amounts as deltas
+      // and plot the resulting balance by applying them in order to a reconstructed start.
+      // Simple approach: plot the cash value after each jump (we can store it, or approximate).
+      // For v1, plot tick vs the amount of each jump, but user wants the balance.
+      // We'll compute a running balance assuming the first tape entry is applied to the pre-jump cash.
+      // Since we don't store pre-jump, we'll just plot the sequence of post-jump balances if available,
+      // otherwise fall back to showing the jumps themselves.
+      // Easiest reliable path: store nothing new; plot tick and the cash that existed after that tick
+      // by walking the jumps from the known final cash backward, or simply plot the tape amounts
+      // and overlay the target. For clarity we'll plot the running cash reconstructed from the end.
+      const target = plan.target || 0;
+      const ticks = sorted.map(e => e.tick);
+      // Reconstruct approximate balance path ending at current cash
+      let bal = state.banks[stub]?.cash || 0;
+      const bals = [];
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        bals.unshift(bal);
+        bal -= sorted[i].amount;
+      }
+      Plotly.react(el, [
+        {
+          x: ticks,
+          y: bals,
+          mode: "lines+markers",
+          name: "Reserve balance",
+          line: { color: "#4af", width: 2 },
+          marker: { size: 6 }
+        },
+        {
+          x: [ticks[0] || 0, ticks[ticks.length-1] || 78],
+          y: [target, target],
+          mode: "lines",
+          name: "Risk target",
+          line: { color: "#e33", width: 2, dash: "dash" }
+        }
+      ], {
+        margin: { t: 20, r: 20, b: 40, l: 50 },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        xaxis: { title: "Tick", gridcolor: "#333" },
+        yaxis: { title: "Reserve balance ($B)", gridcolor: "#333" },
+        legend: { orientation: "h", y: -0.2 },
+        font: { color: "#ccc" }
+      }, { displayModeBar: false });
+    }
+
     function updateWarn() {
       const wEl = document.getElementById("warn");
       if (!wEl || !state) return;
@@ -186,6 +254,7 @@
         gapEl.style.color = "";
       }
       updateCountdown();
+      updateReserveChart();
       const tapeEl = document.getElementById("cash-tape");
       if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
       // Leaderboard overlay after close
