@@ -123,7 +123,15 @@ export function balanceSheetHTML(s, stub) {
       ${row("Treasuries (HQLA)" + pledgedNote, "treasuries", fmtMoney(b.treasuries))}
       ${b.treasuryBook ? `<tr><td colspan="2" class="muted small" style="padding-left:1.2em">Mix: ${esc(fmtTreasuryMix(b.treasuryBook))} · Dur ${fmtDuration(b.treasuryBook, s.curve)}</td></tr>` : ""}
       ${row("Reverse repo (cash lent)", "repoLent", fmtMoney(b.repoLent), b.repoLent > E.EPS ? "hl" : "")}
-      ${row("<strong>Cash / reserves</strong>", "cash", fmtMoney(gap), gap < -E.EPS ? "neg" : "pos")}
+      ${row("<strong>Current reserve balance</strong>", "cash", fmtMoney(gap), gap < -E.EPS ? "neg" : "pos")}
+      ${(() => {
+        const plan = s.reservePlans && s.reservePlans[stub];
+        if (!plan) return "";
+        const shortfall = E.r6((b.cash || 0) - (plan.target || 0));
+        const cls = shortfall < -E.EPS ? "neg" : "pos";
+        const label = shortfall < 0 ? "Reserve shortfall vs target" : "Reserve surplus vs target";
+        return `<tr><td>${label}</td><td class="num ${cls}">${fmtMoney(shortfall)}</td></tr>`;
+      })()}
       <tr class="bs-total"><td>Total assets</td><td class="num">${fmtMoney(t.assets)}</td></tr>
       <tr class="bs-h"><td colspan="2">Liabilities & equity</td></tr>
       ${row("Sticky deposits (3.50%)", "stickyDep", fmtMoney(b.stickyDep))}

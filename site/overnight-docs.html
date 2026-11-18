@@ -174,3 +174,8 @@
   </footer>
 </body>
 </html>
+
+
+## Reserve targets and tick-driven cash flows
+
+When the instructor starts trading, `generateReservePlans` pre-computes a target reserve balance (risk-desk formula) and a full sequence of cash-flow jumps for every bank. Jumps are applied as the shared tick advances. Students see the live Current reserve balance and the shortfall/surplus versus target. Instructor parameters control the formula, clustering, and aggregate true end-of-day outcome. A future regulatory-penalty threshold for severe shortfalls is noted for later implementation.

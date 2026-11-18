@@ -27,6 +27,78 @@ export const DAY_COUNT = 360;
 export const FED = "FED";
 export const EPS = 0.005;              // $5M — anything smaller is treated as zero
 
+// ---------------------------------------------------------------- target reserve balance
+// Risk-desk target set at the open of each day.
+// Simplified educational formula (adjustable via game parameters):
+//   target = k * (stickyDep + volatile) + fixedCushion
+// k ≈ 0.11 means the bank wants to hold ~11% of its short-term funding as a reserve buffer.
+// fixedCushion is a small absolute floor so even small banks keep a minimal comfort level.
+export function calculateTargetReserveBalance(b, params = {}) {
+  const k = typeof params.k === "number" ? params.k : 0.11;
+  const cushion = typeof params.fixedCushion === "number" ? params.fixedCushion : 1.5;
+  const funding = (b.stickyDep || 0) + (b.volatile || 0);
+  return r6(Math.max(0.5, k * funding + cushion));
+}
+
+
+// Generate the full day's cash-flow plan for every bank the moment trading starts.
+// Pre-computes jumps so the path is deterministic given the seed and parameters.
+// Clustering: early ticks more likely positive (inflows), late ticks more likely negative (outflows).
+export function generateReservePlans(s, rnd = Math.random) {
+  const params = s.gameParams || {};
+  const banks = Object.entries(s.banks);
+  if (!banks.length) return;
+  const plans = {};
+  let totalTrue = 0;
+  for (const [stub, b] of banks) {
+    const target = calculateTargetReserveBalance(b, params);
+    // True EOD centered near target, with system-wide surplus/deficit allocated
+    const noise = (rnd() - 0.5) * 8;
+    const trueEod = r6(target + noise);
+    plans[stub] = { target, trueEod, jumps: [], tape: [] };
+    totalTrue += trueEod;
+  }
+  // Scale so aggregate true EOD matches instructor's systemSurplus (relative to sum of targets)
+  const sumTargets = Object.values(plans).reduce((a, p) => a + p.target, 0);
+  const desiredAggregate = sumTargets + (params.systemSurplus || 0);
+  const scale = totalTrue !== 0 ? desiredAggregate / totalTrue : 1;
+  for (const p of Object.values(plans)) p.trueEod = r6(p.trueEod * scale);
+
+  // Now build jumps for each bank so the path ends near trueEod
+  const totalTicks = 78;
+  for (const [stub, plan] of Object.entries(plans)) {
+    const startCash = s.banks[stub].cash || 0;
+    const netNeeded = r6(plan.trueEod - startCash);
+    const jumps = [];
+    let remaining = netNeeded;
+    for (let t = 1; t <= totalTicks; t++) {
+      const progress = t / totalTicks;
+      // Clustering bias: early positive, late negative
+      let bias = 0;
+      if (params.clustering !== false) {
+        if (progress < 0.3) bias = 0.4;          // early morning influx
+        else if (progress > 0.7) bias = -0.5;    // late-day squeeze
+      }
+      const prob = (params.volProb || 0.35) + bias * 0.2;
+      if (rnd() < Math.max(0.05, Math.min(0.8, prob))) {
+        const step = (params.volStep || 0.8) * (0.6 + rnd() * 0.8);
+        const sign = remaining > 0 ? 1 : -1;
+        // Blend toward remaining need
+        const amount = r6(sign * step * (0.3 + 0.7 * Math.abs(remaining) / (Math.abs(netNeeded) + 1)));
+        jumps.push({ tick: t, amount, note: amount > 0 ? "Inflow" : "Outflow" });
+        remaining = r6(remaining - amount);
+      }
+    }
+    // Final adjustment jump on last tick if needed
+    if (Math.abs(remaining) > 0.1) {
+      jumps.push({ tick: totalTicks, amount: r6(remaining), note: "Close adjustment" });
+    }
+    plan.jumps = jumps;
+  }
+  s.reservePlans = plans;
+}
+
+
 export const TENORS = ["1M", "6M", "1Y", "2Y", "5Y", "10Y"];
 export const TENOR_YEARS = { "1M": 1/12, "6M": 0.5, "1Y": 1, "2Y": 2, "5Y": 5, "10Y": 10 };
 export const DEFAULT_CURVE = { "1M": 4.45, "6M": 4.50, "1Y": 4.55, "2Y": 4.60, "5Y": 4.70, "10Y": 4.85 };
@@ -55,7 +127,18 @@ export function newState(now = Date.now()) {
     sofrHistory: [],               // [{day, sofr}] appended on each close
     curve: { ...DEFAULT_CURVE },
     curveHistory: [],
-
+    // Game parameters for the reserve-target / cash-flow system (instructor adjustable)
+    gameParams: {
+      k: 0.11,
+      fixedCushion: 1.5,
+      clustering: true,            // true = time-of-day clustered flows; false = uniform
+      systemSurplus: 5,           // aggregate true-EOD surplus target ($B); negative = deficit
+      volStep: 0.8,               // typical jump size ($B)
+      volProb: 0.35,              // probability a bank gets a flow on a given tick
+    },
+    // Per-bank plans for the current trading day (generated when trading starts)
+    // { [stub]: { target, trueEod, jumps: [{tick, amount, note}], tape: [] } }
+    reservePlans: {},
     closedBy: null,                // "timer" | "manual" | null
   };
 }
@@ -128,6 +211,10 @@ export function normalize(raw) {
   if (s.tick === undefined) s.tick = 0;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
+  if (!s.gameParams || typeof s.gameParams !== "object") {
+    s.gameParams = { k: 0.11, fixedCushion: 1.5, clustering: true, systemSurplus: 5, volStep: 0.8, volProb: 0.35 };
+  }
+  if (!s.reservePlans || typeof s.reservePlans !== "object") s.reservePlans = {};
   if (!s.curve || typeof s.curve !== "object") s.curve = { ...DEFAULT_CURVE };
   for (const t of TENORS) if (typeof s.curve[t] !== "number") s.curve[t] = DEFAULT_CURVE[t];
   if (!Array.isArray(s.curveHistory)) s.curveHistory = [];
