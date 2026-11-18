@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>How to Play · Overnight Clearing Desk</title>
   <link rel="stylesheet" href="style.css" />
@@ -10,17 +10,32 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    body { max-width: 780px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
-    h1 { font-size: 1.7rem; margin-bottom: 0.4em; }
-    h2 { font-size: 1.25rem; margin-top: 1.8em; color: var(--lime, #b8e986); }
-    code, pre { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-family: "IBM Plex Mono", monospace; }
-    pre { padding: 12px; overflow-x: auto; }
-    .note { background: rgba(255, 193, 7, 0.12); border-left: 4px solid #ffc107; padding: 12px 14px; margin: 16px 0; border-radius: 0 6px 6px 0; }
-    a { color: var(--lime, #b8e986); }
+    main { max-width: 780px; margin: 2rem auto; padding: 0 1.25rem; }
+    h1 { font-size: 1.55rem; margin-bottom: 0.25rem; }
+    .lede { color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+    h2 { font-size: 1.15rem; margin-top: 1.9rem; margin-bottom: 0.45rem; border-bottom: 1px solid var(--gold-faint); padding-bottom: 0.2rem; }
+    h3 { font-size: 1rem; margin-top: 1.2rem; margin-bottom: 0.3rem; }
+    p, li { margin: 0.35rem 0 0.7rem; line-height: 1.55; }
+    ul, ol { padding-left: 1.2rem; }
+    code, pre { font-family: "IBM Plex Mono", monospace; font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 0.1em 0.35em; border-radius: 3px; }
+    pre { padding: 12px; overflow-x: auto; display: block; }
+    .note { background: rgba(255, 193, 7, 0.08); border-left: 4px solid #ffc107; padding: 12px 14px; margin: 16px 0; border-radius: 0 6px 6px 0; font-size: 0.95em; }
+    .back { margin-top: 2.5rem; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <p><a href="overnight-clearing.html">← back to the desk</a></p>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="index.html">home</a>
+        <a href="overnight-clearing.html">overnight desk</a>
+      </p>
+    </div>
+  </header>
+
+  <main>
+
+  
   <h1>How to Play the Overnight Clearing Desk</h1>
   <p>You are the treasury / liquidity desk of a commercial bank. Each day you manage the bank’s reserve balance by trading in the overnight repo market.</p>
 
@@ -73,5 +88,8 @@ dayBonus = max(0, rawValue) × zoneMultiplier</code></pre>
   <p>The instructor can hide the market-wide order book. When it is hidden you only see your own orders — closer to how the real repo market works (you have to call around).</p>
 
   <p style="margin-top:40px"><a href="overnight-clearing.html">← back to the desk</a></p>
+
+    <p class="back"><a href="overnight-clearing.html">← back to the desk</a></p>
+  </main>
 </body>
 </html>
