@@ -165,7 +165,12 @@ export function cashFlowTapeHTML(s, stub) {
   const lines = plan.tape.slice().reverse().map(entry => {
     const sign = entry.amount > 0 ? "+" : "";
     const cls = entry.amount > 0 ? "pos" : "neg";
-    const time = entry.ts ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : `tick ${entry.tick}`;
+    const totalMin = 9 * 60 + 30 + (entry.tick || 0) * 5;
+    let h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    const time = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
     return `<div class="tape-row"><span class="tape-t">${time}</span><span class="${cls}">${sign}${fmtMoney(entry.amount)}</span> <span class="muted">${esc(entry.note || "")}</span></div>`;
   }).join("");
   return `<div class="tape" style="max-height:180px">${lines}</div>`;

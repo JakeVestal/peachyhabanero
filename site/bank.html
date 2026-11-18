@@ -168,6 +168,7 @@
       document.getElementById("phase").textContent = state.phase;
       document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
+      updateCountdown();
       const tapeEl = document.getElementById("cash-tape");
       if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
       // Leaderboard overlay after close

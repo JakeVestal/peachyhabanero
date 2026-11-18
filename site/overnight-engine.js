@@ -82,9 +82,10 @@ export function generateReservePlans(s, rnd = Math.random) {
       const prob = (params.volProb || 0.35) + bias * 0.2;
       if (rnd() < Math.max(0.05, Math.min(0.8, prob))) {
         const step = (params.volStep || 0.8) * (0.6 + rnd() * 0.8);
-        const sign = remaining > 0 ? 1 : -1;
-        // Blend toward remaining need
-        const amount = r6(sign * step * (0.3 + 0.7 * Math.abs(remaining) / (Math.abs(netNeeded) + 1)));
+        // Mix of noise and mild drift toward the needed net
+        const noiseSign = rnd() < 0.5 ? -1 : 1;
+        const drift = remaining > 0 ? 0.3 : -0.3;
+        const amount = r6(noiseSign * step * 0.7 + drift * step * 0.5);
         jumps.push({ tick: t, amount, note: amount > 0 ? "Inflow" : "Outflow" });
         remaining = r6(remaining - amount);
       }
