@@ -127,3 +127,43 @@ test("duration is positive for a normal book", () => {
   const d = E.duration(book, E.DEFAULT_CURVE);
   assert.ok(d > 0 && d < 10, `duration ${d}`);
 });
+
+
+test("calculateTargetReserveBalance uses k and cushion", () => {
+  const b = { stickyDep: 80, volatile: 20 }; // funding = 100
+  const t = E.calculateTargetReserveBalance(b, { k: 0.10, fixedCushion: 2 });
+  // 0.10 * 100 + 2 = 12
+  assert.ok(almost(t, 12, 0.01), `expected ~12, got ${t}`);
+});
+
+test("calculateTargetReserveBalance applies minimum floor", () => {
+  const b = { stickyDep: 1, volatile: 1 };
+  const t = E.calculateTargetReserveBalance(b, { k: 0.01, fixedCushion: 0 });
+  assert.ok(t >= 0.5, `floor not applied, got ${t}`);
+});
+
+test("generateReservePlans creates a plan per bank and jumps that net to trueEod", () => {
+  const s = E.newState();
+  s.banks.a = E.newBank("A", Date.now(), () => 0.4);
+  s.banks.b = E.newBank("B", Date.now(), () => 0.6);
+  // deterministic seed
+  let seed = 0.1;
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  E.generateReservePlans(s, rnd);
+  assert.ok(s.reservePlans.a && s.reservePlans.b, "plans missing");
+  for (const [stub, plan] of Object.entries(s.reservePlans)) {
+    const start = s.banks[stub].cash || 0;
+    const netJumps = plan.jumps.reduce((a, j) => a + j.amount, 0);
+    const final = start + netJumps;
+    assert.ok(almost(final, plan.trueEod, 0.15), `${stub}: final ${final} vs trueEod ${plan.trueEod}`);
+    assert.ok(plan.target > 0, "target should be positive");
+  }
+});
+
+test("normalize supplies default gameParams and reservePlans", () => {
+  const raw = { day: 2, banks: {} };
+  const s = E.normalize(raw);
+  assert.ok(s.gameParams);
+  assert.equal(s.gameParams.k, 0.11);
+  assert.deepEqual(s.reservePlans, {});
+});
