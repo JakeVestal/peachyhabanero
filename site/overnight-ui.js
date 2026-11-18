@@ -89,21 +89,23 @@ export function balanceSheetHTML(s, stub) {
   const b = s.banks[stub];
   if (!b) return "<p class='muted'>Bank not found.</p>";
   const t = E.totals(b);
-  const gap = b.cash;
+  const plan = s.reservePlans && s.reservePlans[stub];
+  const target = plan ? (plan.target || 0) : 0;
+  const gap = E.r6((b.cash || 0) - target);
   const free = E.freeCollateral(b);
   const { srf, iorb } = s.rates;
   const pledgedNote = b.pledged > E.EPS ? ` <span class="muted">(${fmtMoney(b.pledged)} pledged)</span>` : "";
   let status;
   if (gap < -E.EPS) {
     status = s.phase === "trading"
-      ? `<span class="neg">Funding need ${fmtMoney(gap)}</span>: bid for cash. Anything still short at the close is funded by the Fed SRF at ${fmtPct(srf)}.`
-      : `<span class="neg">Funding need ${fmtMoney(gap)}</span>`;
+      ? `<span class="neg">Shortfall vs target ${fmtMoney(gap)}</span>: bid for cash. Anything still short at the close is funded by the Fed SRF at ${fmtPct(srf)}.`
+      : `<span class="neg">Shortfall vs target ${fmtMoney(gap)}</span>`;
   } else if (gap > E.EPS) {
     status = s.phase === "trading"
-      ? `<span class="pos">Surplus ${fmtMoney(gap)}</span>: offer it to banks that need cash, or leave it at the Fed earning IORB ${fmtPct(iorb)}.`
-      : `<span class="pos">Surplus ${fmtMoney(gap)}</span> at the Fed earning IORB ${fmtPct(iorb)}.`;
+      ? `<span class="pos">Surplus vs target ${fmtMoney(gap)}</span>: you can lend this much and still meet the risk-desk target, or leave it at the Fed earning IORB ${fmtPct(iorb)}.`
+      : `<span class="pos">Surplus vs target ${fmtMoney(gap)}</span> at the Fed earning IORB ${fmtPct(iorb)}.`;
   } else {
-    status = `<span class="pos">Flat</span>: no funding gap.`;
+    status = `<span class="pos">At target</span>: no surplus or shortfall.`;
   }
 
   const orders = E.openOrders(s, stub).sort((a, c) => a.ts - c.ts);

@@ -306,7 +306,16 @@
           const ov = state.day > 1 ? UI.overnightResultsHTML(state, stub, state.day - 1) : "";
           const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
           const url = base + "bank.html?session=" + encodeURIComponent(sessionId) + "&stub=" + encodeURIComponent(stub);
-          return `<div class="bank-card"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
+          const plan = state.reservePlans && state.reservePlans[stub];
+          const target = plan ? (plan.target || 0) : 0;
+          const gap = (b.cash || 0) - target;
+          const gapCls = gap >= 0 ? "pos" : "neg";
+          const gapLabel = gap >= 0 ? "Surplus vs target" : "Shortfall vs target";
+          const gapBanner = `<div class="gap-indicator ${gapCls}" style="margin:8px 0;padding:8px;border-radius:6px;font-weight:600;text-align:center;background:${gap>=0?"rgba(0,180,80,.12)":"rgba(220,50,50,.12)"};color:${gap>=0?"#0a0":"#c00"}">${gapLabel}: ${gap>=0?"+":""}${gap.toFixed(2)}B · Target ${target.toFixed(2)}B</div>`;
+          const net = plan ? (plan.assignedNetCashFlow || 0) : 0;
+          const netCls = net >= 0 ? "pos" : "neg";
+          const netBanner = `<div class="small" style="margin:4px 0;color:${net>=0?"#0a0":"#c00"}">Assigned net cash flow: <strong>${net>=0?"+":""}${net.toFixed(2)}B</strong></div>`;
+          return `<div class="bank-card"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
         }).join("") || "<em class='muted'>No banks yet.</em>";
       }
 
