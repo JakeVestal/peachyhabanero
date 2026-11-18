@@ -277,7 +277,9 @@
       if (!editingBank) {
         banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
           const ov = state.day > 1 ? UI.overnightResultsHTML(state, stub, state.day - 1) : "";
-          return `<div class="bank-card"><h3>${UI.esc(b.name)}</h3>${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
+          const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+          const url = base + "bank.html?session=" + encodeURIComponent(sessionId) + "&stub=" + encodeURIComponent(stub);
+          return `<div class="bank-card"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
         }).join("") || "<em class='muted'>No banks yet.</em>";
       }
 

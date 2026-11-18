@@ -36,6 +36,13 @@ input.field, select.field {
 .bank-card h3 { margin: 0 0 6px; font-size: 15px; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
 .bank-card h3 .spacer { flex: 1; }
 .bank-card.needs { border-color: rgba(255, 107, 107, 0.6); }
+.bank-card h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.bank-card h3 a:hover {
+  text-decoration: underline;
+}
 .mini-btn { font-size: 10px !important; padding: 2px 8px !important; }
 /* override the site's global table look (mono, green first column, grid lines) */
 .bs-table, .book-table { width: 100%; min-width: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; }

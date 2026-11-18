@@ -75,7 +75,8 @@ const TIP = {
 };
 
 function row(label, key, value, cls = "") {
-  return `<tr title="${esc(TIP[key] || "")}"><td>${label}</td><td class="num ${cls}">${value}</td></tr>`;
+  const tip = esc(TIP[key] || "");
+  return `<tr title="${tip}"><td title="${tip}">${label}</td><td class="num ${cls}" title="${tip}">${value}</td></tr>`;
 }
 
 export function orderLine(o) {
