@@ -53,7 +53,6 @@
       <div class="stat-row">
         <div class="stat-box"><div class="label">Day</div><div class="value" id="day">1</div></div>
         <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
-        <div class="stat-box"><div class="label">Phase</div><div class="value" id="phase">trading</div></div>
         <div class="stat-box"><div class="label">Corridor</div><div class="value" id="corridor" style="font-size:14px">—</div></div>
         <div class="stat-box"><div class="label">Market time</div><div class="value countdown" id="countdown">—</div></div>
       </div>
@@ -286,7 +285,6 @@
       document.getElementById("title").textContent = bank.name;
       document.getElementById("day").textContent = state.day;
       document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
-      document.getElementById("phase").textContent = state.phase;
       document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
       const gapEl = document.getElementById("gap-indicator");

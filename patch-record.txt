@@ -120,3 +120,4 @@ peachyhabanero-154-red-day-letter-and-lifetime-count.patch
 peachyhabanero-155-leaderboard-and-inplace-edit.patch
 peachyhabanero-156-true-inplace-bs-edit.patch
 peachyhabanero-157-clock-and-fixed-chart-axis.patch
+peachyhabanero-158-remove-phase-box.patch
