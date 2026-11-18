@@ -118,3 +118,4 @@ peachyhabanero-152-howtoplay-styling.patch
 peachyhabanero-153-howtoplay-match-identity.patch
 peachyhabanero-154-red-day-letter-and-lifetime-count.patch
 peachyhabanero-155-leaderboard-and-inplace-edit.patch
+peachyhabanero-156-true-inplace-bs-edit.patch

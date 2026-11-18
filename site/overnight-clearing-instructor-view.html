@@ -317,24 +317,44 @@
           const netCls = net >= 0 ? "pos" : "neg";
           const netBanner = `<div class="small" style="margin:4px 0;color:${net>=0?"#0a0":"#c00"}">Assigned net cash flow: <strong>${net>=0?"+":""}${net.toFixed(2)}B</strong></div>`;
           let bs = UI.balanceSheetHTML(state, stub);
-          // Turn the numeric cells for editable fields into inputs
-          const fields = ["fixedLoans","floatingAssets","treasuries","repoLent","cash","stickyDep","volatile","repoBorrowed","equity"];
-          fields.forEach(field => {
+          // Make the printed numbers themselves editable
+          const fields = [
+            ["fixedLoans", "Fixed loans"],
+            ["floatingAssets", "Floating"],
+            ["treasuries", "Treasuries"],
+            ["repoLent", "Reverse repo"],
+            ["cash", "Current reserve balance"],
+            ["stickyDep", "Sticky deposits"],
+            ["volatile", "Volatile ST"],
+            ["repoBorrowed", "Repo borrowings"],
+            ["equity", "Equity"]
+          ];
+          fields.forEach(([field, label]) => {
             const val = Number(b[field] || 0);
-            const re = new RegExp(`(<td[^>]*>[^<]*${field === "cash" ? "Current reserve balance" : ""}[^<]*</td>\s*<td[^>]*>)([^<]+)(</td>)`, "i");
-            // Simpler: replace the displayed money value for known labels
+            // Replace the numeric cell that follows the label
+            const re = new RegExp(`(<td[^>]*>[^<]*${label}[^<]*</td>\s*<td[^>]*class="num[^"]*"[^>]*>)([^<]+)(</td>)`, "i");
+            bs = bs.replace(re, `$1<span class="bs-live-edit" contenteditable="true" data-stub="${stub}" data-field="${field}" data-orig="${val}">${val.toFixed(2)}</span>$3`);
           });
-          // For reliability, inject inputs after the static BS and hide the static numbers via CSS class
-          const editRows = fields.map(field => {
-            const label = {fixedLoans:"Fixed loans",floatingAssets:"Floating",treasuries:"Treasuries",repoLent:"Reverse repo",cash:"Current reserve balance",stickyDep:"Sticky deposits",volatile:"Volatile ST",repoBorrowed:"Repo borrowings",equity:"Equity"}[field] || field;
-            return `<div class="row" style="gap:8px;margin:2px 0;font-size:13px"><label style="min-width:160px">${label}</label><input class="field bs-edit" data-stub="${stub}" data-field="${field}" type="number" step="0.01" value="${Number(b[field]||0)}" style="width:100px"></div>`;
-          }).join("");
-          const actions = `<div class="bs-actions" data-stub="${stub}" style="display:none;margin-top:8px"><button class="neon-btn bs-write" data-stub="${stub}">Write new balance sheet</button> <button class="neon-btn bs-cancel" data-stub="${stub}">Cancel</button></div>`;
-          return `<div class="bank-card" data-stub="${stub}"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${bs}<details open style="margin-top:8px"><summary class="small">Edit balances in place</summary><div class="bs-edit-box" data-stub="${stub}">${editRows}${actions}</div></details>${ov}</div>`;
+          const actions = `<div class="bs-actions" data-stub="${stub}" style="display:none;margin-top:8px"><button class="neon-btn bs-write" data-stub="${stub}">Write</button> <button class="neon-btn bs-cancel" data-stub="${stub}">Cancel</button></div>`;
+          return `<div class="bank-card" data-stub="${stub}"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${bs}${actions}${ov}</div>`;
         }).join("") || "<em class='muted'>No banks yet.</em>";
       }
 
       // Freeze-on-edit for balance inputs
+      document.querySelectorAll(".bs-live-edit").forEach(span => {
+        if (span._wired) return;
+        span._wired = true;
+        span.addEventListener("input", () => {
+          const card = span.closest(".bank-card");
+          if (!card) return;
+          card.dataset.frozen = "1";
+          const actions = card.querySelector(".bs-actions");
+          if (actions) actions.style.display = "block";
+        });
+        span.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); span.blur(); }
+        });
+      });
       document.querySelectorAll(".bs-edit").forEach(inp => {
         if (inp._wired) return;
         inp._wired = true;
@@ -353,6 +373,14 @@
           const stub = btn.dataset.stub;
           const box = btn.closest(".bs-edit-box");
           if (!box || !state.banks[stub]) return;
+          const card = btn.closest(".bank-card");
+          if (card) {
+            card.querySelectorAll(".bs-live-edit").forEach(span => {
+              const field = span.dataset.field;
+              const val = parseFloat(span.textContent.replace(/[^0-9.-]/g, ""));
+              if (isFinite(val)) state.banks[stub][field] = E.r6(val);
+            });
+          }
           box.querySelectorAll(".bs-edit").forEach(inp => {
             const field = inp.dataset.field;
             const val = parseFloat(inp.value);
