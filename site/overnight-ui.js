@@ -284,9 +284,12 @@ export function editableBalanceSheetHTML(s, stub) {
     </div>`
   ).join("");
   return `<div class="bs-edit-box" data-stub="${esc(stub)}">
-    <div class="small muted" style="margin:6px 0">Edit balances ($B). Save writes them into the game.</div>
+    <div class="small muted" style="margin:6px 0">Live balances. Edit any field to freeze this card.</div>
     ${rows}
-    <button class="neon-btn bs-save" data-stub="${esc(stub)}">Save ${esc(b.name)}</button>
+    <div class="bs-actions" data-stub="${esc(stub)}" style="display:none;margin-top:8px">
+      <button class="neon-btn bs-write" data-stub="${esc(stub)}">Write new balance sheet</button>
+      <button class="neon-btn bs-cancel" data-stub="${esc(stub)}">Cancel</button>
+    </div>
   </div>`;
 }
 

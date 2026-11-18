@@ -300,7 +300,7 @@
       drawCurvePlots();
 
       const banksEl = document.getElementById("banks");
-      const editingBank = banksEl && banksEl.contains(document.activeElement);
+      const editingBank = banksEl && (banksEl.contains(document.activeElement) || banksEl.querySelector(".bs-edit-box[data-frozen]"));
       if (!editingBank) {
         banksEl.innerHTML = Object.entries(state.banks).map(([stub, b]) => {
           const ov = state.day > 1 ? UI.overnightResultsHTML(state, stub, state.day - 1) : "";
@@ -309,6 +309,48 @@
           return `<div class="bank-card"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
         }).join("") || "<em class='muted'>No banks yet.</em>";
       }
+
+      // Freeze-on-edit for balance inputs
+      document.querySelectorAll(".bs-edit").forEach(inp => {
+        if (inp._wired) return;
+        inp._wired = true;
+        inp.addEventListener("input", () => {
+          const box = inp.closest(".bs-edit-box");
+          if (!box) return;
+          box.dataset.frozen = "1";
+          const actions = box.querySelector(".bs-actions");
+          if (actions) actions.style.display = "block";
+        });
+      });
+      document.querySelectorAll(".bs-write").forEach(btn => {
+        if (btn._wired) return;
+        btn._wired = true;
+        btn.addEventListener("click", async () => {
+          const stub = btn.dataset.stub;
+          const box = btn.closest(".bs-edit-box");
+          if (!box || !state.banks[stub]) return;
+          box.querySelectorAll(".bs-edit").forEach(inp => {
+            const field = inp.dataset.field;
+            const val = parseFloat(inp.value);
+            if (isFinite(val)) state.banks[stub][field] = E.r6(val);
+          });
+          delete box.dataset.frozen;
+          box.querySelector(".bs-actions").style.display = "none";
+          await writeState();
+        });
+      });
+      document.querySelectorAll(".bs-cancel").forEach(btn => {
+        if (btn._wired) return;
+        btn._wired = true;
+        btn.addEventListener("click", () => {
+          const box = btn.closest(".bs-edit-box");
+          if (!box) return;
+          delete box.dataset.frozen;
+          box.querySelector(".bs-actions").style.display = "none";
+          // Force re-render on next state tick
+          banksEl.innerHTML = "";
+        });
+      });
 
       document.getElementById("book").innerHTML = UI.orderBookHTML(state);
       const trades = E.tradesForDay(state);
@@ -489,7 +531,12 @@
       }
       const stub = "b" + Math.random().toString(36).slice(2, 8);
       const bank = E.newBank(name);
-      await update(ref(db, "sessions/" + sessionId + "/banks/" + stub), bank);
+      // Immediately compute target so indicators are honest before trading starts
+      if (!state.reservePlans) state.reservePlans = {};
+      const target = E.calculateTargetReserveBalance(bank, state.gameParams || {});
+      state.reservePlans[stub] = { target, trueEod: target, jumps: [], tape: [] };
+      state.banks[stub] = bank;
+      await update(ref(db, "sessions/" + sessionId), { banks: state.banks, reservePlans: state.reservePlans });
       document.getElementById("bank-name").value = "";
     };
 
