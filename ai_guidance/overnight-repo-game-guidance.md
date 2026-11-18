@@ -16,6 +16,7 @@ You are working on the Overnight Clearing Desk classroom simulation in the peach
 - site/bank.html
 - site/overnight.css
 - site/stylizations-caveats.html
+- site/overnight-docs.html (under-the-hood reference for the game loop, balance sheets, curve, cards, ticks, and order book)
 - tests/engine.test.js
 
 Do not modify style.css, index.html, or any other site page unless explicitly asked.

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How It Works · Overnight Clearing Desk</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="overnight.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    main { max-width: 780px; margin: 2rem auto; padding: 0 1.25rem; }
+    h1 { font-size: 1.55rem; margin-bottom: 0.25rem; }
+    .lede { color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+    h2 { font-size: 1.15rem; margin-top: 1.9rem; margin-bottom: 0.45rem; border-bottom: 1px solid var(--gold-faint); padding-bottom: 0.2rem; }
+    h3 { font-size: 1rem; margin-top: 1.2rem; margin-bottom: 0.3rem; }
+    p, li { margin: 0.35rem 0 0.7rem; line-height: 1.55; }
+    ul { padding-left: 1.2rem; }
+    code { font-family: "IBM Plex Mono", monospace; font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 0.1em 0.35em; border-radius: 3px; }
+    .note { font-size: 0.92em; color: var(--muted); margin-top: 0.3rem; }
+    .back { margin-top: 2.5rem; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 1.2rem; font-size: 0.92em; }
+    th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--gold-faint); vertical-align: top; }
+    th { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="index.html">home</a>
+        <a href="overnight-clearing.html">overnight desk</a>
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <h1>How the Overnight Clearing Desk Works</h1>
+    <p class="lede">Under-the-hood reference for the classroom simulation. All game logic lives in pure functions in <code>site/overnight-engine.js</code>. The instructor page and student bank pages call the same engine so the rules stay identical. Units are $ billions for balance-sheet amounts and percent for rates (4.40 means 4.40%).</p>
+
+    <h2>Starting state</h2>
+    <p>When the instructor hosts a new game, the engine creates a fresh session with <code>newState()</code>:</p>
+    <ul>
+      <li>Day 1, phase <code>"trading"</code></li>
+      <li>Corridor: IORB 4.40%, SRF 4.50%</li>
+      <li>Default yield curve (1M 4.45%, 6M 4.50%, 1Y 4.55%, 2Y 4.60%, 5Y 4.70%, 10Y 4.85%)</li>
+      <li>Empty banks, orders, trades, and histories; tick = 0; timers null</li>
+    </ul>
+    <p>Students join from the lobby by entering a bank name. Each bank is created with <code>newBank()</code> → <code>randomStartingBS()</code>, which produces a unique but balanced sheet totaling ~$120B assets:</p>
+    <ul>
+      <li>Cash drawn from −6 to +7 (roughly 45% of banks start short cash)</li>
+      <li>Treasuries 14–26, floating assets 12–26, fixed loans the residual (kept roughly 55–90)</li>
+      <li>Volatile funding 12–28, sticky deposits the residual of the $110 funding side</li>
+      <li>Equity fixed at 10; repo positions and pledged start at zero</li>
+      <li>A default treasury book (face amounts) is allocated across the six tenors with heavier weights in 2Y/5Y/10Y</li>
+    </ul>
+    <p>The sheet is immediately balanced. Free collateral for repo is marked Treasuries minus pledged. Banks can join at any time; their starting sheet is independent of the current day or phase.</p>
+
+    <h2>1. Bank balance sheets & how they are generated</h2>
+    <p>Each bank object holds the classic items plus a <code>treasuryBook</code> (face amounts by tenor) and a marked <code>treasuries</code> value. Key generation and mutation points:</p>
+    <ul>
+      <li><strong>Initial generation</strong> — <code>randomStartingBS()</code> (called only when a bank joins or on New Game). The ranges above are hard-coded constants in the engine; they are not exposed in the instructor UI.</li>
+      <li><strong>Situation cards, systemic shock, cash re-randomize</strong> — these call <code>shockBank()</code> which moves a field (usually <code>volatile</code>) and cash by the same amount so the sheet stays balanced. Positive = inflow / surplus cash; negative = runoff / funding need.</li>
+      <li><strong>Mark-to-market</strong> — any curve change calls <code>markToMarket()</code>, which re-prices the treasury book (simple zero/bullet pricing) and updates the <code>treasuries</code> market value. Free collateral uses the new marked value immediately.</li>
+      <li><strong>End-of-day interest & unwind</strong> — <code>advanceDay()</code> accrues one night of interest into equity and cash, then matures every overnight repo (cash and collateral return to the original owners).</li>
+    </ul>
+    <p><strong>Adjustable in the instructor UI?</strong> Yes for post-creation shocks:</p>
+    <ul>
+      <li>Apply Systemic Shock (−5B volatile to every bank)</li>
+      <li>Re-randomize Cash (~40% short)</li>
+      <li>Situation cards (see below)</li>
+      <li>New Game (re-draws every existing bank’s sheet with fresh randoms while keeping the name)</li>
+    </ul>
+    <p class="note">These changes take effect immediately, including mid-session while the market is open. There is no “after-hours only” lock. The random ranges and fixed coupon rates (fixed loans 6.50%, sticky deposits 3.50%, floating assets = SOFR + 100 bp) are engine constants and are not UI-adjustable.</p>
+
+    <h2>2. Yield curve & yield-curve history</h2>
+    <p>The live curve is stored on the session as <code>curve</code> (six tenors). History is an array <code>curveHistory</code> of <code>{day, curve}</code> snapshots.</p>
+    <ul>
+      <li><strong>Generation</strong> — starts as <code>DEFAULT_CURVE</code> on <code>newState()</code>.</li>
+      <li><strong>Instructor adjustments</strong> — the Yield Curve panel lets the instructor type any tenor, apply a parallel shift (bps to every tenor), or a short-end shift (bps to 1M/6M/1Y only). All routes call <code>applyCurve()</code>, which stores the new curve and immediately marks every bank’s Treasury book.</li>
+      <li><strong>Situation cards</strong> — most cards also carry a <code>curveShift</code> object (bps by tenor). Applying the card adds those deltas and marks books.</li>
+      <li><strong>Automatic day-to-day drift</strong> — inside <code>advanceDay()</code>, after interest and unwind, the engine takes the just-finished day’s SOFR change and applies a small weighted move (heavy on the short end: 1M weight 0.75 down to 10Y weight 0.02) plus modest random noise (±4 bp). This is the only automatic curve evolution.</li>
+      <li><strong>History</strong> — the curve that was in force for the finished day is pushed to <code>curveHistory</code> at the end of <code>advanceDay()</code>. The 3-D surface on the instructor and student pages is built from that history.</li>
+    </ul>
+    <p><strong>When adjustments take effect</strong> — manual curve edits, parallel/short shifts, and card-driven shifts take effect immediately (mid-game or after hours). The automatic SOFR-linked drift happens only when the instructor advances to the next day.</p>
+
+    <h2>3. Situation cards</h2>
+    <p>Named scenarios the instructor can apply at any time. Each card:</p>
+    <ol>
+      <li>Optionally overwrites the corridor rates (IORB / SRF).</li>
+      <li>Applies a relative <code>curveShift</code> (or an absolute curve) and marks books.</li>
+      <li>Draws a fixed pool of liquidity shocks and assigns them to banks according to a mode, then calls <code>shockBank()</code> on the <code>volatile</code> field (cash moves by the same amount).</li>
+    </ol>
+    <p>The five built-in cards (from <code>SITUATION_CARDS</code> in the engine):</p>
+    <table>
+      <thead><tr><th>Card</th><th>Corridor</th><th>Curve shift (approx.)</th><th>Shock shape</th><th>Economic story</th></tr></thead>
+      <tbody>
+        <tr><td>Pandemic shock</td><td>IORB 0.15 / SRF 0.25</td><td>Sharp parallel drop, front end most (−150 to −40 bp)</td><td>Mostly large negative volatile shocks; a few positive; shuffled</td><td>Risk-off freezes funding; Fed cuts hard. Most banks lose wholesale funds; a few strong franchises see inflows.</td></tr>
+        <tr><td>Hot inflation print</td><td>IORB 5.40 / SRF 5.50</td><td>Modest rise, front end most (+25 to +5 bp)</td><td>Mild-to-moderate negatives; lowest-cash banks hit first</td><td>Hot CPI forces a hike. Funding tightens; banks already short cash feel it most.</td></tr>
+        <tr><td>Liquidity crisis (2019-style)</td><td>IORB 4.40 / SRF 5.00</td><td>Short-end rise (+40 to −5 bp)</td><td>A few very large negatives; most mild or zero; shuffled</td><td>Concentrated squeeze. Corridor widens as the Fed emphasizes the SRF backstop.</td></tr>
+        <tr><td>Flight to safety</td><td>IORB 4.25 / SRF 4.35</td><td>Long-end decline (0 to −35 bp)</td><td>Mostly positive inflows; a couple modest negatives; shuffled</td><td>Risk aversion drives cash into the banking system. Longer yields fall on flight to quality.</td></tr>
+        <tr><td>Quarter-end turn</td><td>IORB 4.40 / SRF 4.55</td><td>Mild short-end rise (+15 to 0 bp)</td><td>Mild even negatives; largest / more wholesale-funded banks hit first</td><td>Window-dressing and balance-sheet constraints create mild funding pressure into the turn.</td></tr>
+      </tbody>
+    </table>
+    <p class="note">All card effects (rates, curve, balance-sheet shocks) are applied immediately when the instructor clicks Apply Card. They are not restricted to the start of the game or to after-hours. The story text and per-bank shock amounts are stored on <code>s.shock</code> so every page can display them.</p>
+
+    <h2>4. Tick & timer system</h2>
+    <p>The instructor sets the real-time length of a trading day (default 5 minutes) and clicks Start Trading. That writes:</p>
+    <ul>
+      <li><code>timerStart</code>, <code>timerEnd</code>, <code>timerDurationMs</code></li>
+      <li>Resets <code>tick</code> to 0</li>
+    </ul>
+    <p>A client-side interval on the instructor page then computes the in-game tick:</p>
+    <ul>
+      <li>Total in-game trading window is 09:30–16:00 = 390 minutes = 78 five-minute ticks.</li>
+      <li><code>tick = floor(elapsed_real_ms / (timerDurationMs / 78))</code>, capped at 78.</li>
+      <li>The displayed clock is 09:30 plus <code>tick × 5</code> minutes.</li>
+    </ul>
+    <p>When real time reaches <code>timerEnd</code> the market auto-closes (same path as a manual close). Pause/Resume freezes the elapsed-time calculation. The tick value is written back to Firebase so every client can see it.</p>
+    <p>Currently the tick is used for the clock display and for the auto-close trigger. The architecture is deliberately ready for future intraday events (for example, a scheduled curve tweak or balance-sheet drip at tick 20) because any client or the host can key off the shared <code>tick</code> field. No such intraday mutations exist today; all curve and balance changes are either instructor-driven or happen at the day boundary.</p>
+    <p class="note">The timer length is chosen before (or at) the start of trading. Once the timer is running, only pause/resume is available; the length itself is not changed mid-session. Trading can also proceed without a timer (instructor closes manually).</p>
+
+    <h2>5. Repo order book (overview)</h2>
+    <p>Students submit orders from their bank page. A bid is a request to borrow cash overnight (pledge Treasuries); an offer is a request to lend cash overnight (receive Treasuries). Vocabulary follows the “price of cash” convention: higher bid / lower offer is more aggressive.</p>
+    <ul>
+      <li>Validation (<code>validateOrder</code>) checks phase == trading, rate 0–25%, volume ≥ $0.01B, and capacity: a bank can only bid up to its free collateral and can only offer up to its available cash (after other open offers). Soft corridor warnings are shown but do not block the order.</li>
+      <li>The order is written to Firebase. The instructor page’s <code>pumpMatches()</code> loop detects crosses and calls <code>matchOrders()</code>.</li>
+      <li>Matching is a continuous price-time priority double auction. A bid and offer trade when bid rate ≥ offer rate; the trade prints at the rate of the order that was resting first. Volume is limited by the smaller remaining size and by the lender’s cash / borrower’s free collateral. Self-trades are forbidden. Cash, <code>repoLent</code> / <code>repoBorrowed</code>, and <code>pledged</code> are updated immediately on the fill.</li>
+      <li>On market close every still-open order is expired. Any residual shortfall is funded by the Fed SRF (secured by remaining free Treasuries) or, beyond collateral, as an unsecured overdraft at SRF + 100 bp. Surplus cash is recorded as parked at IORB.</li>
+    </ul>
+    <p>SOFR itself is the volume-weighted median of the day’s private interbank trades (Fed operations are excluded), calculated at the close.</p>
+
+    <h2>Game loop — key phases</h2>
+    <h3>Start of trading day</h3>
+    <p>After <code>advanceDay()</code> finishes, the session is in phase <code>"trading"</code>, day has been incremented, the previous day’s orders have been cleaned, timers and tick are reset, and SOFR is null. The instructor may optionally start the real-time timer (which begins the 5-minute tick clock). Students may already have banks or may join now. The curve is whatever was left by the previous day’s drift (or the default on day 1). No automatic processes run until an order is submitted or the instructor acts.</p>
+
+    <h3>During the trading day</h3>
+    <ul>
+      <li>Students place, update, or cancel orders. Updates that change price or increase size lose time priority.</li>
+      <li>The instructor page continuously pumps matches whenever a cross exists, writing the resulting trades and balance-sheet updates back to Firebase.</li>
+      <li>If a timer is running, the shared <code>tick</code> advances with real time and the in-game clock moves from 09:30 toward 16:00.</li>
+      <li>The instructor can apply corridor changes, curve edits/shifts, situation cards, systemic shocks, or cash re-rolls at any moment; all take effect immediately (balances change, books are re-marked, free collateral updates).</li>
+      <li>Corridor warnings appear on orders that bid above SRF or offer below IORB, but students may still proceed.</li>
+    </ul>
+
+    <h3>End of trade day</h3>
+    <p>Triggered by the instructor’s “Close Market & Print SOFR” button or automatically when the timer expires. <code>closeMarket()</code>:</p>
+    <ul>
+      <li>Expires every open order.</li>
+      <li>Sets <code>sofr</code> = volume-weighted median of the day’s private trades.</li>
+      <li>Funds any remaining cash shortfall: first secured at the SRF rate up to free collateral, then the rest as an unsecured overdraft at SRF + 100 bp. Records surplus cash as an IORB placement.</li>
+      <li>Appends a snapshot (SOFR, volume, gross cash, pledged, available) to <code>sofrHistory</code>.</li>
+      <li>Sets phase = <code>"closed"</code>, clears timers and tick, records <code>closedBy</code> (“timer” or “manual”).</li>
+    </ul>
+    <p>No further matching occurs. Students can still see the tape, their sheets, and the curve, but cannot place new orders.</p>
+
+    <h3>After hours</h3>
+    <p>While the market is closed the instructor can still apply situation cards, curve changes, systemic shocks, or cash re-rolls (all take effect immediately). The primary “after hours” action is “Advance to Next Day”, which calls <code>advanceDay()</code>:</p>
+    <ul>
+      <li>If the market was not yet closed, it closes it first.</li>
+      <li>Accrues one night of interest for every bank (fixed loans at 6.50%, floating assets at yesterday’s SOFR + 100 bp, positive cash at IORB, sticky deposits at 3.50%, plus the actual interest on every repo trade) and adds the net to equity and cash.</li>
+      <li>Unwinds every overnight repo: cash returns to the lender, collateral is released, <code>repoLent</code> / <code>repoBorrowed</code> / <code>pledged</code> go back to zero.</li>
+      <li>Archives the day into <code>history</code>, snapshots the curve that was in force into <code>curveHistory</code>, and applies the small SOFR-linked curve drift + noise for the coming day.</li>
+      <li>Increments the day, clears SOFR, sets phase back to <code>"trading"</code>, resets timers and tick, and deletes orders from the finished day.</li>
+    </ul>
+    <p>The session is now ready for the next trading day. “New Game” is a stronger reset: it re-draws every bank’s entire starting balance sheet with fresh randoms (keeping only the bank name) and returns to day 1 with a clean slate.</p>
+
+    <p class="back"><a href="overnight-clearing.html">← back to the desk</a></p>
+  </main>
+
+  <footer>
+    <p>Classroom tool for FINTECH. Engine by Hanna Boud; site by peachyhabanero. · <a href="stylizations-caveats.html" style="opacity:0.6;font-size:0.85em">stylizations & caveats</a></p>
+  </footer>
+</body>
+</html>
