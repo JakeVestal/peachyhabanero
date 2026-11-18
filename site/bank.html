@@ -271,6 +271,9 @@
     }
 
     onValue(sessRef, (snap) => {
+      try {
+      statusEl.textContent = "Connected to session " + sessionId;
+      statusEl.className = "status-bar";
       if (!snap.exists()) {
         document.getElementById("content").style.display = "none";
         document.getElementById("ended").style.display = "block";
@@ -288,14 +291,14 @@
       document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
       const gapEl = document.getElementById("gap-indicator");
-      if (gapEl && state.reservePlans && state.reservePlans[stub]) {
-        const plan = state.reservePlans[stub];
+      if (gapEl) {
         const cash = state.banks[stub]?.cash || 0;
-        const gap = (cash - (plan.target || 0));
+        const target = E.calculateTargetReserveBalance(state.banks[stub], state.gameParams || {});
+        const gap = (cash - target);
         const cls = gap >= 0 ? "pos" : "neg";
         const label = gap >= 0 ? "Surplus vs target" : "Shortfall vs target";
         gapEl.className = "gap-indicator " + cls;
-        gapEl.innerHTML = `${label}: <span class="${cls}">${gap >= 0 ? "+" : ""}${gap.toFixed(2)}B</span> &nbsp;·&nbsp; Target ${ (plan.target||0).toFixed(2) }B`;
+        gapEl.innerHTML = `${label}: <span class="${cls}">${gap >= 0 ? "+" : ""}${gap.toFixed(2)}B</span> &nbsp;·&nbsp; Target ${ target.toFixed(2) }B`;
         gapEl.style.background = gap >= 0 ? "rgba(0,180,80,.12)" : "rgba(220,50,50,.12)";
         gapEl.style.color = gap >= 0 ? "#0a0" : "#c00";
       } else if (gapEl) {
@@ -382,6 +385,11 @@
       document.getElementById("sofr-history").innerHTML = UI.marketTableHTML(UI.historyRows(state));
       statusEl.textContent = "Connected to session " + sessionId;
       statusEl.className = "status-bar";
+      } catch (e) {
+        console.error("bank render error", e);
+        statusEl.textContent = "Connected (render error: " + e.message + ")";
+        statusEl.className = "status-bar err";
+      }
     }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
 
     setInterval(updateCountdown, 250);

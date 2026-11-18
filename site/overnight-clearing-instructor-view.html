@@ -51,7 +51,6 @@
       <div class="stat-box"><div class="label">Session</div><div class="value" id="session-code">—</div></div>
       <div class="stat-box"><div class="label">Day</div><div class="value" id="day">1</div></div>
       <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
-      <div class="stat-box"><div class="label">Phase</div><div class="value" id="phase">trading</div></div>
     </div>
 
     <div class="row">
@@ -260,7 +259,6 @@
       if (!state) return;
       document.getElementById("day").textContent = state.day;
       document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
-      document.getElementById("phase").textContent = state.phase;
 
       const corridor = document.getElementById("corridor-display");
       if (corridor) corridor.textContent = `Current: IORB ${state.rates.iorb.toFixed(2)}% · SRF ${state.rates.srf.toFixed(2)}%`;
@@ -308,7 +306,7 @@
           const base = location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
           const url = base + "bank.html?session=" + encodeURIComponent(sessionId) + "&stub=" + encodeURIComponent(stub);
           const plan = state.reservePlans && state.reservePlans[stub];
-          const target = plan ? (plan.target || 0) : 0;
+          const target = E.calculateTargetReserveBalance(b, state.gameParams || {});
           const gap = (b.cash || 0) - target;
           const gapCls = gap >= 0 ? "pos" : "neg";
           const gapLabel = gap >= 0 ? "Surplus vs target" : "Shortfall vs target";
