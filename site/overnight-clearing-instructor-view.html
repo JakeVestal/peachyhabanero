@@ -70,14 +70,15 @@
     <div class="panel">
       <h3>Trading Timer</h3>
       <div class="row">
-        <label>Minutes</label>
+        <label>real-time length of trading day (minutes)</label>
         <input id="timer-minutes" class="field" type="number" min="1" max="120" step="1" value="5" style="width:70px">
         <button class="neon-btn" id="start-trading">Start Trading</button>
         <button class="neon-btn" id="pause-timer" style="display:none">Pause Timer</button>
         <button class="neon-btn" id="resume-timer" style="display:none">Resume Timer</button>
         <span class="countdown" id="countdown">—</span>
+        <span id="tick-ind" class="muted" style="margin-left:12px;font-family:IBM Plex Mono,monospace">Tick: —</span>
       </div>
-      <p class="small muted">Shared countdown. At zero the market closes.</p>
+      <p class="small muted">In-game clock from 09:30 to 16:00 in 5-minute steps. Market auto-closes at the end of the day.</p>
     </div>
 
     <div class="panel">
@@ -297,12 +298,6 @@
       updateCountdown();
     }
 
-    function formatRemaining(rem) {
-      const m = Math.floor(rem / 60000);
-      const s = Math.floor((rem % 60000) / 1000);
-      return m + ":" + String(s).padStart(2, "0");
-    }
-
     function updateTimerControls() {
       const startBtn = document.getElementById("start-trading");
       const pauseBtn = document.getElementById("pause-timer");
@@ -322,22 +317,31 @@
       resumeBtn.style.display = paused ? "" : "none";
     }
 
+    function inGameClock(tick) {
+      const totalMin = 9 * 60 + 30 + (Number(tick) || 0) * 5;
+      let h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
+    }
+
     function updateCountdown() {
       const el = document.getElementById("countdown");
+      const tickEl = document.getElementById("tick-ind");
       if (!el || !state) return;
       updateTimerControls();
+      const tick = state.tick || 0;
+      if (tickEl) tickEl.textContent = "Tick: " + tick;
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "countdown"; return; }
       if (state.timerPaused) {
-        const rem = Math.max(0, state.timerRemainingMs || 0);
-        el.textContent = formatRemaining(rem) + " paused";
+        el.textContent = inGameClock(tick) + " paused";
         el.className = "countdown";
         return;
       }
       if (!state.timerEnd) { el.textContent = "—"; el.className = "countdown"; return; }
-      const rem = state.timerEnd - Date.now();
-      if (rem <= 0) { el.textContent = "0:00"; el.className = "countdown urgent"; return; }
-      el.textContent = formatRemaining(rem);
-      el.className = rem < 30000 ? "countdown urgent" : "countdown";
+      el.textContent = inGameClock(tick);
+      el.className = "countdown";
     }
 
     let busy = false;
@@ -400,6 +404,10 @@
       if (!state || state.phase === "closed" || busy) return;
       busy = true;
       try {
+        // Settle any remaining crossed orders that were initiated before close
+        if (E.hasCross(state)) {
+          E.matchOrders(state);
+        }
         state.closedBy = reason;
         E.closeMarket(state);
         await writeState();
@@ -408,7 +416,16 @@
 
     setInterval(() => {
       updateCountdown();
-      if (state && state.phase === "trading" && state.timerEnd && Date.now() >= state.timerEnd) {
+      if (!state || state.phase !== "trading" || !state.timerEnd || state.timerPaused) return;
+      const elapsed = Date.now() - (state.timerStart || Date.now());
+      const tickMs = (state.timerDurationMs || 1) / 78;
+      let newTick = Math.floor(elapsed / tickMs);
+      newTick = Math.max(0, Math.min(78, newTick));
+      if (newTick !== state.tick) {
+        state.tick = newTick;
+        update(ref(db, "sessions/" + sessionId + "/tick"), newTick);
+      }
+      if (Date.now() >= state.timerEnd && !matching) {
         closeNow("timer");
       }
     }, 250);
@@ -455,8 +472,11 @@
         state.sofrHistory = [];
         state.shock = null;
         state.timerEnd = null;
+        state.timerStart = null;
+        state.timerDurationMs = null;
         state.timerPaused = false;
         state.timerRemainingMs = null;
+        state.tick = 0;
         state.closedBy = null;
         await writeState();
       } finally { busy = false; }
@@ -468,7 +488,11 @@
       if (!isFinite(mins) || mins <= 0 || mins > 180) return;
       busy = true;
       try {
-        state.timerEnd = Date.now() + mins * 60 * 1000;
+        const durationMs = mins * 60 * 1000;
+        state.timerStart = Date.now();
+        state.timerDurationMs = durationMs;
+        state.timerEnd = state.timerStart + durationMs;
+        state.tick = 0;
         state.timerPaused = false;
         state.timerRemainingMs = null;
         await writeState();
@@ -490,7 +514,9 @@
       if (!state || busy || !state.timerPaused) return;
       busy = true;
       try {
-        state.timerEnd = Date.now() + (state.timerRemainingMs || 0);
+        const remaining = state.timerRemainingMs || 0;
+        state.timerEnd = Date.now() + remaining;
+        state.timerStart = Date.now() - (state.timerDurationMs - remaining);
         state.timerPaused = false;
         state.timerRemainingMs = null;
         await writeState();

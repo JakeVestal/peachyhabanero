@@ -39,7 +39,7 @@
         <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
         <div class="stat-box"><div class="label">Phase</div><div class="value" id="phase">trading</div></div>
         <div class="stat-box"><div class="label">Corridor</div><div class="value" id="corridor" style="font-size:14px">—</div></div>
-        <div class="stat-box"><div class="label">Time left</div><div class="value countdown" id="countdown">—</div></div>
+        <div class="stat-box"><div class="label">Market time</div><div class="value countdown" id="countdown">—</div></div>
       </div>
 
       <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
@@ -101,27 +101,28 @@
     let state = null;
     const sessRef = ref(db, "sessions/" + sessionId);
 
-    function formatRemaining(rem) {
-      const m = Math.floor(rem / 60000);
-      const s = Math.floor((rem % 60000) / 1000);
-      return m + ":" + String(s).padStart(2, "0");
+    function inGameClock(tick) {
+      const totalMin = 9 * 60 + 30 + (Number(tick) || 0) * 5;
+      let h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
     }
 
     function updateCountdown() {
       const el = document.getElementById("countdown");
       if (!el || !state) return;
+      const tick = state.tick || 0;
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
       if (state.timerPaused) {
-        const rem = Math.max(0, state.timerRemainingMs || 0);
-        el.textContent = formatRemaining(rem) + " paused";
+        el.textContent = inGameClock(tick) + " paused";
         el.className = "value countdown";
         return;
       }
       if (!state.timerEnd) { el.textContent = "—"; el.className = "value countdown"; return; }
-      const rem = state.timerEnd - Date.now();
-      if (rem <= 0) { el.textContent = "0:00"; el.className = "value countdown urgent"; return; }
-      el.textContent = formatRemaining(rem);
-      el.className = rem < 30000 ? "value countdown urgent" : "value countdown";
+      el.textContent = inGameClock(tick);
+      el.className = "value countdown";
     }
 
     function updateWarn() {

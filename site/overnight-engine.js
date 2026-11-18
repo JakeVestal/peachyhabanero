@@ -47,8 +47,11 @@ export function newState(now = Date.now()) {
     rates: { srf: 4.50, iorb: 4.40 },
     banks: {}, orders: {}, trades: {}, history: {},
     timerEnd: null,                // epoch ms; host sets this to open a timed session
+    timerStart: null,              // epoch ms when the current timed session started (or resumed)
+    timerDurationMs: null,         // total real-time duration of the trading day in ms
     timerPaused: false,            // true while the countdown is paused
     timerRemainingMs: null,        // remaining ms while paused
+    tick: 0,                       // number of 5-minute in-game ticks that have occurred (0 at 09:30)
     sofrHistory: [],               // [{day, sofr}] appended on each close
     curve: { ...DEFAULT_CURVE },
     curveHistory: [],
@@ -118,8 +121,11 @@ export function normalize(raw) {
   if (s.sofr === undefined) s.sofr = null;
   if (s.lastSofr === undefined) s.lastSofr = null;
   if (s.timerEnd === undefined) s.timerEnd = null;
+  if (s.timerStart === undefined) s.timerStart = null;
+  if (s.timerDurationMs === undefined) s.timerDurationMs = null;
   if (s.timerPaused === undefined) s.timerPaused = false;
   if (s.timerRemainingMs === undefined) s.timerRemainingMs = null;
+  if (s.tick === undefined) s.tick = 0;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
   if (!s.curve || typeof s.curve !== "object") s.curve = { ...DEFAULT_CURVE };
@@ -351,8 +357,11 @@ export function closeMarket(s, now = Date.now(), idFn = makeId) {
   s.phase = "closed";
   s.closedAt = now;
   s.timerEnd = null;                 // countdown is over
+  s.timerStart = null;
+  s.timerDurationMs = null;
   s.timerPaused = false;
   s.timerRemainingMs = null;
+  s.tick = 0;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (!s.sofrHistory.some((h) => h.day === s.day)) {
     const snap = marketSnapshot(s);
@@ -456,8 +465,11 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   s.phase = "trading";
   s.shock = null;
   s.timerEnd = null;
+  s.timerStart = null;
+  s.timerDurationMs = null;
   s.timerPaused = false;
   s.timerRemainingMs = null;
+  s.tick = 0;
   s.closedBy = null;
   for (const [id, o] of Object.entries(s.orders)) if (o.day < s.day) delete s.orders[id];
   return { finishedDay: s.day - 1, sofrRef };
