@@ -60,6 +60,10 @@
         <div class="panel">
           <h3>Balance Sheet</h3>
           <div id="bs"></div>
+    <details style="margin-top:12px">
+      <summary class="small">Cash-flow tape (today)</summary>
+      <div id="cash-tape"></div>
+    </details>
         </div>
         <div class="panel order-form">
           <h3>Post Order</h3>
@@ -153,6 +157,8 @@
       document.getElementById("phase").textContent = state.phase;
       document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
       document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
+      const tapeEl = document.getElementById("cash-tape");
+      if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
       drawStudentCurves();
       document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
       renderMine();

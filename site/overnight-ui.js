@@ -156,6 +156,21 @@ export function tradeLineFor(t, stub) {
   return `<span class="k-private">Lent ${v} to ${esc(t.borrowerName)} @ ${r}</span>`;
 }
 
+// Cash-flow tape for a single bank (inflows/outflows applied on ticks).
+export function cashFlowTapeHTML(s, stub) {
+  const plan = s.reservePlans && s.reservePlans[stub];
+  if (!plan || !plan.tape || !plan.tape.length) {
+    return `<div class="muted small">No cash flows yet this day.</div>`;
+  }
+  const lines = plan.tape.slice().reverse().map(entry => {
+    const sign = entry.amount > 0 ? "+" : "";
+    const cls = entry.amount > 0 ? "pos" : "neg";
+    const time = entry.ts ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : `tick ${entry.tick}`;
+    return `<div class="tape-row"><span class="tape-t">${time}</span><span class="${cls}">${sign}${fmtMoney(entry.amount)}</span> <span class="muted">${esc(entry.note || "")}</span></div>`;
+  }).join("");
+  return `<div class="tape" style="max-height:180px">${lines}</div>`;
+}
+
 export function tapeLine(t) {
   const v = fmtMoney(t.volume), r = fmtPct(t.rate);
   const time = new Date(t.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });

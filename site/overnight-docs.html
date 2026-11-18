@@ -179,3 +179,12 @@
 ## Reserve targets and tick-driven cash flows
 
 When the instructor starts trading, `generateReservePlans` pre-computes a target reserve balance (risk-desk formula) and a full sequence of cash-flow jumps for every bank. Jumps are applied as the shared tick advances. Students see the live Current reserve balance and the shortfall/surplus versus target. Instructor parameters control the formula, clustering, and aggregate true end-of-day outcome. A future regulatory-penalty threshold for severe shortfalls is noted for later implementation.
+
+## Future work (reserve-target system)
+
+- **Regulatory / penalty threshold**: A second, deeper shortfall level (beyond the bank’s own risk-desk target) that would trigger actual consequences (forced actions, higher funding costs, or supervisory flags). Currently only a visual warning exists.
+- **Forced Treasury sales**: When a bank remains deeply negative, automatically sell Treasuries at the current mark until the shortfall is closed. (No intraday price moves yet.)
+- **Instructor cash-injection tool**: Explicit “thumb on the scale” controls to inject or withdraw cash from specific banks mid-day.
+- **Randomize Targets button**: Fully wire the button that re-draws targets under the current parameters.
+- **Additional situation cards**: Cards that raise every bank’s target, increase volatility, or alter clustering for the day, each with a short narrative.
+- **Drift logging**: Explicit error logging if the realized path ends materially away from the instructor-set true EOD.
