@@ -94,3 +94,4 @@ peachyhabanero-127-bank-link.patch
 peachyhabanero-128-day-curve-drift.patch
 peachyhabanero-129-3d-surface-fix.patch
 peachyhabanero-130-bank-3d-fix.patch
+peachyhabanero-131-ai-guidance.patch
