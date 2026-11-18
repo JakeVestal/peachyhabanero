@@ -73,6 +73,7 @@
         <label>real-time length of trading day (minutes)</label>
         <input id="timer-minutes" class="field" type="number" min="1" max="120" step="1" value="5" style="width:70px">
         <button class="neon-btn" id="start-trading">Start Trading</button>
+        <label class="small" style="margin-left:12px"><input type="checkbox" id="order-book-visible" checked> Order book visible to students</label>
         <button class="neon-btn" id="pause-timer" style="display:none">Pause Timer</button>
         <button class="neon-btn" id="resume-timer" style="display:none">Resume Timer</button>
         <span class="countdown" id="countdown">—</span>
@@ -540,6 +541,12 @@
       await writeState();
     });
 
+
+    document.getElementById("order-book-visible")?.addEventListener("change", async (e) => {
+      if (!state) return;
+      state.orderBookVisible = e.target.checked;
+      await writeState();
+    });
     document.getElementById("start-trading").onclick = async () => {
       if (!state || busy || state.phase !== "trading") return;
       const mins = parseFloat(document.getElementById("timer-minutes").value);

@@ -124,6 +124,7 @@ export function newState(now = Date.now()) {
     timerPaused: false,            // true while the countdown is paused
     timerRemainingMs: null,        // remaining ms while paused
     tick: 0,                       // number of 5-minute in-game ticks that have occurred (0 at 09:30)
+    orderBookVisible: true,        // if false, students see only their own orders
     sofrHistory: [],               // [{day, sofr}] appended on each close
     curve: { ...DEFAULT_CURVE },
     curveHistory: [],
@@ -209,6 +210,7 @@ export function normalize(raw) {
   if (s.timerPaused === undefined) s.timerPaused = false;
   if (s.timerRemainingMs === undefined) s.timerRemainingMs = null;
   if (s.tick === undefined) s.tick = 0;
+  if (s.orderBookVisible === undefined) s.orderBookVisible = true;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
   if (!s.gameParams || typeof s.gameParams !== "object") {

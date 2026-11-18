@@ -160,7 +160,14 @@
       const tapeEl = document.getElementById("cash-tape");
       if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
       drawStudentCurves();
-      document.getElementById("book").innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+      const bookEl = document.getElementById("book");
+      if (bookEl) {
+        if (state.orderBookVisible === false) {
+          bookEl.innerHTML = "<p class='muted small'>Order book is private. You can only see your own orders.</p>";
+        } else {
+          bookEl.innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+        }
+      }
       renderMine();
       const mineTrades = E.tradesForDay(state).filter(t => t.lender === stub || t.borrower === stub);
       document.getElementById("my-trades").innerHTML = mineTrades.length
