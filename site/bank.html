@@ -13,10 +13,17 @@
       document.getElementById("warning-letter").style.display = "none";
       window._letterSeen = true;
     });
-    document.getElementById("lb-close")?.addEventListener("click", () => {
-      document.getElementById("leaderboard-overlay").style.display = "none";
-      window._lbDismissed = true;
-    });
+    function wireLeaderboardClose() {
+      const btn = document.getElementById("lb-close");
+      if (!btn || btn._wired) return;
+      btn._wired = true;
+      btn.addEventListener("click", () => {
+        const ov = document.getElementById("leaderboard-overlay");
+        if (ov) ov.style.display = "none";
+        window._lbDismissed = true;
+      });
+    }
+    wireLeaderboardClose();
   </script>
   <style>
     .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
@@ -90,11 +97,11 @@
         </div>
       </div>
     </div>
-    <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1000; align-items:center; justify-content:center;">
-      <div style="background:#fff; padding:24px; border-radius:8px; max-width:520px; width:90%; max-height:80vh; overflow:auto;">
-        <h2>Day <span id="lb-day"></span> Leaderboard</h2>
-        <div id="lb-content"></div>
-        <button id="lb-close" class="neon-btn" style="margin-top:12px">Close</button>
+    <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:1000; align-items:center; justify-content:center;">
+      <div class="panel" style="max-width:520px; width:90%; max-height:80vh; overflow:auto; padding:20px;">
+        <h2 style="margin-top:0">Day <span id="lb-day"></span> Leaderboard</h2>
+        <div id="lb-content" style="margin:12px 0; line-height:1.6"></div>
+        <button id="lb-close" class="neon-btn">Close</button>
       </div>
     </div>
     <details open style="margin-top:12px">
@@ -297,6 +304,7 @@
           `<div>${i+1}. ${b.name} — ${b.bonus.toFixed(2)} (${b.zone}${b.fired ? ", FIRED" : ""})</div>`
         ).join("") || "<p>No banks</p>";
         ov.style.display = "flex";
+        wireLeaderboardClose();
       } else if (ov && state.phase !== "closed") {
         ov.style.display = "none";
         window._lbDismissed = false;

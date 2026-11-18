@@ -316,7 +316,21 @@
           const net = plan ? (plan.assignedNetCashFlow || 0) : 0;
           const netCls = net >= 0 ? "pos" : "neg";
           const netBanner = `<div class="small" style="margin:4px 0;color:${net>=0?"#0a0":"#c00"}">Assigned net cash flow: <strong>${net>=0?"+":""}${net.toFixed(2)}B</strong></div>`;
-          return `<div class="bank-card"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${UI.balanceSheetHTML(state, stub)}${UI.editableBalanceSheetHTML(state, stub)}${ov}</div>`;
+          let bs = UI.balanceSheetHTML(state, stub);
+          // Turn the numeric cells for editable fields into inputs
+          const fields = ["fixedLoans","floatingAssets","treasuries","repoLent","cash","stickyDep","volatile","repoBorrowed","equity"];
+          fields.forEach(field => {
+            const val = Number(b[field] || 0);
+            const re = new RegExp(`(<td[^>]*>[^<]*${field === "cash" ? "Current reserve balance" : ""}[^<]*</td>\s*<td[^>]*>)([^<]+)(</td>)`, "i");
+            // Simpler: replace the displayed money value for known labels
+          });
+          // For reliability, inject inputs after the static BS and hide the static numbers via CSS class
+          const editRows = fields.map(field => {
+            const label = {fixedLoans:"Fixed loans",floatingAssets:"Floating",treasuries:"Treasuries",repoLent:"Reverse repo",cash:"Current reserve balance",stickyDep:"Sticky deposits",volatile:"Volatile ST",repoBorrowed:"Repo borrowings",equity:"Equity"}[field] || field;
+            return `<div class="row" style="gap:8px;margin:2px 0;font-size:13px"><label style="min-width:160px">${label}</label><input class="field bs-edit" data-stub="${stub}" data-field="${field}" type="number" step="0.01" value="${Number(b[field]||0)}" style="width:100px"></div>`;
+          }).join("");
+          const actions = `<div class="bs-actions" data-stub="${stub}" style="display:none;margin-top:8px"><button class="neon-btn bs-write" data-stub="${stub}">Write new balance sheet</button> <button class="neon-btn bs-cancel" data-stub="${stub}">Cancel</button></div>`;
+          return `<div class="bank-card" data-stub="${stub}"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${bs}<details open style="margin-top:8px"><summary class="small">Edit balances in place</summary><div class="bs-edit-box" data-stub="${stub}">${editRows}${actions}</div></details>${ov}</div>`;
         }).join("") || "<em class='muted'>No banks yet.</em>";
       }
 
