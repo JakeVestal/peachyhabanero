@@ -105,3 +105,4 @@ peachyhabanero-138-reserve-plan-tests.patch
 peachyhabanero-139-order-book-visibility.patch
 peachyhabanero-140-bonus-leaderboard-howto.patch
 peachyhabanero-141-tape-clock-fixes.patch
+peachyhabanero-142-tape-open-by-default.patch
