@@ -732,24 +732,53 @@
 
     start().catch(e => setStatus(explainError(e), "err"));
 
-    // ---- Load today's Treasury CMT curve on first connect ----
-    const TREASURY_CSV = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_yield_curve&field_tdr_date_value=2026&page&_format=csv";
+    // ---- Load the most recent published Treasury CMT curve on first connect ----
+    // Treasury publishes the daily yield curve after the trading day closes, so
+    // "today" is often empty. We request the current year's CSV (newest-first)
+    // and explicitly pick the row with the latest date.
     const TENOR_MAP = { "1M": "1 Mo", "6M": "6 Mo", "1Y": "1 Yr", "2Y": "2 Yr", "5Y": "5 Yr", "10Y": "10 Yr" };
 
-    async function loadTodayCurve() {
+    function treasuryCsvUrl() {
+      const year = new Date().getFullYear();
+      return `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/${year}/all?type=daily_treasury_yield_curve&field_tdr_date_value=${year}&page&_format=csv`;
+    }
+
+    function parseTreasuryDate(s) {
+      // MM/DD/YYYY
+      const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((s || "").trim());
+      if (!m) return null;
+      return new Date(+m[3], +m[1] - 1, +m[2]);
+    }
+
+    async function loadMostRecentCurve() {
       if (!state) return;
       try {
-        const res = await fetch(TREASURY_CSV);
+        const res = await fetch(treasuryCsvUrl());
         if (!res.ok) return;
         const csv = await res.text();
-        const lines = csv.trim().split(/\r?\n/);
+        const lines = csv.trim().split(/\r?\n/).filter(Boolean);
         if (lines.length < 2) return;
         const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
-        const latest = lines[1].split(",").map(c => c.replace(/^"|"$/g, "").trim());
+        const dateIdx = headers.findIndex(h => h.toLowerCase() === "date");
+        if (dateIdx < 0) return;
+
+        let best = null;
+        let bestDate = null;
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(",").map(c => c.replace(/^"|"$/g, "").trim());
+          const d = parseTreasuryDate(cols[dateIdx]);
+          if (!d || isNaN(d)) continue;
+          if (!bestDate || d > bestDate) {
+            bestDate = d;
+            best = cols;
+          }
+        }
+        if (!best) return;
+
         const curve = {};
         for (const [our, their] of Object.entries(TENOR_MAP)) {
           const idx = headers.indexOf(their);
-          const v = idx >= 0 ? parseFloat(latest[idx]) : NaN;
+          const v = idx >= 0 ? parseFloat(best[idx]) : NaN;
           curve[our] = isFinite(v) ? v : E.DEFAULT_CURVE[our];
         }
         const isDefault = !state.curve || Object.keys(E.DEFAULT_CURVE).every(t =>
@@ -760,14 +789,15 @@
           await writeState();
           syncCurveInputs();
           drawCurvePlots();
-          console.log("Loaded today's Treasury curve", curve);
+          const ymd = bestDate.toISOString().slice(0, 10);
+          console.log("Loaded most recent Treasury curve (" + ymd + ")", curve);
         }
       } catch (e) {
         console.warn("Could not load Treasury curve", e);
       }
     }
 
-    setTimeout(loadTodayCurve, 1200);
+    setTimeout(loadMostRecentCurve, 1200);
 </script>
 </body>
 </html>

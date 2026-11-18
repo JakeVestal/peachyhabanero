@@ -44,7 +44,7 @@
     <ul>
       <li>Day 1, phase <code>"trading"</code></li>
       <li>Corridor: IORB 4.40%, SRF 4.50%</li>
-      <li>Default yield curve (1M 4.45%, 6M 4.50%, 1Y 4.55%, 2Y 4.60%, 5Y 4.70%, 10Y 4.85%)</li>
+      <li>Default yield curve (hardcoded fallback: 1M 4.45%, 6M 4.50%, 1Y 4.55%, 2Y 4.60%, 5Y 4.70%, 10Y 4.85%; replaced by the most recent published Treasury CMT yields when the instructor page loads)</li>
       <li>Empty banks, orders, trades, and histories; tick = 0; timers null</li>
     </ul>
     <p>Students join from the lobby by entering a bank name. Each bank is created with <code>newBank()</code> → <code>randomStartingBS()</code>, which produces a unique but balanced sheet totaling ~$120B assets:</p>
@@ -77,13 +77,13 @@
     <h2>2. Yield curve & yield-curve history</h2>
     <p>The live curve is stored on the session as <code>curve</code> (six tenors). History is an array <code>curveHistory</code> of <code>{day, curve}</code> snapshots.</p>
     <ul>
-      <li><strong>Generation</strong> — starts as <code>DEFAULT_CURVE</code> on <code>newState()</code>.</li>
+      <li><strong>Generation / first-game defaults</strong> — <code>newState()</code> starts with the engine’s hardcoded <code>DEFAULT_CURVE</code> (1M 4.45%, 6M 4.50%, 1Y 4.55%, 2Y 4.60%, 5Y 4.70%, 10Y 4.85%). On the instructor page, ~1.2 s after the session connects, <code>loadMostRecentCurve()</code> fetches the current year’s daily Treasury CMT yield-curve CSV from treasury.gov. Treasury publishes rates after the trading day closes, so “today” is often empty; the code therefore parses every row, selects the one with the latest date, maps the live 1 Mo / 6 Mo / 1 Yr / 2 Yr / 5 Yr / 10 Yr values onto the game tenors, and (only if the session curve is still at the engine defaults) calls <code>applyCurve()</code> and writes the state. This is the path that populates real current yields for a brand-new game. If the fetch fails or the curve has already been edited, the hardcoded defaults (or the existing curve) remain. The year in the URL is taken from the current date so the endpoint stays valid across year boundaries.</li>
       <li><strong>Instructor adjustments</strong> — the Yield Curve panel lets the instructor type any tenor, apply a parallel shift (bps to every tenor), or a short-end shift (bps to 1M/6M/1Y only). All routes call <code>applyCurve()</code>, which stores the new curve and immediately marks every bank’s Treasury book.</li>
       <li><strong>Situation cards</strong> — most cards also carry a <code>curveShift</code> object (bps by tenor). Applying the card adds those deltas and marks books.</li>
       <li><strong>Automatic day-to-day drift</strong> — inside <code>advanceDay()</code>, after interest and unwind, the engine takes the just-finished day’s SOFR change and applies a small weighted move (heavy on the short end: 1M weight 0.75 down to 10Y weight 0.02) plus modest random noise (±4 bp). This is the only automatic curve evolution.</li>
       <li><strong>History</strong> — the curve that was in force for the finished day is pushed to <code>curveHistory</code> at the end of <code>advanceDay()</code>. The 3-D surface on the instructor and student pages is built from that history.</li>
     </ul>
-    <p><strong>When adjustments take effect</strong> — manual curve edits, parallel/short shifts, and card-driven shifts take effect immediately (mid-game or after hours). The automatic SOFR-linked drift happens only when the instructor advances to the next day.</p>
+    <p><strong>When adjustments take effect</strong> — the live Treasury load happens once at the start of a new session (instructor page). Manual curve edits, parallel/short shifts, and card-driven shifts take effect immediately (mid-game or after hours). The automatic SOFR-linked drift happens only when the instructor advances to the next day.</p>
 
     <h2>3. Situation cards</h2>
     <p>Named scenarios the instructor can apply at any time. Each card:</p>
