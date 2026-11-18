@@ -34,6 +34,11 @@
     .status-minor, .status-degraded { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
     .status-major, .status-critical, .status-outage { background: #ff2bd6; box-shadow: 0 0 8px #ff2bd6; }
     .status-unknown { background: var(--muted); }
+    .status-link-indicator {
+      background: transparent;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 6px var(--cyan);
+    }
     .status-name { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 14px; color: var(--ink); margin: 0 0 6px; }
     .status-desc { font-size: 13px; color: var(--muted); margin: 4px 0 8px; min-height: 2.4em; }
     .status-meta { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; color: var(--muted); }
@@ -83,9 +88,8 @@
     <h2>Notes</h2>
     <div class="col-card">
       <p>
-        Endpoints polled: Cloudflare Statuspage, Google Cloud incidents summary, Optimizely Statuspage.
-        AWS, Azure, Microsoft 365, and Apple are linked directly (their public JSON is either missing, redirected, or CORS-restricted from a static page).
-        CISA and other threat intel are best checked at the source.
+        Live-polled (CORS-friendly JSON): Cloudflare, Google Cloud, Optimizely.
+        AWS, Azure, Microsoft 365, Apple, and CISA show a cyan ring indicator because their public status feeds are either missing, redirected, encoded in a non-browser-friendly way, or blocked by CORS from a static page. Click through for the official source.
       </p>
       <p>
         This is not a substitute for official communications or your own monitoring.
@@ -161,9 +165,10 @@ const SERVICES = [
   }
 ];
 
-function indicatorClass(indicator) {
+function indicatorClass(indicator, isLink) {
+  if (isLink) return 'status-link-indicator';
   if (!indicator) return 'status-unknown';
-  const i = indicator.toLowerCase();
+  const i = String(indicator).toLowerCase();
   if (i === 'none' || i === 'operational' || i === 'ok') return 'status-ok';
   if (i === 'minor' || i === 'degraded') return 'status-minor';
   if (i === 'major' || i === 'critical' || i === 'outage') return 'status-major';
@@ -175,26 +180,27 @@ function renderCard(svc, data) {
   card.className = 'status-card';
   card.id = 'card-' + svc.id;
 
+  const isLink = svc.type === 'link';
   let indicator = 'unknown';
   let desc = 'No live data';
   let updated = '';
 
-  if (data && data.indicator) {
+  if (isLink) {
+    desc = 'Check official status page';
+  } else if (data && data.indicator) {
     indicator = data.indicator;
     desc = data.description || data.indicator;
     updated = data.updated || '';
-  } else if (svc.type === 'link') {
-    desc = 'Open official page';
   }
 
-  const indClass = indicatorClass(indicator);
+  const indClass = indicatorClass(indicator, isLink);
 
   card.innerHTML = `
     <div class="status-name">
       <span class="status-indicator ${indClass}"></span>${svc.name}
     </div>
     <div class="status-desc">${desc}</div>
-    <div class="status-meta">${updated ? 'Updated ' + updated : ''}</div>
+    <div class="status-meta">${updated ? 'Updated ' + updated : (isLink ? 'Direct link' : '')}</div>
     <div class="status-link"><a href="${svc.url}" target="_blank" rel="noopener">Official status →</a></div>
   `;
   return card;
@@ -247,13 +253,13 @@ async function updateAll() {
   let anyIssue = false;
   results.forEach(({ svc, data }) => {
     grid.appendChild(renderCard(svc, data));
-    if (data && data.indicator && !['none', 'operational', 'ok'].includes(data.indicator.toLowerCase())) {
+    if (data && data.indicator && !['none', 'operational', 'ok'].includes(String(data.indicator).toLowerCase())) {
       anyIssue = true;
     }
   });
 
   const overall = document.getElementById('overall-status');
-  overall.textContent = anyIssue ? ' · Some services reporting issues' : ' · All polled endpoints look clear';
+  overall.textContent = anyIssue ? ' · Some polled services reporting issues' : ' · Polled endpoints look clear';
   overall.style.color = anyIssue ? 'var(--gold)' : 'var(--lime)';
 }
 
