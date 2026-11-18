@@ -530,11 +530,11 @@
         return;
       }
       const stub = "b" + Math.random().toString(36).slice(2, 8);
-      const bank = E.newBank(name);
-      // Immediately compute target so indicators are honest before trading starts
+      const bank = E.newBank(name, Date.now(), Math.random, state.gameParams || {});
+      // Target is already reflected in starting cash; store a minimal plan for the indicator
       if (!state.reservePlans) state.reservePlans = {};
       const target = E.calculateTargetReserveBalance(bank, state.gameParams || {});
-      state.reservePlans[stub] = { target, trueEod: target, jumps: [], tape: [] };
+      state.reservePlans[stub] = { target, assignedNetCashFlow: 0, jumps: [], tape: [] };
       state.banks[stub] = bank;
       await update(ref(db, "sessions/" + sessionId), { banks: state.banks, reservePlans: state.reservePlans });
       document.getElementById("bank-name").value = "";

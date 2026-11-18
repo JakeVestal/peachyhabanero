@@ -49,55 +49,64 @@ export function generateReservePlans(s, rnd = Math.random) {
   const banks = Object.entries(s.banks);
   if (!banks.length) return;
   const plans = {};
-  let totalTrue = 0;
+  const fractionShort = typeof params.fractionShort === "number" ? params.fractionShort : 0.40;
+
+  // First compute targets and decide who is assigned a negative net flow
+  const stubs = banks.map(([stub]) => stub);
+  // Shuffle to pick the short cohort
+  for (let i = stubs.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [stubs[i], stubs[j]] = [stubs[j], stubs[i]];
+  }
+  const nShort = Math.round(stubs.length * fractionShort);
+  const shortSet = new Set(stubs.slice(0, nShort));
+
   for (const [stub, b] of banks) {
     const target = calculateTargetReserveBalance(b, params);
-    // True EOD centered near target, with system-wide surplus/deficit allocated
-    const noise = (rnd() - 0.5) * 8;
-    const trueEod = r6(target + noise);
-    plans[stub] = { target, trueEod, jumps: [], tape: [] };
-    totalTrue += trueEod;
+    const startCash = b.cash || 0;
+    let assignedNetCashFlow;
+    if (shortSet.has(stub)) {
+      // Will finish below target if idle
+      const shortfall = 0.5 + rnd() * 2.5;          // 0.5 to 3.0 below
+      assignedNetCashFlow = r6((target - shortfall) - startCash);
+    } else {
+      // Will finish above target if idle
+      const surplus = 0.5 + rnd() * 2.5;            // 0.5 to 3.0 above
+      assignedNetCashFlow = r6((target + surplus) - startCash);
+    }
+    plans[stub] = { target, assignedNetCashFlow, jumps: [], tape: [] };
   }
-  // Scale so aggregate true EOD matches instructor's systemSurplus (relative to sum of targets)
-  const sumTargets = Object.values(plans).reduce((a, p) => a + p.target, 0);
-  const desiredAggregate = sumTargets + (params.systemSurplus || 0);
-  const scale = totalTrue !== 0 ? desiredAggregate / totalTrue : 1;
-  for (const p of Object.values(plans)) p.trueEod = r6(p.trueEod * scale);
 
-  // Now build jumps for each bank so the path ends near trueEod
+  // Build the random walk that sums to assignedNetCashFlow
   const totalTicks = 78;
   for (const [stub, plan] of Object.entries(plans)) {
-    const startCash = s.banks[stub].cash || 0;
-    const netNeeded = r6(plan.trueEod - startCash);
     const jumps = [];
-    let remaining = netNeeded;
+    let remaining = plan.assignedNetCashFlow;
     for (let t = 1; t <= totalTicks; t++) {
       const progress = t / totalTicks;
-      // Clustering bias: early positive, late negative
       let bias = 0;
       if (params.clustering !== false) {
-        if (progress < 0.3) bias = 0.4;          // early morning influx
-        else if (progress > 0.7) bias = -0.5;    // late-day squeeze
+        if (progress < 0.3) bias = 0.4;
+        else if (progress > 0.7) bias = -0.5;
       }
       const prob = (params.volProb || 0.35) + bias * 0.2;
       if (rnd() < Math.max(0.05, Math.min(0.8, prob))) {
         const step = (params.volStep || 0.8) * (0.6 + rnd() * 0.8);
-        // Mix of noise and mild drift toward the needed net
         const noiseSign = rnd() < 0.5 ? -1 : 1;
-        const drift = remaining > 0 ? 0.3 : -0.3;
-        const amount = r6(noiseSign * step * 0.7 + drift * step * 0.5);
+        const drift = remaining > 0 ? 0.35 : -0.35;
+        const amount = r6(noiseSign * step * 0.65 + drift * step * 0.55);
         jumps.push({ tick: t, amount, note: amount > 0 ? "Inflow" : "Outflow" });
         remaining = r6(remaining - amount);
       }
     }
-    // Final adjustment jump on last tick if needed
-    if (Math.abs(remaining) > 0.1) {
+    if (Math.abs(remaining) > 0.05) {
       jumps.push({ tick: totalTicks, amount: r6(remaining), note: "Close adjustment" });
     }
     plan.jumps = jumps;
   }
   s.reservePlans = plans;
 }
+
 
 
 export const TENORS = ["1M", "6M", "1Y", "2Y", "5Y", "10Y"];
@@ -137,9 +146,10 @@ export function newState(now = Date.now()) {
       systemSurplus: 5,           // aggregate true-EOD surplus target ($B); negative = deficit
       volStep: 0.8,               // typical jump size ($B)
       volProb: 0.35,              // probability a bank gets a flow on a given tick
+      fractionShort: 0.40,         // fraction of banks that finish below target if idle
     },
     // Per-bank plans for the current trading day (generated when trading starts)
-    // { [stub]: { target, trueEod, jumps: [{tick, amount, note}], tape: [] } }
+    // { [stub]: { target, assignedNetCashFlow, jumps: [{tick, amount, note}], tape: [] } }
     reservePlans: {},
     closedBy: null,                // "timer" | "manual" | null
   };
@@ -191,8 +201,12 @@ export function randomStartingBS(rnd = Math.random) {
   };
 }
 
-export function newBank(name, now = Date.now(), rnd = Math.random) {
-  return { name, created: now, ...randomStartingBS(rnd) };
+export function newBank(name, now = Date.now(), rnd = Math.random, params = {}) {
+  const bs = randomStartingBS(rnd);
+  const target = calculateTargetReserveBalance(bs, params);
+  const cushion = r2(0.5 + rnd() * 1.5);          // start 0.5–2.0 above target
+  bs.cash = r6(target + cushion);
+  return { name, created: now, ...bs };
 }
 
 // Firebase drops empty objects and null values, so anything read back from
@@ -215,7 +229,7 @@ export function normalize(raw) {
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
   if (!s.gameParams || typeof s.gameParams !== "object") {
-    s.gameParams = { k: 0.11, fixedCushion: 1.5, clustering: true, systemSurplus: 5, volStep: 0.8, volProb: 0.35 };
+    s.gameParams = { k: 0.11, fixedCushion: 1.5, clustering: true, systemSurplus: 5, volStep: 0.8, volProb: 0.35, fractionShort: 0.40 };
   }
   if (!s.reservePlans || typeof s.reservePlans !== "object") s.reservePlans = {};
   if (!s.curve || typeof s.curve !== "object") s.curve = { ...DEFAULT_CURVE };
