@@ -103,3 +103,4 @@ peachyhabanero-136-reserve-targets-cashflows.patch
 peachyhabanero-137-tape-ui-future-work.patch
 peachyhabanero-138-reserve-plan-tests.patch
 peachyhabanero-139-order-book-visibility.patch
+peachyhabanero-140-bonus-leaderboard-howto.patch

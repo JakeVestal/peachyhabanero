@@ -407,6 +407,62 @@ export function marketSnapshot(s) {
   return { grossCash, pledged, available: r6(grossCash - pledged), volume: privateVol };
 }
 
+
+// ---------------------------------------------------------------- day bonus & zones
+// Educational bonus: economic value created by the desk, reduced by risk breaches.
+// Not a real-world compensation formula.
+export function calculateDayBonus(s, stub) {
+  const b = s.banks[stub];
+  if (!b) return { raw: 0, multiplier: 0, bonus: 0, zone: "unknown" };
+  const plan = s.reservePlans?.[stub];
+  const target = plan?.target || 0;
+  const cash = b.cash || 0;
+
+  // Zone
+  let zone = "green", multiplier = 1.0, equityCharge = 0;
+  if (cash < 0) {
+    zone = "red"; multiplier = 0;
+  } else if (cash < 0.5 * target) {
+    zone = "orange"; multiplier = 0.3; equityCharge = 0.15;
+  } else if (cash < target) {
+    zone = "yellow"; multiplier = 0.7; equityCharge = 0.05;
+  }
+
+  // Small comfort credit for finishing well above target (kept modest)
+  let comfort = 0;
+  if (cash > target * 1.5) comfort = r6(0.02 * (cash - target));
+
+  // Repo spread income / cost from today's private trades
+  let repoNet = 0;
+  for (const t of tradesForDay(s)) {
+    if (t.kind !== "private") continue;
+    const interest = t.volume * t.rate / 100;
+    if (t.lender === stub) repoNet += interest;
+    if (t.borrower === stub) repoNet -= interest;
+  }
+  const iorb = (s.rates.iorb || 4.4) / 100;
+  const iorbIncome = Math.max(0, cash) * iorb;
+
+  const raw = r6(repoNet + iorbIncome + comfort - equityCharge);
+  const bonus = r6(Math.max(0, raw) * multiplier);
+
+  // Apply equity charge immediately
+  if (equityCharge > 0) b.equity = r6(b.equity - equityCharge);
+
+  // Track consecutive reds
+  b.redStreak = (zone === "red") ? (b.redStreak || 0) + 1 : 0;
+
+  // Firing check
+  const fired = cash < -2.0 || b.redStreak >= 2 || b.equity < 5;
+  if (fired) b.fired = true;
+
+  b.dayBonus = bonus;
+  b.bonusYTD = r6((b.bonusYTD || 0) + bonus);
+  b.zone = zone;
+
+  return { raw, multiplier, bonus, zone, fired, comfort, equityCharge };
+}
+
 export function closeMarket(s, now = Date.now(), idFn = makeId) {
   if (s.phase === "closed") return { sofr: s.sofr, already: true };
   for (const o of Object.values(s.orders)) {
@@ -462,6 +518,10 @@ export function closeMarket(s, now = Date.now(), idFn = makeId) {
       pledged: snap.pledged,
       available: snap.available,
     });
+  }
+  // Calculate bonuses and apply zone/firing logic
+  for (const stub of Object.keys(s.banks)) {
+    calculateDayBonus(s, stub);
   }
   return { sofr: s.sofr, privateCount: privateTrades.length, srfCount, overdraftCount, parkedCount };
 }

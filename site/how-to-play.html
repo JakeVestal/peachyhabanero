@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>How to Play · Overnight Clearing Desk</title>
+  <link rel="stylesheet" href="overnight.css">
+  <style>
+    body { max-width: 780px; margin: 40px auto; padding: 0 20px; font-family: system-ui, sans-serif; line-height: 1.5; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.2rem; margin-top: 1.6em; }
+    code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+    .note { background: #fff8e1; padding: 12px; border-left: 4px solid #ffc107; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <p><a href="overnight-clearing.html">← back to the desk</a></p>
+  <h1>How to Play the Overnight Clearing Desk</h1>
+  <p>You are the treasury / liquidity desk of a commercial bank. Each day you manage the bank’s reserve balance by trading in the overnight repo market.</p>
+
+  <h2>The basic loop</h2>
+  <ol>
+    <li>Join a session and get a bank.</li>
+    <li>During the trading day, place bids (borrow cash) or offers (lend cash).</li>
+    <li>Watch your <strong>Current reserve balance</strong> move as payments arrive and as you trade.</li>
+    <li>At the close, your performance is scored and a leaderboard appears.</li>
+    <li>The instructor advances to the next day.</li>
+  </ol>
+
+  <h2>Current reserve balance and the target</h2>
+  <p>Your risk desk sets a <strong>target reserve balance</strong> at the open. Your job is to finish the day at or above that target. The shortfall/surplus line updates live.</p>
+
+  <h2>Bonus calculation</h2>
+  <p>At the close of each day you earn a bonus based on the economic value your desk created:</p>
+  <pre><code>rawValue = repo spread income
+         + IORB earned on residual cash
+         + small comfort credit (if well above target)
+         – zone equity charges
+
+dayBonus = max(0, rawValue) × zoneMultiplier</code></pre>
+  <p>Zone multipliers: Green 1.0 · Yellow 0.7 · Orange 0.3 · Red 0.0</p>
+  <p>Your year-to-date bonus is the simple sum of daily bonuses. The leaderboard ranks by that day’s bonus.</p>
+
+  <div class="note">
+    <strong>Important disclaimer.</strong> This captures the spirit of real treasury compensation (“you are paid for the economic value you create for the bank, subject to risk and control constraints”). It is <em>not</em> a model of any bank’s actual bonus formula. Real compensation decisions are private, discretionary, and involve many factors we do not simulate.
+  </div>
+
+  <h2>Why is an unsecured overdraft SRF + 100 bp?</h2>
+  <p>The Federal Reserve’s Payment System Risk policy charges a penalty rate on overnight overdrafts that are not fully collateralized. The standard penalty is the primary credit rate (or SRF rate in our stylized corridor) plus 100 basis points. That is why the game uses SRF + 100 bp for any residual negative cash that cannot be secured by Treasuries.</p>
+
+  <h2>Zones and getting fired</h2>
+  <ul>
+    <li><strong>Green</strong> — cash ≥ target. Full bonus.</li>
+    <li><strong>Yellow</strong> — below target but ≥ 50% of target. Multiplier 0.7 + small equity charge.</li>
+    <li><strong>Orange</strong> — below 50% of target but still non-negative. Multiplier 0.3 + larger equity charge + “Supervisory attention”.</li>
+    <li><strong>Red</strong> — negative cash. Bonus zero for the day + overdraft funding.</li>
+  </ul>
+  <p>You are <strong>fired</strong> (desk shut down) if <em>any</em> of these occur:</p>
+  <ul>
+    <li>Closing cash < –2.0</li>
+    <li>Two consecutive red days</li>
+    <li>Equity falls below 5 after charges</li>
+  </ul>
+  <p>When fired you cannot trade the next day. The instructor can reinstate you. In a classroom this usually just means you watch a friend’s screen and laugh.</p>
+
+  <h2>Order book visibility</h2>
+  <p>The instructor can hide the market-wide order book. When it is hidden you only see your own orders — closer to how the real repo market works (you have to call around).</p>
+
+  <p style="margin-top:40px"><a href="overnight-clearing.html">← back to the desk</a></p>
+</body>
+</html>
