@@ -136,3 +136,4 @@ peachyhabanero-170-fix-normalize-test.patch
 peachyhabanero-171-remove-fixed-loans.patch
 peachyhabanero-172-fix-continuous-after-hours.patch
 peachyhabanero-173-planned-eod-on-bank-cards.patch
+peachyhabanero-174-reserve-chart-labels.patch

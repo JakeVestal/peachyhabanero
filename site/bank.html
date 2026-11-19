@@ -67,7 +67,7 @@
       <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
 
       <div class="panel" style="margin:12px 0">
-        <h3>Reserve balance through the day</h3>
+        <h3>Reserve balance</h3>
         <div id="reserve-chart" style="height:220px"></div>
       </div>
 
@@ -266,7 +266,6 @@
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         xaxis: {
-          title: "Time of day",
           range: [9*60+30, 16*60],
           tickvals: tickvals,
           ticktext: ticktext,
@@ -275,7 +274,7 @@
           fixedrange: true
         },
         yaxis: { title: "Reserve balance ($B)", gridcolor: "#333" },
-        legend: { orientation: "h", y: -0.25 },
+        legend: { orientation: "h", x: 1, xanchor: "right", y: 1.05, yanchor: "bottom" },
         font: { color: "#ccc" }
       }, { displayModeBar: false });
     }
