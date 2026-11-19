@@ -162,6 +162,17 @@ export function newState(now = Date.now()) {
     // { [stub]: { target, assignedNetCashFlow, jumps: [{tick, amount, note}], tape: [] } }
     reservePlans: {},
     closedBy: null,                // "timer" | "manual" | null
+    // Continuous mode (instructor-driven by default; continuous runs N sessions automatically)
+    gameMode: "instructor-driven", // "instructor-driven" | "continuous"
+    continuousTotalSessions: 5,
+    continuousAfterHoursMs: 60 * 1000,
+    continuousCurrentSession: 0,
+    continuousActive: false,
+    afterHoursStart: null,
+    afterHoursEnd: null,
+    afterHoursDurationMs: null,
+    tradingDurationMs: null,       // remembered trading-day length for continuous loops
+    winner: null,                  // { name, bonusYTD } set at end of continuous run
   };
 }
 
@@ -238,6 +249,16 @@ export function normalize(raw) {
   if (s.orderBookVisible === undefined) s.orderBookVisible = true;
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
+  if (s.gameMode === undefined) s.gameMode = "instructor-driven";
+  if (s.continuousTotalSessions === undefined) s.continuousTotalSessions = 5;
+  if (s.continuousAfterHoursMs === undefined) s.continuousAfterHoursMs = 60 * 1000;
+  if (s.continuousCurrentSession === undefined) s.continuousCurrentSession = 0;
+  if (s.continuousActive === undefined) s.continuousActive = false;
+  if (s.afterHoursStart === undefined) s.afterHoursStart = null;
+  if (s.afterHoursEnd === undefined) s.afterHoursEnd = null;
+  if (s.afterHoursDurationMs === undefined) s.afterHoursDurationMs = null;
+  if (s.tradingDurationMs === undefined) s.tradingDurationMs = null;
+  if (s.winner === undefined) s.winner = null;
   if (!s.gameParams || typeof s.gameParams !== "object") {
     s.gameParams = { kSticky: 0.05, kVolatile: 0.28, fixedCushion: 1.5, clustering: true, volStep: 0.8, volProb: 0.35, fractionShort: 0.40 };
   }

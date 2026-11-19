@@ -30,6 +30,7 @@ Do not modify style.css, index.html, or any other site page unless explicitly as
 - Bonus: raw value (repo spread + IORB + small comfort credit if cash > 1.5× target − zone charges) × zone multiplier (Green 1.0, Yellow 0.7, Orange 0.3, Red 0.0), floored at zero. YTD is the sum.
 - Firing: cash < –2.0, two red days total (not consecutive), or equity < 5. Formal warning letter on the first red day.
 - Instructor toggle for order-book visibility (when off, students see only their own orders).
+- Game mode toggle on the instructor page (default instructor-driven; continuous runs a set number of trading sessions automatically with after-hours countdowns between them, auto close/advance/SOFR/curve/plans, and final leaderboard + winner).
 - Instructor view and student bank pages show 2-D curve + 3-D surface.
 - Situation cards apply relative curve shifts.
 - Stylizations & caveats page and how-to-play page exist and are linked.

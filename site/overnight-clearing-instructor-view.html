@@ -69,6 +69,19 @@
     <div class="control-row">
     <div class="panel">
       <h3>Trading Timer</h3>
+      <div class="row" style="align-items:center;gap:12px;flex-wrap:wrap">
+        <label class="small">Game mode</label>
+        <select id="game-mode" class="field" style="width:160px">
+          <option value="instructor-driven">Instructor-driven</option>
+          <option value="continuous">Continuous</option>
+        </select>
+        <span id="continuous-inputs" style="display:none">
+          <label class="small"># of trading sessions</label>
+          <input id="continuous-sessions" class="field" type="number" min="1" max="50" step="1" value="5" style="width:60px">
+          <label class="small">real-time length of after-hours (minutes)</label>
+          <input id="after-hours-minutes" class="field" type="number" min="0.1" max="30" step="0.1" value="1" style="width:70px">
+        </span>
+      </div>
       <div class="row">
         <label>real-time length of trading day (minutes)</label>
         <input id="timer-minutes" class="field" type="number" min="1" max="120" step="1" value="5" style="width:70px">
@@ -80,6 +93,7 @@
         <span id="tick-ind" class="muted" style="margin-left:12px;font-family:IBM Plex Mono,monospace">Tick: —</span>
       </div>
       <p class="small muted">In-game clock from 09:30 to 16:00 in 5-minute steps. Market auto-closes at the end of the day.</p>
+      <p id="continuous-status" class="small muted" style="display:none"></p>
     </div>
 
     <div class="panel">
@@ -457,6 +471,7 @@
       updateCountdown();
       syncControlsFromState();
       updatePlanIndicators();
+      if (typeof updateModeUI === "function") updateModeUI();
     }
 
     function updateTimerControls() {
@@ -494,6 +509,26 @@
       updateTimerControls();
       const tick = state.tick || 0;
       if (tickEl) tickEl.textContent = "Tick: " + tick;
+      // After-hours clock: advance from 16:00 toward 09:30 next day
+      if (state.afterHoursEnd && state.afterHoursStart && state.phase === "closed") {
+        const elapsed = Date.now() - state.afterHoursStart;
+        const dur = state.afterHoursDurationMs || 1;
+        const progress = Math.min(1, Math.max(0, elapsed / dur));
+        // 16:00 to 09:30 next = 17.5 hours = 1050 minutes
+        const nightMinutes = 17.5 * 60;
+        const advanced = progress * nightMinutes;
+        const totalMin = 16 * 60 + advanced;
+        let h = Math.floor(totalMin / 60) % 24;
+        const m = Math.floor(totalMin % 60);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const hh = h % 12 || 12;
+        const timeStr = String(hh).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
+        const remain = Math.max(0, state.afterHoursEnd - Date.now());
+        const remainStr = Math.ceil(remain / 1000) + "s";
+        el.textContent = timeStr + " (after hours, " + remainStr + ")";
+        el.className = "countdown";
+        return;
+      }
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "countdown"; return; }
       if (state.timerPaused) {
         el.textContent = inGameClock(tick) + " paused";
@@ -612,9 +647,82 @@
         update(ref(db, "sessions/" + sessionId), payload);
       }
       if (Date.now() >= state.timerEnd && !matching) {
-        closeNow("timer");
+        if (state.continuousActive && state.gameMode === "continuous") {
+          handleContinuousEndOfDay();
+        } else {
+          closeNow("timer");
+        }
+      }
+      // After-hours timer check (continuous mode)
+      if (state && state.afterHoursEnd && Date.now() >= state.afterHoursEnd && !busy) {
+        startNextContinuousTradingDay();
       }
     }, 250);
+
+    async function handleContinuousEndOfDay() {
+      if (!state || busy) return;
+      busy = true;
+      try {
+        // Close the current trading day
+        if (E.hasCross(state)) E.matchOrders(state);
+        state.closedBy = "timer";
+        E.closeMarket(state);
+        // Advance (interest, unwind, curve drift, new plans, day++)
+        syncParamsFromControls();
+        E.advanceDay(state);
+        const finished = state.continuousCurrentSession;
+        const total = state.continuousTotalSessions;
+        if (finished >= total) {
+          // Last session complete
+          state.continuousActive = false;
+          state.phase = "closed";
+          // Find winner by highest bonusYTD
+          let best = null;
+          for (const b of Object.values(state.banks)) {
+            const ytd = b.bonusYTD || 0;
+            if (!best || ytd > best.bonusYTD) best = { name: b.name, bonusYTD: ytd };
+          }
+          state.winner = best;
+          state.afterHoursEnd = null;
+          state.afterHoursStart = null;
+          setStatus("Continuous game complete. " + (best ? `Winner: ${best.name}` : "No banks."));
+        } else {
+          // Start after-hours before next trading day
+          state.phase = "closed";
+          state.afterHoursStart = Date.now();
+          state.afterHoursDurationMs = state.continuousAfterHoursMs;
+          state.afterHoursEnd = state.afterHoursStart + state.continuousAfterHoursMs;
+          state.tick = 0;
+          state.timerEnd = null;
+          state.timerStart = null;
+          state.timerDurationMs = null;
+        }
+        await writeState();
+        updateModeUI();
+      } finally { busy = false; }
+    }
+
+    async function startNextContinuousTradingDay() {
+      if (!state || busy || !state.continuousActive) return;
+      busy = true;
+      try {
+        state.phase = "trading";
+        state.afterHoursEnd = null;
+        state.afterHoursStart = null;
+        state.afterHoursDurationMs = null;
+        const durationMs = state.tradingDurationMs || (5 * 60 * 1000);
+        state.timerStart = Date.now();
+        state.timerDurationMs = durationMs;
+        state.timerEnd = state.timerStart + durationMs;
+        state.tick = 0;
+        state.timerPaused = false;
+        state.timerRemainingMs = null;
+        state.continuousCurrentSession = (state.continuousCurrentSession || 1) + 1;
+        // Plans were already regenerated by advanceDay
+        await writeState();
+        updateModeUI();
+      } finally { busy = false; }
+    }
 
     document.getElementById("add-bank").onclick = async () => {
       // No joining mid-session: only allow when no trading day is actively running
@@ -766,6 +874,41 @@
       state.orderBookVisible = e.target.checked;
       await writeState();
     });
+
+    // Game mode toggle
+    const gameModeEl = document.getElementById("game-mode");
+    const continuousInputs = document.getElementById("continuous-inputs");
+    const continuousStatus = document.getElementById("continuous-status");
+    function updateModeUI() {
+      const mode = (state && state.gameMode) || "instructor-driven";
+      if (gameModeEl && document.activeElement !== gameModeEl) gameModeEl.value = mode;
+      if (continuousInputs) continuousInputs.style.display = mode === "continuous" ? "" : "none";
+      if (continuousStatus) {
+        if (state && state.continuousActive) {
+          continuousStatus.style.display = "";
+          const sess = state.continuousCurrentSession || 1;
+          const total = state.continuousTotalSessions || 1;
+          continuousStatus.textContent = `Continuous mode: session ${sess} of ${total}`;
+        } else if (state && state.winner) {
+          continuousStatus.style.display = "";
+          continuousStatus.textContent = `Game complete. Winner: ${state.winner.name} (${state.winner.bonusYTD.toFixed(2)} YTD bonus)`;
+        } else {
+          continuousStatus.style.display = "none";
+        }
+      }
+    }
+    if (gameModeEl) {
+      gameModeEl.addEventListener("change", async () => {
+        if (!state) return;
+        state.gameMode = gameModeEl.value;
+        updateModeUI();
+        await writeState();
+      });
+    }
+    // Sync mode UI from state in render
+    const origRender = render;
+    // We'll call updateModeUI from the existing render via a hook below
+
     document.getElementById("start-trading").onclick = async () => {
       if (!state || busy || state.phase !== "trading") return;
       const mins = parseFloat(document.getElementById("timer-minutes").value);
@@ -773,16 +916,33 @@
       busy = true;
       try {
         const durationMs = mins * 60 * 1000;
+        state.tradingDurationMs = durationMs;
         state.timerStart = Date.now();
         state.timerDurationMs = durationMs;
         state.timerEnd = state.timerStart + durationMs;
         state.tick = 0;
         state.timerPaused = false;
         state.timerRemainingMs = null;
+        // Continuous mode setup
+        const mode = gameModeEl ? gameModeEl.value : (state.gameMode || "instructor-driven");
+        if (mode === "continuous") {
+          const sessions = parseInt(document.getElementById("continuous-sessions")?.value, 10) || 5;
+          const afterMins = parseFloat(document.getElementById("after-hours-minutes")?.value) || 1;
+          state.gameMode = "continuous";
+          state.continuousTotalSessions = Math.max(1, sessions);
+          state.continuousAfterHoursMs = Math.max(1000, afterMins * 60 * 1000);
+          state.continuousCurrentSession = 1;
+          state.continuousActive = true;
+          state.winner = null;
+        } else {
+          state.gameMode = "instructor-driven";
+          state.continuousActive = false;
+        }
         // Generate the day's reserve plans from the current control values
         syncParamsFromControls();
         E.generateReservePlans(state);
         await writeState();
+        updateModeUI();
       } finally { busy = false; }
     };
 

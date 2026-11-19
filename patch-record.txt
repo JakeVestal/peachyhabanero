@@ -131,3 +131,4 @@ peachyhabanero-165-fix-advance-plans-tick-join.patch
 peachyhabanero-166-update.patch
 peachyhabanero-167-plan-controls.patch
 peachyhabanero-168-weighted-targets-and-ui (1).patch
+peachyhabanero-169-continuous-mode.patch

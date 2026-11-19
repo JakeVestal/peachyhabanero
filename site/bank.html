@@ -167,6 +167,25 @@
     function updateCountdown() {
       const el = document.getElementById("countdown");
       if (!el || !state) return;
+      // After-hours clock: advance from 16:00 toward 09:30 next day
+      if (state.afterHoursEnd && state.afterHoursStart && state.phase === "closed") {
+        const elapsed = Date.now() - state.afterHoursStart;
+        const dur = state.afterHoursDurationMs || 1;
+        const progress = Math.min(1, Math.max(0, elapsed / dur));
+        const nightMinutes = 17.5 * 60;
+        const advanced = progress * nightMinutes;
+        const totalMin = 16 * 60 + advanced;
+        let h = Math.floor(totalMin / 60) % 24;
+        const m = Math.floor(totalMin % 60);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const hh = h % 12 || 12;
+        const timeStr = String(hh).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
+        const remain = Math.max(0, state.afterHoursEnd - Date.now());
+        const remainStr = Math.ceil(remain / 1000) + "s";
+        el.textContent = timeStr + " (after hours, " + remainStr + ")";
+        el.className = "value countdown";
+        return;
+      }
       if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
       let tick = state.tick || 0;
       // Compute tick locally from timer so the clock moves between Firebase updates
@@ -326,11 +345,15 @@
       if (ov && state.phase === "closed" && !window._lbDismissed) {
         const banks = Object.entries(state.banks || {})
           .map(([id, b]) => ({ id, name: b.name, bonus: b.dayBonus || 0, ytd: b.bonusYTD || 0, zone: b.zone || "", fired: b.fired }))
-          .sort((a, b) => b.bonus - a.bonus);
+          .sort((a, b) => b.ytd - a.ytd);
         document.getElementById("lb-day").textContent = state.day;
-        document.getElementById("lb-content").innerHTML = banks.map((b, i) =>
-          `<div>${i+1}. ${b.name} — ${b.bonus.toFixed(2)} (${b.zone}${b.fired ? ", FIRED" : ""})</div>`
+        let html = banks.map((b, i) =>
+          `<div>${i+1}. ${b.name} — day ${b.bonus.toFixed(2)} / YTD ${b.ytd.toFixed(2)} (${b.zone}${b.fired ? ", FIRED" : ""})</div>`
         ).join("") || "<p>No banks</p>";
+        if (state.winner) {
+          html = `<div style="margin-bottom:12px;font-weight:600;color:var(--lime)">Congratulations! Winner: ${state.winner.name} with ${state.winner.bonusYTD.toFixed(2)} YTD bonus</div>` + html;
+        }
+        document.getElementById("lb-content").innerHTML = html;
         ov.style.display = "flex";
         wireLeaderboardClose();
       } else if (ov && state.phase !== "closed") {
