@@ -611,7 +611,15 @@
 
     setInterval(() => {
       updateCountdown();
-      if (!state || state.phase !== "trading" || !state.timerEnd || state.timerPaused) return;
+      if (!state) return;
+
+      // After-hours timer check (continuous mode). Must run even when market is closed,
+      // otherwise continuous games stall after the first trading day.
+      if (state.afterHoursEnd && Date.now() >= state.afterHoursEnd && !busy) {
+        startNextContinuousTradingDay();
+      }
+
+      if (state.phase !== "trading" || !state.timerEnd || state.timerPaused) return;
       const elapsed = Date.now() - (state.timerStart || Date.now());
       const tickMs = (state.timerDurationMs || 1) / 78;
       let newTick = Math.floor(elapsed / tickMs);
@@ -651,10 +659,6 @@
         } else {
           closeNow("timer");
         }
-      }
-      // After-hours timer check (continuous mode)
-      if (state && state.afterHoursEnd && Date.now() >= state.afterHoursEnd && !busy) {
-        startNextContinuousTradingDay();
       }
     }, 250);
 
