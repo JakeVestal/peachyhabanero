@@ -647,13 +647,19 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
   const daySofr = s.sofr;
   const prevSofr = s.lastSofr;
   if (isFinite(daySofr)) {
-    const dSofr = isFinite(prevSofr) ? (daySofr - prevSofr) : 0;
+    // Cap the daily SOFR move so one odd print cannot crash the short end.
+    const rawDelta = isFinite(prevSofr) ? (daySofr - prevSofr) : 0;
+    const dSofr = Math.max(-0.25, Math.min(0.25, rawDelta));
     const next = {};
     const weights = { "1M": 0.75, "6M": 0.45, "1Y": 0.25, "2Y": 0.12, "5Y": 0.05, "10Y": 0.02 };
+    const FLOOR = 0.25; // US Treasury yields do not go meaningfully negative
     for (const t of TENORS) {
       const base = (s.curve && s.curve[t]) || DEFAULT_CURVE[t];
       const noise = (Math.random() - 0.5) * 0.08; // roughly ±4 bps
-      next[t] = r2(base + dSofr * (weights[t] || 0) + noise);
+      const meanRev = (DEFAULT_CURVE[t] - base) * 0.08; // gentle pull toward the starting curve
+      let v = base + dSofr * (weights[t] || 0) + noise + meanRev;
+      if (v < FLOOR) v = FLOOR;
+      next[t] = r2(v);
     }
     applyCurve(s, next);
   }
@@ -792,7 +798,7 @@ export function applySituationCard(s, cardOrId, rnd = Math.random) {
     for (const t of TENORS) {
       const base = (s.curve && s.curve[t]) || DEFAULT_CURVE[t];
       const delta = typeof shift === "number" ? shift : (shift[t] || 0);
-      next[t] = r2(base + delta);
+      next[t] = r2(Math.max(0.25, base + delta));
     }
     applyCurve(s, next);
   }
