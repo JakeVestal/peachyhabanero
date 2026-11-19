@@ -646,7 +646,7 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
 
   // Fresh assigned net cash flows and walks for the new day.
   // Resamples which banks will finish short if idle (~fractionShort).
-  generateReservePlans(s);
+  generateReservePlans(s, Math.random, true);
 
   return { finishedDay: s.day - 1, sofrRef };
 }

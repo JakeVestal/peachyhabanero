@@ -260,6 +260,19 @@
       document.getElementById("day").textContent = state.day;
       document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
 
+      // Disable "Add Bank" while a trading day is actively running.
+      const addBtn = document.getElementById("add-bank");
+      const addInput = document.getElementById("bank-name");
+      const tradingActive = state.phase === "trading" && state.timerDurationMs != null;
+      if (addBtn) {
+        addBtn.disabled = tradingActive;
+        addBtn.style.opacity = tradingActive ? "0.45" : "";
+        addBtn.title = tradingActive
+          ? "Cannot add banks while a trading day is in progress. Wait until the market is closed."
+          : "";
+      }
+      if (addInput) addInput.disabled = tradingActive;
+
       const corridor = document.getElementById("corridor-display");
       if (corridor) corridor.textContent = `Current: IORB ${state.rates.iorb.toFixed(2)}% · SRF ${state.rates.srf.toFixed(2)}%`;
       // Keep the corridor inputs in sync unless the instructor is typing in one.
@@ -540,19 +553,21 @@
       let newTick = Math.floor(elapsed / tickMs);
       newTick = Math.max(0, Math.min(78, newTick));
       if (newTick !== state.tick) {
+        const oldTick = state.tick || 0;
         state.tick = newTick;
-        // Apply any pre-computed cash-flow jumps for this tick
+        // Apply any pre-computed cash-flow jumps for all ticks in (oldTick, newTick]
+        // so lagged intervals do not skip intermediate flows.
         if (state.reservePlans) {
           let changed = false;
           for (const [stub, plan] of Object.entries(state.reservePlans)) {
             const b = state.banks[stub];
             if (!b || !plan.jumps) continue;
             for (const j of plan.jumps) {
-              if (j.tick === newTick && !j.applied) {
+              if (j.tick > oldTick && j.tick <= newTick && !j.applied) {
                 b.cash = E.r6((b.cash || 0) + j.amount);
                 j.applied = true;
                 if (!plan.tape) plan.tape = [];
-                plan.tape.push({ tick: newTick, amount: j.amount, note: j.note, ts: Date.now() });
+                plan.tape.push({ tick: j.tick, amount: j.amount, note: j.note, ts: Date.now() });
                 changed = true;
               }
             }
@@ -570,6 +585,12 @@
     }, 250);
 
     document.getElementById("add-bank").onclick = async () => {
+      // No joining mid-session: only allow when no trading day is actively running
+      // (timer not started for the current day, or market closed / between days).
+      if (state && state.phase === "trading" && state.timerDurationMs != null) {
+        alert("Cannot add banks while a trading day is in progress. Wait until the market is closed and the next day has been advanced (or before Start Trading is clicked).");
+        return;
+      }
       const name = document.getElementById("bank-name").value.trim();
       if (!name || !state) return;
       const taken = Object.values(state.banks).some(
