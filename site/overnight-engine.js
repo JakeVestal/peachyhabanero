@@ -44,10 +44,14 @@ export function calculateTargetReserveBalance(b, params = {}) {
 // Generate the full day's cash-flow plan for every bank the moment trading starts.
 // Pre-computes jumps so the path is deterministic given the seed and parameters.
 // Clustering: early ticks more likely positive (inflows), late ticks more likely negative (outflows).
-export function generateReservePlans(s, rnd = Math.random) {
+export function generateReservePlans(s, rnd = Math.random, force = false) {
   const params = s.gameParams || {};
   const banks = Object.entries(s.banks);
   if (!banks.length) return;
+  // If plans already exist for every current bank and we're not forcing, keep them
+  if (!force && s.reservePlans && Object.keys(s.banks).every(stub => s.reservePlans[stub] && Array.isArray(s.reservePlans[stub].jumps))) {
+    return;
+  }
   const plans = {};
   const fractionShort = typeof params.fractionShort === "number" ? params.fractionShort : 0.40;
 
@@ -99,8 +103,11 @@ export function generateReservePlans(s, rnd = Math.random) {
         remaining = r6(remaining - amount);
       }
     }
-    if (Math.abs(remaining) > 0.05) {
-      jumps.push({ tick: totalTicks, amount: r6(remaining), note: "Close adjustment" });
+    // Force the jumps to sum exactly to assignedNetCashFlow
+    const sumSoFar = jumps.reduce((a, j) => a + j.amount, 0);
+    const residual = r6(plan.assignedNetCashFlow - sumSoFar);
+    if (Math.abs(residual) > 0.001) {
+      jumps.push({ tick: totalTicks, amount: residual, note: "Close adjustment" });
     }
     plan.jumps = jumps;
   }
