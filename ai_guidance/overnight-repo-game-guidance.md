@@ -41,6 +41,7 @@ Do not modify style.css, index.html, or any other site page unless explicitly as
 - Intraday scheduled events keyed off the tick: architecture is ready (shared tick field); no events implemented yet.
 - More endogenous yield-curve behavior: currently mostly instructor-driven + small SOFR-linked drift in advanceDay.
 - Bond trading / margin tracking: deferred. Requires target-refresh rules after trades or curve moves, pledged-vs-free tracking by tenor, and mid-day margin checks. Not started.
+- Early payoff / runoff management of volatile ST funding: deferred. Banks could be allowed to use cash to pay down volatile funding (reducing the reserve target on the next plan generation). This is a real treasury decision but interacts with the bonus via zone and cash; needs clear rules for when the target updates. Not started.
 
 **Adding new files**
 It is fine to add a new file when the task requires it. If you do, update this file in the same change: list the new file’s path and a one-line description of what it does. That keeps future threads from missing it.
