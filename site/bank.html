@@ -66,9 +66,14 @@
 
       <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
 
-      <div class="panel" style="margin:12px 0">
-        <h3>Reserve balance</h3>
-        <div id="reserve-chart" style="height:220px"></div>
+      <div class="panel" style="margin:8px 0 12px">
+        <h3 style="margin:0 0 4px">Bonus YTD</h3>
+        <div id="bonus-chart" style="height:160px"></div>
+      </div>
+
+      <div class="panel" style="margin:8px 0 12px">
+        <h3 style="margin:0 0 4px">Reserve balance</h3>
+        <div id="reserve-chart" style="height:200px"></div>
       </div>
 
       <h3 style="margin-top:16px">Market History</h3>
@@ -262,7 +267,7 @@
           line: { color: "#e33", width: 2, dash: "dash" }
         }
       ], {
-        margin: { t: 20, r: 20, b: 50, l: 55 },
+        margin: { t: 8, r: 12, b: 40, l: 50 },
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         xaxis: {
@@ -274,7 +279,63 @@
           fixedrange: true
         },
         yaxis: { title: "Reserve balance ($B)", gridcolor: "#333" },
-        legend: { orientation: "h", x: 1, xanchor: "right", y: 1.05, yanchor: "bottom" },
+        legend: { orientation: "h", x: 1, xanchor: "right", y: 1.0, yanchor: "bottom" },
+        font: { color: "#ccc" }
+      }, { displayModeBar: false });
+    }
+
+    let bonusHistory = []; // { day, ytd }
+
+    function updateBonusChart() {
+      const el = document.getElementById("bonus-chart");
+      if (!el || !state || typeof Plotly === "undefined") return;
+      const b = state.banks[stub];
+      if (!b) return;
+      const day = state.day || 1;
+      const ytd = Number(b.bonusYTD || 0);
+      let entry = bonusHistory.find(h => h.day === day);
+      if (entry) {
+        entry.ytd = ytd;
+      } else {
+        bonusHistory.push({ day, ytd });
+        bonusHistory.sort((a, c) => a.day - c.day);
+      }
+      // Axis length: 10 by default, continuousTotalSessions if continuous, always at least current day
+      let axisDays = 10;
+      if (state.gameMode === "continuous" && state.continuousActive) {
+        axisDays = Math.max(axisDays, state.continuousTotalSessions || 10);
+      }
+      axisDays = Math.max(axisDays, day);
+      const xs = bonusHistory.map(h => h.day);
+      const ys = bonusHistory.map(h => h.ytd);
+      const tickvals = [];
+      const ticktext = [];
+      for (let d = 1; d <= axisDays; d++) {
+        tickvals.push(d);
+        ticktext.push("Day " + d);
+      }
+      Plotly.react(el, [
+        {
+          x: xs,
+          y: ys,
+          mode: "lines+markers",
+          name: "Bonus YTD",
+          line: { color: "#6f6", width: 2 },
+          marker: { size: 7 }
+        }
+      ], {
+        margin: { t: 8, r: 12, b: 40, l: 50 },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        xaxis: {
+          range: [0.5, axisDays + 0.5],
+          tickvals: tickvals,
+          ticktext: ticktext,
+          gridcolor: "#333",
+          fixedrange: true
+        },
+        yaxis: { title: "Bonus YTD", gridcolor: "#333", zeroline: true },
+        legend: { orientation: "h", x: 1, xanchor: "right", y: 1.0, yanchor: "bottom" },
         font: { color: "#ccc" }
       }, { displayModeBar: false });
     }
@@ -327,6 +388,7 @@
       }
       updateCountdown();
       updateReserveChart();
+      updateBonusChart();
       const tapeEl = document.getElementById("cash-tape");
       if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
       // Formal warning letter on first red day
