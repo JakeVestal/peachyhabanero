@@ -214,3 +214,14 @@ test("advanceDay force-regenerates reserve plans", () => {
       `${id}: jumps sum ${netJumps} vs assigned ${plan.assignedNetCashFlow}`);
   }
 });
+
+test("newBank has no fixedLoans and still balances near 120", () => {
+  const b = E.newBank("NoFixed", Date.now(), () => 0.5);
+  assert.ok(b.fixedLoans === undefined || b.fixedLoans === 0, "fixedLoans should be absent");
+  const t = E.totals(b);
+  assert.ok(t.balanced, "sheet should balance");
+  assert.ok(almost(t.assets, 120, 1.0), `assets ${t.assets} should be near 120`);
+  // Cash is still set above target
+  const target = E.calculateTargetReserveBalance(b);
+  assert.ok(b.cash >= target - 0.1, "cash should start at or above target");
+});

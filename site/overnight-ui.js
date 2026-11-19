@@ -63,7 +63,6 @@ export function applyCardCurve(s, card) {
 }
 
 const TIP = {
-  fixedLoans: "Fixed-rate corporate loans earning a constant 6.50%. They do not reprice with SOFR.",
   floatingAssets: "Floating-rate assets that reprice daily to SOFR + 100 bps. A higher SOFR raises the yield on this book.",
   treasuries: "US Treasuries (HQLA). You pledge them as collateral when you borrow cash in repo. Pledged Treasuries stay on your balance sheet but can't be pledged twice.",
   repoLent: "Reverse repo: cash you lent overnight against Treasury collateral. It comes back tomorrow with interest.",
@@ -120,7 +119,6 @@ export function balanceSheetHTML(s, stub) {
   return `
     <table class="bs-table">
       <tr class="bs-h"><td colspan="2">Assets</td></tr>
-      ${row("Fixed loans (6.50%)", "fixedLoans", fmtMoney(b.fixedLoans))}
       ${row("Floating (SOFR+100)", "floatingAssets", fmtMoney(b.floatingAssets))}
       ${row("Treasuries (HQLA)" + pledgedNote, "treasuries", fmtMoney(b.treasuries))}
       ${b.treasuryBook ? `<tr><td colspan="2" class="muted small" style="padding-left:1.2em">Mix: ${esc(fmtTreasuryMix(b.treasuryBook))} · Dur ${fmtDuration(b.treasuryBook, s.curve)}</td></tr>` : ""}
@@ -265,7 +263,6 @@ export function overnightHistoryHTML(s, stub) {
 
 
 const EDIT_FIELDS = [
-  ["fixedLoans", "Fixed loans"],
   ["floatingAssets", "Floating"],
   ["treasuries", "Treasuries"],
   ["repoLent", "Reverse repo"],

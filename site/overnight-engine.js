@@ -14,12 +14,11 @@
 // the rate of whichever order was resting in the book first.
 
 export const STARTING_BS = {
-  fixedLoans: 80, floatingAssets: 20, treasuries: 20, cash: 0, repoLent: 0,
+  floatingAssets: 20, treasuries: 20, cash: 0, repoLent: 0,
   stickyDep: 90, volatile: 20, repoBorrowed: 0, equity: 10,
   pledged: 0,
 };
 
-export const FIXED_LOAN_RATE = 6.50;   // %
 export const STICKY_DEP_RATE = 3.50;   // %
 export const FLOAT_SPREAD = 1.00;      // SOFR + 100 bps
 export const OVERDRAFT_PENALTY = 1.00; // unsecured Fed overdraft = SRF + 100 bps
@@ -186,36 +185,26 @@ function randBetween(rnd, lo, hi) {
 // so some banks have surplus to lend and some have a funding need.
 //
 // Ranges are kept tight on purpose:
-//   cash             4 to 12    (ample positive starting reserves)
-//   treasuries      14 to 26    (enough free collateral to repo against)
+//   cash             4 to 12    (ample positive starting reserves; overridden in newBank)
+//   treasuries      14 to 26    (base; residual is folded in later)
 //   floatingAssets  12 to 26
-//   fixedLoans      the residual of the non-cash assets (stays the bulk)
 //   volatile        12 to 28    (sticky deposits take the rest of the 110 of funding)
 //   equity          fixed at 10
+// Fixed loans have been removed. The residual that used to sit in fixedLoans
+// is folded into Treasuries after newBank sets cash = target + cushion,
+// so starting cash and the reserve-target path stay exactly as before.
 export function randomStartingBS(rnd = Math.random) {
-  const cash = r2(randBetween(rnd, 4, 12));   // ample positive starting reserves
+  const cash = r2(randBetween(rnd, 4, 12));   // temporary; newBank overrides
   const remaining = 120 - cash;
   let treasuries = r2(randBetween(rnd, 14, 26));
   let floatingAssets = r2(randBetween(rnd, 12, 26));
-  let fixedLoans = r2(remaining - treasuries - floatingAssets);
-  // If the residual lands outside a sane band, pull from the other two.
-  if (fixedLoans < 55) {
-    const need = r2(55 - fixedLoans);
-    const cutT = r2(Math.min(treasuries - 14, need));
-    treasuries = r2(treasuries - cutT);
-    floatingAssets = r2(floatingAssets - (need - cutT));
-    fixedLoans = r2(remaining - treasuries - floatingAssets);
-  } else if (fixedLoans > 90) {
-    const extra = r2(fixedLoans - 90);
-    treasuries = r2(treasuries + extra / 2);
-    floatingAssets = r2(floatingAssets + extra / 2);
-    fixedLoans = r2(remaining - treasuries - floatingAssets);
-  }
+  // Residual that used to be fixedLoans is left for newBank to place into Treasuries
+  // after the cash override, so we do not force a clamp here.
   const volatile = r2(randBetween(rnd, 12, 28));
   const stickyDep = r2(110 - volatile);
   const treasuryBook = defaultTreasuryBook(treasuries);
   return {
-    fixedLoans, floatingAssets, treasuries, cash, repoLent: 0,
+    floatingAssets, treasuries, cash, repoLent: 0,
     stickyDep, volatile, repoBorrowed: 0, equity: 10,
     pledged: 0,
     treasuryBook,
@@ -227,6 +216,15 @@ export function newBank(name, now = Date.now(), rnd = Math.random, params = {}) 
   const target = calculateTargetReserveBalance(bs, params);
   const cushion = r2(0.5 + rnd() * 1.5);          // start 0.5–2.0 above target
   bs.cash = r6(target + cushion);
+  // Fold the residual that used to be fixedLoans into Treasuries.
+  // This keeps starting cash (and therefore reserve plans / starting surplus)
+  // identical to the prior generation while preserving a balanced ~120B sheet.
+  const currentAssets = (bs.floatingAssets || 0) + (bs.treasuries || 0) + bs.cash + (bs.repoLent || 0);
+  const residual = r6(120 - currentAssets);
+  if (residual > 0.001) {
+    bs.treasuries = r6((bs.treasuries || 0) + residual);
+    bs.treasuryBook = defaultTreasuryBook(bs.treasuries);
+  }
   return { name, created: now, ...bs };
 }
 
@@ -268,6 +266,12 @@ export function normalize(raw) {
   if (!Array.isArray(s.curveHistory)) s.curveHistory = [];
   for (const b of Object.values(s.banks)) {
     for (const f of BS_FIELDS) if (typeof b[f] !== "number" || isNaN(b[f])) b[f] = 0;
+    // Fold any legacy fixedLoans residual into Treasuries so existing sessions stay balanced.
+    if (typeof b.fixedLoans === "number" && b.fixedLoans > 0) {
+      b.treasuries = r6((b.treasuries || 0) + b.fixedLoans);
+      b.treasuryBook = defaultTreasuryBook(b.treasuries);
+      delete b.fixedLoans;
+    }
     if (!b.treasuryBook || typeof b.treasuryBook !== "object") b.treasuryBook = defaultTreasuryBook(b.treasuries || 0);
     for (const t of TENORS) if (typeof b.treasuryBook[t] !== "number") b.treasuryBook[t] = 0;
   }
@@ -292,7 +296,7 @@ export function makeId(prefix = "t", now = Date.now()) {
 export function freeCollateral(b) { return r6(b.treasuries - b.pledged); }
 
 export function totals(b) {
-  const assets = b.fixedLoans + b.floatingAssets + b.treasuries + b.cash + b.repoLent;
+  const assets = b.floatingAssets + b.treasuries + b.cash + b.repoLent;
   const liabEq = b.stickyDep + b.volatile + b.repoBorrowed + b.equity;
   return { assets: r6(assets), liabEq: r6(liabEq), balanced: Math.abs(assets - liabEq) < 1e-4 };
 }
@@ -584,7 +588,6 @@ export function advanceDay(s, now = Date.now(), idFn = makeId) {
 
   for (const [stub, b] of Object.entries(s.banks)) {
     const p = {
-      fixedLoans: b.fixedLoans * FIXED_LOAN_RATE / 100,
       floating: b.floatingAssets * (sofrRef + FLOAT_SPREAD) / 100,
       reserves: Math.max(0, b.cash) * iorb / 100,
       repoIncome: 0,

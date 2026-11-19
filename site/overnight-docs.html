@@ -50,7 +50,7 @@
     <p>Students join from the lobby by entering a bank name. Each bank is created with <code>newBank()</code> → <code>randomStartingBS()</code>, which produces a unique but balanced sheet totaling ~$120B assets:</p>
     <ul>
       <li>Cash starts positive and above the day's risk-desk target. randomStartingBS draws 4-12; newBank then sets cash = target + cushion (0.5-2.0)</li>
-      <li>Treasuries 14–26, floating assets 12–26, fixed loans the residual (kept roughly 55–90)</li>
+      <li>Treasuries start in a 14–26 base range; the residual that used to sit in fixed loans is folded into Treasuries after cash is set to target + cushion (so free collateral is larger). Floating assets 12–26</li>
       <li>Volatile funding 12–28, sticky deposits the residual of the $110 funding side</li>
       <li>Equity fixed at 10; repo positions and pledged start at zero</li>
       <li>A default treasury book (face amounts) is allocated across the six tenors with heavier weights in 2Y/5Y/10Y</li>
@@ -72,7 +72,7 @@
       <li>Situation cards (see below)</li>
       <li>New Game (re-draws every existing bank's sheet with fresh randoms while keeping the name)</li>
     </ul>
-    <p class="note">These changes take effect immediately, including mid-session while the market is open. There is no “after-hours only” lock. The random ranges and fixed coupon rates (fixed loans 6.50%, sticky deposits 3.50%, floating assets = SOFR + 100 bp) are engine constants and are not UI-adjustable.</p>
+    <p class="note">These changes take effect immediately, including mid-session while the market is open. There is no “after-hours only” lock. The random ranges and coupon rates (sticky deposits 3.50%, floating assets = SOFR + 100 bp) are engine constants and are not UI-adjustable. Fixed loans have been removed; their residual is folded into Treasuries.</p>
 
     <h2>2. Yield curve & yield-curve history</h2>
     <p>The live curve is stored on the session as <code>curve</code> (six tenors). History is an array <code>curveHistory</code> of <code>{day, curve}</code> snapshots.</p>
@@ -163,7 +163,7 @@
     <p>While the market is closed the instructor can still apply situation cards, curve changes, systemic shocks, or cash re-rolls (all take effect immediately). The primary “after hours” action is “Advance to Next Day”, which calls <code>advanceDay()</code>:</p>
     <ul>
       <li>If the market was not yet closed, it closes it first.</li>
-      <li>Accrues one night of interest for every bank (fixed loans at 6.50%, floating assets at yesterday's SOFR + 100 bp, positive cash at IORB, sticky deposits at 3.50%, plus the actual interest on every repo trade) and adds the net to equity and cash.</li>
+      <li>Accrues one night of interest for every bank (floating assets at yesterday's SOFR + 100 bp, positive cash at IORB, sticky deposits at 3.50%, plus the actual interest on every repo trade) and adds the net to equity and cash. There is no fixed-loan coupon.</li>
       <li>Unwinds every overnight repo: cash returns to the lender, collateral is released, <code>repoLent</code> / <code>repoBorrowed</code> / <code>pledged</code> go back to zero.</li>
       <li>Archives the day into <code>history</code>, snapshots the curve that was in force into <code>curveHistory</code>, and applies the small SOFR-linked curve drift + noise for the coming day.</li>
       <li>Increments the day, clears SOFR, sets phase back to <code>"trading"</code>, resets timers and tick, deletes orders from the finished day, and force-regenerates reserve plans for the new day.</li>
