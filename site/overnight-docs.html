@@ -49,7 +49,7 @@
     </ul>
     <p>Students join from the lobby by entering a bank name. Each bank is created with <code>newBank()</code> → <code>randomStartingBS()</code>, which produces a unique but balanced sheet totaling ~$120B assets:</p>
     <ul>
-      <li>Cash drawn from −6 to +7 (roughly 45% of banks start short cash)</li>
+      <li>Cash starts positive and above the day's risk-desk target. randomStartingBS draws 4-12; newBank then sets cash = target + cushion (0.5-2.0)</li>
       <li>Treasuries 14–26, floating assets 12–26, fixed loans the residual (kept roughly 55–90)</li>
       <li>Volatile funding 12–28, sticky deposits the residual of the $110 funding side</li>
       <li>Equity fixed at 10; repo positions and pledged start at zero</li>
@@ -70,17 +70,17 @@
       <li>Apply Systemic Shock (−5B volatile to every bank)</li>
       <li>Re-randomize Cash (~40% short)</li>
       <li>Situation cards (see below)</li>
-      <li>New Game (re-draws every existing bank’s sheet with fresh randoms while keeping the name)</li>
+      <li>New Game (re-draws every existing bank's sheet with fresh randoms while keeping the name)</li>
     </ul>
     <p class="note">These changes take effect immediately, including mid-session while the market is open. There is no “after-hours only” lock. The random ranges and fixed coupon rates (fixed loans 6.50%, sticky deposits 3.50%, floating assets = SOFR + 100 bp) are engine constants and are not UI-adjustable.</p>
 
     <h2>2. Yield curve & yield-curve history</h2>
     <p>The live curve is stored on the session as <code>curve</code> (six tenors). History is an array <code>curveHistory</code> of <code>{day, curve}</code> snapshots.</p>
     <ul>
-      <li><strong>Generation / first-game defaults</strong> — <code>newState()</code> starts with the engine’s hardcoded <code>DEFAULT_CURVE</code> (1M 4.45%, 6M 4.50%, 1Y 4.55%, 2Y 4.60%, 5Y 4.70%, 10Y 4.85%). On the instructor page, ~1.2 s after the session connects, <code>loadMostRecentCurve()</code> fetches the current year’s daily Treasury CMT yield-curve CSV from treasury.gov. Treasury publishes rates after the trading day closes, so “today” is often empty; the code therefore parses every row, selects the one with the latest date, maps the live 1 Mo / 6 Mo / 1 Yr / 2 Yr / 5 Yr / 10 Yr values onto the game tenors, and (only if the session curve is still at the engine defaults) calls <code>applyCurve()</code> and writes the state. This is the path that populates real current yields for a brand-new game. If the fetch fails or the curve has already been edited, the hardcoded defaults (or the existing curve) remain. The year in the URL is taken from the current date so the endpoint stays valid across year boundaries.</li>
-      <li><strong>Instructor adjustments</strong> — the Yield Curve panel lets the instructor type any tenor, apply a parallel shift (bps to every tenor), or a short-end shift (bps to 1M/6M/1Y only). All routes call <code>applyCurve()</code>, which stores the new curve and immediately marks every bank’s Treasury book.</li>
+      <li><strong>Generation / first-game defaults</strong> — <code>newState()</code> starts with the engine's hardcoded <code>DEFAULT_CURVE</code> (1M 4.45%, 6M 4.50%, 1Y 4.55%, 2Y 4.60%, 5Y 4.70%, 10Y 4.85%). On the instructor page, ~1.2 s after the session connects, <code>loadMostRecentCurve()</code> fetches the current year's daily Treasury CMT yield-curve CSV from treasury.gov. Treasury publishes rates after the trading day closes, so “today” is often empty; the code therefore parses every row, selects the one with the latest date, maps the live 1 Mo / 6 Mo / 1 Yr / 2 Yr / 5 Yr / 10 Yr values onto the game tenors, and (only if the session curve is still at the engine defaults) calls <code>applyCurve()</code> and writes the state. This is the path that populates real current yields for a brand-new game. If the fetch fails or the curve has already been edited, the hardcoded defaults (or the existing curve) remain. The year in the URL is taken from the current date so the endpoint stays valid across year boundaries.</li>
+      <li><strong>Instructor adjustments</strong> — the Yield Curve panel lets the instructor type any tenor, apply a parallel shift (bps to every tenor), or a short-end shift (bps to 1M/6M/1Y only). All routes call <code>applyCurve()</code>, which stores the new curve and immediately marks every bank's Treasury book.</li>
       <li><strong>Situation cards</strong> — most cards also carry a <code>curveShift</code> object (bps by tenor). Applying the card adds those deltas and marks books.</li>
-      <li><strong>Automatic day-to-day drift</strong> — inside <code>advanceDay()</code>, after interest and unwind, the engine takes the just-finished day’s SOFR change and applies a small weighted move (heavy on the short end: 1M weight 0.75 down to 10Y weight 0.02) plus modest random noise (±4 bp). This is the only automatic curve evolution.</li>
+      <li><strong>Automatic day-to-day drift</strong> — inside <code>advanceDay()</code>, after interest and unwind, the engine takes the just-finished day's SOFR change and applies a small weighted move (heavy on the short end: 1M weight 0.75 down to 10Y weight 0.02) plus modest random noise (±4 bp). This is the only automatic curve evolution.</li>
       <li><strong>History</strong> — the curve that was in force for the finished day is pushed to <code>curveHistory</code> at the end of <code>advanceDay()</code>. The 3-D surface on the instructor and student pages is built from that history.</li>
     </ul>
     <p><strong>When adjustments take effect</strong> — the live Treasury load happens once at the start of a new session (instructor page). Manual curve edits, parallel/short shifts, and card-driven shifts take effect immediately (mid-game or after hours). The automatic SOFR-linked drift happens only when the instructor advances to the next day.</p>
@@ -125,30 +125,34 @@
     <p>Students submit orders from their bank page. A bid is a request to borrow cash overnight (pledge Treasuries); an offer is a request to lend cash overnight (receive Treasuries). Vocabulary follows the “price of cash” convention: higher bid / lower offer is more aggressive.</p>
     <ul>
       <li>Validation (<code>validateOrder</code>) checks phase == trading, rate 0–25%, volume ≥ $0.01B, and capacity: a bank can only bid up to its free collateral and can only offer up to its available cash (after other open offers). Soft corridor warnings are shown but do not block the order.</li>
-      <li>The order is written to Firebase. The instructor page’s <code>pumpMatches()</code> loop detects crosses and calls <code>matchOrders()</code>.</li>
-      <li>Matching is a continuous price-time priority double auction. A bid and offer trade when bid rate ≥ offer rate; the trade prints at the rate of the order that was resting first. Volume is limited by the smaller remaining size and by the lender’s cash / borrower’s free collateral. Self-trades are forbidden. Cash, <code>repoLent</code> / <code>repoBorrowed</code>, and <code>pledged</code> are updated immediately on the fill.</li>
+      <li>The order is written to Firebase. The instructor page's <code>pumpMatches()</code> loop detects crosses and calls <code>matchOrders()</code>.</li>
+      <li>Matching is a continuous price-time priority double auction. A bid and offer trade when bid rate ≥ offer rate; the trade prints at the rate of the order that was resting first. Volume is limited by the smaller remaining size and by the lender's cash / borrower's free collateral. Self-trades are forbidden. Cash, <code>repoLent</code> / <code>repoBorrowed</code>, and <code>pledged</code> are updated immediately on the fill.</li>
       <li>On market close every still-open order is expired. Any residual shortfall is funded by the Fed SRF (secured by remaining free Treasuries) or, beyond collateral, as an unsecured overdraft at SRF + 100 bp. Surplus cash is recorded as parked at IORB.</li>
     </ul>
-    <p>SOFR itself is the volume-weighted median of the day’s private interbank trades (Fed operations are excluded), calculated at the close.</p>
+    <p>SOFR itself is the volume-weighted median of the day's private interbank trades (Fed operations are excluded), calculated at the close.</p>
+
+    <h2>Reserve targets and tick-driven cash flows</h2>
+    <p><code>generateReservePlans</code> runs when a bank joins, when the instructor clicks Start Trading, and with <code>force=true</code> at the end of every day inside <code>advanceDay</code>. It computes each bank's risk-desk target (a deterministic function of short-term funding) and assigns an <code>assignedNetCashFlow</code> for the day. Approximately 40% of banks (the short cohort, controlled by <code>fractionShort</code>) are given a net outflow large enough that they finish below target if they do nothing; the rest receive a net inflow. A pre-computed sequence of tick-by-tick jumps is built so that the jumps sum exactly to the assigned net cash flow. Existing plans are left alone unless the call is forced.</p>
+    <p>Students see a live <strong>Reserve shortfall / surplus vs target</strong> line (current cash minus the day's target). They start the day above target. The instructor page shows each bank's assigned net cash flow; students do not. The host (instructor page) applies the pre-computed jumps as the shared tick advances, with catch-up so that lagged intervals do not skip intermediate flows. Mid-session joining is restricted: banks cannot be added while a trading day is actively running (timer started and market open).</p>
 
     <h2>Game loop — key phases</h2>
     <h3>Start of trading day</h3>
-    <p>After <code>advanceDay()</code> finishes, the session is in phase <code>"trading"</code>, day has been incremented, the previous day’s orders have been cleaned, timers and tick are reset, and SOFR is null. The instructor may optionally start the real-time timer (which begins the 5-minute tick clock). Students may already have banks or may join now. The curve is whatever was left by the previous day’s drift (or the default on day 1). No automatic processes run until an order is submitted or the instructor acts.</p>
+    <p>After <code>advanceDay()</code> finishes, the session is in phase <code>"trading"</code>, day has been incremented, the previous day's orders have been cleaned, timers and tick are reset, SOFR is null, and reserve plans have been force-regenerated for the new day. The instructor may optionally start the real-time timer (which begins the 5-minute tick clock and enables host application of the pre-computed cash-flow jumps). Students may already have banks or may join now. The curve is whatever was left by the previous day's drift (or the default on day 1). No automatic processes run until an order is submitted or the instructor acts.</p>
 
     <h3>During the trading day</h3>
     <ul>
       <li>Students place, update, or cancel orders. Updates that change price or increase size lose time priority.</li>
       <li>The instructor page continuously pumps matches whenever a cross exists, writing the resulting trades and balance-sheet updates back to Firebase.</li>
-      <li>If a timer is running, the shared <code>tick</code> advances with real time and the in-game clock moves from 09:30 toward 16:00.</li>
+      <li>If a timer is running, the shared <code>tick</code> advances with real time and the in-game clock moves from 09:30 toward 16:00. The host applies any pre-computed cash-flow jumps whose tick falls in the advanced interval (with catch-up for skipped ticks) and persists the updated cash and plans.</li>
       <li>The instructor can apply corridor changes, curve edits/shifts, situation cards, systemic shocks, or cash re-rolls at any moment; all take effect immediately (balances change, books are re-marked, free collateral updates).</li>
       <li>Corridor warnings appear on orders that bid above SRF or offer below IORB, but students may still proceed.</li>
     </ul>
 
     <h3>End of trade day</h3>
-    <p>Triggered by the instructor’s “Close Market & Print SOFR” button or automatically when the timer expires. <code>closeMarket()</code>:</p>
+    <p>Triggered by the instructor's “Close Market & Print SOFR” button or automatically when the timer expires. Host jump application stops with the timer. <code>closeMarket()</code>:</p>
     <ul>
       <li>Expires every open order.</li>
-      <li>Sets <code>sofr</code> = volume-weighted median of the day’s private trades.</li>
+      <li>Sets <code>sofr</code> = volume-weighted median of the day's private trades.</li>
       <li>Funds any remaining cash shortfall: first secured at the SRF rate up to free collateral, then the rest as an unsecured overdraft at SRF + 100 bp. Records surplus cash as an IORB placement.</li>
       <li>Appends a snapshot (SOFR, volume, gross cash, pledged, available) to <code>sofrHistory</code>.</li>
       <li>Sets phase = <code>"closed"</code>, clears timers and tick, records <code>closedBy</code> (“timer” or “manual”).</li>
@@ -159,12 +163,12 @@
     <p>While the market is closed the instructor can still apply situation cards, curve changes, systemic shocks, or cash re-rolls (all take effect immediately). The primary “after hours” action is “Advance to Next Day”, which calls <code>advanceDay()</code>:</p>
     <ul>
       <li>If the market was not yet closed, it closes it first.</li>
-      <li>Accrues one night of interest for every bank (fixed loans at 6.50%, floating assets at yesterday’s SOFR + 100 bp, positive cash at IORB, sticky deposits at 3.50%, plus the actual interest on every repo trade) and adds the net to equity and cash.</li>
+      <li>Accrues one night of interest for every bank (fixed loans at 6.50%, floating assets at yesterday's SOFR + 100 bp, positive cash at IORB, sticky deposits at 3.50%, plus the actual interest on every repo trade) and adds the net to equity and cash.</li>
       <li>Unwinds every overnight repo: cash returns to the lender, collateral is released, <code>repoLent</code> / <code>repoBorrowed</code> / <code>pledged</code> go back to zero.</li>
       <li>Archives the day into <code>history</code>, snapshots the curve that was in force into <code>curveHistory</code>, and applies the small SOFR-linked curve drift + noise for the coming day.</li>
-      <li>Increments the day, clears SOFR, sets phase back to <code>"trading"</code>, resets timers and tick, and deletes orders from the finished day.</li>
+      <li>Increments the day, clears SOFR, sets phase back to <code>"trading"</code>, resets timers and tick, deletes orders from the finished day, and force-regenerates reserve plans for the new day.</li>
     </ul>
-    <p>The session is now ready for the next trading day. “New Game” is a stronger reset: it re-draws every bank’s entire starting balance sheet with fresh randoms (keeping only the bank name) and returns to day 1 with a clean slate.</p>
+    <p>The session is now ready for the next trading day. “New Game” is a stronger reset: it re-draws every bank's entire starting balance sheet with fresh randoms (keeping only the bank name) and returns to day 1 with a clean slate.</p>
 
     <p class="back"><a href="overnight-clearing.html">← back to the desk</a></p>
   </main>
@@ -174,17 +178,3 @@
   </footer>
 </body>
 </html>
-
-
-## Reserve targets and tick-driven cash flows
-
-`generateReservePlans` runs when a bank joins, when the instructor clicks Start Trading, and at the end of every day via `advanceDay`. It computes each bank’s risk-desk target (deterministic function of short-term funding) and assigns an `assignedNetCashFlow` for the day. Approximately `fractionShort` (default 40%) of banks are given a net outflow large enough that they will finish below target if they do nothing; the rest receive a net inflow. A random walk of tick-by-tick jumps (clustering optional) is pre-computed so the jumps sum exactly to that assigned net flow (a close adjustment forces the total). Once a plan exists for a bank, later calls will not overwrite it unless forced. Students see the live <strong>Reserve shortfall / surplus vs target</strong> (cash minus target). They start the day above target. The instructor page shows each bank’s assigned net cash flow (students do not see it). A future regulatory-penalty threshold for severe shortfalls is noted for later implementation.
-
-## Future work (reserve-target system)
-
-- **Regulatory / penalty threshold**: A second, deeper shortfall level (beyond the bank’s own risk-desk target) that would trigger actual consequences (forced actions, higher funding costs, or supervisory flags). Currently only a visual warning exists.
-- **Forced Treasury sales**: When a bank remains deeply negative, automatically sell Treasuries at the current mark until the shortfall is closed. (No intraday price moves yet.)
-- **Instructor cash-injection tool**: Explicit “thumb on the scale” controls to inject or withdraw cash from specific banks mid-day.
-- **Randomize Targets button**: Fully wire the button that re-draws targets under the current parameters.
-- **Additional situation cards**: Cards that raise every bank’s target, increase volatility, or alter clustering for the day, each with a short narrative.
-- **Drift logging**: Explicit error logging if the realized path ends materially away from the assigned net cash flow.

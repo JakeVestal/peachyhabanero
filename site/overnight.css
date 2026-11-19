@@ -111,3 +111,9 @@ canvas.chart { width: 100%; max-width: 820px; margin-top: 10px; background: #101
   .two-col, .book { grid-template-columns: 1fr; }
   .game-wrap, .bank-wrap { padding: 10px 12px 40px; }
 }
+
+/* Ensure native title tooltips on balance-sheet rows/cells are not suppressed */
+.bs-table, .bs-table tr, .bs-table td {
+  pointer-events: auto;
+  overflow: visible;
+}

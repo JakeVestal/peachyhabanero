@@ -19,6 +19,7 @@ When asked to cut a patch for this repository:
 
 6. After the patch is applied and pushed, it is recorded in `patch-record.txt`. Do not reuse a number.
 
-7. Prefer small, focused patches. If a change touches several files, one patch that includes all of them is fine as long as every hunk applies cleanly.
+7. Prefer small, focused patches. If a change touches several files, one 
+   patch that includes all of them is fine as long as every hunk applies cleanly. Use ASCII only (no curly quotes). End the file with a newline.
 
 8. If the correct prefix or next number is unclear, check `patch-record.txt` or ask before writing the patch.

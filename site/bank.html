@@ -185,41 +185,37 @@
       el.className = "value countdown";
     }
 
+    let reserveSamples = [];
+    let lastSampledTick = -1;
+    let lastSampledDay = 0;
+
     function updateReserveChart() {
       const el = document.getElementById("reserve-chart");
       if (!el || !state || typeof Plotly === "undefined") return;
+      const b = state.banks[stub];
+      if (!b) return;
       const plan = state.reservePlans && state.reservePlans[stub];
-      const tape = (plan && plan.tape) || [];
-      if (!tape.length) {
+      const target = plan ? (plan.target || 0) : 0;
+      const currentTick = state.tick || 0;
+      const currentDay = state.day || 1;
+      // Reset samples on a new day
+      if (currentDay !== lastSampledDay) {
+        reserveSamples = [];
+        lastSampledTick = -1;
+        lastSampledDay = currentDay;
+      }
+      // Sample whenever the tick advances
+      if (currentTick !== lastSampledTick) {
+        reserveSamples.push({ tick: currentTick, cash: b.cash || 0 });
+        lastSampledTick = currentTick;
+      }
+      if (!reserveSamples.length) {
         el.innerHTML = "<p class='muted small' style='padding:20px'>Waiting for cash flows…</p>";
         return;
       }
-      // Reconstruct path from tape (tape is chronological)
-      const sorted = tape.slice().sort((a, b) => a.tick - b.tick);
-      let c = (state.banks[stub]?.cash || 0);
-      // Better: walk forward from start of day if we stored it; for now use cumulative from tape
-      // We don't have start-of-day cash stored separately, so show the tape amounts as deltas
-      // and plot the resulting balance by applying them in order to a reconstructed start.
-      // Simple approach: plot the cash value after each jump (we can store it, or approximate).
-      // For v1, plot tick vs the amount of each jump, but user wants the balance.
-      // We'll compute a running balance assuming the first tape entry is applied to the pre-jump cash.
-      // Since we don't store pre-jump, we'll just plot the sequence of post-jump balances if available,
-      // otherwise fall back to showing the jumps themselves.
-      // Easiest reliable path: store nothing new; plot tick and the cash that existed after that tick
-      // by walking the jumps from the known final cash backward, or simply plot the tape amounts
-      // and overlay the target. For clarity we'll plot the running cash reconstructed from the end.
-      const target = plan.target || 0;
-      const ticks = sorted.map(e => e.tick);
-      // Reconstruct approximate balance path ending at current cash
-      let bal = state.banks[stub]?.cash || 0;
-      const bals = [];
-      for (let i = sorted.length - 1; i >= 0; i--) {
-        bals.unshift(bal);
-        bal -= sorted[i].amount;
-      }
-      // Fixed axis: 09:30 to 16:00 (78 ticks). Convert tick to minutes past 9:30.
       const toMin = (t) => 9*60 + 30 + t * 5;
-      const xs = ticks.map(toMin);
+      const xs = reserveSamples.map(s => toMin(s.tick));
+      const ys = reserveSamples.map(s => s.cash);
       const targetX = [toMin(0), toMin(78)];
       const tickvals = [];
       const ticktext = [];
@@ -233,7 +229,7 @@
       Plotly.react(el, [
         {
           x: xs,
-          y: bals,
+          y: ys,
           mode: "lines+markers",
           name: "Reserve balance",
           line: { color: "#4af", width: 2 },
@@ -255,6 +251,7 @@
           range: [9*60+30, 16*60],
           tickvals: tickvals,
           ticktext: ticktext,
+          tickangle: -90,
           gridcolor: "#333",
           fixedrange: true
         },

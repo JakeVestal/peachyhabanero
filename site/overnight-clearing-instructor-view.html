@@ -557,8 +557,8 @@
         state.tick = newTick;
         // Apply any pre-computed cash-flow jumps for all ticks in (oldTick, newTick]
         // so lagged intervals do not skip intermediate flows.
+        let changed = false;
         if (state.reservePlans) {
-          let changed = false;
           for (const [stub, plan] of Object.entries(state.reservePlans)) {
             const b = state.banks[stub];
             if (!b || !plan.jumps) continue;
@@ -572,12 +572,14 @@
               }
             }
           }
-          if (changed) {
-            // Persist the updated banks and plans
-            update(ref(db, "sessions/" + sessionId), { banks: state.banks, reservePlans: state.reservePlans });
-          }
         }
-        update(ref(db, "sessions/" + sessionId + "/tick"), newTick);
+        // Single atomic update: include banks and reservePlans only when jumps were applied.
+        const payload = { tick: newTick };
+        if (changed) {
+          payload.banks = state.banks;
+          payload.reservePlans = state.reservePlans;
+        }
+        update(ref(db, "sessions/" + sessionId), payload);
       }
       if (Date.now() >= state.timerEnd && !matching) {
         closeNow("timer");

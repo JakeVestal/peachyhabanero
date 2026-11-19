@@ -167,3 +167,31 @@ test("normalize supplies default gameParams and reservePlans", () => {
   assert.equal(s.gameParams.k, 0.11);
   assert.deepEqual(s.reservePlans, {});
 });
+
+
+test("advanceDay force-regenerates reserve plans", () => {
+  const s = E.newState();
+  s.banks.a = E.newBank("A", Date.now(), () => 0.4);
+  s.banks.b = E.newBank("B", Date.now(), () => 0.6);
+  let seed = 0.2;
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  E.generateReservePlans(s, rnd);
+  // Mark one jump as applied so we can verify the old plan is discarded
+  const stub = Object.keys(s.reservePlans)[0];
+  if (s.reservePlans[stub].jumps.length) {
+    s.reservePlans[stub].jumps[0].applied = true;
+  }
+  // Close so advanceDay can proceed
+  s.phase = "closed";
+  s.sofr = 4.45;
+  E.advanceDay(s);
+  assert.equal(s.day, 2);
+  assert.ok(s.reservePlans.a && s.reservePlans.b, "plans should exist after advance");
+  for (const [id, plan] of Object.entries(s.reservePlans)) {
+    // No leftover applied flags from the previous day
+    assert.ok(!plan.jumps.some(j => j.applied), `${id} still has applied flags`);
+    const netJumps = plan.jumps.reduce((a, j) => a + j.amount, 0);
+    assert.ok(almost(netJumps, plan.assignedNetCashFlow, 0.15),
+      `${id}: jumps sum ${netJumps} vs assigned ${plan.assignedNetCashFlow}`);
+  }
+});
