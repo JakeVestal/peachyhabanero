@@ -150,7 +150,6 @@ export function newState(now = Date.now()) {
       k: 0.11,
       fixedCushion: 1.5,
       clustering: true,            // true = time-of-day clustered flows; false = uniform
-      systemSurplus: 5,           // aggregate true-EOD surplus target ($B); negative = deficit
       volStep: 0.8,               // typical jump size ($B)
       volProb: 0.35,              // probability a bank gets a flow on a given tick
       fractionShort: 0.40,         // fraction of banks that finish below target if idle
@@ -236,7 +235,7 @@ export function normalize(raw) {
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
   if (!s.gameParams || typeof s.gameParams !== "object") {
-    s.gameParams = { k: 0.11, fixedCushion: 1.5, clustering: true, systemSurplus: 5, volStep: 0.8, volProb: 0.35, fractionShort: 0.40 };
+    s.gameParams = { k: 0.11, fixedCushion: 1.5, clustering: true, volStep: 0.8, volProb: 0.35, fractionShort: 0.40 };
   }
   if (!s.reservePlans || typeof s.reservePlans !== "object") s.reservePlans = {};
   if (!s.curve || typeof s.curve !== "object") s.curve = { ...DEFAULT_CURVE };

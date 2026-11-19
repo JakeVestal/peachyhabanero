@@ -95,31 +95,6 @@
     </div>
 
     <div class="panel">
-      <h3>Game Parameters <span class="small muted">(reserve targets & cash flows)</span></h3>
-      <details>
-        <summary class="small">Expand to edit k, cushion, clustering, system surplus, volatility…</summary>
-        <div class="row" style="margin-top:8px">
-          <label>k (target multiplier)</label>
-          <input id="param-k" class="field" type="number" step="0.01" value="0.11" style="width:70px">
-          <label>Cushion ($B)</label>
-          <input id="param-cushion" class="field" type="number" step="0.1" value="1.5" style="width:70px">
-          <label>System surplus ($B)</label>
-          <input id="param-surplus" class="field" type="number" step="1" value="5" style="width:70px">
-        </div>
-        <div class="row">
-          <label><input type="checkbox" id="param-clustering" checked> Clustering</label>
-          <label>Vol step</label>
-          <input id="param-volstep" class="field" type="number" step="0.1" value="0.8" style="width:70px">
-          <label>Vol prob</label>
-          <input id="param-volprob" class="field" type="number" step="0.05" value="0.35" style="width:70px">
-          <button class="neon-btn" id="save-params">Save Parameters</button>
-          <button class="neon-btn" id="randomize-targets">Randomize Targets</button>
-        </div>
-        <p class="small muted">These set the risk-desk target formula and the day’s cash-flow path. Changes apply on the next trading start. Tooltips: k scales the buffer with short-term funding; cushion is a small absolute floor; system surplus controls the aggregate true-EOD outcome.</p>
-      </details>
-    </div>
-
-    <div class="panel">
       <h3>Situation Cards</h3>
       <div class="row">
         <select id="card-select" class="field" style="min-width:240px">
@@ -164,6 +139,36 @@
     <div id="sofr-history"></div>
 
     <h2>Banks</h2>
+    <div class="panel" id="plan-controls">
+      <h3>Reserve plan parameters <span class="small muted">(source of truth for the next generateReservePlans)</span></h3>
+      <div class="row" style="margin-top:6px">
+        <label>k (target multiplier)</label>
+        <input id="param-k" class="field" type="number" step="0.01" value="0.11" style="width:70px" title="Fraction of short-term funding held as the risk-desk reserve target">
+        <label>Cushion ($B)</label>
+        <input id="param-cushion" class="field" type="number" step="0.1" value="1.5" style="width:70px" title="Absolute add-on to the risk-desk target">
+        <label>fractionShort</label>
+        <input id="param-fraction-short" class="field" type="number" step="0.05" min="0" max="1" value="0.40" style="width:70px" title="Fraction of banks assigned a net outflow large enough to finish below target if idle">
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="param-clustering" checked> Clustering</label>
+        <label>Vol step</label>
+        <input id="param-volstep" class="field" type="number" step="0.1" value="0.8" style="width:70px" title="Scale of the random jump size in the pre-computed path">
+        <label>Vol prob</label>
+        <input id="param-volprob" class="field" type="number" step="0.05" value="0.35" style="width:70px" title="Base probability of a jump on any given tick">
+        <button class="neon-btn" id="recalc-plans">Recalculate planned cashflows for next trading day</button>
+      </div>
+      <div class="stat-row" style="margin-top:10px">
+        <div class="stat-box">
+          <div class="label">Shortfall %</div>
+          <div class="value" id="ind-shortfall-pct">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Planned Free Cash</div>
+          <div class="value" id="ind-planned-free-cash">—</div>
+        </div>
+      </div>
+      <p class="small muted">These controls are the sole source of truth for generateReservePlans. Shortfall % is the share of banks whose planned ending cash (current cash + assigned net flow) is below target if they do nothing. Planned Free Cash is the sum of those planned surplus/shortfall amounts.</p>
+    </div>
     <div id="banks" class="bank-grid"></div>
 
     <h2>Order Book</h2>
@@ -427,6 +432,8 @@
       }).join("");
 
       updateCountdown();
+      syncControlsFromState();
+      updatePlanIndicators();
     }
 
     function updateTimerControls() {
@@ -607,6 +614,7 @@
       state.banks[stub] = bank;
       // Generate a full plan now so assignedNetCashFlow and the walk exist before trading starts
       if (!state.reservePlans) state.reservePlans = {};
+      syncParamsFromControls();
       E.generateReservePlans(state);
       await update(ref(db, "sessions/" + sessionId), { banks: state.banks, reservePlans: state.reservePlans });
       document.getElementById("bank-name").value = "";
@@ -618,6 +626,7 @@
       if (!state || busy) return;
       busy = true;
       try {
+        syncParamsFromControls();
         E.advanceDay(state);
         await writeState();
       } finally { busy = false; }
@@ -648,16 +657,78 @@
       } finally { busy = false; }
     };
 
-    document.getElementById("save-params")?.addEventListener("click", async () => {
+    // Controls under the Banks heading are the sole source of truth for plan parameters.
+    function syncParamsFromControls() {
       if (!state) return;
       state.gameParams = state.gameParams || {};
-      state.gameParams.k = parseFloat(document.getElementById("param-k").value) || 0.11;
-      state.gameParams.fixedCushion = parseFloat(document.getElementById("param-cushion").value) || 1.5;
-      state.gameParams.systemSurplus = parseFloat(document.getElementById("param-surplus").value) || 0;
-      state.gameParams.clustering = document.getElementById("param-clustering").checked;
-      state.gameParams.volStep = parseFloat(document.getElementById("param-volstep").value) || 0.8;
-      state.gameParams.volProb = parseFloat(document.getElementById("param-volprob").value) || 0.35;
-      await writeState();
+      const num = (id, fallback) => {
+        const el = document.getElementById(id);
+        const v = el ? parseFloat(el.value) : NaN;
+        return isFinite(v) ? v : fallback;
+      };
+      state.gameParams.k = num("param-k", 0.11);
+      state.gameParams.fixedCushion = num("param-cushion", 1.5);
+      state.gameParams.volStep = num("param-volstep", 0.8);
+      state.gameParams.volProb = num("param-volprob", 0.35);
+      state.gameParams.fractionShort = num("param-fraction-short", 0.40);
+      const cl = document.getElementById("param-clustering");
+      state.gameParams.clustering = cl ? cl.checked : true;
+      delete state.gameParams.systemSurplus;
+    }
+
+    function computePlannedSurplusShortfallVec() {
+      if (!state) return [];
+      const vec = [];
+      for (const [stub, b] of Object.entries(state.banks || {})) {
+        const plan = state.reservePlans && state.reservePlans[stub];
+        const target = plan && typeof plan.target === "number"
+          ? plan.target
+          : E.calculateTargetReserveBalance(b, state.gameParams || {});
+        const assigned = plan ? (plan.assignedNetCashFlow || 0) : 0;
+        // Planned ending surplus/shortfall vs target if the bank does nothing
+        vec.push(E.r6((b.cash || 0) + assigned - target));
+      }
+      state.plannedSurplusShortfallVec = vec;
+      return vec;
+    }
+
+    function updatePlanIndicators() {
+      const vec = computePlannedSurplusShortfallVec();
+      const n = vec.length;
+      const nShort = vec.filter(v => v < 0).length;
+      const pct = n ? (nShort / n * 100) : 0;
+      const total = vec.reduce((a, v) => a + v, 0);
+      const pctEl = document.getElementById("ind-shortfall-pct");
+      const cashEl = document.getElementById("ind-planned-free-cash");
+      if (pctEl) pctEl.textContent = n ? pct.toFixed(1) + "%" : "—";
+      if (cashEl) cashEl.textContent = n ? ((total >= 0 ? "+" : "") + total.toFixed(2) + "B") : "—";
+    }
+
+    function syncControlsFromState() {
+      if (!state || !state.gameParams) return;
+      const gp = state.gameParams;
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && document.activeElement !== el && typeof val === "number") el.value = val;
+      };
+      set("param-k", gp.k);
+      set("param-cushion", gp.fixedCushion);
+      set("param-volstep", gp.volStep);
+      set("param-volprob", gp.volProb);
+      set("param-fraction-short", gp.fractionShort);
+      const cl = document.getElementById("param-clustering");
+      if (cl && document.activeElement !== cl && typeof gp.clustering === "boolean") cl.checked = gp.clustering;
+    }
+
+    document.getElementById("recalc-plans")?.addEventListener("click", async () => {
+      if (!state || busy) return;
+      busy = true;
+      try {
+        syncParamsFromControls();
+        E.generateReservePlans(state, Math.random, true);
+        computePlannedSurplusShortfallVec();
+        await writeState();
+      } finally { busy = false; }
     });
 
 
@@ -679,7 +750,8 @@
         state.tick = 0;
         state.timerPaused = false;
         state.timerRemainingMs = null;
-        // Generate the day's reserve plans (targets + pre-computed cash-flow jumps)
+        // Generate the day's reserve plans from the current control values
+        syncParamsFromControls();
         E.generateReservePlans(state);
         await writeState();
       } finally { busy = false; }
