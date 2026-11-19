@@ -614,7 +614,7 @@
       } finally { busy = false; }
     }
 
-    setInterval(() => {
+    function pumpTimers() {
       updateCountdown();
       if (!state) return;
 
@@ -665,7 +665,15 @@
           closeNow("timer");
         }
       }
-    }, 250);
+    }
+
+    setInterval(pumpTimers, 250);
+
+    // Background tabs throttle setInterval. When the instructor tab becomes visible again,
+    // immediately catch up on any elapsed wall-clock time (ticks, end-of-day, after-hours).
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) pumpTimers();
+    });
 
     async function handleContinuousEndOfDay() {
       if (!state || busy) return;
