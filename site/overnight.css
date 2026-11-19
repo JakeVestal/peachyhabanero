@@ -117,3 +117,68 @@ canvas.chart { width: 100%; max-width: 820px; margin-top: 10px; background: #101
   pointer-events: auto;
   overflow: visible;
 }
+
+/* Reserve plan parameter controls */
+.param-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 20px;
+  align-items: flex-end;
+  margin: 10px 0 6px;
+}
+.param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 92px;
+}
+.param-item label {
+  font-size: 0.82em;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.param-item .field {
+  width: 80px;
+}
+.param-check {
+  align-items: center;
+  min-width: auto;
+  padding-bottom: 4px;
+}
+.param-check label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9em;
+  color: inherit;
+  white-space: nowrap;
+}
+.param-btn {
+  margin-left: auto;
+  align-self: flex-end;
+}
+
+/* Collapsible bank cards */
+.banks-summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px 0 6px;
+  user-select: none;
+  list-style: none;
+}
+.banks-summary::-webkit-details-marker { display: none; }
+.banks-summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+details[open] > .banks-summary::before {
+  content: "▾ ";
+}
+.banks-scroll {
+  max-height: 58vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-top: 4px;
+}

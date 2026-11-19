@@ -129,16 +129,16 @@ test("duration is positive for a normal book", () => {
 });
 
 
-test("calculateTargetReserveBalance uses k and cushion", () => {
-  const b = { stickyDep: 80, volatile: 20 }; // funding = 100
-  const t = E.calculateTargetReserveBalance(b, { k: 0.10, fixedCushion: 2 });
-  // 0.10 * 100 + 2 = 12
-  assert.ok(almost(t, 12, 0.01), `expected ~12, got ${t}`);
+test("calculateTargetReserveBalance uses kSticky, kVolatile and cushion", () => {
+  const b = { stickyDep: 80, volatile: 20 };
+  const t = E.calculateTargetReserveBalance(b, { kSticky: 0.05, kVolatile: 0.25, fixedCushion: 2 });
+  // 0.05*80 + 0.25*20 + 2 = 4 + 5 + 2 = 11
+  assert.ok(almost(t, 11, 0.01), `expected ~11, got ${t}`);
 });
 
 test("calculateTargetReserveBalance applies minimum floor", () => {
   const b = { stickyDep: 1, volatile: 1 };
-  const t = E.calculateTargetReserveBalance(b, { k: 0.01, fixedCushion: 0 });
+  const t = E.calculateTargetReserveBalance(b, { kSticky: 0.01, kVolatile: 0.01, fixedCushion: 0 });
   assert.ok(t >= 0.5, `floor not applied, got ${t}`);
 });
 

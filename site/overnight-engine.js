@@ -30,14 +30,17 @@ export const EPS = 0.005;              // $5M — anything smaller is treated as
 // ---------------------------------------------------------------- target reserve balance
 // Risk-desk target set at the open of each day.
 // Simplified educational formula (adjustable via game parameters):
-//   target = k * (stickyDep + volatile) + fixedCushion
-// k ≈ 0.11 means the bank wants to hold ~11% of its short-term funding as a reserve buffer.
-// fixedCushion is a small absolute floor so even small banks keep a minimal comfort level.
+//   target = kSticky * stickyDep + kVolatile * volatile + fixedCushion
+// Higher weight on volatile (wholesale) funding reflects higher runoff risk.
+// Defaults chosen so a typical mix (sticky ~90, volatile ~20) produces a target
+// similar to the prior single-k formula (~12–13B).
 export function calculateTargetReserveBalance(b, params = {}) {
-  const k = typeof params.k === "number" ? params.k : 0.11;
-  const cushion = typeof params.fixedCushion === "number" ? params.fixedCushion : 1.5;
-  const funding = (b.stickyDep || 0) + (b.volatile || 0);
-  return r6(Math.max(0.5, k * funding + cushion));
+  const kSticky   = typeof params.kSticky   === "number" ? params.kSticky   : 0.05;
+  const kVolatile = typeof params.kVolatile === "number" ? params.kVolatile : 0.28;
+  const cushion   = typeof params.fixedCushion === "number" ? params.fixedCushion : 1.5;
+  const sticky = b.stickyDep || 0;
+  const vol    = b.volatile  || 0;
+  return r6(Math.max(0.5, kSticky * sticky + kVolatile * vol + cushion));
 }
 
 
@@ -147,7 +150,8 @@ export function newState(now = Date.now()) {
     curveHistory: [],
     // Game parameters for the reserve-target / cash-flow system (instructor adjustable)
     gameParams: {
-      k: 0.11,
+      kSticky: 0.05,
+      kVolatile: 0.28,
       fixedCushion: 1.5,
       clustering: true,            // true = time-of-day clustered flows; false = uniform
       volStep: 0.8,               // typical jump size ($B)
@@ -235,7 +239,7 @@ export function normalize(raw) {
   if (!Array.isArray(s.sofrHistory)) s.sofrHistory = [];
   if (s.closedBy === undefined) s.closedBy = null;
   if (!s.gameParams || typeof s.gameParams !== "object") {
-    s.gameParams = { k: 0.11, fixedCushion: 1.5, clustering: true, volStep: 0.8, volProb: 0.35, fractionShort: 0.40 };
+    s.gameParams = { kSticky: 0.05, kVolatile: 0.28, fixedCushion: 1.5, clustering: true, volStep: 0.8, volProb: 0.35, fractionShort: 0.40 };
   }
   if (!s.reservePlans || typeof s.reservePlans !== "object") s.reservePlans = {};
   if (!s.curve || typeof s.curve !== "object") s.curve = { ...DEFAULT_CURVE };
