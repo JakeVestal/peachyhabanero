@@ -164,8 +164,27 @@ test("normalize supplies default gameParams and reservePlans", () => {
   const raw = { day: 2, banks: {} };
   const s = E.normalize(raw);
   assert.ok(s.gameParams);
-  assert.equal(s.gameParams.k, 0.11);
+  assert.equal(s.gameParams.kSticky, 0.05);
+  assert.equal(s.gameParams.kVolatile, 0.28);
+  assert.equal(s.gameParams.fixedCushion, 1.5);
+  assert.equal(s.gameParams.fractionShort, 0.40);
   assert.deepEqual(s.reservePlans, {});
+  // Continuous-mode defaults are also filled in
+  assert.equal(s.gameMode, "instructor-driven");
+  assert.equal(s.continuousActive, false);
+  assert.equal(s.continuousTotalSessions, 5);
+  assert.equal(s.winner, null);
+});
+
+test("newState includes continuous-mode fields with defaults", () => {
+  const s = E.newState();
+  assert.equal(s.gameMode, "instructor-driven");
+  assert.equal(s.continuousActive, false);
+  assert.equal(s.continuousTotalSessions, 5);
+  assert.equal(s.continuousAfterHoursMs, 60 * 1000);
+  assert.equal(s.continuousCurrentSession, 0);
+  assert.equal(s.afterHoursEnd, null);
+  assert.equal(s.winner, null);
 });
 
 
