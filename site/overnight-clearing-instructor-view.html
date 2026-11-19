@@ -907,7 +907,7 @@
           continuousStatus.textContent = `Continuous mode: session ${sess} of ${total}`;
         } else if (state && state.winner) {
           continuousStatus.style.display = "";
-          continuousStatus.textContent = `Game complete. Winner: ${state.winner.name} (${state.winner.bonusYTD.toFixed(2)} YTD bonus)`;
+          continuousStatus.textContent = `Game complete. Winner: ${state.winner.name} ($${(state.winner.bonusYTD * 1000).toLocaleString(undefined,{maximumFractionDigits:0})} YTD)`;
         } else {
           continuousStatus.style.display = "none";
         }

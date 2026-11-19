@@ -139,3 +139,4 @@ peachyhabanero-173-planned-eod-on-bank-cards.patch
 peachyhabanero-174-reserve-chart-labels.patch
 peachyhabanero-175-bonus-chart-and-compact-reserve.patch
 peachyhabanero-176-background-tab-catchup.patch
+peachyhabanero-177-bonus-dollars-and-fancy-leaderboard.patch

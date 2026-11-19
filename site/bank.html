@@ -108,11 +108,17 @@
         </div>
       </div>
     </div>
-    <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:1000; align-items:center; justify-content:center;">
-      <div class="panel" style="max-width:520px; width:90%; max-height:80vh; overflow:auto; padding:20px;">
-        <h2 style="margin-top:0">Day <span id="lb-day"></span> Leaderboard</h2>
-        <div id="lb-content" style="margin:12px 0; line-height:1.6"></div>
-        <button id="lb-close" class="neon-btn">Close</button>
+    <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+      <div class="panel" style="max-width:640px; width:92%; max-height:85vh; overflow:auto; padding:0; border:1px solid var(--gold-dim); box-shadow:0 20px 60px rgba(0,0,0,.6);">
+        <div style="background:linear-gradient(180deg, #1a1408 0%, #0e1218 100%); border-bottom:1px solid var(--gold-dim); padding:18px 24px 14px; text-align:center;">
+          <div style="font-size:11px; letter-spacing:0.18em; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Overnight Clearing Desk</div>
+          <h2 style="margin:0; font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:22px; color:#f0e6d2;">Day <span id="lb-day"></span> Performance</h2>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Bonus awards · ranked by year-to-date</div>
+        </div>
+        <div id="lb-content" style="padding:8px 0;"></div>
+        <div style="padding:12px 20px 18px; text-align:center; border-top:1px solid var(--gold-faint);">
+          <button id="lb-close" class="neon-btn">Dismiss</button>
+        </div>
       </div>
     </div>
     <details open style="margin-top:12px">
@@ -292,7 +298,7 @@
       const b = state.banks[stub];
       if (!b) return;
       const day = state.day || 1;
-      const ytd = Number(b.bonusYTD || 0);
+      const ytd = Number(b.bonusYTD || 0) * 1000;
       let entry = bonusHistory.find(h => h.day === day);
       if (entry) {
         entry.ytd = ytd;
@@ -334,7 +340,7 @@
           gridcolor: "#333",
           fixedrange: true
         },
-        yaxis: { title: "Bonus YTD", gridcolor: "#333", zeroline: true },
+        yaxis: { title: "Bonus YTD ($)", gridcolor: "#333", zeroline: true, tickformat: "$,.0f" },
         legend: { orientation: "h", x: 1, xanchor: "right", y: 1.0, yanchor: "bottom" },
         font: { color: "#ccc" }
       }, { displayModeBar: false });
@@ -405,14 +411,28 @@
       const ov = document.getElementById("leaderboard-overlay");
       if (ov && state.phase === "closed" && !window._lbDismissed) {
         const banks = Object.entries(state.banks || {})
-          .map(([id, b]) => ({ id, name: b.name, bonus: b.dayBonus || 0, ytd: b.bonusYTD || 0, zone: b.zone || "", fired: b.fired }))
+          .map(([id, b]) => ({ id, name: b.name, bonus: (b.dayBonus || 0) * 1000, ytd: (b.bonusYTD || 0) * 1000, zone: b.zone || "", fired: b.fired }))
           .sort((a, b) => b.ytd - a.ytd);
         document.getElementById("lb-day").textContent = state.day;
-        let html = banks.map((b, i) =>
-          `<div>${i+1}. ${b.name} — day ${b.bonus.toFixed(2)} / YTD ${b.ytd.toFixed(2)} (${b.zone}${b.fired ? ", FIRED" : ""})</div>`
-        ).join("") || "<p>No banks</p>";
+        const fmt$ = (n) => "$" + Math.round(n).toLocaleString();
+        const zoneColor = (z) => z === "green" ? "#6f6" : z === "yellow" ? "#fc6" : z === "orange" ? "#f93" : z === "red" ? "#f66" : "#aaa";
+        let html = banks.map((b, i) => {
+          const rank = i + 1;
+          const medal = rank === 1 ? "1" : rank === 2 ? "2" : rank === 3 ? "3" : rank;
+          const zoneBadge = b.zone ? `<span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;background:${zoneColor(b.zone)}22;color:${zoneColor(b.zone)};border:1px solid ${zoneColor(b.zone)}55;">${b.zone}</span>` : "";
+          const fired = b.fired ? ` <span style="color:#f66;font-size:11px;">FIRED</span>` : "";
+          return `<div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid #1a2030;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#1a1408;border:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold);flex-shrink:0;">${medal}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;color:#f0e6d2;">${b.name}${fired}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px;">Day ${fmt$(b.bonus)} · YTD ${fmt$(b.ytd)}</div>
+            </div>
+            <div style="text-align:right;">${zoneBadge}</div>
+          </div>`;
+        }).join("") || "<p style='padding:20px;text-align:center;color:var(--muted)'>No banks</p>";
         if (state.winner) {
-          html = `<div style="margin-bottom:12px;font-weight:600;color:var(--lime)">Congratulations! Winner: ${state.winner.name} with ${state.winner.bonusYTD.toFixed(2)} YTD bonus</div>` + html;
+          const wYtd = (state.winner.bonusYTD || 0) * 1000;
+          html = `<div style="margin:0 20px 12px;padding:10px 14px;background:rgba(180,140,60,.12);border:1px solid var(--gold-dim);border-radius:6px;text-align:center;font-weight:600;color:var(--gold);">Winner: ${state.winner.name} · ${fmt$(wYtd)} YTD</div>` + html;
         }
         document.getElementById("lb-content").innerHTML = html;
         ov.style.display = "flex";
