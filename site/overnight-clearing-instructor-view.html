@@ -369,6 +369,11 @@
           const net = plan ? (plan.assignedNetCashFlow || 0) : 0;
           const netCls = net >= 0 ? "pos" : "neg";
           const netBanner = `<div class="small" style="margin:4px 0;color:${net>=0?"#0a0":"#c00"}">Assigned net cash flow: <strong>${net>=0?"+":""}${net.toFixed(2)}B</strong></div>`;
+          // Planned end-of-day surplus/shortfall vs target if the bank does nothing
+          const planTarget = plan && typeof plan.target === "number" ? plan.target : target;
+          const planned = E.r6((b.cash || 0) + net - planTarget);
+          const plannedLabel = planned >= 0 ? "Planned surplus vs target" : "Planned shortfall vs target";
+          const plannedBanner = `<div class="small" style="margin:4px 0;color:${planned>=0?"#0a0":"#c00"}">${plannedLabel}: <strong>${planned>=0?"+":""}${planned.toFixed(2)}B</strong></div>`;
           let bs = UI.balanceSheetHTML(state, stub);
           // Make the printed numbers themselves editable
           const fields = [
@@ -388,7 +393,7 @@
             bs = bs.replace(re, `$1<span class="bs-live-edit" contenteditable="true" data-stub="${stub}" data-field="${field}" data-orig="${val}">${val.toFixed(2)}</span>$3`);
           });
           const actions = `<div class="bs-actions" data-stub="${stub}" style="display:none;margin-top:8px"><button class="neon-btn bs-write" data-stub="${stub}">Write</button> <button class="neon-btn bs-cancel" data-stub="${stub}">Cancel</button></div>`;
-          return `<div class="bank-card" data-stub="${stub}"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${bs}${actions}${ov}</div>`;
+          return `<div class="bank-card" data-stub="${stub}"><h3><a href="${url}" target="_blank" rel="noopener">${UI.esc(b.name)}</a></h3>${gapBanner}${netBanner}${plannedBanner}${bs}${actions}${ov}</div>`;
         }).join("") || "<em class='muted'>No banks yet.</em>";
       }
 
