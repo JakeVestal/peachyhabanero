@@ -35,6 +35,13 @@ Do not modify style.css, index.html, or any other site page unless explicitly as
 - Situation cards apply relative curve shifts.
 - Stylizations & caveats page and how-to-play page exist and are linked.
 
+**Future work (explicitly out of scope or deferred)**
+- ON RRP / non-bank participants: out of scope. Class size (15–20) is too small to support two distinct participant types cleanly. The caveats page already notes the simplification; do not propose adding it.
+- Floating-rate book (SOFR + 100) P&L feedback: keep the line. It is a useful teaching link (higher SOFR → higher next-night interest income on that book). Next development target is to make this feedback more visible and pedagogically explicit (e.g. clearer student-facing explanation, optional live SOFR sensitivity display, or instructor controls that highlight the transmission). Do not remove the floating book.
+- Intraday scheduled events keyed off the tick: architecture is ready (shared tick field); no events implemented yet.
+- More endogenous yield-curve behavior: currently mostly instructor-driven + small SOFR-linked drift in advanceDay.
+- Bond trading / margin tracking: deferred. Requires target-refresh rules after trades or curve moves, pledged-vs-free tracking by tenor, and mid-day margin checks. Not started.
+
 **Adding new files**
 It is fine to add a new file when the task requires it. If you do, update this file in the same change: list the new file’s path and a one-line description of what it does. That keeps future threads from missing it.
 
