@@ -431,7 +431,7 @@
               if (t.borrower === stub) { borrowedVol += t.volume; repoExpense -= interest; }
             }
           }
-          const sofrRef = state.sofr ?? state.lastSofr ?? (state.rates && state.rates.iorb) || 4.4;
+          const sofrRef = state.sofr ?? state.lastSofr ?? ((state.rates && state.rates.iorb) || 4.4);
           const floating = (me.floatingAssets || 0) * (sofrRef + 1.0) / 100 / E.DAY_COUNT;
           const reserves = Math.max(0, me.cash || 0) * ((state.rates && state.rates.iorb) || 0) / 100 / E.DAY_COUNT;
           const deposits = -(me.stickyDep || 0) * E.STICKY_DEP_RATE / 100 / E.DAY_COUNT;

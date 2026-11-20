@@ -144,3 +144,4 @@ peachyhabanero-178-end-of-day-report (1).patch
 peachyhabanero-179-yield-curve-floor.patch
 peachyhabanero-180-fix-bank-page-content-hidden.patch
 peachyhabanero-181-restore-bank-html-from-fef67a4.patch
+peachyhabanero-182-fix-sofrref-syntax (1).patch
