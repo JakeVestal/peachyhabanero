@@ -268,6 +268,8 @@
         document.getElementById("bs").innerHTML = "<p class='muted'>Waiting for bank…</p>";
         return;
       }
+      document.getElementById("content").style.display = "block";
+      document.getElementById("ended").style.display = "none";
       document.getElementById("title").textContent = bank.name;
       document.getElementById("day").textContent = state.day;
       document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";

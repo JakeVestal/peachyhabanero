@@ -142,3 +142,4 @@ peachyhabanero-176-background-tab-catchup.patch
 peachyhabanero-177-bonus-dollars-and-fancy-leaderboard.patch
 peachyhabanero-178-end-of-day-report (1).patch
 peachyhabanero-179-yield-curve-floor.patch
+peachyhabanero-180-fix-bank-page-content-hidden.patch
