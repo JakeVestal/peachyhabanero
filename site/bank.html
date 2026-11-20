@@ -53,194 +53,297 @@
     <p class="small" style="margin-top:6px"><a href="how-to-play.html" style="font-weight:600">How to play →</a> <span class="muted">(bonus rules, zones, firing)</span></p>
   </header>
 
-  <div id="warning-letter" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#1a1408; border:2px solid #c00; border-radius:10px; padding:28px 32px; max-width:520px; color:#f0e6d2;">
-      <h2 style="margin:0 0 12px; color:#f66;">Formal Warning</h2>
-      <p>Your bank ended the day in the <strong>red zone</strong>. This is your first red day.</p>
-      <p>A second red day will result in your termination as chief executive of this institution.</p>
-      <p style="margin-bottom:0">Review your reserve position and funding plan carefully.</p>
-      <button id="letter-close" style="margin-top:18px; padding:8px 18px; background:#c00; color:#fff; border:none; border-radius:6px; cursor:pointer;">I understand</button>
-    </div>
-  </div>
+  <div class="bank-wrap">
+    <div id="content">
+      <div id="status" class="status-bar">Connecting…</div>
 
-  <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
-    <div style="background:#1a1408; border:1px solid var(--gold-dim); border-radius:12px; max-width:480px; width:92%; max-height:85vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.6);">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--gold-dim);">
-        <div>
-          <h2 style="margin:0; font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:22px; color:#f0e6d2;">End of Day Report</h2>
-          <div style="font-size:13px;color:var(--muted);margin-top:2px;">Day <span id="lb-day"></span> · <span id="lb-bankname"></span></div>
-        </div>
-        <button id="lb-close" style="background:none;border:none;color:var(--gold);font-size:28px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
+      <div class="stat-row">
+        <div class="stat-box"><div class="label">Day</div><div class="value" id="day">1</div></div>
+        <div class="stat-box"><div class="label">SOFR</div><div class="value" id="sofr">—</div></div>
+        <div class="stat-box"><div class="label">Corridor</div><div class="value" id="corridor" style="font-size:14px">—</div></div>
+        <div class="stat-box"><div class="label">Market time</div><div class="value countdown" id="countdown">—</div></div>
       </div>
-      <div id="lb-content" style="padding:4px 0 12px;"></div>
-    </div>
-  </div>
 
-  <div id="status" class="status-bar">Connecting…</div>
+      <div id="closed-banner" class="closed-banner" style="display:none">Market closed</div>
 
-  <div id="content" style="display:none">
-    <div class="toolbar">
-      <span>Day <strong id="day">1</strong></span>
-      <span>SOFR <strong id="sofr">—</strong></span>
-      <span id="corridor"></span>
-      <span id="countdown" class="countdown"></span>
-    </div>
+      <div class="panel" style="margin:8px 0 12px">
+        <h3 style="margin:0 0 4px">Bonus YTD</h3>
+        <div id="bonus-chart" style="height:160px"></div>
+      </div>
 
-    <div id="gap-indicator" class="gap-indicator" style="margin:8px 0;padding:8px 12px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:14px;"></div>
+      <div class="panel" style="margin:8px 0 12px">
+        <h3 style="margin:0 0 4px">Reserve balance</h3>
+        <div id="reserve-chart" style="height:200px"></div>
+      </div>
 
-    <div id="closed-banner" class="closed-banner" style="display:none"></div>
-    <div id="shock-banner" class="shock-banner" style="display:none"></div>
+      <h3 style="margin-top:16px">Market History</h3>
+      <div id="sofr-history"></div>
+      <div id="shock-banner" class="shock-banner" style="display:none"></div>
 
-    <div class="grid-2">
-      <section>
-        <h2>Balance sheet</h2>
-        <div id="bs"></div>
-        <div style="margin-top:16px">
-          <h3>Reserve history</h3>
-          <div id="reserve-chart" style="height:160px"></div>
+      <div class="panel" style="margin:12px 0">
+        <h3>Today’s Yield Curve</h3>
+        <div id="curve-2d" style="height:240px"></div>
+        <details style="margin-top:8px">
+          <summary class="small">Yield surface (how the curve has moved)</summary>
+          <div id="curve-3d" style="height:320px;margin-top:8px"></div>
+        </details>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Balance Sheet</h3>
+          <div id="gap-indicator" class="gap-indicator" style="margin:12px 0;padding:12px;border-radius:6px;font-weight:600;text-align:center;"></div>
+    <div id="bs"></div>
+    <div id="warning-letter" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:1001; align-items:center; justify-content:center;">
+      <div style="background:#f8f5ef; color:#1a1a1a; padding:36px 40px; max-width:560px; width:92%; font-family:Georgia, 'Times New Roman', serif; border:1px solid #c9b99a; box-shadow:0 8px 40px rgba(0,0,0,.5);">
+        <div style="text-align:center; letter-spacing:3px; font-size:11px; color:#666; margin-bottom:8px;">CONFIDENTIAL — PERSONNEL MATTER</div>
+        <h2 style="text-align:center; font-size:1.35rem; margin:0 0 16px; font-weight:normal; border-bottom:1px solid #c9b99a; padding-bottom:12px;">Notice of Liquidity Performance Deficiency</h2>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Dear Liquidity Manager,</p>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">This letter is to formally advise you that your desk closed the trading day with a negative reserve balance. Under the terms of your engagement and the firm’s liquidity risk policy, a negative close constitutes a <strong>Red Day</strong>.</p>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Please be advised that the posting of a second Red Day — whether consecutive or not — will result in the <strong>immediate termination</strong> of your responsibilities as Liquidity Manager. No further warning will be issued.</p>
+        <p style="font-size:15px; line-height:1.55; margin:0 0 20px;">You are directed to restore compliance with the risk-desk target on the next trading day.</p>
+        <p style="font-size:14px; margin:0;">Very truly yours,<br><strong>Office of the Chief Risk Officer</strong></p>
+        <div style="text-align:center; margin-top:24px;">
+          <button id="letter-close" class="neon-btn" style="background:#1a1a1a; color:#f8f5ef; border-color:#1a1a1a;">Acknowledge</button>
         </div>
-        <div style="margin-top:12px">
-          <h3>Bonus YTD</h3>
-          <div id="bonus-chart" style="height:140px"></div>
+      </div>
+    </div>
+    <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+      <div class="panel" style="max-width:640px; width:92%; max-height:85vh; overflow:auto; padding:0; border:1px solid var(--gold-dim); box-shadow:0 20px 60px rgba(0,0,0,.6);">
+        <div style="background:linear-gradient(180deg, #1a1408 0%, #0e1218 100%); border-bottom:1px solid var(--gold-dim); padding:18px 24px 14px; text-align:center;">
+          <div style="font-size:11px; letter-spacing:0.18em; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Overnight Clearing Desk</div>
+          <h2 style="margin:0; font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:22px; color:#f0e6d2;">End of Day Report</h2>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Day <span id="lb-day"></span> · <span id="lb-bankname"></span></div>
         </div>
-      </section>
-
-      <section>
-        <h2>Order entry</h2>
-        <form id="order-form">
-          <label>Side
-            <select id="side">
-              <option value="lend">Lend</option>
-              <option value="borrow">Borrow</option>
-            </select>
-          </label>
-          <label>Rate %
-            <input id="rate" type="number" step="0.01" min="0" value="4.40" required />
-          </label>
-          <label>Volume ($B)
-            <input id="vol" type="number" step="0.1" min="0.1" value="1" required />
-          </label>
-          <button id="submit" type="submit">Submit order</button>
+        <div id="lb-content" style="padding:8px 0;"></div>
+        <div style="padding:12px 20px 18px; text-align:center; border-top:1px solid var(--gold-faint);">
+          <button id="lb-close" class="neon-btn">Dismiss</button>
+        </div>
+      </div>
+    </div>
+    <details open style="margin-top:12px">
+      <summary class="small">Cash-flow tape (today)</summary>
+      <div id="cash-tape"></div>
+    </details>
+        </div>
+        <div class="panel order-form">
+          <h3>Post Order</h3>
+          <div class="row"><label>Side</label>
+            <select id="side" class="field"><option value="bid">Bid (borrow cash)</option><option value="offer">Offer (lend cash)</option></select>
+          </div>
+          <div class="row"><label>Rate %</label><input id="rate" class="field" type="number" step="0.01" value="4.40"></div>
+          <div class="row"><label>Volume $B</label><input id="vol" class="field" type="number" step="0.1" value="1.0"></div>
+          <button class="neon-btn" id="submit">Submit Order</button>
           <div id="warn" class="msg"></div>
           <div id="msg" class="msg"></div>
-        </form>
-
-        <h3 style="margin-top:20px">Order book</h3>
-        <div id="book"></div>
-
-        <h3 style="margin-top:20px">My open orders</h3>
-        <div id="mine"></div>
-      </section>
+          <h3 style="margin-top:18px">My Open Orders</h3>
+          <div id="mine"></div>
+          <h3 style="margin-top:18px">My Trades Today</h3>
+          <div id="my-trades"></div>
+          <h3 style="margin-top:18px">Overnight Results</h3>
+          <div id="overnight-results" class="small"></div>
+          <div id="book" style="margin-top:16px"></div>
+        </div>
+      </div>
     </div>
-
-    <section style="margin-top:24px">
-      <h2>Cash flow tape</h2>
-      <div id="cash-tape"></div>
-    </section>
-
-    <section style="margin-top:24px">
-      <h2>My trades today</h2>
-      <div id="my-trades"></div>
-    </section>
-
-    <section style="margin-top:24px">
-      <h2>Overnight results</h2>
-      <div id="overnight-results"></div>
-    </section>
-
-    <section style="margin-top:24px">
-      <h2>SOFR history</h2>
-      <div id="sofr-history"></div>
-    </section>
-
-    <section style="margin-top:24px">
-      <h2>Yield curve</h2>
-      <div id="curve-2d" style="height:220px"></div>
-      <div id="curve-3d" style="height:320px;margin-top:12px"></div>
-    </section>
+    <div id="ended" class="ended" style="display:none">Session ended by host.</div>
   </div>
 
-  <div id="ended" style="display:none">
-    <h2>Session ended</h2>
-    <p>This session is no longer active.</p>
-  </div>
-
-<script type="module">
-    import { db, ref, onValue, update, push, configError, explainError } from "./overnight-db.js";
+  <script type="module">
     import * as E from "./overnight-engine.js";
     import * as UI from "./overnight-ui.js";
+    import { db, ref, onValue, update, push, configError, explainError } from "./overnight-db.js";
 
-    const statusEl = document.getElementById("status");
-    if (configError) { statusEl.textContent = configError; statusEl.className = "status-bar err"; throw new Error(configError); }
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("session");
     const stub = params.get("stub");
+    const statusEl = document.getElementById("status");
+    const msgEl = document.getElementById("msg");
+
+    if (configError) { statusEl.textContent = configError; statusEl.className = "status-bar err"; throw new Error(configError); }
     if (!sessionId || !stub) { document.body.innerHTML = "<h1>Missing session or stub. Use the private link from the instructor.</h1>"; throw new Error("missing params"); }
 
     let state = null;
     const sessRef = ref(db, "sessions/" + sessionId);
 
+    function inGameClock(tick) {
+      const totalMin = 9 * 60 + 30 + (Number(tick) || 0) * 5;
+      let h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
+    }
+
     function updateCountdown() {
       const el = document.getElementById("countdown");
-      if (!el || !state || state.phase !== "trading" || !state.tradingEndsAt) { if (el) el.textContent = ""; return; }
-      const left = Math.max(0, state.tradingEndsAt - Date.now());
-      const m = Math.floor(left / 60000);
-      const s = Math.floor((left % 60000) / 1000);
-      el.textContent = m + ":" + String(s).padStart(2, "0");
-      el.className = left < 30000 ? "countdown urgent" : "countdown";
+      if (!el || !state) return;
+      // After-hours clock: advance from 16:00 toward 09:30 next day
+      if (state.afterHoursEnd && state.afterHoursStart && state.phase === "closed") {
+        const elapsed = Date.now() - state.afterHoursStart;
+        const dur = state.afterHoursDurationMs || 1;
+        const progress = Math.min(1, Math.max(0, elapsed / dur));
+        const nightMinutes = 17.5 * 60;
+        const advanced = progress * nightMinutes;
+        const totalMin = 16 * 60 + advanced;
+        let h = Math.floor(totalMin / 60) % 24;
+        const m = Math.floor(totalMin % 60);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const hh = h % 12 || 12;
+        const timeStr = String(hh).padStart(2, "0") + ":" + String(m).padStart(2, "0") + " " + ampm;
+        const remain = Math.max(0, state.afterHoursEnd - Date.now());
+        const remainStr = Math.ceil(remain / 1000) + "s";
+        el.textContent = timeStr + " (after hours, " + remainStr + ")";
+        el.className = "value countdown";
+        return;
+      }
+      if (state.phase === "closed") { el.textContent = "closed"; el.className = "value countdown"; return; }
+      let tick = state.tick || 0;
+      // Compute tick locally from timer so the clock moves between Firebase updates
+      if (state.timerStart && state.timerDurationMs && !state.timerPaused) {
+        const elapsed = Date.now() - state.timerStart;
+        const totalTicks = 78;
+        tick = Math.min(totalTicks, Math.floor((elapsed / state.timerDurationMs) * totalTicks));
+      }
+      if (state.timerPaused) {
+        el.textContent = inGameClock(tick) + " paused";
+        el.className = "value countdown";
+        return;
+      }
+      if (!state.timerEnd && !state.timerStart) { el.textContent = "—"; el.className = "value countdown"; return; }
+      el.textContent = inGameClock(tick);
+      el.className = "value countdown";
     }
-    setInterval(updateCountdown, 1000);
+
+    let reserveSamples = [];
+    let lastSampledTick = -1;
+    let lastSampledDay = 0;
 
     function updateReserveChart() {
-      if (!state || typeof Plotly === "undefined") return;
-      const bank = state.banks[stub];
-      if (!bank) return;
-      const hist = Array.isArray(bank.reserveHistory) ? bank.reserveHistory : [];
-      const days = hist.map(h => h.day);
-      const cash = hist.map(h => h.cash);
-      const target = hist.map(h => h.target);
-      Plotly.react("reserve-chart", [
-        { x: days, y: cash, name: "Cash", type: "scatter", mode: "lines+markers", line: { color: "#6cf" } },
-        { x: days, y: target, name: "Target", type: "scatter", mode: "lines", line: { color: "#fc6", dash: "dot" } }
+      const el = document.getElementById("reserve-chart");
+      if (!el || !state || typeof Plotly === "undefined") return;
+      const b = state.banks[stub];
+      if (!b) return;
+      const plan = state.reservePlans && state.reservePlans[stub];
+      const target = plan ? (plan.target || 0) : 0;
+      const currentTick = state.tick || 0;
+      const currentDay = state.day || 1;
+      // Reset samples on a new day
+      if (currentDay !== lastSampledDay) {
+        reserveSamples = [];
+        lastSampledTick = -1;
+        lastSampledDay = currentDay;
+      }
+      // Sample whenever the tick advances
+      if (currentTick !== lastSampledTick) {
+        reserveSamples.push({ tick: currentTick, cash: b.cash || 0 });
+        lastSampledTick = currentTick;
+      }
+      if (!reserveSamples.length) {
+        el.innerHTML = "<p class='muted small' style='padding:20px'>Waiting for cash flows…</p>";
+        return;
+      }
+      const toMin = (t) => 9*60 + 30 + t * 5;
+      const xs = reserveSamples.map(s => toMin(s.tick));
+      const ys = reserveSamples.map(s => s.cash);
+      const targetX = [toMin(0), toMin(78)];
+      const tickvals = [];
+      const ticktext = [];
+      for (let m = 9*60+30; m <= 16*60; m += 30) {
+        tickvals.push(m);
+        let h = Math.floor(m/60); const mm = m%60;
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+        ticktext.push(String(h).padStart(2,"0") + ":" + String(mm).padStart(2,"0") + " " + ampm);
+      }
+      Plotly.react(el, [
+        {
+          x: xs,
+          y: ys,
+          mode: "lines+markers",
+          name: "Reserve balance",
+          line: { color: "#4af", width: 2 },
+          marker: { size: 6 }
+        },
+        {
+          x: targetX,
+          y: [target, target],
+          mode: "lines",
+          name: "Risk target",
+          line: { color: "#e33", width: 2, dash: "dash" }
+        }
       ], {
-        margin: { t: 10, b: 30, l: 40, r: 10 },
-        xaxis: { title: "Day" }, yaxis: { title: "$B" },
-        paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
-        font: { color: "#e0e0e0" }, legend: { orientation: "h" }
-      }, { responsive: true });
+        margin: { t: 8, r: 12, b: 40, l: 50 },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        xaxis: {
+          range: [9*60+30, 16*60],
+          tickvals: tickvals,
+          ticktext: ticktext,
+          tickangle: -90,
+          gridcolor: "#333",
+          fixedrange: true
+        },
+        yaxis: { title: "Reserve balance ($B)", gridcolor: "#333" },
+        legend: { orientation: "h", x: 1, xanchor: "right", y: 1.0, yanchor: "bottom" },
+        font: { color: "#ccc" }
+      }, { displayModeBar: false });
     }
+
+    let bonusHistory = []; // { day, ytd }
 
     function updateBonusChart() {
-      if (!state || typeof Plotly === "undefined") return;
-      const bank = state.banks[stub];
-      if (!bank) return;
-      const hist = Array.isArray(bank.bonusHistory) ? bank.bonusHistory : [];
-      const days = hist.map(h => h.day);
-      const ytd = hist.map(h => (h.ytd || 0) * 1000);
-      Plotly.react("bonus-chart", [{
-        x: days, y: ytd, type: "scatter", mode: "lines+markers",
-        line: { color: "#fc6" }, marker: { size: 6 }
-      }], {
-        margin: { t: 10, b: 30, l: 45, r: 10 },
-        xaxis: { title: "Day" }, yaxis: { title: "$" },
-        paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
-        font: { color: "#e0e0e0" }
-      }, { responsive: true });
-    }
-
-    function renderMine() {
-      const el = document.getElementById("mine");
-      if (!el || !state) return;
-      const mine = Object.values(state.orders || {}).filter(o => o.stub === stub && o.status === "open");
-      el.innerHTML = mine.length
-        ? mine.map(o => `<div>${o.side} ${o.volume}B @ ${o.rate.toFixed(2)}% <button class="small" data-cancel="${o.id}">cancel</button></div>`).join("")
-        : "<p class='muted'>No open orders.</p>";
-      el.querySelectorAll("[data-cancel]").forEach(btn => {
-        btn.onclick = async () => {
-          const id = btn.dataset.cancel;
-          await update(ref(db, `sessions/${sessionId}/orders/${id}`), { status: "cancelled" });
-        };
-      });
+      const el = document.getElementById("bonus-chart");
+      if (!el || !state || typeof Plotly === "undefined") return;
+      const b = state.banks[stub];
+      if (!b) return;
+      const day = state.day || 1;
+      const ytd = Number(b.bonusYTD || 0) * 1000;
+      let entry = bonusHistory.find(h => h.day === day);
+      if (entry) {
+        entry.ytd = ytd;
+      } else {
+        bonusHistory.push({ day, ytd });
+        bonusHistory.sort((a, c) => a.day - c.day);
+      }
+      // Axis length: 10 by default, continuousTotalSessions if continuous, always at least current day
+      let axisDays = 10;
+      if (state.gameMode === "continuous" && state.continuousActive) {
+        axisDays = Math.max(axisDays, state.continuousTotalSessions || 10);
+      }
+      axisDays = Math.max(axisDays, day);
+      const xs = bonusHistory.map(h => h.day);
+      const ys = bonusHistory.map(h => h.ytd);
+      const tickvals = [];
+      const ticktext = [];
+      for (let d = 1; d <= axisDays; d++) {
+        tickvals.push(d);
+        ticktext.push("Day " + d);
+      }
+      Plotly.react(el, [
+        {
+          x: xs,
+          y: ys,
+          mode: "lines+markers",
+          name: "Bonus YTD",
+          line: { color: "#6f6", width: 2 },
+          marker: { size: 7 }
+        }
+      ], {
+        margin: { t: 8, r: 12, b: 40, l: 50 },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        xaxis: {
+          range: [0.5, axisDays + 0.5],
+          tickvals: tickvals,
+          ticktext: ticktext,
+          gridcolor: "#333",
+          fixedrange: true
+        },
+        yaxis: { title: "Bonus YTD ($)", gridcolor: "#333", zeroline: true, tickformat: "$,.0f" },
+        legend: { orientation: "h", x: 1, xanchor: "right", y: 1.0, yanchor: "bottom" },
+        font: { color: "#ccc" }
+      }, { displayModeBar: false });
     }
 
     function updateWarn() {
@@ -268,8 +371,6 @@
         document.getElementById("bs").innerHTML = "<p class='muted'>Waiting for bank…</p>";
         return;
       }
-      document.getElementById("content").style.display = "block";
-      document.getElementById("ended").style.display = "none";
       document.getElementById("title").textContent = bank.name;
       document.getElementById("day").textContent = state.day;
       document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
@@ -296,7 +397,6 @@
       updateBonusChart();
       const tapeEl = document.getElementById("cash-tape");
       if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
-
       // Formal warning letter on first red day
       const letter = document.getElementById("warning-letter");
       if (letter && state.phase === "closed" && state.banks[stub]) {
@@ -338,26 +438,43 @@
           const useStored = me.pnl && state.history && state.history["d" + finishedDay];
           const p = useStored ? me.pnl : { floating, reserves, repoIncome, deposits, repoExpense };
           const total = (p.floating || 0) + (p.reserves || 0) + (p.repoIncome || 0) + (p.deposits || 0) + (p.repoExpense || 0);
-          const zone = me.zone || "—";
-          const bonus = (me.bonusToday || 0) * 1000;
+
+          const dayBonus = (me.dayBonus || 0) * 1000;
           const ytd = (me.bonusYTD || 0) * 1000;
 
+          const row = (label, val, isMoney) =>
+            `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;">
+               <span style="color:var(--muted);">${label}</span>
+               <span style="font-family:'IBM Plex Mono',monospace;color:${isMoney && val < 0 ? "#f66" : "#e8e0d0"};">${isMoney ? fmtInt(val) : val}</span>
+             </div>`;
+
           let report = `<div style="padding:12px 22px 8px;">
-            <div style="font-size:12px;letter-spacing:0.08em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">Your results</div>
-            <table style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;border-collapse:collapse;">
-              <tr><td style="padding:3px 0;color:var(--muted)">Floating assets</td><td style="text-align:right">${fmtB(p.floating || 0)}</td></tr>
-              <tr><td style="padding:3px 0;color:var(--muted)">Reserves (IORB)</td><td style="text-align:right">${fmtB(p.reserves || 0)}</td></tr>
-              <tr><td style="padding:3px 0;color:var(--muted)">Repo income</td><td style="text-align:right">${fmtB(p.repoIncome || 0)}</td></tr>
-              <tr><td style="padding:3px 0;color:var(--muted)">Sticky deposits</td><td style="text-align:right">${fmtB(p.deposits || 0)}</td></tr>
-              <tr><td style="padding:3px 0;color:var(--muted)">Repo expense</td><td style="text-align:right">${fmtB(p.repoExpense || 0)}</td></tr>
-              <tr style="border-top:1px solid var(--gold-dim)"><td style="padding:6px 0;font-weight:600">Net P&L</td><td style="text-align:right;font-weight:600">${fmtInt(total)}</td></tr>
-            </table>
-            <div style="margin-top:8px;font-size:13px;">Zone <strong>${zone}</strong> &nbsp;·&nbsp; Day bonus ${fmt$(bonus)} &nbsp;·&nbsp; YTD ${fmt$(ytd)}</div>
+            <div style="font-size:11px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">Your Desk · Day ${finishedDay}</div>
+            ${row("Treasuries lent (repo)", fmtB(lentVol), false)}
+            ${row("Treasuries borrowed (repo + SRF)", fmtB(borrowedVol), false)}
+            <div style="height:1px;background:var(--gold-faint);margin:8px 0;"></div>
+            ${row("Floating assets", p.floating || 0, true)}
+            ${row("Reserves (IORB)", p.reserves || 0, true)}
+            ${row("Repo interest income", p.repoIncome || 0, true)}
+            ${row("Sticky deposits", p.deposits || 0, true)}
+            ${row("Repo interest expense", p.repoExpense || 0, true)}
+            <div style="display:flex;justify-content:space-between;padding:6px 0 2px;font-weight:600;border-top:1px solid var(--gold-dim);margin-top:4px;">
+              <span style="color:#f0e6d2;">Net interest</span>
+              <span style="font-family:'IBM Plex Mono',monospace;color:${total >= 0 ? "#6f6" : "#f66"};">${fmtInt(total)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0 4px;margin-top:6px;background:rgba(180,140,60,.08);border-radius:4px;padding-left:8px;padding-right:8px;">
+              <span style="color:var(--gold);font-weight:600;">Bonus this day</span>
+              <span style="font-family:'IBM Plex Mono',monospace;color:var(--gold);font-weight:600;">${fmt$(dayBonus)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:2px 8px 6px;font-size:12px;color:var(--muted);">
+              <span>Year-to-date</span>
+              <span style="font-family:'IBM Plex Mono',monospace;">${fmt$(ytd)}</span>
+            </div>
           </div>`;
 
-          const banks = Object.entries(state.banks || {}).map(([id, b]) => ({
-            id, name: b.name || id, zone: b.zone, bonus: (b.bonusToday || 0) * 1000, ytd: (b.bonusYTD || 0) * 1000, fired: b.fired
-          })).sort((a, b) => b.ytd - a.ytd);
+          const banks = Object.entries(state.banks || {})
+            .map(([id, b]) => ({ id, name: b.name, bonus: (b.dayBonus || 0) * 1000, ytd: (b.bonusYTD || 0) * 1000, zone: b.zone || "", fired: b.fired }))
+            .sort((a, b) => b.ytd - a.ytd);
           const zoneColor = (z) => z === "green" ? "#6f6" : z === "yellow" ? "#fc6" : z === "orange" ? "#f93" : z === "red" ? "#f66" : "#aaa";
           let lb = `<div style="padding:4px 0 6px;border-top:1px solid var(--gold-dim);margin-top:4px;">
             <div style="font-size:11px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;padding:8px 22px 4px;">Leaderboard · Day ${finishedDay}</div>`;
@@ -446,15 +563,82 @@
       }
     }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
 
-    document.getElementById("order-form").onsubmit = async (ev) => {
-      ev.preventDefault();
-      const msgEl = document.getElementById("msg");
-      if (!state || state.phase !== "trading") { msgEl.textContent = "Market is closed."; msgEl.className = "msg err"; return; }
+    setInterval(updateCountdown, 250);
+    document.getElementById("rate").addEventListener("input", updateWarn);
+    document.getElementById("side").addEventListener("change", updateWarn);
+
+    function renderMine(force = false) {
+      const el = document.getElementById("mine");
+      if (!el || !state) return;
+      // Only skip the refresh if the student is actively editing an input.
+      // A focused Cancel/Update button should not freeze a partial fill.
+      const active = document.activeElement;
+      const editing = active && el.contains(active) && active.tagName === "INPUT";
+      if (!force && editing) return;
+      const mine = E.openOrders(state, stub);
+      const closed = state.phase !== "trading";
+      if (!mine.length) {
+        el.innerHTML = "<p class='muted'>No open orders.</p>";
+        return;
+      }
+      el.innerHTML = mine.map((o) => {
+        const filled = o.filled ? ` <span class="muted">(${Number(o.filled).toFixed(2)} filled)</span>` : "";
+        return `<div class="row" data-id="${o.id}" style="gap:6px">
+          <span class="${o.side}" style="min-width:52px">${o.side === "bid" ? "BID" : "OFFER"}</span>
+          <label class="muted">Rate</label>
+          <input class="field mine-rate" type="number" step="0.01" value="${o.rate}" style="width:78px" ${closed ? "disabled" : ""}>
+          <label class="muted">$B</label>
+          <input class="field mine-vol" type="number" step="0.1" value="${o.remaining}" style="width:78px" ${closed ? "disabled" : ""}>
+          ${filled}
+          <button class="neon-btn mine-update" ${closed ? "disabled" : ""}>Update</button>
+          <button class="neon-btn mine-cancel" ${closed ? "disabled" : ""}>Cancel</button>
+        </div>`;
+      }).join("");
+    }
+
+    document.getElementById("mine").onclick = async (e) => {
+      if (!state) return;
+      const row = e.target.closest("[data-id]");
+      if (!row) return;
+      const id = row.dataset.id;
+      const order = state.orders[id];
+      if (!order || order.stub !== stub || order.status !== "open") return;
+      const orderRef = ref(db, "sessions/" + sessionId + "/orders/" + id);
+
+      if (e.target.classList.contains("mine-cancel")) {
+        await update(orderRef, { status: "cancelled", note: "Cancelled by bank" });
+        // Optimistically remove from local state so the list clears immediately.
+        if (state.orders[id]) state.orders[id].status = "cancelled";
+        if (document.activeElement) document.activeElement.blur();
+        renderMine(true);
+        msgEl.textContent = "Order cancelled.";
+        msgEl.className = "msg ok";
+        return;
+      }
+      if (!e.target.classList.contains("mine-update")) return;
+
+      const rate = parseFloat(row.querySelector(".mine-rate").value);
+      const volume = parseFloat(row.querySelector(".mine-vol").value);
+      const err = E.validateOrder(state, stub, order.side, rate, volume, id);
+      if (err) { msgEl.textContent = err; msgEl.className = "msg err"; return; }
+      const warn = E.corridorWarning(state, order.side, rate);
+      if (warn && !confirm(warn + "\n\nUpdate anyway?")) return;
+
+      const patch = { rate, volume, remaining: volume };
+      // Price change or size increase loses time priority.
+      if (Math.abs(rate - order.rate) > 1e-9 || volume > order.remaining + 1e-9) patch.ts = Date.now();
+      await update(orderRef, patch);
+      msgEl.textContent = "Order updated.";
+      msgEl.className = "msg ok";
+    };
+
+    document.getElementById("submit").onclick = async () => {
+      if (!state) return;
       const side = document.getElementById("side").value;
       const rate = parseFloat(document.getElementById("rate").value);
       const volume = parseFloat(document.getElementById("vol").value);
-      if (!isFinite(rate) || !isFinite(volume) || volume <= 0) { msgEl.textContent = "Enter a valid rate and volume."; msgEl.className = "msg err"; return; }
-
+      const err = E.validateOrder(state, stub, side, rate, volume);
+      if (err) { msgEl.textContent = err; msgEl.className = "msg err"; return; }
       const warn = E.corridorWarning(state, side, rate);
       if (warn && !confirm(warn + "\n\nSubmit anyway?")) return;
 
