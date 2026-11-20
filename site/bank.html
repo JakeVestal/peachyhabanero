@@ -1,1 +1,517 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bank Desk — Overnight Clearing · peachyhabanero</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="overnight.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script>
+    document.getElementById("letter-close")?.addEventListener("click", () => {
+      document.getElementById("warning-letter").style.display = "none";
+      window._letterSeen = true;
+    });
+    function wireLeaderboardClose() {
+      const btn = document.getElementById("lb-close");
+      if (!btn || btn._wired) return;
+      btn._wired = true;
+      btn.addEventListener("click", () => {
+        const ov = document.getElementById("leaderboard-overlay");
+        if (ov) ov.style.display = "none";
+        window._lbDismissed = true;
+      });
+    }
+    // Defer until DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", wireLeaderboardClose);
+    } else {
+      wireLeaderboardClose();
+    }
+  </script>
+  <style>
+    .closed-banner { background: rgba(255, 107, 107, 0.15); border: 1px solid #ff6b6b; color: #ffb3b3; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; text-align: center; }
+    .countdown { font-family: "IBM Plex Mono", monospace; font-size: 22px; color: var(--lime); min-width: 70px; }
+    .countdown.urgent { color: #ff6b6b; }
+    .history-list { list-style: none; padding: 0; margin: 8px 0; font-family: "IBM Plex Mono", monospace; }
+    .history-list li { padding: 4px 0; border-bottom: 1px solid var(--gold-faint); }
+    .msg.warn { color: #ffe2a8; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <p class="navline">
+        <a href="overnight-clearing.html">← main desk</a>
+      </p>
+    </div>
+    <h1 id="title">Bank Desk</h1>
+    <p class="sub">Your balance sheet and order entry for this session.</p>
+    <p class="small" style="margin-top:6px"><a href="how-to-play.html" style="font-weight:600">How to play →</a> <span class="muted">(bonus rules, zones, firing)</span></p>
+  </header>
+
+  <div id="warning-letter" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#1a1408; border:2px solid #c00; border-radius:10px; padding:28px 32px; max-width:520px; color:#f0e6d2;">
+      <h2 style="margin:0 0 12px; color:#f66;">Formal Warning</h2>
+      <p>Your bank ended the day in the <strong>red zone</strong>. This is your first red day.</p>
+      <p>A second red day will result in your termination as chief executive of this institution.</p>
+      <p style="margin-bottom:0">Review your reserve position and funding plan carefully.</p>
+      <button id="letter-close" style="margin-top:18px; padding:8px 18px; background:#c00; color:#fff; border:none; border-radius:6px; cursor:pointer;">I understand</button>
+    </div>
+  </div>
+
+  <div id="leaderboard-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div style="background:#1a1408; border:1px solid var(--gold-dim); border-radius:12px; max-width:480px; width:92%; max-height:85vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.6);">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--gold-dim);">
+        <div>
+          <h2 style="margin:0; font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:22px; color:#f0e6d2;">End of Day Report</h2>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px;">Day <span id="lb-day"></span> · <span id="lb-bankname"></span></div>
+        </div>
+        <button id="lb-close" style="background:none;border:none;color:var(--gold);font-size:28px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
+      </div>
+      <div id="lb-content" style="padding:4px 0 12px;"></div>
+    </div>
+  </div>
+
+  <div id="status" class="status-bar">Connecting…</div>
+
+  <div id="content" style="display:none">
+    <div class="toolbar">
+      <span>Day <strong id="day">1</strong></span>
+      <span>SOFR <strong id="sofr">—</strong></span>
+      <span id="corridor"></span>
+      <span id="countdown" class="countdown"></span>
+    </div>
+
+    <div id="gap-indicator" class="gap-indicator" style="margin:8px 0;padding:8px 12px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:14px;"></div>
+
+    <div id="closed-banner" class="closed-banner" style="display:none"></div>
+    <div id="shock-banner" class="shock-banner" style="display:none"></div>
+
+    <div class="grid-2">
+      <section>
+        <h2>Balance sheet</h2>
+        <div id="bs"></div>
+        <div style="margin-top:16px">
+          <h3>Reserve history</h3>
+          <div id="reserve-chart" style="height:160px"></div>
+        </div>
+        <div style="margin-top:12px">
+          <h3>Bonus YTD</h3>
+          <div id="bonus-chart" style="height:140px"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Order entry</h2>
+        <form id="order-form">
+          <label>Side
+            <select id="side">
+              <option value="lend">Lend</option>
+              <option value="borrow">Borrow</option>
+            </select>
+          </label>
+          <label>Rate %
+            <input id="rate" type="number" step="0.01" min="0" value="4.40" required />
+          </label>
+          <label>Volume ($B)
+            <input id="vol" type="number" step="0.1" min="0.1" value="1" required />
+          </label>
+          <button id="submit" type="submit">Submit order</button>
+          <div id="warn" class="msg"></div>
+          <div id="msg" class="msg"></div>
+        </form>
+
+        <h3 style="margin-top:20px">Order book</h3>
+        <div id="book"></div>
+
+        <h3 style="margin-top:20px">My open orders</h3>
+        <div id="mine"></div>
+      </section>
+    </div>
+
+    <section style="margin-top:24px">
+      <h2>Cash flow tape</h2>
+      <div id="cash-tape"></div>
+    </section>
+
+    <section style="margin-top:24px">
+      <h2>My trades today</h2>
+      <div id="my-trades"></div>
+    </section>
+
+    <section style="margin-top:24px">
+      <h2>Overnight results</h2>
+      <div id="overnight-results"></div>
+    </section>
+
+    <section style="margin-top:24px">
+      <h2>SOFR history</h2>
+      <div id="sofr-history"></div>
+    </section>
+
+    <section style="margin-top:24px">
+      <h2>Yield curve</h2>
+      <div id="curve-2d" style="height:220px"></div>
+      <div id="curve-3d" style="height:320px;margin-top:12px"></div>
+    </section>
+  </div>
+
+  <div id="ended" style="display:none">
+    <h2>Session ended</h2>
+    <p>This session is no longer active.</p>
+  </div>
+
+<script type="module">
+    import { db, ref, onValue, update, push, configError, explainError } from "./overnight-db.js";
+    import * as E from "./overnight-engine.js";
+    import * as UI from "./overnight-ui.js";
+
+    const statusEl = document.getElementById("status");
+    if (configError) { statusEl.textContent = configError; statusEl.className = "status-bar err"; throw new Error(configError); }
+    const params = new URLSearchParams(location.search);
+    const sessionId = params.get("session");
+    const stub = params.get("stub");
+    if (!sessionId || !stub) { document.body.innerHTML = "<h1>Missing session or stub. Use the private link from the instructor.</h1>"; throw new Error("missing params"); }
+
+    let state = null;
+    const sessRef = ref(db, "sessions/" + sessionId);
+
+    function updateCountdown() {
+      const el = document.getElementById("countdown");
+      if (!el || !state || state.phase !== "trading" || !state.tradingEndsAt) { if (el) el.textContent = ""; return; }
+      const left = Math.max(0, state.tradingEndsAt - Date.now());
+      const m = Math.floor(left / 60000);
+      const s = Math.floor((left % 60000) / 1000);
+      el.textContent = m + ":" + String(s).padStart(2, "0");
+      el.className = left < 30000 ? "countdown urgent" : "countdown";
+    }
+    setInterval(updateCountdown, 1000);
+
+    function updateReserveChart() {
+      if (!state || typeof Plotly === "undefined") return;
+      const bank = state.banks[stub];
+      if (!bank) return;
+      const hist = Array.isArray(bank.reserveHistory) ? bank.reserveHistory : [];
+      const days = hist.map(h => h.day);
+      const cash = hist.map(h => h.cash);
+      const target = hist.map(h => h.target);
+      Plotly.react("reserve-chart", [
+        { x: days, y: cash, name: "Cash", type: "scatter", mode: "lines+markers", line: { color: "#6cf" } },
+        { x: days, y: target, name: "Target", type: "scatter", mode: "lines", line: { color: "#fc6", dash: "dot" } }
+      ], {
+        margin: { t: 10, b: 30, l: 40, r: 10 },
+        xaxis: { title: "Day" }, yaxis: { title: "$B" },
+        paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+        font: { color: "#e0e0e0" }, legend: { orientation: "h" }
+      }, { responsive: true });
+    }
+
+    function updateBonusChart() {
+      if (!state || typeof Plotly === "undefined") return;
+      const bank = state.banks[stub];
+      if (!bank) return;
+      const hist = Array.isArray(bank.bonusHistory) ? bank.bonusHistory : [];
+      const days = hist.map(h => h.day);
+      const ytd = hist.map(h => (h.ytd || 0) * 1000);
+      Plotly.react("bonus-chart", [{
+        x: days, y: ytd, type: "scatter", mode: "lines+markers",
+        line: { color: "#fc6" }, marker: { size: 6 }
+      }], {
+        margin: { t: 10, b: 30, l: 45, r: 10 },
+        xaxis: { title: "Day" }, yaxis: { title: "$" },
+        paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+        font: { color: "#e0e0e0" }
+      }, { responsive: true });
+    }
+
+    function renderMine() {
+      const el = document.getElementById("mine");
+      if (!el || !state) return;
+      const mine = Object.values(state.orders || {}).filter(o => o.stub === stub && o.status === "open");
+      el.innerHTML = mine.length
+        ? mine.map(o => `<div>${o.side} ${o.volume}B @ ${o.rate.toFixed(2)}% <button class="small" data-cancel="${o.id}">cancel</button></div>`).join("")
+        : "<p class='muted'>No open orders.</p>";
+      el.querySelectorAll("[data-cancel]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.cancel;
+          await update(ref(db, `sessions/${sessionId}/orders/${id}`), { status: "cancelled" });
+        };
+      });
+    }
+
+    function updateWarn() {
+      const wEl = document.getElementById("warn");
+      if (!wEl || !state) return;
+      const side = document.getElementById("side").value;
+      const rate = parseFloat(document.getElementById("rate").value);
+      const warn = isFinite(rate) ? E.corridorWarning(state, side, rate) : null;
+      wEl.textContent = warn ? "⚠ " + warn : "";
+      wEl.className = warn ? "msg warn" : "msg";
+    }
+
+    onValue(sessRef, (snap) => {
+      try {
+      statusEl.textContent = "Connected to session " + sessionId;
+      statusEl.className = "status-bar";
+      if (!snap.exists()) {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("ended").style.display = "block";
+        return;
+      }
+      state = E.normalize(snap.val());
+      const bank = state.banks[stub];
+      if (!bank) {
+        document.getElementById("bs").innerHTML = "<p class='muted'>Waiting for bank…</p>";
+        return;
+      }
+      document.getElementById("title").textContent = bank.name;
+      document.getElementById("day").textContent = state.day;
+      document.getElementById("sofr").textContent = state.sofr != null ? state.sofr.toFixed(2) + "%" : "—";
+      document.getElementById("corridor").textContent = `IORB ${state.rates.iorb.toFixed(2)} / SRF ${state.rates.srf.toFixed(2)}`;
+      document.getElementById("bs").innerHTML = UI.balanceSheetHTML(state, stub);
+      const gapEl = document.getElementById("gap-indicator");
+      if (gapEl) {
+        const cash = state.banks[stub]?.cash || 0;
+        const target = E.calculateTargetReserveBalance(state.banks[stub], state.gameParams || {});
+        const gap = (cash - target);
+        const cls = gap >= 0 ? "pos" : "neg";
+        const label = gap >= 0 ? "Surplus vs target" : "Shortfall vs target";
+        gapEl.className = "gap-indicator " + cls;
+        gapEl.innerHTML = `${label}: <span class="${cls}">${gap >= 0 ? "+" : ""}${gap.toFixed(2)}B</span> &nbsp;·&nbsp; Target ${ target.toFixed(2) }B`;
+        gapEl.style.background = gap >= 0 ? "rgba(0,180,80,.12)" : "rgba(220,50,50,.12)";
+        gapEl.style.color = gap >= 0 ? "#0a0" : "#c00";
+      } else if (gapEl) {
+        gapEl.textContent = "Target not yet set for today";
+        gapEl.style.background = "";
+        gapEl.style.color = "";
+      }
+      updateCountdown();
+      updateReserveChart();
+      updateBonusChart();
+      const tapeEl = document.getElementById("cash-tape");
+      if (tapeEl) tapeEl.innerHTML = UI.cashFlowTapeHTML(state, stub);
+
+      // Formal warning letter on first red day
+      const letter = document.getElementById("warning-letter");
+      if (letter && state.phase === "closed" && state.banks[stub]) {
+        const b = state.banks[stub];
+        if (b.zone === "red" && (b.redCount || 0) === 1 && !window._letterSeen) {
+          letter.style.display = "flex";
+        }
+      }
+      if (letter && state.phase !== "closed") window._letterSeen = false;
+
+      // End-of-day report + leaderboard after close
+      const ov = document.getElementById("leaderboard-overlay");
+      if (ov && state.phase === "closed" && !window._lbDismissed) {
+        const me = state.banks[stub];
+        if (!me) { ov.style.display = "none"; }
+        else {
+          const finishedDay = (state.history && state.history["d" + (state.day - 1)]) ? state.day - 1 : state.day;
+          document.getElementById("lb-day").textContent = finishedDay;
+          const nameEl = document.getElementById("lb-bankname");
+          if (nameEl) nameEl.textContent = me.name || stub;
+
+          const fmt$ = (n) => "$" + Math.round(n).toLocaleString();
+          const fmtB = (n) => (n >= 0 ? "" : "−") + Math.abs(n).toFixed(2) + "B";
+          const fmtInt = (n) => (n >= 0 ? "+" : "−") + "$" + Math.abs(Math.round(n * 1000)).toLocaleString();
+
+          const trades = E.tradesForDay(state, finishedDay);
+          let lentVol = 0, borrowedVol = 0, repoIncome = 0, repoExpense = 0;
+          for (const t of trades) {
+            if (t.kind === "private" || t.kind === "srf" || t.kind === "overdraft") {
+              const interest = t.volume * t.rate / 100 / E.DAY_COUNT;
+              if (t.lender === stub) { lentVol += t.volume; repoIncome += interest; }
+              if (t.borrower === stub) { borrowedVol += t.volume; repoExpense -= interest; }
+            }
+          }
+          const sofrRef = state.sofr ?? state.lastSofr ?? (state.rates && state.rates.iorb) || 4.4;
+          const floating = (me.floatingAssets || 0) * (sofrRef + 1.0) / 100 / E.DAY_COUNT;
+          const reserves = Math.max(0, me.cash || 0) * ((state.rates && state.rates.iorb) || 0) / 100 / E.DAY_COUNT;
+          const deposits = -(me.stickyDep || 0) * E.STICKY_DEP_RATE / 100 / E.DAY_COUNT;
+          const useStored = me.pnl && state.history && state.history["d" + finishedDay];
+          const p = useStored ? me.pnl : { floating, reserves, repoIncome, deposits, repoExpense };
+          const total = (p.floating || 0) + (p.reserves || 0) + (p.repoIncome || 0) + (p.deposits || 0) + (p.repoExpense || 0);
+          const zone = me.zone || "—";
+          const bonus = (me.bonusToday || 0) * 1000;
+          const ytd = (me.bonusYTD || 0) * 1000;
+
+          let report = `<div style="padding:12px 22px 8px;">
+            <div style="font-size:12px;letter-spacing:0.08em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">Your results</div>
+            <table style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;border-collapse:collapse;">
+              <tr><td style="padding:3px 0;color:var(--muted)">Floating assets</td><td style="text-align:right">${fmtB(p.floating || 0)}</td></tr>
+              <tr><td style="padding:3px 0;color:var(--muted)">Reserves (IORB)</td><td style="text-align:right">${fmtB(p.reserves || 0)}</td></tr>
+              <tr><td style="padding:3px 0;color:var(--muted)">Repo income</td><td style="text-align:right">${fmtB(p.repoIncome || 0)}</td></tr>
+              <tr><td style="padding:3px 0;color:var(--muted)">Sticky deposits</td><td style="text-align:right">${fmtB(p.deposits || 0)}</td></tr>
+              <tr><td style="padding:3px 0;color:var(--muted)">Repo expense</td><td style="text-align:right">${fmtB(p.repoExpense || 0)}</td></tr>
+              <tr style="border-top:1px solid var(--gold-dim)"><td style="padding:6px 0;font-weight:600">Net P&L</td><td style="text-align:right;font-weight:600">${fmtInt(total)}</td></tr>
+            </table>
+            <div style="margin-top:8px;font-size:13px;">Zone <strong>${zone}</strong> &nbsp;·&nbsp; Day bonus ${fmt$(bonus)} &nbsp;·&nbsp; YTD ${fmt$(ytd)}</div>
+          </div>`;
+
+          const banks = Object.entries(state.banks || {}).map(([id, b]) => ({
+            id, name: b.name || id, zone: b.zone, bonus: (b.bonusToday || 0) * 1000, ytd: (b.bonusYTD || 0) * 1000, fired: b.fired
+          })).sort((a, b) => b.ytd - a.ytd);
+          const zoneColor = (z) => z === "green" ? "#6f6" : z === "yellow" ? "#fc6" : z === "orange" ? "#f93" : z === "red" ? "#f66" : "#aaa";
+          let lb = `<div style="padding:4px 0 6px;border-top:1px solid var(--gold-dim);margin-top:4px;">
+            <div style="font-size:11px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;padding:8px 22px 4px;">Leaderboard · Day ${finishedDay}</div>`;
+          lb += banks.map((b, i) => {
+            const rank = i + 1;
+            const zoneBadge = b.zone ? `<span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;background:${zoneColor(b.zone)}22;color:${zoneColor(b.zone)};border:1px solid ${zoneColor(b.zone)}55;">${b.zone}</span>` : "";
+            const fired = b.fired ? ` <span style="color:#f66;font-size:11px;">FIRED</span>` : "";
+            const isMe = b.id === stub;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 22px;${isMe ? "background:rgba(0,180,220,.06);" : ""}">
+              <div style="width:24px;height:24px;border-radius:50%;background:#1a1408;border:1px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);flex-shrink:0;">${rank}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:${isMe ? 600 : 500};color:#f0e6d2;">${b.name}${fired}</div>
+                <div style="font-size:11px;color:var(--muted);">Day ${fmt$(b.bonus)} · YTD ${fmt$(b.ytd)}</div>
+              </div>
+              <div>${zoneBadge}</div>
+            </div>`;
+          }).join("") || "<p style='padding:12px 22px;color:var(--muted)'>No banks</p>";
+          lb += "</div>";
+
+          if (state.winner) {
+            const wYtd = (state.winner.bonusYTD || 0) * 1000;
+            report = `<div style="margin:8px 22px 4px;padding:8px 12px;background:rgba(180,140,60,.12);border:1px solid var(--gold-dim);border-radius:6px;text-align:center;font-weight:600;color:var(--gold);">Winner: ${state.winner.name} · ${fmt$(wYtd)} YTD</div>` + report;
+          }
+
+          document.getElementById("lb-content").innerHTML = report + lb;
+          ov.style.display = "flex";
+          wireLeaderboardClose();
+        }
+      } else if (ov && state.phase !== "closed") {
+        ov.style.display = "none";
+        window._lbDismissed = false;
+      }
+      drawStudentCurves();
+      const bookEl = document.getElementById("book");
+      if (bookEl) {
+        if (state.orderBookVisible === false) {
+          bookEl.innerHTML = "<p class='muted small'>Order book is private. You can only see your own orders.</p>";
+        } else {
+          bookEl.innerHTML = UI.orderBookHTML(state, { highlightStub: stub });
+        }
+      }
+      renderMine();
+      const mineTrades = E.tradesForDay(state).filter(t => t.lender === stub || t.borrower === stub);
+      document.getElementById("my-trades").innerHTML = mineTrades.length
+        ? mineTrades.slice().reverse().map(t => `<div>${UI.tradeLineFor(t, stub)}</div>`).join("")
+        : "<p class='muted'>No trades yet.</p>";
+      document.getElementById("overnight-results").innerHTML = UI.overnightHistoryHTML(state, stub);
+
+      const closedEl = document.getElementById("closed-banner");
+      const formDisabled = state.phase !== "trading";
+      if (formDisabled) {
+        closedEl.style.display = "block";
+        closedEl.textContent = state.closedBy === "timer" ? "Market closed — time’s up" : "Market closed";
+      } else {
+        closedEl.style.display = "none";
+      }
+
+      const sh = document.getElementById("shock-banner");
+      if (sh) {
+        if (state.shock) {
+          sh.style.display = "block";
+          const mine = state.shock.perBank && state.shock.perBank[stub];
+          const field = state.shock.field || "volatile";
+          const mineLine = (mine != null)
+            ? `<div class="small" style="margin-top:6px">Your bank: ${mine > 0 ? "+" : ""}${mine}B ${UI.esc(field)} funding.</div>`
+            : "";
+          sh.innerHTML = `<strong>${UI.esc(state.shock.title)}</strong> — ${UI.esc(state.shock.text)}${mineLine}`;
+        } else {
+          sh.style.display = "none";
+        }
+      }
+      document.getElementById("submit").disabled = formDisabled;
+      document.getElementById("side").disabled = formDisabled;
+      document.getElementById("rate").disabled = formDisabled;
+      document.getElementById("vol").disabled = formDisabled;
+
+      updateCountdown();
+      updateWarn();
+      document.getElementById("sofr-history").innerHTML = UI.marketTableHTML(UI.historyRows(state));
+      statusEl.textContent = "Connected to session " + sessionId;
+      statusEl.className = "status-bar";
+      } catch (e) {
+        console.error("bank render error", e);
+        statusEl.textContent = "Connected (render error: " + e.message + ")";
+        statusEl.className = "status-bar err";
+      }
+    }, (err) => { statusEl.textContent = explainError(err); statusEl.className = "status-bar err"; });
+
+    document.getElementById("order-form").onsubmit = async (ev) => {
+      ev.preventDefault();
+      const msgEl = document.getElementById("msg");
+      if (!state || state.phase !== "trading") { msgEl.textContent = "Market is closed."; msgEl.className = "msg err"; return; }
+      const side = document.getElementById("side").value;
+      const rate = parseFloat(document.getElementById("rate").value);
+      const volume = parseFloat(document.getElementById("vol").value);
+      if (!isFinite(rate) || !isFinite(volume) || volume <= 0) { msgEl.textContent = "Enter a valid rate and volume."; msgEl.className = "msg err"; return; }
+
+      const warn = E.corridorWarning(state, side, rate);
+      if (warn && !confirm(warn + "\n\nSubmit anyway?")) return;
+
+      const order = {
+        stub, name: state.banks[stub].name, side, rate, volume,
+        remaining: volume, filled: 0, status: "open", day: state.day, ts: Date.now()
+      };
+      const orderId = push(ref(db, "sessions/" + sessionId + "/orders")).key;
+      await update(ref(db, "sessions/" + sessionId + "/orders/" + orderId), order);
+
+      // Host does the matching; we just write the order.
+      msgEl.textContent = "Order submitted.";
+      msgEl.className = "msg ok";
+    };
+
+    function drawStudentCurves() {
+      if (!state || typeof Plotly === "undefined") return;
+      const curve = state.curve || E.DEFAULT_CURVE;
+      const tenors = UI.PLOT_TENORS;
+      const ys = tenors.map(t => curve[t]);
+      Plotly.react("curve-2d", [{
+        x: tenors, y: ys, type: "scatter", mode: "lines+markers",
+        line: { color: UI.PLOT_COLOR, width: 2 }, marker: { size: 7 }
+      }], {
+        margin: { t: 10, b: 30, l: 45, r: 10 },
+        xaxis: { title: "Tenor" }, yaxis: { title: "Yield %", tickformat: ".2f" },
+        paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+        font: { color: "#e0e0e0" }
+      }, { responsive: true });
+
+      const hist = Array.isArray(state.curveHistory) ? state.curveHistory : [];
+      const el = document.getElementById("curve-3d");
+      if (!el) return;
+      if (hist.length < 1) {
+        el.innerHTML = "<p class='muted small'>Surface appears after the first day advances.</p>";
+        return;
+      }
+      const days = hist.map(h => h.day);
+      const z = hist.map(h => tenors.map(t => (h.curve && h.curve[t]) || E.DEFAULT_CURVE[t]));
+      const xIdx = tenors.map((_, i) => i);
+      Plotly.react("curve-3d", [{
+        type: "surface",
+        x: xIdx,
+        y: days,
+        z: z,
+        colorscale: UI.PLOT_SURFACE_COLORS,
+        showscale: true
+      }], {
+        margin: { t: 10, b: 30, l: 30, r: 10 },
+        scene: {
+          xaxis: { title: "Tenor", tickvals: xIdx, ticktext: tenors },
+          yaxis: { title: "Day" },
+          zaxis: { title: "Yield %" }
+        },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        font: { color: "#e0e0e0" }
+      }, { responsive: true });
+    }
+</script>
+  <p style="text-align:center;margin:2rem 0 1rem;opacity:0.6;font-size:0.85em"><a href="stylizations-caveats.html">stylizations & caveats</a> · <a href="overnight-docs.html">how it works</a></p>
+</body>
+</html>
